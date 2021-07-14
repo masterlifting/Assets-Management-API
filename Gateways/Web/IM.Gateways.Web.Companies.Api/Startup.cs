@@ -1,3 +1,4 @@
+using IM.Gateways.Web.Companies.Api.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -13,7 +14,7 @@ namespace IM.Gateways.Web.Companies.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
             services.AddControllers();
         }
 
