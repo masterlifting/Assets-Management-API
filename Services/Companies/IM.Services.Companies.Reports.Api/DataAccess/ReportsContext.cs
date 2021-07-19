@@ -17,6 +17,7 @@ namespace IM.Services.Companies.Reports.Api.DataAccess
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Report>().HasKey(x => new { x.ReportSourceId, x.Year, x.Quarter });
             modelBuilder.Entity<ReportSource>().HasIndex(x => x.IsActive);
+            modelBuilder.Entity<ReportSourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<ReportSourceType>().HasData(new ReportSourceType[]
             {
                 new (){Id = 1, Name = "official" },

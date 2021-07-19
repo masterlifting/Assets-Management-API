@@ -15,6 +15,7 @@ namespace IM.Services.Companies.Prices.Api.DataAccess
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Price>().HasKey(x => new { x.TickerName, x.Date });
+            modelBuilder.Entity<PriceSourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<PriceSourceType>().HasData(new PriceSourceType[]
             {
                 new (){Id = 1, Name = "moex" },

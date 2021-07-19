@@ -6,10 +6,12 @@ namespace IM.Gateways.Web.Companies.Api.Services.Agregators.Interfaces
 {
     public interface IAnalyzerDtoAgregator
     {
-        Task<ResponseModel<PaginationResponseModel<CoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination);
-        Task<ResponseModel<PaginationResponseModel<RatingDto>>> GetRatingsAsync(PaginationRequestModel pagination);
-        Task<ResponseModel<RatingDto>> GetRatingAsync(string ticker);
         Task<ResponseModel<PaginationResponseModel<RecommendationDto>>> GetRecommendationsAsync(PaginationRequestModel pagination);
         Task<ResponseModel<RecommendationDto>> GetRecommendationAsync(string ticker);
+        
+        Task<ResponseModel<PaginationResponseModel<RatingDto>>> GetRatingsAsync(PaginationRequestModel pagination);
+        Task<ResponseModel<RatingDto>> GetRatingAsync(string ticker);
+        
+        Task<ResponseModel<PaginationResponseModel<CoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination);
     }
 }

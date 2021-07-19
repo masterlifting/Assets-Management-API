@@ -5,6 +5,7 @@ using IM.Services.Companies.Reports.Api.Services.Agregators.Interfaces;
 using IM.Services.Companies.Reports.Api.Services.Background;
 using IM.Services.Companies.Reports.Api.Services.Background.Implementations;
 using IM.Services.Companies.Reports.Api.Settings;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -33,8 +34,7 @@ namespace IM.Services.Companies.Reports.Api
 
             services.AddHttpClient<InvestingClient>();
 
-            services.AddScoped<ILastReportDtoAgregator, LastReportDtoAgregator>();
-            services.AddScoped<IHistoryReportDtoAgregator, HistoryReportDtoAgregator>();
+            services.AddScoped<IReportsDtoAgregator, ReportsDtoAgregator>();
             services.AddScoped<IReportUpdater, ReportUpdater>();
         }
 

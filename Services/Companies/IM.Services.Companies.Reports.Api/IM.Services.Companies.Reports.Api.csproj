@@ -7,9 +7,13 @@
 
   <ItemGroup>
     <Compile Remove="Entities\**" />
+    <Compile Remove="Services\Mapper\**" />
     <Content Remove="Entities\**" />
+    <Content Remove="Services\Mapper\**" />
     <EmbeddedResource Remove="Entities\**" />
+    <EmbeddedResource Remove="Services\Mapper\**" />
     <None Remove="Entities\**" />
+    <None Remove="Services\Mapper\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,9 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
     <Folder Include="DataAccess\" />
-    <Folder Include="Services\Mapper\" />
     <Folder Include="Settings\" />
   </ItemGroup>
 

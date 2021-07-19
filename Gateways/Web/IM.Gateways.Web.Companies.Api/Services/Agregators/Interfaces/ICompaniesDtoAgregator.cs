@@ -8,10 +8,9 @@ namespace IM.Gateways.Web.Companies.Api.Services.Agregators.Interfaces
     {
         Task<ResponseModel<PaginationResponseModel<CompanyDto>>> GetCompaniesAsync(PaginationRequestModel pagination);
         Task<ResponseModel<CompanyDto>> GetCompanyAsync(string ticker);
-        Task<ResponseModel<string>> DeleteCompanyAsync(string ticker);
 
-        IPricesDtoAgregator PricesDtoAgregators { get; }
-        IReportsDtoAgregator ReportsDtoAgregators { get; }
-        IAnalyzerDtoAgregator AnalyzerDtoAgregators { get; }
+        IPricesDtoAgregator PricesDtoAgregator { get; }
+        IReportsDtoAgregator ReportsDtoAgregator { get; }
+        IAnalyzerDtoAgregator AnalyzerDtoAgregator { get; }
     }
 }

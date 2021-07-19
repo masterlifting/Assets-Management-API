@@ -2,7 +2,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using IM.Services.Companies.Prices.Api.Clients.Models.MoexModels;
+using IM.Services.Companies.Prices.Api.Models.Client.MoexModels;
 using Microsoft.Extensions.Options;
 
 namespace IM.Services.Companies.Prices.Api

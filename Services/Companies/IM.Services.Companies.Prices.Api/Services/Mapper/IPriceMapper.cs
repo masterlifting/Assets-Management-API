@@ -1,5 +1,5 @@
-using IM.Services.Companies.Prices.Api.Clients.Models.MoexModels;
-using IM.Services.Companies.Prices.Api.Clients.Models.TdAmeritradeModels;
+using IM.Services.Companies.Prices.Api.Models.Client.MoexModels;
+using IM.Services.Companies.Prices.Api.Models.Client.TdAmeritradeModels;
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 using System.Collections.Generic;
 

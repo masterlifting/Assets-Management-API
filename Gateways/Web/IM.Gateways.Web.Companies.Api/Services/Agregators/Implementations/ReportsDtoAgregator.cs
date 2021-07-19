@@ -1,25 +1,21 @@
-﻿using IM.Gateways.Web.Companies.Api.Models.Dto;
+﻿using IM.Gateways.Web.Companies.Api.Clients;
+using IM.Gateways.Web.Companies.Api.Models.Dto;
 using IM.Gateways.Web.Companies.Api.Models.Http;
 using IM.Gateways.Web.Companies.Api.Services.Agregators.Interfaces;
+
 using System.Threading.Tasks;
 
 namespace IM.Gateways.Web.Companies.Api.Services.Agregators.Implementations
 {
     public class ReportsDtoAgregator : IReportsDtoAgregator
     {
-        public Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetHistoryReportsAsync(string ticker, PaginationRequestModel pagination)
-        {
-            throw new System.NotImplementedException();
-        }
+        private readonly ReportsClient httpClient;
+        public ReportsDtoAgregator(ReportsClient httpClient) => this.httpClient = httpClient;
 
-        public Task<ResponseModel<ReportDto>> GetLastReportAsync(string ticker)
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(string ticker, PaginationRequestModel pagination) =>
+            httpClient.GetReportsAsync(ticker, pagination);
 
-        public Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetLastReportsAsync(PaginationRequestModel pagination)
-        {
-            throw new System.NotImplementedException();
-        }
+        public Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(PaginationRequestModel pagination) =>
+            httpClient.GetReportsAsync(pagination);
     }
 }

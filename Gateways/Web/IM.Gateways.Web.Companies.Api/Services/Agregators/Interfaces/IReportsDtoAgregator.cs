@@ -6,8 +6,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.Agregators.Interfaces
 {
     public interface IReportsDtoAgregator
     {
-        Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetLastReportsAsync(PaginationRequestModel pagination);
-        Task<ResponseModel<ReportDto>> GetLastReportAsync(string ticker);
-        Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetHistoryReportsAsync(string ticker, PaginationRequestModel pagination);
+        Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(PaginationRequestModel pagination);
+        Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(string ticker, PaginationRequestModel pagination);
     }
 }

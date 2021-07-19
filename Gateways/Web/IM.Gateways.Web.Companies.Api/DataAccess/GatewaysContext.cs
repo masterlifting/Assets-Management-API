@@ -1,4 +1,5 @@
 ﻿using IM.Gateways.Web.Companies.Api.DataAccess.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace IM.Gateways.Web.Companies.Api.DataAccess
@@ -7,11 +8,7 @@ namespace IM.Gateways.Web.Companies.Api.DataAccess
     {
         public DbSet<Company> Companies { get; set; } = null!;
 
-        public GatewaysContext(DbContextOptions<GatewaysContext> options) : base(options)
-        {
-            //delete
-            Database.EnsureCreated(); 
-        }
+        public GatewaysContext(DbContextOptions<GatewaysContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -5,13 +5,16 @@ using IM.Services.Companies.Prices.Api.Services.Background;
 using IM.Services.Companies.Prices.Api.Services.Background.Implementations;
 using IM.Services.Companies.Prices.Api.Services.HealthCheck;
 using IM.Services.Companies.Prices.Api.Services.Mapper;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using Polly;
+
 using System;
 
 namespace IM.Services.Companies.Prices.Api
@@ -45,8 +48,7 @@ namespace IM.Services.Companies.Prices.Api
                 .AddCheck<MoexHealthCheck>("Moex");
 
             services.AddScoped<IPriceMapper, PriceMapper>();
-            services.AddScoped<ILastPriceDtoAgregator, LastPriceDtoAgregator>();
-            services.AddScoped<IHistoryPriceDtoAgregator, HistoryPriceDtoAgregator>();
+            services.AddScoped<IPricesDtoAgregator, PricesDtoAgregator>();
             services.AddScoped<IPriceUpdater, PriceUpdater>();
         }
 

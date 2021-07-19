@@ -5,7 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
-using IM.Services.Companies.Prices.Api.Clients.Models.TdAmeritradeModels;
+using IM.Services.Companies.Prices.Api.Models.Client.TdAmeritradeModels;
 
 namespace IM.Services.Companies.Prices.Api
 {

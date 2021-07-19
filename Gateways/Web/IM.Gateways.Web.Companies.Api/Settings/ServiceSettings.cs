@@ -2,8 +2,8 @@
 {
     public class ServiceSettings
     {
-        public PricesClientSettings PricesSettings { get; set; } = null!;
-        public ReportsClientSettings ReportsSettings { get; set; } = null!;
-        public AnalyzerClientSettings AnalyzerSettings { get; set; } = null!;
+        public ClientSettings PricesSettings { get; set; } = null!;
+        public ClientSettings ReportsSettings { get; set; } = null!;
+        public ClientSettings AnalyzerSettings { get; set; } = null!;
     }
 }

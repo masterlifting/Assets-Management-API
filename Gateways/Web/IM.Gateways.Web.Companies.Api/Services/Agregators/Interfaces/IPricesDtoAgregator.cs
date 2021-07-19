@@ -6,8 +6,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.Agregators.Interfaces
 {
     public interface IPricesDtoAgregator
     {
-        Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetLastPricesAsync(PaginationRequestModel pagination);
-        Task<ResponseModel<PriceDto>> GetLastPriceAsync(string ticker);
-        Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetHistoryPricesAsync(string ticker, PaginationRequestModel pagination);
+        Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(PaginationRequestModel pagination);
+        Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, PaginationRequestModel pagination);
     }
 }

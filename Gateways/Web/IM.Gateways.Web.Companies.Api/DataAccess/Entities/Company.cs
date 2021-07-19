@@ -9,6 +9,6 @@ namespace IM.Gateways.Web.Companies.Api.DataAccess.Entities
 
         [Required, StringLength(300)]
         public string Name { get; set; } = null!;
-        public string Description { get; set; } = null!;
+        public string? Description { get; set; }
     }
 }
