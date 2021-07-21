@@ -1,6 +1,7 @@
 ﻿using IM.Gateways.Web.Companies.Api.Models.Dto;
 using IM.Gateways.Web.Companies.Api.Models.Http;
 using IM.Gateways.Web.Companies.Api.Settings;
+using IM.Gateways.Web.Companies.Api.Settings.Client;
 
 using Microsoft.Extensions.Options;
 
@@ -20,7 +21,7 @@ namespace IM.Gateways.Web.Companies.Api.Clients
         public ReportsClient(HttpClient httpClient, IOptions<ServiceSettings> options)
         {
             this.httpClient = httpClient;
-            settings = options.Value.ReportsSettings;
+            settings = options.Value.ClientCompaniesReportsSettings;
         }
 
 

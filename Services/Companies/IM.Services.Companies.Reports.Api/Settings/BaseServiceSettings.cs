@@ -1,4 +1,4 @@
-namespace IM.Services.Companies.Prices.Api
+namespace IM.Services.Companies.Reports.Api.Settings
 {
     public abstract class BaseServiceSettings
     {

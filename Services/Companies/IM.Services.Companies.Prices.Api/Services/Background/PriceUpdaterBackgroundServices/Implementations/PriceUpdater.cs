@@ -1,14 +1,18 @@
 using IM.Services.Companies.Prices.Api.DataAccess;
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
+using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Interfaces;
 using IM.Services.Companies.Prices.Api.Services.Mapper;
+
 using Microsoft.EntityFrameworkCore;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using static IM.Services.Companies.Prices.Api.DataAccess.DataEnums;
 
-namespace IM.Services.Companies.Prices.Api.Services.Background.Implementations
+namespace IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Implementations
 {
     public class PriceUpdater : IPriceUpdater
     {

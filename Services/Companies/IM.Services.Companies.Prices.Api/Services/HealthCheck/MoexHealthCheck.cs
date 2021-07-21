@@ -1,3 +1,5 @@
+using IM.Services.Companies.Prices.Api.Settings;
+
 using Microsoft.Extensions.Options;
 
 namespace IM.Services.Companies.Prices.Api.Services.HealthCheck

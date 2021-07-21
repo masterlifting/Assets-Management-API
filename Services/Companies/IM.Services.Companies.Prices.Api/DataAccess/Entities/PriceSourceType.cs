@@ -6,7 +6,7 @@ namespace IM.Services.Companies.Prices.Api.DataAccess.Entities
     public class PriceSourceType
     {
         [Key]
-        public int Id { get; set; }
+        public byte Id { get; set; }
         [Required, StringLength(50)]
         public string Name { get; set; }
 

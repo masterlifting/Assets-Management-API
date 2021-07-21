@@ -1,4 +1,4 @@
-﻿namespace IM.Services.Analyzer.Api.Settings
+﻿namespace IM.Services.Analyzer.Api.Settings.Calculator
 {
     public class CalculatorSettings
     {

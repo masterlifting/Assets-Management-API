@@ -1,9 +1,13 @@
-﻿namespace IM.Gateways.Web.Companies.Api.Settings
+﻿using IM.Gateways.Web.Companies.Api.Settings.Client;
+using IM.Gateways.Web.Companies.Api.Settings.Rabbitmq;
+
+namespace IM.Gateways.Web.Companies.Api.Settings
 {
     public class ServiceSettings
     {
-        public ClientSettings PricesSettings { get; set; } = null!;
-        public ClientSettings ReportsSettings { get; set; } = null!;
-        public ClientSettings AnalyzerSettings { get; set; } = null!;
+        public ClientSettings ClientCompaniesPricesSettings { get; set; } = null!;
+        public ClientSettings ClientCompaniesReportsSettings { get; set; } = null!;
+        public ClientSettings ClientAnalyzerSettings { get; set; } = null!;
+        public RabbitmqSettings RabbitmqSettings { get; set; } = null!;
     }
 }

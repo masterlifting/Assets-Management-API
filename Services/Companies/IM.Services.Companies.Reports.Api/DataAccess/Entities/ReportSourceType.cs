@@ -6,7 +6,7 @@ namespace IM.Services.Companies.Reports.Api.DataAccess.Entities
     {
         [Key]
         public byte Id { get; set; }
-        [StringLength(50)]
+        [Required, StringLength(50)]
         public string Name { get; set; }
     }
 }

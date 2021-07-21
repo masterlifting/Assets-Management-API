@@ -9,7 +9,7 @@ namespace IM.Services.Companies.Prices.Api.DataAccess.Entities
         public string Name { get; set; }
 
         public virtual PriceSourceType SourceType { get; set; }
-        public int PriceSourceTypeId { get; set; }
+        public byte PriceSourceTypeId { get; set; }
 
         public virtual IEnumerable<Price> Prices { get; set; }
     }

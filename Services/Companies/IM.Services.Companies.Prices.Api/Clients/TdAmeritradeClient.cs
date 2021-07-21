@@ -1,11 +1,15 @@
+using IM.Services.Companies.Prices.Api.Models.Client.TdAmeritradeModels;
+using IM.Services.Companies.Prices.Api.Settings;
+using IM.Services.Companies.Prices.Api.Settings.Client;
+
+using Microsoft.Extensions.Options;
+
 using System;
-using System.Text;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
-using IM.Services.Companies.Prices.Api.Models.Client.TdAmeritradeModels;
 
 namespace IM.Services.Companies.Prices.Api
 {

@@ -1,5 +1,7 @@
 ﻿using IM.Services.Analyzer.Api.Services.Calculators.Interfaces.RatingCalculator;
 using IM.Services.Analyzer.Api.Settings;
+using IM.Services.Analyzer.Api.Settings.Calculator;
+
 using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 

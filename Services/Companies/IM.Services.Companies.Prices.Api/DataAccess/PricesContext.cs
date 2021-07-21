@@ -1,4 +1,5 @@
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace IM.Services.Companies.Prices.Api.DataAccess
@@ -19,7 +20,7 @@ namespace IM.Services.Companies.Prices.Api.DataAccess
             modelBuilder.Entity<PriceSourceType>().HasData(new PriceSourceType[]
             {
                 new (){Id = 1, Name = "moex" },
-                new (){Id = 2, Name = "tdameridrade" }
+                new (){Id = 2, Name = "tdameritrade" }
             });
         }
     }

@@ -1,8 +1,7 @@
-namespace IM.Services.Companies.Reports.Api.Settings
+namespace IM.Services.Companies.Reports.Api.Settings.Reports.Investing
 {
-    public class InvestingSettings
+    public class InvestingSettings : BaseServiceSettings
     {
-        public string Host { get; set; }
         public string Path { get; set; }
         public string Finantial{get;set;}
         public string Balance { get; set; }

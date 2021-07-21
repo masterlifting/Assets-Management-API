@@ -1,17 +1,25 @@
 ﻿using IM.Gateways.Web.Companies.Api.DataAccess;
 using IM.Gateways.Web.Companies.Api.Models.Dto.State;
 using IM.Gateways.Web.Companies.Api.Models.Http;
-using IM.Gateways.Web.Companies.Api.Services.Management.Interfaces;
+using IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Interfaces;
+using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Implementations;
+using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Interfaces;
 
 using System;
 using System.Threading.Tasks;
 
-namespace IM.Gateways.Web.Companies.Api.Services.Management.Implementations
+namespace IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Implementations
 {
     public class CompaniesManager : ICompaniesManager
     {
         private readonly GatewaysContext context;
-        public CompaniesManager(GatewaysContext context) => this.context = context;
+        private readonly IRabbitmqManager rabbitmqManager;
+
+        public CompaniesManager(GatewaysContext context, IRabbitmqManager rabbitmqManager)
+        {
+            this.context = context;
+            this.rabbitmqManager = rabbitmqManager;
+        }
 
         public async Task<ResponseModel<string>> CreateCompanyAsync(CompanyModel company)
         {
@@ -27,25 +35,31 @@ namespace IM.Gateways.Web.Companies.Api.Services.Management.Implementations
                 Description = company.Description
             });
 
-            if (await context.SaveChangesAsync() >= 0)
-            {
+            rabbitmqManager.CreateCompany(company);
 
-            }
+            string contextResultMessage = "failed";
+            string mqResultMessage = "failed";
+
+            //if (await context.SaveChangesAsync() >= 0)
+            //{
+            //    contextResultMessage = "success";
+
+            //    if (new RabbitMqCompanyProvider().CreateCompany(company))
+            //        mqResultMessage = "success";
+            //}
 
             return new()
             {
-                Data = $"company: {company.Name} is added",
+                Data = $"Company: {company.Name} is {contextResultMessage}. Ticker send to rabbit is {mqResultMessage}.",
             };
         }
         public async Task<ResponseModel<string>> EditCompanyAsync(string ticker, CompanyModel company)
         {
             var errors = Array.Empty<string>();
             var _company = await context.Companies.FindAsync(ticker.ToUpperInvariant());
+
             if (_company is null)
-            {
-                errors = new string[1] { "this is company not found" };
-                return new() { Errors =  errors};
-            }
+                return new() { Errors = new string[1] { "this is company not found" } };
 
             if(!company.Ticker.Equals(ticker, StringComparison.OrdinalIgnoreCase))
                 errors = new string[1] { "ticker modified  is denied" };
@@ -83,6 +97,5 @@ namespace IM.Gateways.Web.Companies.Api.Services.Management.Implementations
                 Data = $"company: {company.Name} is deleted",
             };
         }
-
     }
 }

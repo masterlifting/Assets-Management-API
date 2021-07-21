@@ -1,5 +1,7 @@
 ﻿using HtmlAgilityPack;
 using IM.Services.Companies.Reports.Api.Settings;
+using IM.Services.Companies.Reports.Api.Settings.Reports.Investing;
+
 using Microsoft.Extensions.Options;
 using System;
 using System.Net.Http;

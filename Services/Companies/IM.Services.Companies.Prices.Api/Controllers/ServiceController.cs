@@ -1,5 +1,7 @@
-using IM.Services.Companies.Prices.Api.Services.Background;
+using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Interfaces;
+
 using Microsoft.AspNetCore.Mvc;
+
 using System.Threading.Tasks;
 
 namespace IM.Services.Companies.Prices.Api.Controllers

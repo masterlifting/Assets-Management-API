@@ -30,7 +30,6 @@
 
   <ItemGroup>
     <Folder Include="DataAccess\" />
-    <Folder Include="Settings\" />
   </ItemGroup>
 
 </Project>

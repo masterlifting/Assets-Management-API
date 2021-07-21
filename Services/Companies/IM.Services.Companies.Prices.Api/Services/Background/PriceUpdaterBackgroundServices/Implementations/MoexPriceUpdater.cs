@@ -1,18 +1,20 @@
 ﻿using IM.Services.Companies.Prices.Api.DataAccess.Entities;
+using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Interfaces;
 using IM.Services.Companies.Prices.Api.Services.Mapper;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IM.Services.Companies.Prices.Api.Services.Background.Implementations
+namespace IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Implementations
 {
-    public class TdameritradePriceUpdater : IClientPriceUpdater
+    public class MoexPriceUpdater : IClientPriceUpdater
     {
-        private readonly TdAmeritradeClient client;
+        private readonly MoexClient client;
         private readonly IPriceMapper priceMapper;
 
-        public TdameritradePriceUpdater(TdAmeritradeClient client, IPriceMapper priceMapper)
+        public MoexPriceUpdater(MoexClient client, IPriceMapper priceMapper)
         {
             this.client = client;
             this.priceMapper = priceMapper;
@@ -24,11 +26,13 @@ namespace IM.Services.Companies.Prices.Api.Services.Background.Implementations
 
             foreach (var (ticker, priceDate) in data)
             {
-                var priceData = await client.GetLastYearPricesAsync(ticker);
+                var priceData = await client.GetHistoryPricesAsync(ticker, priceDate.AddDays(1));
                 var prices = priceMapper.MapToPrices(priceData);
-                var priceResult = prices.Where(x => x.Date.Date > priceDate.Date);
-                if (priceResult.Any())
+                if (prices.Any())
+                {
+                    var priceResult = prices.GroupBy(x => x.Date.Date).Select(x => x.First());
                     result.AddRange(priceResult);
+                }
             }
 
             return result.ToArray();
@@ -42,15 +46,14 @@ namespace IM.Services.Companies.Prices.Api.Services.Background.Implementations
         {
             var result = new List<Price>(data.Count());
 
-            var priceData = await client.GetLastPricesAsync(data.Select(x => x.ticker));
-            var prices = priceMapper.MapToPrices(priceData);
+            var priceData = await client.GetLastPricesAsync();
+            var prices = priceMapper.MapToPrices(priceData, data.Select(x => x.ticker));
 
             foreach (var item in prices.Join(data, x => x.TickerName, y => y.ticker, (x, y) => new { Price = x, y.priceDate.Date }))
             {
                 if (condition.Invoke(item.Price.Date.Date, item.Date))
                     result.Add(item.Price);
             }
-
             return result.ToArray();
         }
     }

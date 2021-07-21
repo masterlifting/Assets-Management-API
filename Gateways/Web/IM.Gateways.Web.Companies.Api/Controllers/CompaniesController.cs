@@ -2,7 +2,7 @@
 using IM.Gateways.Web.Companies.Api.Models.Dto.State;
 using IM.Gateways.Web.Companies.Api.Models.Http;
 using IM.Gateways.Web.Companies.Api.Services.Agregators.Interfaces;
-using IM.Gateways.Web.Companies.Api.Services.Management.Interfaces;
+using IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Interfaces;
 
 using Microsoft.AspNetCore.Mvc;
 

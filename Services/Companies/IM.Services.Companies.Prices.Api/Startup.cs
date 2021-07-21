@@ -1,10 +1,14 @@
 using IM.Services.Companies.Prices.Api.DataAccess;
 using IM.Services.Companies.Prices.Api.Services.Agregators.Implementations;
 using IM.Services.Companies.Prices.Api.Services.Agregators.Interfaces;
-using IM.Services.Companies.Prices.Api.Services.Background;
-using IM.Services.Companies.Prices.Api.Services.Background.Implementations;
+using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Implementations;
+using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Interfaces;
+using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices;
+using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices.Implementations;
+using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
 using IM.Services.Companies.Prices.Api.Services.HealthCheck;
 using IM.Services.Companies.Prices.Api.Services.Mapper;
+using IM.Services.Companies.Prices.Api.Settings;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -31,9 +35,9 @@ namespace IM.Services.Companies.Prices.Api
             services.AddDbContext<PricesContext>(provider =>
             {
                 provider.UseLazyLoadingProxies();
-                provider.UseNpgsql(Configuration["ConnectionString"]);
+                provider.UseNpgsql(Configuration[$"{nameof(ServiceSettings)}:{nameof(ConnectionStrings)}:{nameof(ConnectionStrings.DbConnectionString)}"]);
             });
-           
+
             services.AddControllers();
 
             services.AddHttpClient<TdAmeritradeClient>()
@@ -50,6 +54,9 @@ namespace IM.Services.Companies.Prices.Api
             services.AddScoped<IPriceMapper, PriceMapper>();
             services.AddScoped<IPricesDtoAgregator, PricesDtoAgregator>();
             services.AddScoped<IPriceUpdater, PriceUpdater>();
+
+            services.AddScoped<IRabbitMqManager, RabbitMqManager>();
+            services.AddHostedService<RabbitmqBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
