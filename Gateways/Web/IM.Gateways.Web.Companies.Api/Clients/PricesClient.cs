@@ -16,12 +16,12 @@ namespace IM.Gateways.Web.Companies.Api.Clients
         private const string prices = "prices";
 
         private readonly HttpClient httpClient;
-        private readonly ClientSettings settings;
+        private readonly HostModel settings;
 
         public PricesClient(HttpClient httpClient, IOptions<ServiceSettings> options)
         {
             this.httpClient = httpClient;
-            settings = options.Value.ClientCompaniesPricesSettings;
+            settings = options.Value.ClientSettings.ClientCompaniesPrices;
         }
 
 

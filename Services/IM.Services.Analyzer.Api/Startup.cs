@@ -1,7 +1,11 @@
 using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.Services.Agregators.Implementations;
 using IM.Services.Analyzer.Api.Services.Agregators.Interfaces;
+using IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundServices;
+using IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundServices.Implementations;
+using IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
 using IM.Services.Analyzer.Api.Settings;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +27,8 @@ namespace IM.Services.Analyzer.Api
             services.AddDbContext<AnalyzerContext>(provider =>
             {
                 provider.UseLazyLoadingProxies();
-                provider.UseNpgsql(Configuration["ConnectionString"]);
+                //todo: connection string to improve
+                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
             });
 
             services.AddControllers();
@@ -31,6 +36,9 @@ namespace IM.Services.Analyzer.Api
             services.AddScoped<ICoefficientDtoAgregator, CoefficientDtoAgregator>();
             services.AddScoped<IRatingDtoAgregator, RatingDtoAgregator>();
             services.AddScoped<IRecommendationDtoAgregator, RecommendationDtoAgregator>();
+
+            services.AddScoped<IRabbitMqManager, RabbitMqManager>();
+            services.AddHostedService<RabbitmqBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

@@ -1,8 +1,10 @@
 ﻿using HtmlAgilityPack;
+
 using IM.Services.Companies.Reports.Api.Settings;
-using IM.Services.Companies.Reports.Api.Settings.Reports.Investing;
+using IM.Services.Companies.Reports.Api.Settings.Client;
 
 using Microsoft.Extensions.Options;
+
 using System;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -12,7 +14,7 @@ namespace IM.Services.Companies.Reports.Api.Clients
     public class InvestingClient
     {
         private readonly HttpClient httpClient;
-        private readonly InvestingSettings settings;
+        private readonly InvestingModel settings;
 
         public InvestingClient(HttpClient httpClient, IOptions<ServiceSettings> options)
         {
@@ -20,7 +22,7 @@ namespace IM.Services.Companies.Reports.Api.Clients
             httpClient.DefaultRequestHeaders.Add("Accept", "application/json, text/html, */*; q=0.01");
             httpClient.DefaultRequestHeaders.Add("Connection", "keep-alive");
             this.httpClient = httpClient;
-            settings = options.Value.InvestingSettings;
+            settings = options.Value.ClientSettings.Investing;
         }
 
         public async Task<HtmlDocument> GetMainPageAsync(string value) => await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}");

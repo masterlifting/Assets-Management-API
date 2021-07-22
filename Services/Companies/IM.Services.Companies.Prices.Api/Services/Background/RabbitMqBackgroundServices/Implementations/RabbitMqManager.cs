@@ -2,6 +2,7 @@
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
 
+using System;
 using System.Text.Json;
 
 namespace IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices.Implementations
@@ -13,7 +14,8 @@ namespace IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroun
         
         public bool CreateTickerAsync(string ticker)
         {
-            var _ticker = JsonSerializer.Deserialize<Ticker>(ticker);
+            //var _ticker = JsonSerializer.Deserialize<Ticker>(ticker);
+            Console.WriteLine("Prices service recived");
             return true;
         }
     }

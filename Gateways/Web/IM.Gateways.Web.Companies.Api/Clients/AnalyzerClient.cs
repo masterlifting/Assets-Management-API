@@ -18,12 +18,12 @@ namespace IM.Gateways.Web.Companies.Api.Clients
         private const string coefficients = "coefficients";
 
         private readonly HttpClient httpClient;
-        private readonly ClientSettings settings;
+        private readonly HostModel settings;
 
         public AnalyzerClient(HttpClient httpClient, IOptions<ServiceSettings> options)
         {
             this.httpClient = httpClient;
-            settings = options.Value.ClientAnalyzerSettings;
+            settings = options.Value.ClientSettings.ClientAnalyzer;
         }
 
 

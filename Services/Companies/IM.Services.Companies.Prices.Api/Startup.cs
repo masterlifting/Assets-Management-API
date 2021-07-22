@@ -35,7 +35,8 @@ namespace IM.Services.Companies.Prices.Api
             services.AddDbContext<PricesContext>(provider =>
             {
                 provider.UseLazyLoadingProxies();
-                provider.UseNpgsql(Configuration[$"{nameof(ServiceSettings)}:{nameof(ConnectionStrings)}:{nameof(ConnectionStrings.DbConnectionString)}"]);
+                //todo: connection string to improve
+                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
             });
 
             services.AddControllers();

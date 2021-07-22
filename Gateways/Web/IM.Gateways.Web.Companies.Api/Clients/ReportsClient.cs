@@ -16,12 +16,12 @@ namespace IM.Gateways.Web.Companies.Api.Clients
         private const string reports = "reports";
 
         private readonly HttpClient httpClient;
-        private readonly ClientSettings settings;
+        private readonly HostModel settings;
 
         public ReportsClient(HttpClient httpClient, IOptions<ServiceSettings> options)
         {
             this.httpClient = httpClient;
-            settings = options.Value.ClientCompaniesReportsSettings;
+            settings = options.Value.ClientSettings.ClientCompaniesReports;
         }
 
 

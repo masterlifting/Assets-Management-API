@@ -2,8 +2,11 @@ using IM.Services.Companies.Reports.Api.Clients;
 using IM.Services.Companies.Reports.Api.DataAccess;
 using IM.Services.Companies.Reports.Api.Services.Agregators.Implementations;
 using IM.Services.Companies.Reports.Api.Services.Agregators.Interfaces;
-using IM.Services.Companies.Reports.Api.Services.Background;
-using IM.Services.Companies.Reports.Api.Services.Background.Implementations;
+using IM.Services.Companies.Reports.Api.Services.Background.RabbitMqBackgroundServices;
+using IM.Services.Companies.Reports.Api.Services.Background.RabbitMqBackgroundServices.Implementations;
+using IM.Services.Companies.Reports.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
+using IM.Services.Companies.Reports.Api.Services.Background.ReportUpdaterBackgroundServices.Implementations;
+using IM.Services.Companies.Reports.Api.Services.Background.ReportUpdaterBackgroundServices.Interfaces;
 using IM.Services.Companies.Reports.Api.Settings;
 
 using Microsoft.AspNetCore.Builder;
@@ -27,7 +30,8 @@ namespace IM.Services.Companies.Reports.Api
             services.AddDbContext<ReportsContext>(provider =>
            {
                provider.UseLazyLoadingProxies();
-               provider.UseNpgsql(Configuration["ConnectionString"]);
+               //todo: connection string to improve
+               provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
            });
 
             services.AddControllers();
@@ -36,6 +40,9 @@ namespace IM.Services.Companies.Reports.Api
 
             services.AddScoped<IReportsDtoAgregator, ReportsDtoAgregator>();
             services.AddScoped<IReportUpdater, ReportUpdater>();
+
+            services.AddScoped<IRabbitMqManager, RabbitMqManager>();
+            services.AddHostedService<RabbitmqBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

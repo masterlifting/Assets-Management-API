@@ -16,12 +16,12 @@ namespace IM.Services.Companies.Prices.Api
     public partial class TdAmeritradeClient
     {
         private readonly HttpClient httpClient;
-        private readonly TdAmeritradeSettings settings;
+        private readonly HostModel tdAmeritradeSetting;
 
         public TdAmeritradeClient(HttpClient httpClient, IOptions<ServiceSettings> options)
         {
             this.httpClient = httpClient;
-            settings = options.Value.TdAmeritradeSettings;
+            tdAmeritradeSetting = options.Value.ClientSettings.TdAmeritrade;
         }
 
         public async Task<TdAmeritradeLastPriceResultModel> GetLastPricesAsync(IEnumerable<string> tickers)
@@ -29,7 +29,7 @@ namespace IM.Services.Companies.Prices.Api
             if (tickers is null)
                 throw new NullReferenceException("tickers is null");
 
-            StringBuilder urlsb = new($"https://{settings.Host}/v1/marketdata/quotes?apikey={settings.ApiKey}&symbol=");
+            StringBuilder urlsb = new($"https://{tdAmeritradeSetting.Host}/v1/marketdata/quotes?apikey={tdAmeritradeSetting.ApiKey}&symbol=");
 
             foreach (var ticker in tickers)
                 urlsb.Append($"{ticker}%2C");
@@ -43,7 +43,7 @@ namespace IM.Services.Companies.Prices.Api
         public async Task<TdAmeritradeHistoryPriceResultModel> GetLastYearPricesAsync(string ticker)
         {
             ticker = ticker.ToUpperInvariant();
-            string url = $"https://{settings.Host}/v1/marketdata/{ticker}/pricehistory?apikey={settings.ApiKey}&periodType=year&period=1&frequencyType=daily&frequency=1&needExtendedHoursData=false";
+            string url = $"https://{tdAmeritradeSetting.Host}/v1/marketdata/{ticker}/pricehistory?apikey={tdAmeritradeSetting.ApiKey}&periodType=year&period=1&frequencyType=daily&frequency=1&needExtendedHoursData=false";
             var data = await httpClient.GetFromJsonAsync<TdAmeritradeHistoryPriceData>(url);
             
             return new(data, ticker);

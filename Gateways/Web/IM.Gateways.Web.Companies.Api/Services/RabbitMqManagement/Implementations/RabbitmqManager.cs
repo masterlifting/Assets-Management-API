@@ -2,7 +2,8 @@
 using IM.Gateways.Web.Companies.Api.Models.Rabbit;
 using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Interfaces;
 using IM.Gateways.Web.Companies.Api.Settings;
-using IM.Gateways.Web.Companies.Api.Settings.Rabbitmq;
+using IM.Gateways.Web.Companies.Api.Settings.Connection;
+using IM.Gateways.Web.Companies.Api.Settings.Mq;
 
 using Microsoft.Extensions.Options;
 
@@ -15,31 +16,45 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Implementati
 {
     public class RabbitmqManager : IRabbitmqManager
     {
-        private readonly RabbitmqSettings settingsRabbitmq;
+        private readonly ConnectionModel mqConnection;
+        private readonly QueueModel queueCompaniesPrices;
+        private readonly QueueModel queueCompaniesReports;
+        private readonly QueueModel queueAnalyzer;
+
         private readonly IConnection connection;
         private readonly IModel channel;
 
         public RabbitmqManager(IOptions<ServiceSettings> options)
         {
-            settingsRabbitmq = options.Value.RabbitmqSettings;
+            mqConnection = new SettingsConverter<ConnectionModel>(options.Value.ConnectionStrings.Mq).Model;
+            queueCompaniesPrices = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueCompaniesPrices).Model;
+            queueCompaniesReports = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueCompaniesReports).Model;
+            queueAnalyzer = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueAnalyzer).Model;
 
-            var factory = new ConnectionFactory() { HostName = settingsRabbitmq.Host, UserName = settingsRabbitmq.UserName, Password = settingsRabbitmq.Password };
+            var factory = new ConnectionFactory()
+            {
+                HostName = mqConnection.Server,
+                UserName = mqConnection.UserId,
+                Password = mqConnection.Password
+            };
+
             connection = factory.CreateConnection();
             channel = connection.CreateModel();
+            
             channel.QueueDeclare(
-                    settingsRabbitmq.QueueCompaniesPrices.Name
+                    queueCompaniesPrices.Name
                     , false
                     , false
                     , false
                     , null);
             channel.QueueDeclare(
-                   settingsRabbitmq.QueueCompaniesReports.Name
+                   queueCompaniesReports.Name
                     , false
                     , false
                     , false
                     , null);
             channel.QueueDeclare(
-                    settingsRabbitmq.QueueAnalyzer.Name
+                    queueAnalyzer.Name
                     , false
                     , false
                     , false
@@ -62,7 +77,17 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Implementati
 
                 channel.BasicPublish(
                     ""
-                    , settingsRabbitmq.QueueCompaniesPrices.Name
+                    , queueCompaniesPrices.Name
+                    , null
+                    , body);
+                channel.BasicPublish(
+                    ""
+                    , queueCompaniesReports.Name
+                    , null
+                    , body);
+                channel.BasicPublish(
+                    ""
+                    , queueAnalyzer.Name
                     , null
                     , body);
 

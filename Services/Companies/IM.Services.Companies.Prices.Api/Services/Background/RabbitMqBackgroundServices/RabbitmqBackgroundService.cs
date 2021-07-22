@@ -1,6 +1,7 @@
 ﻿
 using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
 using IM.Services.Companies.Prices.Api.Settings;
+using IM.Services.Companies.Prices.Api.Settings.Connection;
 using IM.Services.Companies.Prices.Api.Settings.Mq;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -19,8 +20,8 @@ namespace IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroun
 {
     public class RabbitmqBackgroundService : BackgroundService
     {
-        private readonly MqConnectionSettings mqConnection;
-        private readonly MqQueueSettings queueCompaniesPrices;
+        private readonly ConnectionModel mqConnection;
+        private readonly QueueModel queueCompaniesPrices;
 
         private readonly IServiceProvider services;
         private readonly IConnection connection;
@@ -29,8 +30,8 @@ namespace IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroun
         {
             this.services = services;
 
-            mqConnection = new MqConnectionSettingsBuilder(options.Value.ConnectionStrings.MqConnectionString).ConnectionSettings;
-            queueCompaniesPrices = options.Value.QueueCompaniesPrices;
+            mqConnection = new SettingsConverter<ConnectionModel>(options.Value.ConnectionStrings.Mq).Model;
+            queueCompaniesPrices = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueCompaniesPrices).Model;
 
             var factory = new ConnectionFactory()
             {

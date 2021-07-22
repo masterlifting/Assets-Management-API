@@ -1,11 +1,13 @@
-using IM.Services.Companies.Reports.Api.Settings.Rabbitmq;
-using IM.Services.Companies.Reports.Api.Settings.Reports.Investing;
+using IM.Services.Companies.Reports.Api.Settings.Client;
+using IM.Services.Companies.Reports.Api.Settings.Connection;
+using IM.Services.Companies.Reports.Api.Settings.Mq;
 
 namespace IM.Services.Companies.Reports.Api.Settings
 {
     public class ServiceSettings
     {
-        public InvestingSettings InvestingSettings { get; set; }
-        public RabbitmqSettings RabbitmqSettings { get; set; }
+        public ConnectionStrings ConnectionStrings { get; set; }
+        public ClientSettings ClientSettings { get; set; }
+        public MqSettings MqSettings { get; set; }
     }
 }

@@ -1,5 +1,7 @@
-using IM.Services.Companies.Reports.Api.Services.Background;
+using IM.Services.Companies.Reports.Api.Services.Background.ReportUpdaterBackgroundServices.Interfaces;
+
 using Microsoft.AspNetCore.Mvc;
+
 using System.Threading.Tasks;
 
 namespace IM.Services.Companies.Reports.Api.Controllers

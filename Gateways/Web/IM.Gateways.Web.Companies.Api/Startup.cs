@@ -32,7 +32,8 @@ namespace IM.Gateways.Web.Companies.Api
 
             services.AddDbContext<GatewaysContext>(provider =>
             {
-                provider.UseNpgsql(Configuration["ConnectionString"]);
+                //todo: connection string to improve
+                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
             });
 
             services.AddControllers();

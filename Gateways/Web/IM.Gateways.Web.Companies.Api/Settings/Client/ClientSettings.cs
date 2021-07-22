@@ -1,8 +1,9 @@
 ﻿namespace IM.Gateways.Web.Companies.Api.Settings.Client
 {
-    public class ClientSettings : BaseServiceSettings
+    public class ClientSettings
     {
-        public string Sсhema { get; set; } = null!;
-        public int Port { get; set; }
+        public HostModel ClientCompaniesPrices { get; set; } = null!;
+        public HostModel ClientCompaniesReports { get; set; } = null!;
+        public HostModel ClientAnalyzer { get; set; } = null!;
     }
 }

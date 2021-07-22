@@ -28,28 +28,28 @@ services:
       - ${MQ_LOG}:/var/log/rabbitmq/log
   
 
-  # gateways_web_companies:
-  #   container_name: gateways_web_companies
-  #   build: ./Gateways/Web/IM.Gateways.Web.Companies.Api/
-  #   restart: always
-  #   ports:
-  #     - 2101:2101
-  #     # - 21011:21011
-  #   environment:
-  #     - ASPNETCORE_URLS=http://+:2101
-  #     # - ASPNETCORE_URLS=https://+:21011;http://+:2101
-  #     - ConnectionString=Server=postgresql;Port=5432;Database=CompanyGateways;UserId=${DB_USERID};Password=${DB_PASSWORD}
-  #     - ServiceSettings__ClientCompaniesPricesSettings=Sсhema=http;Host=services_companies_prices;Port=3101;
-  #     - ServiceSettings__ClientCompaniesReportsSettings=Sсhema=http;Host=services_companies_reports;Port=3102;
-  #     - ServiceSettings__ClientAnalyzerSettings=Sсhema=http;Host=services_analyzer;Port=3200;
-  #     - ServiceSettings__RabbitmqSettings=Host=rabbitmq;UserName=${MQ_USER};Password=${MQ_PASSWORD};
-  #     - ServiceSettings__RabbitmqSettings__QueueCompaniesPrices=Name=${QUEUENAME_COMPANIES_PRICESSERVICE};
-  #     - ServiceSettings__RabbitmqSettings__QueueCompaniesReports=Name=${QUEUENAME_COMPANIES_REPORTSSERVICE};
-  #     - ServiceSettings__RabbitmqSettings__QueueAnalyzer=Name=${QUEUENAME_ANALYZERSERVICE};
-  #   depends_on:
-  #     - services_companies_prices
-  #     - services_companies_reports
-  #     - services_analyzer
+  gateways_web_companies:
+    container_name: gateways_web_companies
+    build: ./Gateways/Web/IM.Gateways.Web.Companies.Api/
+    restart: always
+    ports:
+      - 2101:2101
+      # - 21011:21011
+    environment:
+      - ASPNETCORE_URLS=http://+:2101
+      # - ASPNETCORE_URLS=https://+:21011;http://+:2101
+      - ServiceSettings__ConnectionStrings__Db=Server=postgresql;Port=5432;Database=CompanyGateways;UserId=${DB_USERID};Password=${DB_PASSWORD}
+      - ServiceSettings__ConnectionStrings__Mq=Server=rabbitmq;UserId=${MQ_USER};Password=${MQ_PASSWORD}
+      - ServiceSettings__ClientSettings__ClientCompaniesPrices__Host=services_companies_prices
+      - ServiceSettings__ClientSettings__ClientCompaniesReports__Host=services_companies_reports
+      - ServiceSettings__ClientSettings__ClientAnalyzer__Host=services_analyzer
+      - ServiceSettings__MqSettings__QueueCompaniesPrices=Name=${QUEUENAME_COMPANIES_PRICESSERVICE}
+      - ServiceSettings__MqSettings__QueueCompaniesReports=Name=${QUEUENAME_COMPANIES_REPORTSSERVICE}
+      - ServiceSettings__MqSettings__QueueAnalyzer=Name=${QUEUENAME_ANALYZERSERVICE}
+    depends_on:
+      - services_companies_prices
+      - services_companies_reports
+      - services_analyzer
 
   services_companies_prices:
     container_name: services_companies_prices
@@ -59,43 +59,43 @@ services:
       - 3101:3101
     environment:
       - ASPNETCORE_URLS=http://+:3101
-      - ServiceSettings__ConnectionStrings__DbConnectionString=Server=postgresql;Port=5432;Database=CompanyPrices;UserId=${DB_USERID};Password=${DB_PASSWORD}
-      - ServiceSettings__ConnectionStrings__MqConnectionString=Server=rabbitmq;UserId=${MQ_USER};Password=${MQ_PASSWORD}
-      - ServiceSettings__QueueCompaniesPrices__Name=${QUEUENAME_COMPANIES_PRICESSERVICE}
-      - ServiceSettings__TdAmeritradeSettings__ApiKey=${DTAMERITRADE_APIKEY}
+      - ServiceSettings__ConnectionStrings__Db=Server=postgresql;Port=5432;Database=CompanyPrices;UserId=${DB_USERID};Password=${DB_PASSWORD}
+      - ServiceSettings__ConnectionStrings__Mq=Server=rabbitmq;UserId=${MQ_USER};Password=${MQ_PASSWORD}
+      - ServiceSettings__MqSettings__QueueCompaniesPrices=Name=${QUEUENAME_COMPANIES_PRICESSERVICE}
+      - ServiceSettings__ClientSettings__TdAmeritrade__ApiKey=${DTAMERITRADE_APIKEY}
     depends_on:
       - postgresql
       - rabbitmq
 
-  # services_companies_reports:
-  #   container_name: services_companies_reports
-  #   build: ./Services/Companies/IM.Services.Companies.Reports.Api/
-  #   restart: always
-  #   ports:
-  #     - 3102:3102
-  #   environment:
-  #     - ASPNETCORE_URLS=http://+:3102
-  #     - ConnectionString=Server=postgresql;Port=5432;Database=CompanyReports;UserId=${DB_USERID};Password=${DB_PASSWORD}
-  #     - ServiceSettings__RabbitmqSettings=Host=rabbitmq;UserName=${MQ_USER};Password=${MQ_PASSWORD};
-  #     - ServiceSettings__RabbitmqSettings__QueueCompaniesReports=Name=${QUEUENAME_COMPANIES_REPORTSSERVICE};
-  #   depends_on:
-  #     - postgresql
-  #     - rabbitmq
+  services_companies_reports:
+    container_name: services_companies_reports
+    build: ./Services/Companies/IM.Services.Companies.Reports.Api/
+    restart: always
+    ports:
+      - 3102:3102
+    environment:
+      - ASPNETCORE_URLS=http://+:3102
+      - ServiceSettings:ConnectionStrings:Db=Server=postgresql;Port=5432;Database=CompanyReports;UserId=${DB_USERID};Password=${DB_PASSWORD}
+      - ServiceSettings:ConnectionStrings:Mq=Server=rabbitmq;UserId=${MQ_USER};Password=${MQ_PASSWORD}
+      - ServiceSettings:MqSettings:QueueCompaniesReports=Name=${QUEUENAME_COMPANIES_REPORTSSERVICE}
+    depends_on:
+      - postgresql
+      - rabbitmq
 
-  # services_analyzer:
-    # container_name: services_analyzer
-    # build: ./Services/IM.Services.Analyzer.Api/
-    # restart: always
-    # ports:
-    #   - 3200:3200
-    # environment:
-    #   - ASPNETCORE_URLS=http://+:3200
-    #   - ConnectionString=Server=postgresql;Port=5432;Database=Analyzer;UserId=${DB_USERID};Password=${DB_PASSWORD}
-    #   - ServiceSettings__RabbitmqSettings=Host=rabbitmq;UserName=${MQ_USER};Password=${MQ_PASSWORD};
-    #   - ServiceSettings__RabbitmqSettings__QueueAnalyzer=Name=${QUEUENAME_ANALYZERSERVICE};
-    # depends_on:
-    #   - postgresql
-    #   - rabbitmq
+  services_analyzer:
+    container_name: services_analyzer
+    build: ./Services/IM.Services.Analyzer.Api/
+    restart: always
+    ports:
+      - 3200:3200
+    environment:
+      - ASPNETCORE_URLS=http://+:3200
+      - ServiceSettings__ConnectionStrings__Db=Server=postgresql;Port=5432;Database=Analyzer;UserId=${DB_USERID};Password=${DB_PASSWORD}
+      - ServiceSettings__ConnectionStrings__Mq=Server=rabbitmq;UserId=${MQ_USER};Password=${MQ_PASSWORD}
+      - ServiceSettings__MqSettings__QueueAnalyzer=Name=${QUEUENAME_ANALYZERSERVICE}
+    depends_on:
+      - postgresql
+      - rabbitmq
 
   # # traefik:
   #   image: traefik:v2.0
