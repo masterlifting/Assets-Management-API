@@ -6,17 +6,18 @@ namespace IM.Gateways.Web.Companies.Api.Settings
 {
     public class SettingsConverter<T> where T : class
     {
-        private Dictionary<string, string> environments;
-        public SettingsConverter(string environmentValue)
+        public SettingsConverter(string? environmentValue)
         {
             if (environmentValue is null)
                 throw new NullReferenceException("environment value is not set");
 
             Model = Activator.CreateInstance<T>();
-            Convert(environmentValue, Model);
+            SettingsConverter<T>.Convert(environmentValue, Model);
         }
-        private void Convert(string environmentValue, T model)
+        private static void Convert(string environmentValue, T model)
         {
+            Dictionary<string, string> environments;
+
             try
             {
                 environments = environmentValue
@@ -35,8 +36,8 @@ namespace IM.Gateways.Web.Companies.Api.Settings
             {
                 string propName = string.Intern(modelProperties[i].Name);
 
-                if (environments.TryGetValue(propName, out string value))
-                    model.GetType().GetProperty(propName).SetValue(model, value);
+                if (environments.TryGetValue(propName, out string? value))
+                    model.GetType()?.GetProperty(propName)?.SetValue(model, value);
             }
         }
         public T Model { get; }

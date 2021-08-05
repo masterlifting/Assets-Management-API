@@ -1,7 +1,5 @@
-﻿using IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
-using IM.Services.Analyzer.Api.Settings;
+﻿using IM.Services.Analyzer.Api.Settings;
 using IM.Services.Analyzer.Api.Settings.Connection;
-using IM.Services.Analyzer.Api.Settings.Mq;
 using IM.Services.Companies.Prices.Api.Settings;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -21,17 +19,17 @@ namespace IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundService
     public class RabbitmqBackgroundService : BackgroundService
     {
         private readonly ConnectionModel mqConnection;
-        private readonly QueueModel queueAnalyzer;
 
         private readonly IServiceProvider services;
         private readonly IConnection connection;
         private readonly IModel channel;
+        private readonly string queueName;
+
         public RabbitmqBackgroundService(IServiceProvider services, IOptions<ServiceSettings> options)
         {
             this.services = services;
 
             mqConnection = new SettingsConverter<ConnectionModel>(options.Value.ConnectionStrings.Mq).Model;
-            queueAnalyzer = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueAnalyzer).Model;
 
             var factory = new ConnectionFactory()
             {
@@ -41,12 +39,10 @@ namespace IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundService
             };
             connection = factory.CreateConnection();
             channel = connection.CreateModel();
-            channel.QueueDeclare(
-                    queueAnalyzer.Name
-                    , false
-                    , false
-                    , false
-                    , null);
+
+            channel.ExchangeDeclare("crud", ExchangeType.Topic);
+            queueName = channel.QueueDeclare().QueueName;
+            channel.QueueBind(queueName, "crud", "analyzer.*.ticker");
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -59,19 +55,16 @@ namespace IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundService
             }
 
             var consumer = new EventingBasicConsumer(channel);
-
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-
+                var data = Encoding.UTF8.GetString(ea.Body.ToArray());
                 using var scope = services.CreateScope();
-                var manager = scope.ServiceProvider.GetRequiredService<IRabbitMqManager>();
 
-                manager.CreateTickerAsync(message);
+                if (await RabbitmqActionService.GetCrudActionResultAsync(data, ea.RoutingKey, scope))
+                    channel.BasicAck(ea.DeliveryTag, false);
             };
 
-            channel.BasicConsume(queueAnalyzer.Name, true, consumer);
+            channel.BasicConsume(queueName, false, consumer);
 
             return Task.CompletedTask;
         }

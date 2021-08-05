@@ -7,5 +7,11 @@ namespace IM.Services.Companies.Reports.Api.DataAccess
             official = 1,
             investing = 2
         }
+        public enum RepositoryActionType
+        {
+            create,
+            update,
+            delete
+        }
     }
 }

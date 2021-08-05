@@ -1,9 +1,9 @@
 ﻿using IM.Gateways.Web.Companies.Api.Models.Dto.State;
-using IM.Gateways.Web.Companies.Api.Models.Rabbit;
+using IM.Gateways.Web.Companies.Api.Models.Rabbit.CompaniesReports;
+using IM.Gateways.Web.Companies.Api.Models.Rabbit.Ticker;
 using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Interfaces;
 using IM.Gateways.Web.Companies.Api.Settings;
 using IM.Gateways.Web.Companies.Api.Settings.Connection;
-using IM.Gateways.Web.Companies.Api.Settings.Mq;
 
 using Microsoft.Extensions.Options;
 
@@ -11,25 +11,22 @@ using RabbitMQ.Client;
 
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Implementations
 {
     public class RabbitmqManager : IRabbitmqManager
     {
         private readonly ConnectionModel mqConnection;
-        private readonly QueueModel queueCompaniesPrices;
-        private readonly QueueModel queueCompaniesReports;
-        private readonly QueueModel queueAnalyzer;
 
         private readonly IConnection connection;
         private readonly IModel channel;
 
+        private readonly string queueName;
+
         public RabbitmqManager(IOptions<ServiceSettings> options)
         {
             mqConnection = new SettingsConverter<ConnectionModel>(options.Value.ConnectionStrings.Mq).Model;
-            queueCompaniesPrices = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueCompaniesPrices).Model;
-            queueCompaniesReports = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueCompaniesReports).Model;
-            queueAnalyzer = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueAnalyzer).Model;
 
             var factory = new ConnectionFactory()
             {
@@ -37,72 +34,115 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Implementati
                 UserName = mqConnection.UserId,
                 Password = mqConnection.Password
             };
-
             connection = factory.CreateConnection();
             channel = connection.CreateModel();
-            
-            channel.QueueDeclare(
-                    queueCompaniesPrices.Name
-                    , false
-                    , false
-                    , false
-                    , null);
-            channel.QueueDeclare(
-                   queueCompaniesReports.Name
-                    , false
-                    , false
-                    , false
-                    , null);
-            channel.QueueDeclare(
-                    queueAnalyzer.Name
-                    , false
-                    , false
-                    , false
-                    , null);
-        }
-    
-        public bool CreateCompany(CompanyModel company)
-        {
-            bool result = false;
 
-            if (company.PriceSourceTypeId.HasValue)
+            channel.ExchangeDeclare("crud", ExchangeType.Topic);
+            queueName = channel.QueueDeclare().QueueName;
+            channel.QueueBind(queueName, "crud", "*.*.ticker");
+            channel.QueueBind(queueName, "crud", "companiesreports.*.reportsource");
+        }
+
+        public async Task CreateCompanyAsync(CompanyModel company)
+        {
+            var analyzerTicker = JsonSerializer.Serialize(new AnalyzerTicker { Name = company.Ticker });
+            var companiesPricesTicker = JsonSerializer.Serialize(new CompaniesPricesTicker { Name = company.Ticker, PriceSourceTypeId = company.PriceSourceTypeId });
+            var companiesReportsTicker = JsonSerializer.Serialize(new CompaniesReportsTicker { Name = company.Ticker });
+
+            await Task.WhenAll(new Task[]
             {
-                var ticker = JsonSerializer.Serialize(new CompaniesPricesTicker
+                Task.Run(() => channel.BasicPublish(
+                "crud"
+                , "companiesprices.create.ticker"
+                , null
+                , Encoding.UTF8.GetBytes(companiesPricesTicker))),
+
+                Task.Run(() => channel.BasicPublish(
+                "crud"
+                , "companiesreports.create.ticker"
+                , null
+                , Encoding.UTF8.GetBytes(companiesReportsTicker))),
+
+                Task.Run(() => channel.BasicPublish(
+                "crud"
+                , "analyzer.create.ticker"
+                , null
+                , Encoding.UTF8.GetBytes(analyzerTicker)))
+            });
+
+            CreateCompaniesReportsReportSource(company);
+
+            void CreateCompaniesReportsReportSource(CompanyModel company)
+            {
+                foreach (var item in company.ReportSources)
                 {
-                    Name = company.Ticker,
-                    PriceSourceTypeId = company.PriceSourceTypeId.Value
+                    var reportSource = JsonSerializer.Serialize(new CompaniesReportsReportSource
+                    {
+                        IsActive = item.IsActive,
+                        ReportSourceTypeId = item.ReportSourceTypeId,
+                        Value = item.Value,
+                        TickerName = company.Ticker
+                    });
+
+                    channel.BasicPublish(
+                    "crud"
+                    , "companiesreports.create.reportsource"
+                    , null
+                    , Encoding.UTF8.GetBytes(reportSource));
+                }
+            }
+        }
+        public async Task UpdateCompanyAsync(CompanyModel company)
+        {
+            var companiesPricesTicker = JsonSerializer.Serialize(new CompaniesPricesTicker { Name = company.Ticker, PriceSourceTypeId = company.PriceSourceTypeId });
+
+            await Task.Run(() => channel.BasicPublish(
+                 "crud"
+                 , "companiesprices.update.ticker"
+                 , null
+                 , Encoding.UTF8.GetBytes(companiesPricesTicker)));
+
+
+            foreach (var item in company.ReportSources)
+            {
+                var reportSource = JsonSerializer.Serialize(new CompaniesReportsReportSource
+                {
+                    Id = item.Id,
+                    IsActive = item.IsActive,
+                    ReportSourceTypeId = item.ReportSourceTypeId,
+                    Value = item.Value,
+                    TickerName = company.Ticker
                 });
 
-                var body = Encoding.UTF8.GetBytes(ticker);
-
                 channel.BasicPublish(
-                    ""
-                    , queueCompaniesPrices.Name
-                    , null
-                    , body);
-                channel.BasicPublish(
-                    ""
-                    , queueCompaniesReports.Name
-                    , null
-                    , body);
-                channel.BasicPublish(
-                    ""
-                    , queueAnalyzer.Name
-                    , null
-                    , body);
-
-                result = true;
+                "crud"
+                , "companiesreports.update.reportsource"
+                , null
+                , Encoding.UTF8.GetBytes(reportSource));
             }
+        }
+        public async Task DeleteCompanyAsync(string ticker)
+        {
+            await Task.WhenAll(new Task[]
+           {
+                Task.Run(() => channel.BasicPublish(
+                "crud"
+                , "companiesprices.delete.ticker"
+                , null
+                , Encoding.UTF8.GetBytes(ticker))),
 
-            return result;
-        }
-        public bool EditCompany(CompanyModel company)
-        {
-            throw new System.NotImplementedException();
-        }
-        public bool DeleteCompany(string ticker)
-        {
-            throw new System.NotImplementedException();
+                Task.Run(() => channel.BasicPublish(
+                "crud"
+                , "companiesreports.delete.ticker"
+                , null
+                , Encoding.UTF8.GetBytes(ticker))),
+
+                Task.Run(() => channel.BasicPublish(
+                "crud"
+                , "analyzer.delete.ticker"
+                , null
+                , Encoding.UTF8.GetBytes(ticker)))
+           });
         }
     }
 }

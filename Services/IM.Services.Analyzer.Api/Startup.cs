@@ -2,8 +2,6 @@ using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.Services.Agregators.Implementations;
 using IM.Services.Analyzer.Api.Services.Agregators.Interfaces;
 using IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundServices;
-using IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundServices.Implementations;
-using IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
 using IM.Services.Analyzer.Api.Settings;
 
 using Microsoft.AspNetCore.Builder;
@@ -37,7 +35,6 @@ namespace IM.Services.Analyzer.Api
             services.AddScoped<IRatingDtoAgregator, RatingDtoAgregator>();
             services.AddScoped<IRecommendationDtoAgregator, RecommendationDtoAgregator>();
 
-            services.AddScoped<IRabbitMqManager, RabbitMqManager>();
             services.AddHostedService<RabbitmqBackgroundService>();
         }
 

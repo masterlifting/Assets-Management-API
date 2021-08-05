@@ -4,8 +4,6 @@ using IM.Services.Companies.Prices.Api.Services.Agregators.Interfaces;
 using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Implementations;
 using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Interfaces;
 using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices;
-using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices.Implementations;
-using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
 using IM.Services.Companies.Prices.Api.Services.HealthCheck;
 using IM.Services.Companies.Prices.Api.Services.Mapper;
 using IM.Services.Companies.Prices.Api.Settings;
@@ -56,7 +54,6 @@ namespace IM.Services.Companies.Prices.Api
             services.AddScoped<IPricesDtoAgregator, PricesDtoAgregator>();
             services.AddScoped<IPriceUpdater, PriceUpdater>();
 
-            services.AddScoped<IRabbitMqManager, RabbitMqManager>();
             services.AddHostedService<RabbitmqBackgroundService>();
         }
 

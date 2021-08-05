@@ -35,8 +35,8 @@ namespace IM.Services.Companies.Prices.Api.Settings
             {
                 string propName = string.Intern(modelProperties[i].Name);
 
-                if (environments.TryGetValue(propName, out string value))
-                    model.GetType().GetProperty(propName).SetValue(model, value);
+                if (environments.TryGetValue(propName, out string? value))
+                    model.GetType()?.GetProperty(propName)?.SetValue(model, value);
             }
         }
         public T Model { get; }

@@ -1,8 +1,5 @@
-﻿
-using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
-using IM.Services.Companies.Prices.Api.Settings;
+﻿using IM.Services.Companies.Prices.Api.Settings;
 using IM.Services.Companies.Prices.Api.Settings.Connection;
-using IM.Services.Companies.Prices.Api.Settings.Mq;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -21,17 +18,19 @@ namespace IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroun
     public class RabbitmqBackgroundService : BackgroundService
     {
         private readonly ConnectionModel mqConnection;
-        private readonly QueueModel queueCompaniesPrices;
+        //private readonly QueueModel queueCompaniesPrices;
 
         private readonly IServiceProvider services;
         private readonly IConnection connection;
         private readonly IModel channel;
+        private readonly string queueName;
+
         public RabbitmqBackgroundService(IServiceProvider services, IOptions<ServiceSettings> options)
         {
             this.services = services;
 
             mqConnection = new SettingsConverter<ConnectionModel>(options.Value.ConnectionStrings.Mq).Model;
-            queueCompaniesPrices = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueCompaniesPrices).Model;
+            //queueCompaniesPrices = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueCompaniesPrices).Model;
 
             var factory = new ConnectionFactory()
             {
@@ -41,12 +40,10 @@ namespace IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroun
             };
             connection = factory.CreateConnection();
             channel = connection.CreateModel();
-            channel.QueueDeclare(
-                    queueCompaniesPrices.Name
-                    , false
-                    , false
-                    , false
-                    , null);
+
+            channel.ExchangeDeclare("crud", ExchangeType.Topic);
+            queueName = channel.QueueDeclare().QueueName;
+            channel.QueueBind(queueName, "crud", "companiesprices.*.ticker");
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -59,19 +56,16 @@ namespace IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroun
             }
 
             var consumer = new EventingBasicConsumer(channel);
-
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-
+                var data = Encoding.UTF8.GetString(ea.Body.ToArray());
                 using var scope = services.CreateScope();
-                var manager = scope.ServiceProvider.GetRequiredService<IRabbitMqManager>();
 
-                manager.CreateTickerAsync(message);
+                if (await RabbitmqActionService.GetCrudActionResultAsync(data, ea.RoutingKey, scope))
+                    channel.BasicAck(ea.DeliveryTag, false);
             };
 
-            channel.BasicConsume(queueCompaniesPrices.Name, true, consumer);
+            channel.BasicConsume(queueName, false, consumer);
 
             return Task.CompletedTask;
         }

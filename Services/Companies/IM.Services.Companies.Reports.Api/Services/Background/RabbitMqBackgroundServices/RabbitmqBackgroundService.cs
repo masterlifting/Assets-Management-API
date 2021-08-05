@@ -1,7 +1,4 @@
-﻿
-using IM.Services.Companies.Reports.Api.Services.Background.RabbitMqBackgroundServices.Interfaces;
-using IM.Services.Companies.Reports.Api.Settings;
-using IM.Services.Companies.Reports.Api.Settings.Mq;
+﻿using IM.Services.Companies.Reports.Api.Settings;
 
 using M.Services.Companies.Reports.Api.Settings.Connection;
 
@@ -22,17 +19,17 @@ namespace IM.Services.Companies.Reports.Api.Services.Background.RabbitMqBackgrou
     public class RabbitmqBackgroundService : BackgroundService
     {
         private readonly ConnectionModel mqConnection;
-        private readonly QueueModel queueCompaniesReports;
 
         private readonly IServiceProvider services;
         private readonly IConnection connection;
         private readonly IModel channel;
+        private readonly string queueName;
+
         public RabbitmqBackgroundService(IServiceProvider services, IOptions<ServiceSettings> options)
         {
             this.services = services;
 
             mqConnection = new SettingsConverter<ConnectionModel>(options.Value.ConnectionStrings.Mq).Model;
-            queueCompaniesReports = new SettingsConverter<QueueModel>(options.Value.MqSettings.QueueCompaniesReports).Model;
 
             var factory = new ConnectionFactory()
             {
@@ -42,12 +39,11 @@ namespace IM.Services.Companies.Reports.Api.Services.Background.RabbitMqBackgrou
             };
             connection = factory.CreateConnection();
             channel = connection.CreateModel();
-            channel.QueueDeclare(
-                    queueCompaniesReports.Name
-                    , false
-                    , false
-                    , false
-                    , null);
+
+            channel.ExchangeDeclare("crud", ExchangeType.Topic);
+            queueName = channel.QueueDeclare().QueueName;
+            channel.QueueBind(queueName, "crud", "companiesreports.*.ticker");
+            channel.QueueBind(queueName, "crud", "companiesreports.*.reportsource");
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -60,19 +56,28 @@ namespace IM.Services.Companies.Reports.Api.Services.Background.RabbitMqBackgrou
             }
 
             var consumer = new EventingBasicConsumer(channel);
-
-            consumer.Received += (model, ea) =>
+            consumer.Received += async (model, ea) =>
             {
-                var body = ea.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-
+                var data = Encoding.UTF8.GetString(ea.Body.ToArray());
                 using var scope = services.CreateScope();
-                var manager = scope.ServiceProvider.GetRequiredService<IRabbitMqManager>();
+                bool result = false;
+                
+                try
+                {
+                    result = await RabbitmqActionService.GetCrudActionResultAsync(data, ea.RoutingKey, scope);
+                }
+                catch (Exception ex)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
 
-                manager.CreateTickerAsync(message);
+                if (result)
+                    channel.BasicAck(ea.DeliveryTag, false);
             };
 
-            channel.BasicConsume(queueCompaniesReports.Name, true, consumer);
+            channel.BasicConsume(queueName, false, consumer);
 
             return Task.CompletedTask;
         }
