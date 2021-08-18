@@ -16,6 +16,7 @@ namespace IM.Services.Companies.Reports.Api.DataAccess
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Report>().HasKey(x => new { x.ReportSourceId, x.Year, x.Quarter });
+            modelBuilder.Entity<ReportSource>().HasOne(x => x.Ticker).WithMany(x => x.ReportSources).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<ReportSource>().HasIndex(x => x.IsActive);
             modelBuilder.Entity<ReportSourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<ReportSourceType>().HasData(new ReportSourceType[]

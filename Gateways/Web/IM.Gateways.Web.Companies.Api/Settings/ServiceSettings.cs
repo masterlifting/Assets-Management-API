@@ -8,6 +8,6 @@ namespace IM.Gateways.Web.Companies.Api.Settings
     {
         public ConnectionStrings ConnectionStrings { get; set; } = null!;
         public ClientSettings ClientSettings { get; set; } = null!;
-        public MqSettings MqSettings { get; set; } = null!;
+        public Exchange[] Exchanges { get; set; } = null!;
     }
 }

@@ -1,4 +1,6 @@
 using IM.Services.Companies.Prices.Api.DataAccess;
+using IM.Services.Companies.Prices.Api.DataAccess.Entities;
+using IM.Services.Companies.Prices.Api.DataAccess.Repository;
 using IM.Services.Companies.Prices.Api.Services.Agregators.Implementations;
 using IM.Services.Companies.Prices.Api.Services.Agregators.Interfaces;
 using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Implementations;
@@ -53,6 +55,9 @@ namespace IM.Services.Companies.Prices.Api
             services.AddScoped<IPriceMapper, PriceMapper>();
             services.AddScoped<IPricesDtoAgregator, PricesDtoAgregator>();
             services.AddScoped<IPriceUpdater, PriceUpdater>();
+
+            services.AddScoped(typeof(EntityRepository<>));
+            services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
 
             services.AddHostedService<RabbitmqBackgroundService>();
         }

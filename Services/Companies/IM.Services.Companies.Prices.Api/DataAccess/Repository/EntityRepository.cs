@@ -6,18 +6,18 @@ using static IM.Services.Companies.Prices.Api.DataAccess.DataEnums;
 
 namespace IM.Services.Companies.Prices.Api.DataAccess.Repository
 {
-    public class EntityRepository<TEntity, TId> where TEntity : class
+    public class EntityRepository<T> where T : class
     {
         private readonly PricesContext context;
-        private readonly IEntityChecker<TEntity> checker;
+        private readonly IEntityChecker<T> checker;
 
-        public EntityRepository(PricesContext context, IEntityChecker<TEntity> checker)
+        public EntityRepository(PricesContext context, IEntityChecker<T> checker)
         {
             this.context = context;
             this.checker = checker;
         }
 
-        public async Task<bool> AddAsync(TEntity entity, string info)
+        public async Task<bool> CreateAsync(T entity, string info)
         {
             if (checker.WithError(entity))
                 return false;
@@ -25,46 +25,41 @@ namespace IM.Services.Companies.Prices.Api.DataAccess.Repository
             if (await checker.IsAlreadyAsync(entity))
                 return true;
 
-            await context.Set<TEntity>().AddAsync(entity);
+            await context.Set<T>().AddAsync(entity);
 
             return await SaveAsync(info, RepositoryActionType.create);
         }
-        public async Task<bool> EditAsync(TId entityId, TEntity entity, string info)
+        public async Task<bool> UpdateAsync(T entity, string info)
         {
             if (checker.WithError(entity))
                 return false;
 
-            var ctxEntity = await context.Set<TEntity>().FindAsync(entityId);
-            
-            if(ctxEntity is null)
-            {
-                Console.WriteLine($"data to edit not found");
-                return false;
-            }
+            context.Set<T>().Update(entity);
 
-            ctxEntity = entity;
-
-            context.Set<TEntity>().Update(ctxEntity);
-            
             return await SaveAsync(info, RepositoryActionType.update);
         }
-        public async Task<bool> RemoveAsync(TId entityId, string info)
+        public async Task<bool> DeleteAsync<TId>(TId id, string info)
         {
-            var ctxEntity = await context.Set<TEntity>().FindAsync(entityId);
+            var ctxEntity = await context.Set<T>().FindAsync(id);
 
-            if (ctxEntity is not null)
-                context.Set<TEntity>().Remove(ctxEntity);
+            if (ctxEntity is null)
+            {
+                Console.WriteLine($"'{info}' to delete not found");
+                return true;
+            }
+
+            context.Set<T>().Remove(ctxEntity);
 
             return await SaveAsync(info, RepositoryActionType.delete);
         }
 
-        public bool TrySerialize(string data, out TEntity entity)
+        public bool TrySerialize(string data, out T entity)
         {
             entity = null;
 
             try
             {
-                entity = JsonSerializer.Deserialize<TEntity>(data);
+                entity = JsonSerializer.Deserialize<T>(data);
                 return true;
             }
             catch (JsonException ex)
@@ -79,17 +74,31 @@ namespace IM.Services.Companies.Prices.Api.DataAccess.Repository
             {
                 RepositoryActionType.create => "created",
                 RepositoryActionType.update => "updated",
-                _ => "deleted",
+                _ => "deleted"
             };
-
-            if (await context.SaveChangesAsync() > 0)
+            int result = -1;
+            string savingError = "Saving error: ";
+            try
             {
+                result = await context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                savingError += ex.InnerException?.Message ?? ex.Message;
+            }
+
+            if (result >= 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"'{info}' has been {actionName}.");
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return true;
             }
             else
             {
-                Console.WriteLine($"'{info}' has not been {actionName}! Saving error!");
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"'{info}' has not been {actionName}! \n{savingError}");
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return false;
             }
         }

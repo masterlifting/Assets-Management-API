@@ -20,15 +20,6 @@ namespace IM.Services.Analyzer.Api.DataAccess.Repository
             Console.WriteLine($"'{ticker.Name}' is already!");
             return true;
         }
-        public bool WithError(Ticker ticker)
-        {
-            if (ticker is null)
-            {
-                Console.WriteLine("ticker is null");
-                return true;
-            }
-
-            return false;
-        }
+        public bool WithError(Ticker ticker) => false;
     }
 }

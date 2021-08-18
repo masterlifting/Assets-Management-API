@@ -1,4 +1,4 @@
-using IM.Services.Companies.Reports.Api.Services.Background.ReportUpdaterBackgroundServices.Interfaces;
+using IM.Services.Companies.Reports.Api.Services.ReportServices;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,13 +9,13 @@ namespace IM.Services.Companies.Reports.Api.Controllers
     [ApiController, Route("[controller]")]
     public class ServiceController : ControllerBase
     {
-        private readonly IReportUpdater reportUpdater;
-        public ServiceController(IReportUpdater reportUpdater) => this.reportUpdater = reportUpdater;
+        private readonly ReportLoader reportUpdater;
+        public ServiceController(ReportLoader reportUpdater) => this.reportUpdater = reportUpdater;
 
         [HttpPost("update")]
         public async Task<string> UpdateReports()
         {
-            int updatedCount = await reportUpdater.UpdateReportsAsync();
+            int updatedCount = await reportUpdater.LoadReportsAsync();
             return $"updated reports count: {updatedCount}";
         }
     }

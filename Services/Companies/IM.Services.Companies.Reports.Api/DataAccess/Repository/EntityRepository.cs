@@ -1,24 +1,22 @@
 ﻿using System;
-using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 using static IM.Services.Companies.Reports.Api.DataAccess.DataEnums;
 
 namespace IM.Services.Companies.Reports.Api.DataAccess.Repository
 {
-    public class EntityRepository<TEntity, TId> where TEntity : class
+    public class EntityRepository<T> where T : class
     {
         private readonly ReportsContext context;
-        private readonly IEntityChecker<TEntity> checker;
+        private readonly IEntityChecker<T> checker;
 
-        public EntityRepository(ReportsContext context, IEntityChecker<TEntity> checker)
+        public EntityRepository(ReportsContext context, IEntityChecker<T> checker)
         {
             this.context = context;
             this.checker = checker;
         }
 
-        public async Task<bool> CreateAsync(TEntity entity, string info)
+        public async Task<bool> CreateAsync(T entity, string info)
         {
             if (checker.WithError(entity))
                 return false;
@@ -26,70 +24,32 @@ namespace IM.Services.Companies.Reports.Api.DataAccess.Repository
             if (await checker.IsAlreadyAsync(entity))
                 return true;
 
-            await context.Set<TEntity>().AddAsync(entity);
+            await context.Set<T>().AddAsync(entity);
 
             return await SaveAsync(info, RepositoryActionType.create);
         }
-        public async Task<bool> UpdateAsync(TId entityId, TEntity entity, string info)
+        public async Task<bool> UpdateAsync(T entity, string info)
         {
             if (checker.WithError(entity))
                 return false;
 
-            var ctxEntity = await context.Set<TEntity>().FindAsync(entityId);
-
-            if (ctxEntity is null)
-            {
-                Console.WriteLine("data to update not found");
-                return false;
-            }
-            context.Attach(ctxEntity);
-            
-            var a = entity.GetType().GetProperties()
-                .Where(x => x.GetType().IsPrimitive || x.GetType() == typeof(decimal) || x.GetType() == typeof(string))
-                //.Where(x => !x.GetType().IsClass && !x.GetType().IsCollectible)
-                .Select(x => x.Name)
-                .Where(x => !x.Equals("Id"))
-                .ToArray();
-
-            foreach (var prop in entity.GetType().GetProperties()
-                .Where(x => !x.GetType().IsClass && !x.GetType().IsCollectible)
-                .Select(x => x.Name)
-                .Where(x => !x.Equals("Id")))
-            {
-                context.Entry(entity).Property(prop).IsModified = true;
-            }
+            context.Set<T>().Update(entity);
 
             return await SaveAsync(info, RepositoryActionType.update);
         }
-        public async Task<bool> DeleteAsync(TId entityId, string info)
+        public async Task<bool> DeleteAsync<TId>(TId id, string info)
         {
-            var ctxEntity = await context.Set<TEntity>().FindAsync(entityId);
+            var ctxEntity = await context.Set<T>().FindAsync(id);
 
             if (ctxEntity is null)
             {
-                Console.WriteLine("data to delete not found");
-                return false;
-            }
-
-            context.Set<TEntity>().Remove(ctxEntity);
-
-            return await SaveAsync(info, RepositoryActionType.delete);
-        }
-
-        public bool TrySerialize(string data, out TEntity entity)
-        {
-            entity = null;
-
-            try
-            {
-                entity = JsonSerializer.Deserialize<TEntity>(data);
+                Console.WriteLine($"'{info}' to delete not found");
                 return true;
             }
-            catch (JsonException ex)
-            {
-                Console.WriteLine("unserializable! Exception: " + ex.Message);
-                return false;
-            }
+
+            context.Set<T>().Remove(ctxEntity);
+
+            return await SaveAsync(info, RepositoryActionType.delete);
         }
         async Task<bool> SaveAsync(string info, RepositoryActionType actionType)
         {
@@ -107,17 +67,21 @@ namespace IM.Services.Companies.Reports.Api.DataAccess.Repository
             }
             catch (Exception ex)
             {
-                savingError += ex.InnerException.Message;
+                savingError += ex.InnerException?.Message ?? ex.Message;
             }
 
             if (result >= 0)
             {
+                Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"'{info}' has been {actionName}.");
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return true;
             }
             else
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"'{info}' has not been {actionName}! \n{savingError}");
+                Console.ForegroundColor = ConsoleColor.Gray;
                 return false;
             }
         }

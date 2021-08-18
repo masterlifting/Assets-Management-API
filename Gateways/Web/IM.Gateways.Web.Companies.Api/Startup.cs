@@ -4,6 +4,7 @@ using IM.Gateways.Web.Companies.Api.Services.Agregators.Implementations;
 using IM.Gateways.Web.Companies.Api.Services.Agregators.Interfaces;
 using IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Implementations;
 using IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Interfaces;
+using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement;
 using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Implementations;
 using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Interfaces;
 using IM.Gateways.Web.Companies.Api.Settings;
@@ -40,7 +41,9 @@ namespace IM.Gateways.Web.Companies.Api
 
             services.AddScoped<ICompaniesManager, CompaniesManager>();
             services.AddScoped<ICompaniesDtoAgregator, CompaniesDtoAgregator>();
-            services.AddScoped<IRabbitmqManager, RabbitmqManager>();
+            
+            services.AddSingleton<RabbitBuilder>();
+            services.AddSingleton<ICrudExchange, CrudExchange>();
 
             services.AddHttpClient<PricesClient>()
                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(10, retryAttemp => TimeSpan.FromSeconds(Math.Pow(2, retryAttemp))))

@@ -1,4 +1,6 @@
 using IM.Services.Analyzer.Api.DataAccess;
+using IM.Services.Analyzer.Api.DataAccess.Entities;
+using IM.Services.Analyzer.Api.DataAccess.Repository;
 using IM.Services.Analyzer.Api.Services.Agregators.Implementations;
 using IM.Services.Analyzer.Api.Services.Agregators.Interfaces;
 using IM.Services.Analyzer.Api.Services.Background.RabbitMqBackgroundServices;
@@ -34,6 +36,9 @@ namespace IM.Services.Analyzer.Api
             services.AddScoped<ICoefficientDtoAgregator, CoefficientDtoAgregator>();
             services.AddScoped<IRatingDtoAgregator, RatingDtoAgregator>();
             services.AddScoped<IRecommendationDtoAgregator, RecommendationDtoAgregator>();
+
+            services.AddScoped(typeof(EntityRepository<>));
+            services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
 
             services.AddHostedService<RabbitmqBackgroundService>();
         }

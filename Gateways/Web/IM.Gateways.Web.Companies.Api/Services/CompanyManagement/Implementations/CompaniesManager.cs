@@ -12,12 +12,12 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Implementatio
     public class CompaniesManager : ICompaniesManager
     {
         private readonly GatewaysContext context;
-        private readonly IRabbitmqManager rabbitmqManager;
+        private readonly ICrudExchange crudExchange;
 
-        public CompaniesManager(GatewaysContext context, IRabbitmqManager rabbitmqManager)
+        public CompaniesManager(GatewaysContext context, ICrudExchange crudExchange)
         {
             this.context = context;
-            this.rabbitmqManager = rabbitmqManager;
+            this.crudExchange = crudExchange;
         }
 
         public async Task<ResponseModel<string>> CreateCompanyAsync(CompanyModel company)
@@ -26,7 +26,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Implementatio
             var ctxCompany = await context.Companies.FindAsync(company.Ticker);
 
             if (ctxCompany is not null)
-                return new() { Errors = new string[1] { "this is company is already" } };
+                return new() { Errors = new string[1] { "this company is already" } };
 
             string contextResultMessage = "failed";
 
@@ -40,7 +40,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Implementatio
             if (await context.SaveChangesAsync() > 0)
             {
                 contextResultMessage = "success";
-                await rabbitmqManager.CreateCompanyAsync(company);
+                crudExchange.CreateCompany(company);
             }
 
             return new()
@@ -70,7 +70,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Implementatio
             if (await context.SaveChangesAsync() >= 0)
             {
                 contextResultMessage = "success";
-                await rabbitmqManager.UpdateCompanyAsync(company);
+                crudExchange.UpdateCompany(company);
             }
 
             return new()
@@ -93,7 +93,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Implementatio
             if (await context.SaveChangesAsync() >= 0)
             {
                 contextResultMessage = "success";
-                await rabbitmqManager.DeleteCompanyAsync(ticker);
+                crudExchange.DeleteCompany(ticker);
             }
 
             return new()

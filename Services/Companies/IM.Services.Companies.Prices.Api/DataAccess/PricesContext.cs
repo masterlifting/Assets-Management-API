@@ -10,12 +10,13 @@ namespace IM.Services.Companies.Prices.Api.DataAccess
         public DbSet<Price> Prices { get; set; }
         public DbSet<PriceSourceType> PriceSourceTypes { get; set; }
 
-        public PricesContext(DbContextOptions<PricesContext> options) : base(options) { }
+        public PricesContext(DbContextOptions<PricesContext> options) : base(options) {}
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Price>().HasKey(x => new { x.TickerName, x.Date });
+            modelBuilder.Entity<Price>().HasOne(x => x.Ticker).WithMany(x => x.Prices).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<PriceSourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<PriceSourceType>().HasData(new PriceSourceType[]
             {

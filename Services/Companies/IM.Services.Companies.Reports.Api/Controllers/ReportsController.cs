@@ -1,6 +1,6 @@
 ﻿using IM.Services.Companies.Reports.Api.Models;
 using IM.Services.Companies.Reports.Api.Models.Dto;
-using IM.Services.Companies.Reports.Api.Services.Agregators.Interfaces;
+using IM.Services.Companies.Reports.Api.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,8 +11,8 @@ namespace IM.Services.Companies.Reports.Api.Controllers
     [ApiController, Route("[controller]")]
     public class ReportsController : Controller
     {
-        private readonly IReportsDtoAgregator agregator;
-        public ReportsController(IReportsDtoAgregator agregator) => this.agregator = agregator;
+        private readonly ReportsDtoAgregator agregator;
+        public ReportsController(ReportsDtoAgregator agregator) => this.agregator = agregator;
 
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> Get(int page = 1, int limit = 10) =>
             await agregator.GetReportsAsync(new(page, limit));

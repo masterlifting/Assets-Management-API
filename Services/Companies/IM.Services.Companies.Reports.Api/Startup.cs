@@ -1,12 +1,13 @@
+using CommonServices.RabbitServices;
+
 using IM.Services.Companies.Reports.Api.Clients;
 using IM.Services.Companies.Reports.Api.DataAccess;
 using IM.Services.Companies.Reports.Api.DataAccess.Entities;
 using IM.Services.Companies.Reports.Api.DataAccess.Repository;
-using IM.Services.Companies.Reports.Api.Services.Agregators.Implementations;
-using IM.Services.Companies.Reports.Api.Services.Agregators.Interfaces;
-using IM.Services.Companies.Reports.Api.Services.Background.RabbitMqBackgroundServices;
-using IM.Services.Companies.Reports.Api.Services.Background.ReportUpdaterBackgroundServices.Implementations;
-using IM.Services.Companies.Reports.Api.Services.Background.ReportUpdaterBackgroundServices.Interfaces;
+using IM.Services.Companies.Reports.Api.Services.BackgroundServices;
+using IM.Services.Companies.Reports.Api.Services.DtoServices;
+using IM.Services.Companies.Reports.Api.Services.RabbitServices;
+using IM.Services.Companies.Reports.Api.Services.ReportServices;
 using IM.Services.Companies.Reports.Api.Settings;
 
 using Microsoft.AspNetCore.Builder;
@@ -30,7 +31,6 @@ namespace IM.Services.Companies.Reports.Api
             services.AddDbContext<ReportsContext>(provider =>
            {
                provider.UseLazyLoadingProxies();
-               //todo: connection string to improve
                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
            });
 
@@ -38,14 +38,19 @@ namespace IM.Services.Companies.Reports.Api
 
             services.AddHttpClient<InvestingClient>();
 
-            services.AddScoped<IReportsDtoAgregator, ReportsDtoAgregator>();
-            services.AddScoped<IReportUpdater, ReportUpdater>();
+            services.AddSingleton<ReportParser>();
+            services.AddScoped<ReportLoader>();
+            services.AddScoped<ReportsDtoAgregator>();
 
+            services.AddScoped(typeof(EntityRepository<>));
             services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
             services.AddScoped<IEntityChecker<ReportSource>, ReportSourceChecker>();
-            services.AddScoped(typeof(EntityRepository<,>));
 
-            services.AddHostedService<RabbitmqBackgroundService>();
+            services.AddSingleton(x => new RabbitBuilder(Configuration["ServiceSettings:ConnectionStrings:Mq"]));
+            services.AddSingleton<RabbitService>();
+            services.AddSingleton<RabbitActionService>();
+
+            services.AddHostedService<RabbitBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
