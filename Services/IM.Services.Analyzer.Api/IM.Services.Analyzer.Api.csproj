@@ -6,9 +6,11 @@
 	  <UserSecretsId>f84af758-58ac-4aed-b74e-f17abb55ae43</UserSecretsId>
   </PropertyGroup>
 
-
 	<ItemGroup>
-		<Folder Include="Services\Calculators\Implementations\RecommendationCalculator\" />
+	  <Compile Remove="Services\CalculatorServices\Implementations\RecommendationCalculator\**" />
+	  <Content Remove="Services\CalculatorServices\Implementations\RecommendationCalculator\**" />
+	  <EmbeddedResource Remove="Services\CalculatorServices\Implementations\RecommendationCalculator\**" />
+	  <None Remove="Services\CalculatorServices\Implementations\RecommendationCalculator\**" />
 	</ItemGroup>
 
 
@@ -17,6 +19,11 @@
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="6.0.0-preview.5.21301.9" />
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0-preview5" />
 	  <PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
+	</ItemGroup>
+
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Common\CommonServices\CommonServices.csproj" />
 	</ItemGroup>
 
 </Project>

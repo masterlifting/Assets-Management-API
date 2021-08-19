@@ -40,7 +40,7 @@ namespace IM.Services.Analyzer.Api.DataAccess.Repository
         }
         public async Task<bool> DeleteAsync<TId>(TId id, string info)
         {
-            var ctxEntity = await context.Set<T>().FindAsync(id!);
+            var ctxEntity = await context.Set<T>().FindAsync(id);
 
             if (ctxEntity is null)
             {
@@ -51,22 +51,6 @@ namespace IM.Services.Analyzer.Api.DataAccess.Repository
             context.Set<T>().Remove(ctxEntity);
 
             return await SaveAsync(info, RepositoryActionType.delete);
-        }
-
-        public bool TrySerialize(string data, out T? entity)
-        {
-            entity = null;
-
-            try
-            {
-                entity = JsonSerializer.Deserialize<T>(data);
-                return true;
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine("unserializable! Exception: " + ex.Message);
-                return false;
-            }
         }
         async Task<bool> SaveAsync(string info, RepositoryActionType actionType)
         {

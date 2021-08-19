@@ -1,8 +1,8 @@
 ﻿using IM.Gateways.Web.Companies.Api.Models.Dto;
 using IM.Gateways.Web.Companies.Api.Models.Dto.State;
 using IM.Gateways.Web.Companies.Api.Models.Http;
-using IM.Gateways.Web.Companies.Api.Services.Agregators.Interfaces;
-using IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Interfaces;
+using IM.Gateways.Web.Companies.Api.Services.CompanyServices;
+using IM.Gateways.Web.Companies.Api.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,10 +13,10 @@ namespace IM.Gateways.Web.Companies.Api.Controllers
     [ApiController, Route("api/[controller]")]
     public class CompaniesController : Controller
     {
-        private readonly ICompaniesDtoAgregator agregator;
-        private readonly ICompaniesManager manager;
+        private readonly CompanyDtoAgregator agregator;
+        private readonly CompanyManager manager;
 
-        public CompaniesController(ICompaniesDtoAgregator agregator, ICompaniesManager manager)
+        public CompaniesController(CompanyDtoAgregator agregator, CompanyManager manager)
         {
             this.agregator = agregator;
             this.manager = manager;

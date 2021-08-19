@@ -11,31 +11,31 @@ namespace IM.Services.Companies.Reports.Api.Services.BackgroundServices
 {
     public class RabbitBackgroundService : BackgroundService
     {
-        private readonly RabbitService queueService;
-        private readonly RabbitActionService rabbitmqService;
+        private readonly RabbitService rabbitService;
+        private readonly RabbitActionService actionService;
 
-        public RabbitBackgroundService(RabbitService queueService, RabbitActionService rabbitmqService)
+        public RabbitBackgroundService(RabbitService rabbitService, RabbitActionService actionService)
         {
-            this.queueService = queueService;
-            this.rabbitmqService = rabbitmqService;
+            this.rabbitService = rabbitService;
+            this.actionService = actionService;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
             if (stoppingToken.IsCancellationRequested)
             {
-                queueService.Stop();
+                rabbitService.Stop();
                 return Task.CompletedTask;
             }
 
-            queueService.GetSubscruber().Subscribe(rabbitmqService.GetActionResultAsync);
+            rabbitService.GetSubscruber().Subscribe(actionService.GetActionResultAsync);
 
             return Task.CompletedTask;
         }
         public override Task StopAsync(CancellationToken stoppingToken)
         {
             base.StopAsync(stoppingToken);
-            queueService.Stop();
+            rabbitService.Stop();
             return Task.CompletedTask;
         }
     }

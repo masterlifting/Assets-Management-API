@@ -3,6 +3,7 @@ using IM.Services.Companies.Reports.Api.DataAccess.Entities;
 using IM.Services.Companies.Reports.Api.Services.ReportServices.Implementations;
 using IM.Services.Companies.Reports.Api.Services.ReportServices.Interfaces;
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -20,6 +21,9 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
                 { ReportSourceTypes.investing, new InvestingParser(investingClient) }
             };
         }
-        public async Task<Report[]> GetReportsAsync(ReportSourceTypes sourceType, ReportSource source) => await parser[sourceType].GetReportsAsync(source);
+        public async Task<Report[]> GetReportsAsync(ReportSourceTypes sourceType, ReportSource source) => 
+            parser.ContainsKey(sourceType) 
+            ? await parser[sourceType].GetReportsAsync(source) 
+            : Array.Empty<Report>();
     }
 }

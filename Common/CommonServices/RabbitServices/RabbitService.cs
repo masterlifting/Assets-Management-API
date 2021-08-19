@@ -7,8 +7,6 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -22,15 +20,20 @@ namespace CommonServices.RabbitServices
         private readonly RabbitBuilder builder;
         private readonly IServiceProvider services;
 
+        public QueueExchange[] Exchanges { get; }
+        public Queue[] Queues { get; }
+
         public RabbitService(RabbitBuilder builder, IServiceProvider services)
         {
             this.builder = builder;
             this.services = services;
+            Exchanges = builder.Exchanges;
+            Queues = builder.Queues;
         }
 
-        public RabbitPublisher GetPublisher(QueueExchanges exchange) => new(builder.Channel, exchange);
-        public RabbitSubscriber GetSubscruber() => new(builder.Channel, services);
-        public static bool TrySerialize<T>(string data, out T entity) where T : class
+        public RabbitPublisher GetPublisher(QueueExchanges exchange) => new(builder, exchange);
+        public RabbitSubscriber GetSubscruber() => new(builder, services);
+        public static bool TrySerialize<T>(string data, out T? entity) where T : class
         {
             entity = null;
 
@@ -55,72 +58,77 @@ namespace CommonServices.RabbitServices
     public class RabbitPublisher
     {
         private readonly IModel channel;
+        private readonly Queue[] queues;
         private readonly QueueExchange exchange;
 
-        public RabbitPublisher(IModel channel, QueueExchanges exchange)
+        public RabbitPublisher(RabbitBuilder builder, QueueExchanges exchange)
         {
-            var ex = QueueConfiguration.Exchanges.FirstOrDefault(x => x.Name.Equals(exchange.ToString().ToLowerInvariant(), StringComparison.OrdinalIgnoreCase));
+            var ex = builder.Exchanges.FirstOrDefault(x => x.NameEnum == exchange);
 
             if (ex is null)
                 throw new NullReferenceException(nameof(exchange));
 
-            this.channel = channel;
+            channel = builder.Channel;
+            queues = builder.Queues;
             this.exchange = ex;
         }
 
         public void PublishTask(QueueEntities entity, QueueActions action, string data)
         {
-            string sentity = entity.ToString();
-
-            foreach (var queue in exchange.Queues)
-                foreach (var routingKey in queue.Params.Where(x => x.Entity.Equals(sentity, StringComparison.OrdinalIgnoreCase) && x.Actions.Contains(action)))
+            foreach (var queue in queues)
+                foreach (var routingKey in queue.Params.Where(x => x.EntityNameEnum == entity && x.Actions.Contains(action)))
                     channel.BasicPublish(
-                    exchange.Name
-                    , $"{queue.Name}.{sentity}.{action}"
+                    exchange.NameString
+                    , $"{queue.NameString}.{routingKey.EntityNameString}.{action}"
                     , null
                     , Encoding.UTF8.GetBytes(data));
         }
+        public void PublishTask(QueueEntities entity, QueueActions action, string[] data)
+        {
+            foreach (var queue in queues)
+                foreach (var routingKey in queue.Params.Where(x => x.EntityNameEnum == entity && x.Actions.Contains(action)))
+                    foreach (var _data in data)
+                        channel.BasicPublish(
+                        exchange.NameString
+                        , $"{queue.NameString}.{routingKey.EntityNameString}.{action}"
+                        , null
+                        , Encoding.UTF8.GetBytes(_data));
+        }
+
         public void PublishTask(QueueNames queue, QueueEntities entity, QueueActions action, string data)
         {
-            string squeue = queue.ToString();
-            string sentity = entity.ToString();
+            var _queue = queues.FirstOrDefault(x => x.NameEnum == queue);
 
-            var q = exchange.Queues.FirstOrDefault(x => x.Name.Equals(squeue, StringComparison.OrdinalIgnoreCase));
+            if (_queue is null)
+                throw new NullReferenceException($"{nameof(queue)} not found");
 
-            if (q is null)
-                throw new NullReferenceException($"{nameof(squeue)} not found");
-
-            var queueParams = q.Params.FirstOrDefault(x => x.Entity.Equals(sentity, StringComparison.OrdinalIgnoreCase) && x.Actions.Contains(action));
+            var queueParams = _queue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
 
             if (queueParams is null)
                 throw new NullReferenceException($"{nameof(queueParams)} not found");
 
             channel.BasicPublish(
-            exchange.Name
-            , $"{squeue}.{sentity}.{action}"
+            exchange.NameString
+            , $"{_queue.NameString}.{queueParams.EntityNameString}.{action}"
             , null
             , Encoding.UTF8.GetBytes(data));
         }
-        public void PublishTask(QueueNames queue, QueueEntities entity, QueueActions action, List<string> data)
+        public void PublishTask(QueueNames queue, QueueEntities entity, QueueActions action, string[] data)
         {
-            string squeue = queue.ToString();
-            string sentity = entity.ToString();
+            var _queue = queues.FirstOrDefault(x => x.NameEnum == queue);
 
+            if (_queue is null)
+                throw new NullReferenceException($"{nameof(queue)} not found");
 
-            var q = exchange.Queues.FirstOrDefault(x => x.Name.Equals(squeue, StringComparison.OrdinalIgnoreCase));
-
-            if (q is null)
-                throw new NullReferenceException($"{nameof(squeue)} not found");
-
-            var queueParams = q.Params.FirstOrDefault(x => x.Entity.Equals(sentity, StringComparison.OrdinalIgnoreCase) && x.Actions.Contains(action));
+            var queueParams = _queue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
 
             if (queueParams is null)
                 throw new NullReferenceException($"{nameof(queueParams)} not found");
 
             foreach (var item in data)
                 channel.BasicPublish(
-                    exchange.Name
-                    , $"{squeue}.{sentity}.{action}"
+                    exchange.NameString
+                    , $"{_queue.NameString}.{queueParams.EntityNameString}.{action}"
                     , null
                     , Encoding.UTF8.GetBytes(item));
         }
@@ -131,26 +139,25 @@ namespace CommonServices.RabbitServices
 
         private readonly IModel channel;
         private readonly IServiceProvider services;
+        private readonly Queue[] queues;
+        private readonly string[] queuesWithConfirm;
 
-        public RabbitSubscriber(IModel channel, IServiceProvider services)
+        public RabbitSubscriber(RabbitBuilder builder, IServiceProvider services)
         {
-            this.channel = channel;
+            channel = builder.Channel;
             this.services = services;
+            queues = builder.Queues;
+            queuesWithConfirm = builder.Queues.Where(x => x.WithConfirm).Select(x => x.NameString).ToArray();
         }
 
         public void Subscribe(Func<QueueExchanges, string, string, IServiceScope, Task<bool>> getActionResult)
         {
-            var queues = QueueConfiguration.Exchanges.SelectMany(x => x.Queues);
-            var uniqQueueNames = queues.Select(x => x.Name).Distinct(new QueueNameComparer());
-
-            foreach (var item in uniqQueueNames)
-                if (Enum.TryParse(item, out QueueNames queue))
-                    SubscribeQueue(getActionResult, queue);
+            foreach (var queue in queues)
+                SubscribeQueue(getActionResult, queue);
         }
-        private void SubscribeQueue(Func<QueueExchanges, string, string, IServiceScope, Task<bool>> getActionResult, QueueNames queue)
+        private void SubscribeQueue(Func<QueueExchanges, string, string, IServiceScope, Task<bool>> getActionResult, Queue queue)
         {
             var consumer = new EventingBasicConsumer(channel);
-            bool isAutoAck = queue != QueueNames.companiesreportscrud;
 
             consumer.Received += async (model, ea) =>
             {
@@ -178,19 +185,11 @@ namespace CommonServices.RabbitServices
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
 
-                QueueNames q = Enum.Parse<QueueNames>(queueName);
-
-                if (q == QueueNames.companiesreportscrud && result)
+                if (queuesWithConfirm.Contains(queueName) && result)
                     channel.BasicAck(ea.DeliveryTag, false);
             };
 
-            channel.BasicConsume(queue.ToString(), isAutoAck, consumer);
+            channel.BasicConsume(queue.NameString, queue.IsAutoAck, consumer);
         }
-    }
-
-    class QueueNameComparer : IEqualityComparer<string>
-    {
-        public bool Equals(string x, string y) => x.ToLowerInvariant().Trim() == y.ToLowerInvariant().Trim();
-        public int GetHashCode([DisallowNull] string obj) => obj.GetHashCode();
     }
 }

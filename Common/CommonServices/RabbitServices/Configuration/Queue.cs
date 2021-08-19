@@ -4,12 +4,18 @@ namespace CommonServices.RabbitServices.Configuration
 {
     public class Queue
     {
-        public Queue(QueueNames name)
+        public Queue(QueueNames name, bool isAutoAck = true, bool withConfirm = false)
         {
-            Name = name.ToString();
+            NameString = name.ToString();
+            NameEnum = name;
+            IsAutoAck = isAutoAck;
+            WithConfirm = withConfirm;
         }
 
-        public string Name { get; }
+        public string NameString { get; }
+        public QueueNames NameEnum { get; }
+        public bool IsAutoAck { get; }
+        public bool WithConfirm { get; }
         public QueueParam[] Params { get; set; } = Array.Empty<QueueParam>();
     }
 }

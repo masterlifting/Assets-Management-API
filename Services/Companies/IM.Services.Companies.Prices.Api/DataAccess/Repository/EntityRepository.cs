@@ -52,22 +52,6 @@ namespace IM.Services.Companies.Prices.Api.DataAccess.Repository
 
             return await SaveAsync(info, RepositoryActionType.delete);
         }
-
-        public bool TrySerialize(string data, out T entity)
-        {
-            entity = null;
-
-            try
-            {
-                entity = JsonSerializer.Deserialize<T>(data);
-                return true;
-            }
-            catch (JsonException ex)
-            {
-                Console.WriteLine("unserializable! Exception: " + ex.Message);
-                return false;
-            }
-        }
         async Task<bool> SaveAsync(string info, RepositoryActionType actionType)
         {
             string actionName = actionType switch

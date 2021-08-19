@@ -21,6 +21,8 @@ namespace IM.Services.Companies.Reports.Api
 {
     public class Startup
     {
+        private static readonly QueueExchanges[] targetExchanges = new[] { QueueExchanges.crud, QueueExchanges.loader };
+        private static readonly QueueNames[] targetQueues = new[] { QueueNames.companiesreportscrud, QueueNames.companiesreportsloader };
         public IConfiguration Configuration { get; }
         public Startup(IConfiguration configuration) => Configuration = configuration;
 
@@ -46,13 +48,13 @@ namespace IM.Services.Companies.Reports.Api
             services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
             services.AddScoped<IEntityChecker<ReportSource>, ReportSourceChecker>();
 
-            services.AddSingleton(x => new RabbitBuilder(Configuration["ServiceSettings:ConnectionStrings:Mq"]));
+            services.AddSingleton(x => new RabbitBuilder(
+                Configuration["ServiceSettings:ConnectionStrings:Mq"]
+                ,QueueConfiguration.GetConfiguredData(targetExchanges, targetQueues)));
             services.AddSingleton<RabbitService>();
             services.AddSingleton<RabbitActionService>();
-
             services.AddHostedService<RabbitBackgroundService>();
         }
-
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())

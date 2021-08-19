@@ -1,12 +1,10 @@
+using CommonServices.RabbitServices;
+
 using IM.Gateways.Web.Companies.Api.Clients;
 using IM.Gateways.Web.Companies.Api.DataAccess;
-using IM.Gateways.Web.Companies.Api.Services.Agregators.Implementations;
-using IM.Gateways.Web.Companies.Api.Services.Agregators.Interfaces;
-using IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Implementations;
-using IM.Gateways.Web.Companies.Api.Services.CompanyManagement.Interfaces;
-using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement;
-using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Implementations;
-using IM.Gateways.Web.Companies.Api.Services.RabbitMqManagement.Interfaces;
+using IM.Gateways.Web.Companies.Api.Services.CompanyServices;
+using IM.Gateways.Web.Companies.Api.Services.DtoServices;
+using IM.Gateways.Web.Companies.Api.Services.RabbitServices;
 using IM.Gateways.Web.Companies.Api.Settings;
 
 using Microsoft.AspNetCore.Builder;
@@ -24,6 +22,14 @@ namespace IM.Gateways.Web.Companies.Api
 {
     public class Startup
     {
+        private static readonly QueueExchanges[] targetExchanges = new[] { QueueExchanges.crud };
+        private static readonly QueueNames[] targetQueues = new[]
+        {
+            QueueNames.companiesanalyzercrud
+            ,QueueNames.companiesreportscrud
+            ,QueueNames.companiespricescrud
+        };
+
         public Startup(IConfiguration configuration) => Configuration = configuration;
         public IConfiguration Configuration { get; }
 
@@ -39,11 +45,14 @@ namespace IM.Gateways.Web.Companies.Api
 
             services.AddControllers();
 
-            services.AddScoped<ICompaniesManager, CompaniesManager>();
-            services.AddScoped<ICompaniesDtoAgregator, CompaniesDtoAgregator>();
-            
-            services.AddSingleton<RabbitBuilder>();
-            services.AddSingleton<ICrudExchange, CrudExchange>();
+            services.AddScoped<CompanyManager>();
+            services.AddScoped<CompanyDtoAgregator>();
+
+            services.AddSingleton(x => new RabbitBuilder(
+                Configuration["ServiceSettings:ConnectionStrings:Mq"]
+                ,QueueConfiguration.GetConfiguredData(targetExchanges, targetQueues)));
+            services.AddSingleton<RabbitService>();
+            services.AddSingleton<RabbitCrudService>();
 
             services.AddHttpClient<PricesClient>()
                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(10, retryAttemp => TimeSpan.FromSeconds(Math.Pow(2, retryAttemp))))

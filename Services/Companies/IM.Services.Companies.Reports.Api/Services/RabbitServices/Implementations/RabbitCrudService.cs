@@ -1,5 +1,4 @@
 ﻿using CommonServices.RabbitServices;
-using CommonServices.RabbitServices.Configuration;
 
 using IM.Services.Companies.Reports.Api.DataAccess.Entities;
 using IM.Services.Companies.Reports.Api.DataAccess.Repository;
@@ -13,8 +12,8 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
 {
     public class RabbitCrudService : IRabbitActionService
     {
-        private readonly RabbitService queueService;
-        public RabbitCrudService(RabbitService queueService) => this.queueService = queueService;
+        private readonly RabbitService rabbitService;
+        public RabbitCrudService(RabbitService rabbitService) => this.rabbitService = rabbitService;
         
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope) => entity switch
         {
@@ -56,7 +55,7 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
                 result = await GetActionAsync(repository, action, source, source.Value);
 
                 if (result)
-                    queueService.GetPublisher(QueueExchanges.parser).PublishTask(QueueEntities.report, QueueActions.download, JsonSerializer.Serialize(source));
+                    rabbitService.GetPublisher(QueueExchanges.loader).PublishTask(QueueEntities.report, QueueActions.download, JsonSerializer.Serialize(source));
             }
 
             return result;

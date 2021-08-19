@@ -1,4 +1,4 @@
-using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Interfaces;
+using IM.Services.Companies.Prices.Api.Services.PriceServices;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,13 +9,13 @@ namespace IM.Services.Companies.Prices.Api.Controllers
     [ApiController, Route("[controller]")]
     public class ServiceController : ControllerBase
     {
-        private readonly IPriceUpdater priceUpdater;
-        public ServiceController(IPriceUpdater priceUpdater) => this.priceUpdater = priceUpdater;
+        private readonly PriceLoader priceLoader;
+        public ServiceController(PriceLoader priceLoader) => this.priceLoader = priceLoader;
 
         [HttpPost("update/")]
         public async Task<string> UpdatePrices()
         {
-            int updatedCount = await priceUpdater.UpdatePricesAsync();
+            int updatedCount = await priceLoader.LoadPricesAsync();
             return  $"updated prices count: {updatedCount}";
         }
     }

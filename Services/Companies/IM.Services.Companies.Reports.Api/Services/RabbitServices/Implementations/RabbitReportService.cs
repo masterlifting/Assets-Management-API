@@ -1,6 +1,5 @@
 ﻿
 using CommonServices.RabbitServices;
-using CommonServices.RabbitServices.Configuration;
 
 using IM.Services.Companies.Reports.Api.DataAccess.Entities;
 using IM.Services.Companies.Reports.Api.Services.ReportServices;
@@ -18,7 +17,7 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope)
         {
-            if (RabbitService.TrySerialize(data, out ReportSource source) && source is not null)
+            if (entity == QueueEntities.report && action == QueueActions.download && RabbitService.TrySerialize(data, out ReportSource source) && source is not null)
                 await reportLoader.LoadReportsAsync(source);
 
             return true;

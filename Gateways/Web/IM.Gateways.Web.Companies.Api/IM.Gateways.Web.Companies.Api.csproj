@@ -20,6 +20,10 @@
 		<PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\..\..\Common\CommonServices\CommonServices.csproj" />
+	</ItemGroup>
+
 	<ProjectExtensions>
 		<VisualStudio>
 			<UserProperties appsettings_1json__JsonSchema="" />

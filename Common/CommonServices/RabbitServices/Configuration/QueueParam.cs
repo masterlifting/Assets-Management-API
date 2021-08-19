@@ -6,9 +6,11 @@ namespace CommonServices.RabbitServices.Configuration
     {
         public QueueParam(QueueEntities entity)
         {
-            Entity = entity.ToString();
+            EntityNameString = entity.ToString();
+            EntityNameEnum = entity;
         }
-        public string Entity { get; }
+        public string EntityNameString { get; }
+        public QueueEntities EntityNameEnum { get; }
         public QueueActions[] Actions { get; set; } = Array.Empty<QueueActions>();
     }
 }

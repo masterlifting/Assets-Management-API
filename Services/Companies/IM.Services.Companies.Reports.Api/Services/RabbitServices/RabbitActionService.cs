@@ -1,5 +1,4 @@
 ﻿using CommonServices.RabbitServices;
-using CommonServices.RabbitServices.Configuration;
 
 using IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementations;
 using IM.Services.Companies.Reports.Api.Services.ReportServices;
@@ -15,12 +14,12 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices
     public class RabbitActionService
     {
         private readonly Dictionary<QueueExchanges, IRabbitActionService> actions;
-        public RabbitActionService(RabbitService queueService, ReportLoader reportLoader)
+        public RabbitActionService(RabbitService rabbitService, ReportLoader reportLoader)
         {
             actions = new()
             {
-                { QueueExchanges.crud, new RabbitCrudService(queueService) },
-                { QueueExchanges.parser, new RabbitReportService(reportLoader) }
+                { QueueExchanges.crud, new RabbitCrudService(rabbitService) },
+                { QueueExchanges.loader, new RabbitReportService(reportLoader) }
             };
         }
 

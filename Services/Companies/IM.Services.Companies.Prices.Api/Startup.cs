@@ -1,13 +1,14 @@
+using CommonServices.RabbitServices;
+
 using IM.Services.Companies.Prices.Api.DataAccess;
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 using IM.Services.Companies.Prices.Api.DataAccess.Repository;
-using IM.Services.Companies.Prices.Api.Services.Agregators.Implementations;
-using IM.Services.Companies.Prices.Api.Services.Agregators.Interfaces;
-using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Implementations;
-using IM.Services.Companies.Prices.Api.Services.Background.PriceUpdaterBackgroundServices.Interfaces;
-using IM.Services.Companies.Prices.Api.Services.Background.RabbitMqBackgroundServices;
+using IM.Services.Companies.Prices.Api.Services.BackgroundServices;
+using IM.Services.Companies.Prices.Api.Services.DtoServices;
 using IM.Services.Companies.Prices.Api.Services.HealthCheck;
-using IM.Services.Companies.Prices.Api.Services.Mapper;
+using IM.Services.Companies.Prices.Api.Services.MapServices;
+using IM.Services.Companies.Prices.Api.Services.PriceServices;
+using IM.Services.Companies.Prices.Api.Services.RabbitServices;
 using IM.Services.Companies.Prices.Api.Settings;
 
 using Microsoft.AspNetCore.Builder;
@@ -25,6 +26,9 @@ namespace IM.Services.Companies.Prices.Api
 {
     public class Startup
     {
+        private static readonly QueueExchanges[] targetExchanges = new[] { QueueExchanges.crud, QueueExchanges.loader };
+        private static readonly QueueNames[] targetQueues = new[] { QueueNames.companiespricescrud, QueueNames.companiespricesloader };
+
         public IConfiguration Configuration { get; }
         public Startup(IConfiguration configuration) => Configuration = configuration;
 
@@ -35,7 +39,6 @@ namespace IM.Services.Companies.Prices.Api
             services.AddDbContext<PricesContext>(provider =>
             {
                 provider.UseLazyLoadingProxies();
-                //todo: connection string to improve
                 provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
             });
 
@@ -52,14 +55,21 @@ namespace IM.Services.Companies.Prices.Api
                 .AddCheck<TdAmeritradeHealthCheck>("TdAmeritrade")
                 .AddCheck<MoexHealthCheck>("Moex");
 
-            services.AddScoped<IPriceMapper, PriceMapper>();
-            services.AddScoped<IPricesDtoAgregator, PricesDtoAgregator>();
-            services.AddScoped<IPriceUpdater, PriceUpdater>();
+            services.AddSingleton<PriceMapper>();
+            services.AddSingleton<PriceParser>();
+            services.AddScoped<PriceLoader>();
+            services.AddScoped<PriceDtoAgregator>();
 
             services.AddScoped(typeof(EntityRepository<>));
             services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
 
-            services.AddHostedService<RabbitmqBackgroundService>();
+            services.AddSingleton(x => new RabbitBuilder(
+                Configuration["ServiceSettings:ConnectionStrings:Mq"]
+                ,QueueConfiguration.GetConfiguredData(targetExchanges, targetQueues)));
+            services.AddSingleton<RabbitService>();
+            services.AddSingleton<RabbitActionService>();
+
+            services.AddHostedService<RabbitBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
