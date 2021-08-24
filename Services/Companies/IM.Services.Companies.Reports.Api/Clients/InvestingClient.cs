@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace IM.Services.Companies.Reports.Api.Clients
 {
-    public class InvestingClient
+    public class InvestingClient : IDisposable
     {
         private readonly HttpClient httpClient;
         private readonly InvestingModel settings;
@@ -43,5 +43,7 @@ namespace IM.Services.Companies.Reports.Api.Clients
 
             return htmlDocument;
         }
+
+        public void Dispose() => httpClient.Dispose();
     }
 }

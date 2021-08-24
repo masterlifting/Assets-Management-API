@@ -1,4 +1,3 @@
-using CommonServices.RabbitServices;
 
 using IM.Gateways.Web.Companies.Api.Clients;
 using IM.Gateways.Web.Companies.Api.DataAccess;
@@ -22,14 +21,6 @@ namespace IM.Gateways.Web.Companies.Api
 {
     public class Startup
     {
-        private static readonly QueueExchanges[] targetExchanges = new[] { QueueExchanges.crud };
-        private static readonly QueueNames[] targetQueues = new[]
-        {
-            QueueNames.companiesanalyzercrud
-            ,QueueNames.companiesreportscrud
-            ,QueueNames.companiespricescrud
-        };
-
         public Startup(IConfiguration configuration) => Configuration = configuration;
         public IConfiguration Configuration { get; }
 
@@ -47,12 +38,7 @@ namespace IM.Gateways.Web.Companies.Api
 
             services.AddScoped<CompanyManager>();
             services.AddScoped<CompanyDtoAgregator>();
-
-            services.AddSingleton(x => new RabbitBuilder(
-                Configuration["ServiceSettings:ConnectionStrings:Mq"]
-                ,QueueConfiguration.GetConfiguredData(targetExchanges, targetQueues)));
-            services.AddSingleton<RabbitService>();
-            services.AddSingleton<RabbitCrudService>();
+            services.AddScoped<RabbitCrudService>();
 
             services.AddHttpClient<PricesClient>()
                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(10, retryAttemp => TimeSpan.FromSeconds(Math.Pow(2, retryAttemp))))

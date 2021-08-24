@@ -1,0 +1,113 @@
+﻿
+using CommonServices.Models;
+using CommonServices.ParserServices;
+using CommonServices.RabbitServices.Configuration;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace CommonServices.RabbitServices
+{
+    public class RabbitSubscriber
+    {
+        private readonly SemaphoreSlim semaphore = new(1, 1);
+
+        private readonly IModel channel;
+        private readonly IConnection connection;
+        private readonly IServiceProvider services;
+        private readonly List<Queue> queues;
+        private readonly string[] queuesWithConfirm;
+
+        public RabbitSubscriber(string connectionString, QueueExchanges[] exchangeNames, QueueNames[] queueNames, IServiceProvider services)
+        {
+            var mqConnection = new SettingsConverter<ConnectionModel>(connectionString).Model;
+
+            var factory = new ConnectionFactory()
+            {
+                HostName = mqConnection.Server,
+                UserName = mqConnection.UserId,
+                Password = mqConnection.Password
+            };
+
+            connection = factory.CreateConnection();
+            channel = connection.CreateModel();
+            queues = new List<Queue>(queueNames.Length);
+
+            foreach (var exchange in QueueConfiguration.Exchanges.Join(exchangeNames, x => x.NameEnum, y => y, (x, y) => x))
+            {
+                channel.ExchangeDeclare(exchange.NameString, exchange.Type);
+
+                foreach (var queue in exchange.Queues.Join(queueNames, x => x.NameEnum, y => y, (x, y) => x))
+                {
+                    if (!queues.Contains(queue, new QueueComparer()))
+                    {
+                        channel.QueueDeclare(queue.NameString, false, false, false, null);
+                        queues.Add(queue);
+
+                        foreach (var route in queue.Params)
+                            channel.QueueBind(queue.NameString, exchange.NameString, $"{queue.NameString}.{route.EntityNameString}.*");
+                    }
+                }
+            }
+
+            this.services = services;
+            queuesWithConfirm = queues.Where(x => x.WithConfirm).Select(x => x.NameString).ToArray();
+        }
+
+        public void Subscribe(Func<QueueExchanges, string, string, IServiceScope, Task<bool>> getActionResult)
+        {
+            foreach (var queue in queues)
+                SubscribeQueue(getActionResult, queue);
+        }
+        public void Unsubscribe()
+        {
+            channel.Dispose();
+            connection.Dispose();
+        }
+        private void SubscribeQueue(Func<QueueExchanges, string, string, IServiceScope, Task<bool>> getActionResult, Queue queue)
+        {
+            var consumer = new EventingBasicConsumer(channel);
+
+            consumer.Received += async (model, ea) =>
+            {
+                var data = Encoding.UTF8.GetString(ea.Body.ToArray());
+                using var scope = services.CreateScope();
+                string queueName = string.Empty;
+                bool result = false;
+
+                try
+                {
+                    await semaphore.WaitAsync();
+
+                    queueName = ea.RoutingKey.Split('.')[0];
+                    var exchange = Enum.Parse<QueueExchanges>(ea.Exchange.ToLowerInvariant());
+                    result = await getActionResult(exchange, ea.RoutingKey, data, scope);
+
+                    semaphore.Release();
+                }
+                catch (Exception ex)
+                {
+                    semaphore.Release();
+
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
+
+                if (queuesWithConfirm.Contains(queueName) && result)
+                    channel.BasicAck(ea.DeliveryTag, false);
+            };
+
+            channel.BasicConsume(queue.NameString, queue.IsAutoAck, consumer);
+        }
+    }
+}

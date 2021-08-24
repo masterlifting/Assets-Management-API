@@ -2,35 +2,19 @@
 
 using IM.Services.Companies.Prices.Api.Services.PriceServices;
 using IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementations;
+using IM.Services.Companies.Prices.Api.Settings;
 
-using Microsoft.Extensions.DependencyInjection;
-
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace IM.Services.Companies.Prices.Api.Services.RabbitServices
 {
-    public class RabbitActionService
+    public class RabbitActionService : RabbitService
     {
-        private readonly Dictionary<QueueExchanges, IRabbitActionService> actions;
-        public RabbitActionService(RabbitService rabbitService, PriceLoader priceLoader)
+        public RabbitActionService(IOptions<ServiceSettings> options, PriceLoader priceLoader) : base(new()
         {
-            actions = new()
-            {
-                { QueueExchanges.crud, new RabbitCrudService(rabbitService) },
-                { QueueExchanges.loader, new RabbitPriceService(priceLoader) }
-            };
-        }
-
-        public async Task<bool> GetActionResultAsync(QueueExchanges exchange, string routingKey, string data, IServiceScope scope)
-        {
-            var route = routingKey.Split('.');
-
-            return route.Length >= 3
-                        && Enum.TryParse(route[1].ToLowerInvariant().Trim(), out QueueEntities entity)
-                        && Enum.TryParse(route[2].ToLowerInvariant().Trim(), out QueueActions action)
-                        && await actions[exchange].GetActionResultAsync(entity, action, data, scope);
-        }
+            { QueueExchanges.crud, new RabbitCrudService(options.Value.ConnectionStrings.Mq) },
+            { QueueExchanges.loader, new RabbitPriceService(priceLoader) }
+        })
+        { }
     }
 }

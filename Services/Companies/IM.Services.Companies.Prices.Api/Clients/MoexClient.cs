@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace IM.Services.Companies.Prices.Api
 {
-    public class MoexClient
+    public class MoexClient : IDisposable
     {
         private readonly HttpClient httpClient;
         private readonly HostModel moexSetting;
@@ -35,5 +35,7 @@ namespace IM.Services.Companies.Prices.Api
             var data = await httpClient.GetFromJsonAsync<MoexHistoryPriceData>(url);
             return new(data, ticker);
         }
+
+        public void Dispose() => httpClient.Dispose();
     }
 }

@@ -29,22 +29,22 @@ namespace IM.Gateways.Web.Companies.Api.Clients
 
         public async Task<ResponseModel<PaginationResponseModel<RecommendationDto>>> GetRecommendationsAsync(PaginationRequestModel pagination) => 
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<RecommendationDto>>>
-                ($"{settings.Sсhema}://{settings.Host}:{settings.Port}/{recommendations}?{pagination.QueryParams}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{recommendations}?{pagination.QueryParams}") ?? new();
         public async Task<ResponseModel<RecommendationDto>> GetRecommendationAsync(string ticker) => 
             await httpClient.GetFromJsonAsync<ResponseModel<RecommendationDto>>
-                ($"{settings.Sсhema}://{settings.Host}:{settings.Port}/{recommendations}/{ticker}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{recommendations}/{ticker}") ?? new();
 
 
         public async Task<ResponseModel<PaginationResponseModel<RatingDto>>> GetRatingsAsync(PaginationRequestModel pagination) => 
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<RatingDto>>>
-                ($"{settings.Sсhema}://{settings.Host}:{settings.Port}/{ratings}?{pagination.QueryParams}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{ratings}?{pagination.QueryParams}") ?? new();
         public async Task<ResponseModel<RatingDto>> GetRatingAsync(string ticker) => 
             await httpClient.GetFromJsonAsync<ResponseModel<RatingDto>>
-                ($"{settings.Sсhema}://{settings.Host}:{settings.Port}/{ratings}/{ticker}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{ratings}/{ticker}") ?? new();
 
 
         public async Task<ResponseModel<PaginationResponseModel<CoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination) => 
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<CoefficientDto>>>
-                ($"{settings.Sсhema}://{settings.Host}:{settings.Port}/{coefficients}/{ticker}?{pagination.QueryParams}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{coefficients}/{ticker}?{pagination.QueryParams}") ?? new();
     }
 }

@@ -26,9 +26,6 @@ namespace IM.Services.Companies.Prices.Api
 {
     public class Startup
     {
-        private static readonly QueueExchanges[] targetExchanges = new[] { QueueExchanges.crud, QueueExchanges.loader };
-        private static readonly QueueNames[] targetQueues = new[] { QueueNames.companiespricescrud, QueueNames.companiespricesloader };
-
         public IConfiguration Configuration { get; }
         public Startup(IConfiguration configuration) => Configuration = configuration;
 
@@ -55,20 +52,15 @@ namespace IM.Services.Companies.Prices.Api
                 .AddCheck<TdAmeritradeHealthCheck>("TdAmeritrade")
                 .AddCheck<MoexHealthCheck>("Moex");
 
-            services.AddSingleton<PriceMapper>();
-            services.AddSingleton<PriceParser>();
+            services.AddTransient<PriceMapper>();
+            services.AddScoped<PriceParser>();
             services.AddScoped<PriceLoader>();
             services.AddScoped<PriceDtoAgregator>();
 
             services.AddScoped(typeof(EntityRepository<>));
             services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
 
-            services.AddSingleton(x => new RabbitBuilder(
-                Configuration["ServiceSettings:ConnectionStrings:Mq"]
-                ,QueueConfiguration.GetConfiguredData(targetExchanges, targetQueues)));
-            services.AddSingleton<RabbitService>();
-            services.AddSingleton<RabbitActionService>();
-
+            services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();
         }
 

@@ -3,6 +3,9 @@
 using IM.Gateways.Web.Companies.Api.Models.Dto.State;
 using IM.Gateways.Web.Companies.Api.Models.Rabbit.CompaniesReports;
 using IM.Gateways.Web.Companies.Api.Models.Rabbit.Ticker;
+using IM.Gateways.Web.Companies.Api.Settings;
+
+using Microsoft.Extensions.Options;
 
 using System.Collections.Generic;
 using System.Text.Json;
@@ -11,8 +14,9 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitServices
 {
     public class RabbitCrudService
     {
-        private readonly RabbitService rabbitService;
-        public RabbitCrudService(RabbitService rabbitService) => this.rabbitService = rabbitService;
+        private readonly RabbitPublisher publisher;
+        public RabbitCrudService(IOptions<ServiceSettings> options) => 
+            publisher = new RabbitPublisher(options.Value.ConnectionStrings.Mq, QueueExchanges.crud);
 
         public void CreateCompany(CompanyModel company)
         {
@@ -23,9 +27,9 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitServices
 
             var tickerData = new Dictionary<QueueNames, string>()
             {
-                {QueueNames.companiesreportscrud,companiesReportsTicker },
-                {QueueNames.companiespricescrud,companiesPricesTicker },
-                {QueueNames.companiesanalyzercrud,analyzerTicker }
+                {QueueNames.companiesreports,companiesReportsTicker },
+                {QueueNames.companiesprices,companiesPricesTicker },
+                {QueueNames.companiesanalyzer,analyzerTicker }
             };
 
             foreach (var reportSource in company.ReportSources)
@@ -38,11 +42,9 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitServices
                 }));
 
             foreach (var data in tickerData)
-                rabbitService.GetPublisher(QueueExchanges.crud)
-                                   .PublishTask(data.Key, QueueEntities.ticker, QueueActions.create, data.Value);
+                publisher.PublishTask(data.Key, QueueEntities.ticker, QueueActions.create, data.Value);
 
-            rabbitService.GetPublisher(QueueExchanges.crud)
-                               .PublishTask(QueueNames.companiesreportscrud, QueueEntities.reportsource, QueueActions.create, reportSourceData.ToArray());
+            publisher.PublishTask(QueueNames.companiesreports, QueueEntities.reportsource, QueueActions.create, reportSourceData.ToArray());
         }
         public void UpdateCompany(CompanyModel company)
         {
@@ -59,12 +61,16 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitServices
                     TickerName = company.Ticker
                 }));
 
-            rabbitService.GetPublisher(QueueExchanges.crud)
-                               .PublishTask(QueueNames.companiespricescrud, QueueEntities.ticker, QueueActions.update, companiesPricesTicker);
+            publisher.PublishTask(QueueNames.companiesprices, QueueEntities.ticker, QueueActions.update, companiesPricesTicker);
 
-            rabbitService.GetPublisher(QueueExchanges.crud)
-                               .PublishTask(QueueNames.companiesreportscrud, QueueEntities.reportsource, QueueActions.update, reportSourceData.ToArray());
+            publisher.PublishTask(QueueNames.companiesreports, QueueEntities.reportsource, QueueActions.update, reportSourceData.ToArray());
         }
-        public void DeleteCompany(string ticker) => rabbitService.GetPublisher(QueueExchanges.crud).PublishTask(QueueEntities.ticker, QueueActions.delete, ticker);
+        public void DeleteCompany(string ticker) => publisher.PublishTask(new QueueNames[]
+        {
+            QueueNames.companiesreports,
+            QueueNames.companiesprices,
+            QueueNames.companiesanalyzer
+        }
+        , QueueEntities.ticker, QueueActions.delete, ticker);
     }
 }

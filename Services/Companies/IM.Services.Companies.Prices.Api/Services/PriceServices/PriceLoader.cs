@@ -1,6 +1,5 @@
 using IM.Services.Companies.Prices.Api.DataAccess;
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
-using IM.Services.Companies.Prices.Api.Services.PriceServices;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using static IM.Services.Companies.Prices.Api.DataAccess.DataEnums;
+using static IM.Services.Companies.Prices.Api.Services.PriceServices.PriceLoaderHelper;
 
 namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 {
@@ -17,34 +17,6 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
     {
         private readonly PricesContext context;
         private readonly PriceParser parser;
-        private static readonly Dictionary<PriceSourceTypes, DateTime[]> Weekend = new()
-        {
-            {
-                PriceSourceTypes.moex,
-                new DateTime[]
-                {
-                    new(2021, 06, 14),
-                    new(2021, 11, 04),
-                    new(2021, 11, 05),
-                    new(2021, 12, 31)
-                }
-            },
-            {
-                PriceSourceTypes.tdameritrade,
-                new DateTime[]
-                {
-                    new(2021, 05, 31),
-                    new(2021, 06, 05),
-                    new(2021, 09, 06),
-                    new(2021, 10, 11),
-                    new(2021, 11, 11),
-                    new(2021, 11, 25),
-                    new(2021, 12, 24),
-                    new(2021, 12, 31)
-                }
-            }
-        };
-
         public PriceLoader(PricesContext context, PriceParser parser)
         {
             this.context = context;
@@ -61,14 +33,23 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
             var tdameritradePrices = await GetPricesAsync(PriceSourceTypes.tdameritrade, lastPrices);
             return await SavePricesAsync(new[] { moexPrices, tdameritradePrices });
         }
-        public async Task<int> LoadPricesAsync(PriceSourceTypes sourceType)
+        public async Task<int> LoadPricesAsync(Ticker ticker)
         {
-            if (IsWeekend(DateTime.UtcNow))
-                return 0;
+            var result = 0;
 
-            var lastPrices = await GetLastPricesAsync(1);
-            var loadedPrices = await GetPricesAsync(sourceType, lastPrices);
-            return await SavePricesAsync(new[] { loadedPrices });
+            var _ticker = await context.Tickers.FindAsync(ticker.Name);
+
+            if (_ticker is not null && !IsWeekend(DateTime.UtcNow) && Enum.TryParse(_ticker.PriceSourceTypeId.ToString(), out PriceSourceTypes sourceType))
+            {
+                var lastPrices = await GetLastPricesAsync(1);
+                var loadedPrices = await GetPricesAsync(sourceType, lastPrices);
+
+                result = await SavePricesAsync(new[] { loadedPrices });
+            }
+
+            Console.WriteLine($"saved prices count: {result}");
+
+            return result;
         }
 
         private async Task<IEnumerable<Price>> GetLastPricesAsync(int priceMonthsAgo)
@@ -161,6 +142,7 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
             {
                 if (data[i].toAdd.Count > 0)
                     await context.Prices.AddRangeAsync(data[i].toAdd);
+                
                 if (data[i].toUpdate.Count > 0)
                     for (int j = 0; j < data[i].toUpdate.Count; j++)
                     {
@@ -170,20 +152,6 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
             }
 
             return await context.SaveChangesAsync();
-        }
-
-        private static bool IsWeekend(DateTime date) => date.DayOfWeek == DayOfWeek.Sunday || date.DayOfWeek == DayOfWeek.Saturday;
-        private static bool IsWeekend(PriceSourceTypes sourceType, DateTime date) => Weekend[sourceType].Contains(date.Date);
-        private static DateTime GetLastWorkday(PriceSourceTypes sourceType)
-        {
-            return CheckWorkday(sourceType, DateTime.UtcNow.AddDays(-1));
-
-            static DateTime CheckWorkday(PriceSourceTypes sourceType, DateTime checkingDate) =>
-                IsWeekend(checkingDate)
-                ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
-                : IsWeekend(sourceType, checkingDate)
-                    ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
-                    : checkingDate.Date;
         }
     }
 }

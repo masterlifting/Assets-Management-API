@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace IM.Services.Companies.Prices.Api
 {
-    public partial class TdAmeritradeClient
+    public partial class TdAmeritradeClient : IDisposable
     {
         private readonly HttpClient httpClient;
         private readonly HostModel tdAmeritradeSetting;
@@ -23,6 +23,8 @@ namespace IM.Services.Companies.Prices.Api
             this.httpClient = httpClient;
             tdAmeritradeSetting = options.Value.ClientSettings.TdAmeritrade;
         }
+
+       
 
         public async Task<TdAmeritradeLastPriceResultModel> GetLastPricesAsync(IEnumerable<string> tickers)
         {
@@ -48,5 +50,7 @@ namespace IM.Services.Companies.Prices.Api
             
             return new(data, ticker);
         }
+
+        public void Dispose() => httpClient.Dispose();
     }
 }

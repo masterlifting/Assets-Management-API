@@ -1,6 +1,4 @@
 ﻿
-using CommonServices.RabbitServices.Configuration;
-
 using Microsoft.Extensions.DependencyInjection;
 
 using System.Threading.Tasks;

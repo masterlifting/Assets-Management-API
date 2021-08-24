@@ -19,13 +19,6 @@ namespace IM.Services.Analyzer.Api
 {
     public class Startup
     {
-        private static readonly QueueExchanges[] targetExchanges = new[] { QueueExchanges.crud, QueueExchanges.calculator };
-        private static readonly QueueNames[] targetQueues = new[]
-        {
-            QueueNames.companiesanalyzercrud
-            ,QueueNames.companiesanalyzercalculator 
-        };
-
         public Startup(IConfiguration configuration) => Configuration = configuration;
         public IConfiguration Configuration { get; }
 
@@ -48,12 +41,7 @@ namespace IM.Services.Analyzer.Api
             services.AddScoped(typeof(EntityRepository<>));
             services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
 
-            services.AddSingleton(x => new RabbitBuilder(
-                Configuration["ServiceSettings:ConnectionStrings:Mq"]
-                ,QueueConfiguration.GetConfiguredData(targetExchanges, targetQueues)));
-            services.AddSingleton<RabbitService>();
-            services.AddSingleton<RabbitActionService>();
-
+            services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();
         }
 

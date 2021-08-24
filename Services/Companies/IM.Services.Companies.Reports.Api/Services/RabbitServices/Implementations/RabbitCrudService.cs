@@ -12,9 +12,13 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
 {
     public class RabbitCrudService : IRabbitActionService
     {
-        private readonly RabbitService rabbitService;
-        public RabbitCrudService(RabbitService rabbitService) => this.rabbitService = rabbitService;
-        
+        private readonly string rabbitConnectionString;
+
+        public RabbitCrudService(string rabbitConnectionString)
+        {
+            this.rabbitConnectionString = rabbitConnectionString;
+        }
+
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope) => entity switch
         {
             QueueEntities.ticker => await GetTickerResultAsync(action, data, scope),
@@ -24,38 +28,38 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
 
         private static async Task<bool> GetTickerResultAsync(QueueActions action, string data, IServiceScope scope)
         {
-            if (!RabbitService.TrySerialize(data, out Ticker ticker) && ticker is null)
-                return false;
-
             var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker>>();
 
             if (repository is null)
                 return false;
 
-            return action == QueueActions.delete
-                ? await repository.DeleteAsync(data, data)
-                : await GetActionAsync(repository, action, ticker, ticker.Name);
+            if (action == QueueActions.delete)
+                return await repository.DeleteAsync(data, data);
+
+            if (!RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is null)
+                return false;
+
+            return await GetActionAsync(repository, action, ticker, ticker.Name);
         }
         private async Task<bool> GetReportSourceResultAsync(QueueActions action, string data, IServiceScope scope)
         {
-            bool result = false;
-            
-            if (!RabbitService.TrySerialize(data, out ReportSource source) && source is null)
-                return result;
-
             var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<ReportSource>>();
 
             if (repository is null)
-                return result;
+                return false;
 
-            if(action == QueueActions.delete)
-                result = await repository.DeleteAsync(int.Parse(data), data);
-            else
+            if (action == QueueActions.delete)
+                return await repository.DeleteAsync(int.Parse(data), data);
+
+            if (!RabbitHelper.TrySerialize(data, out ReportSource source) && source is null)
+                return false;
+
+            var result = await GetActionAsync(repository, action, source, source.Value);
+
+            if (result)
             {
-                result = await GetActionAsync(repository, action, source, source.Value);
-
-                if (result)
-                    rabbitService.GetPublisher(QueueExchanges.loader).PublishTask(QueueEntities.report, QueueActions.download, JsonSerializer.Serialize(source));
+                var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.loader);
+                publisher.PublishTask(QueueNames.companiesreports, QueueEntities.report, QueueActions.download, JsonSerializer.Serialize(source));
             }
 
             return result;

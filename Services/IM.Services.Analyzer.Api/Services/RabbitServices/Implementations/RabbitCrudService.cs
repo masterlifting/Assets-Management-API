@@ -11,8 +11,8 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
 {
     public class RabbitCrudService : IRabbitActionService
     {
-        private readonly RabbitService rabbitService;
-        public RabbitCrudService(RabbitService rabbitService) => this.rabbitService = rabbitService;
+        private readonly RabbitHelper rabbitService;
+        public RabbitCrudService(RabbitHelper rabbitService) => this.rabbitService = rabbitService;
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope) => entity switch
         {
@@ -22,7 +22,7 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
 
         private static async Task<bool> GetTickerResultAsync(QueueActions action, string data, IServiceScope scope)
         {
-            if (!RabbitService.TrySerialize(data, out Ticker? ticker) && ticker is null)
+            if (!RabbitHelper.TrySerialize(data, out Ticker? ticker) && ticker is null)
                 return false;
 
             var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker>>();

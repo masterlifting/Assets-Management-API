@@ -2,35 +2,20 @@
 
 using IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementations;
 using IM.Services.Companies.Reports.Api.Services.ReportServices;
+using IM.Services.Companies.Reports.Api.Settings;
 
-using Microsoft.Extensions.DependencyInjection;
-
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Options;
 
 namespace IM.Services.Companies.Reports.Api.Services.RabbitServices
 {
-    public class RabbitActionService
+    public class RabbitActionService : RabbitService
     {
-        private readonly Dictionary<QueueExchanges, IRabbitActionService> actions;
-        public RabbitActionService(RabbitService rabbitService, ReportLoader reportLoader)
-        {
-            actions = new()
+        public RabbitActionService(IOptions<ServiceSettings> options, ReportLoader reportLoader) : base(
+            new()
             {
-                { QueueExchanges.crud, new RabbitCrudService(rabbitService) },
+                { QueueExchanges.crud, new RabbitCrudService(options.Value.ConnectionStrings.Mq) },
                 { QueueExchanges.loader, new RabbitReportService(reportLoader) }
-            };
-        }
-
-        public async Task<bool> GetActionResultAsync(QueueExchanges exchange, string routingKey, string data, IServiceScope scope)
-        {
-            var route = routingKey.Split('.');
-
-            return route.Length >= 3
-                        && Enum.TryParse(route[1].ToLowerInvariant().Trim(), out QueueEntities entity)
-                        && Enum.TryParse(route[2].ToLowerInvariant().Trim(), out QueueActions action)
-                        && await actions[exchange].GetActionResultAsync(entity, action, data, scope);
-        }
+            })
+        { }
     }
 }

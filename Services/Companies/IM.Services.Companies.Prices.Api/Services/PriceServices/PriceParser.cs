@@ -14,17 +14,12 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
     public class PriceParser
     {
         private readonly Dictionary<PriceSourceTypes, IPriceParser> parser;
-        public PriceParser(
-            MoexClient moexClient,
-            TdAmeritradeClient tdAmeritradeClient,
-            PriceMapper priceMapper)
-        {
+        public PriceParser(MoexClient moexClient, TdAmeritradeClient tdAmeritradeClient, PriceMapper priceMapper) =>
             parser = new()
             {
                 { PriceSourceTypes.moex, new MoexParser(moexClient, priceMapper) },
                 { PriceSourceTypes.tdameritrade, new TdameritradeParser(tdAmeritradeClient, priceMapper) }
             };
-        }
         public async Task<Price[]> GetLastPricesToAddAsync(PriceSourceTypes sourceType, IEnumerable<(string ticker, DateTime priceDate)> data) =>
             parser.ContainsKey(sourceType)
             ? await parser[sourceType].GetLastPricesToAddAsync(data)

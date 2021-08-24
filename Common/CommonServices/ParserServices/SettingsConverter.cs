@@ -7,6 +7,7 @@ namespace CommonServices.ParserServices
     public class SettingsConverter<T> where T : class
     {
         private Dictionary<string, string> environments;
+
         public SettingsConverter(string environmentValue)
         {
             if (environmentValue is null)

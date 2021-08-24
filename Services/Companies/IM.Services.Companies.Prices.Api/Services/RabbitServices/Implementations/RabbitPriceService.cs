@@ -1,14 +1,13 @@
 ﻿
 using CommonServices.RabbitServices;
 
+using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 using IM.Services.Companies.Prices.Api.Services.PriceServices;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using System;
+using System.Text.Json;
 using System.Threading.Tasks;
-
-using static IM.Services.Companies.Prices.Api.DataAccess.DataEnums;
 
 namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementations
 {
@@ -19,8 +18,8 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope)
         {
-            if (entity == QueueEntities.price && action == QueueActions.download && Enum.TryParse(data, out PriceSourceTypes sourceType))
-                await priceLoader.LoadPricesAsync(sourceType);
+            if (entity == QueueEntities.price && action == QueueActions.download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
+                await priceLoader.LoadPricesAsync(ticker);
 
             return true;
         }

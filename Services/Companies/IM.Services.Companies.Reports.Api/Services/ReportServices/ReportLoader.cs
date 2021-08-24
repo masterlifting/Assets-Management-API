@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using static IM.Services.Companies.Reports.Api.DataAccess.DataEnums;
+using static IM.Services.Companies.Reports.Api.Services.ReportServices.ReportLoaderHelper;
 
 namespace IM.Services.Companies.Reports.Api.Services.ReportServices
 {
@@ -58,19 +59,26 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
         }
         public async Task<int> LoadReportsAsync(ReportSource source)
         {
-            int loadededReportsCount = 0;
+            int result = 0;
 
-            var sourceType = Enum.Parse<ReportSourceTypes>(source.ReportSourceTypeId.ToString());
-            var lastReport = await GetLastReportAsync(source);
+            var _source = await context.ReportSources.FindAsync(source.Id);
             
-            if (IsMissingLastQuarter(lastReport.Year, lastReport.Quarter))
+            if (_source is not null)
             {
-                var loadedReports = await parser.GetReportsAsync(sourceType, source);
-                (Report[] toAdd, Report[] toUpdate) = SeparateReports(loadedReports, lastReport);
-                loadededReportsCount = await SaveReportsAsync(toAdd, toUpdate);
+                var sourceType = Enum.Parse<ReportSourceTypes>(_source.ReportSourceTypeId.ToString());
+                var lastReport = await GetLastReportAsync(_source);
+
+                if (IsMissingLastQuarter(lastReport.Year, lastReport.Quarter))
+                {
+                    var loadedReports = await parser.GetReportsAsync(sourceType, _source);
+                    (Report[] toAdd, Report[] toUpdate) = SeparateReports(loadedReports, lastReport);
+                    result = await SaveReportsAsync(toAdd, toUpdate);
+                }
             }
 
-            return loadededReportsCount;
+            Console.WriteLine($"saved reports count: {result}");
+
+            return result;
         }
 
         private async Task<List<Report>> GetLastReportsAsync(IEnumerable<int> reportSourceIds)
@@ -103,27 +111,12 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
             var reports = await context.Reports.Where(x => x.ReportSourceId == source.Id).ToArrayAsync();
             return reports.Any() ? FindLastReport(reports) : new() { ReportSourceId = source.Id, ReportSource = source, Year = 0, Quarter = 0 };
         }
-        private static IEnumerable<Report> GetReportsWithoutLastQuarter(IEnumerable<Report> lastReports) => lastReports.Where(x => IsMissingLastQuarter(x.Year, x.Quarter));
-        private static Report FindLastReport(IEnumerable<Report> reports) => reports.GroupBy(x => x.Year).OrderBy(x => x.Key).Last().OrderBy(x => x.Quarter).Last();
 
-        private static (Report[] toAdd, Report[] toUpdate) SeparateReports(Report[] loadedReports, Report lastReport)
-        {
-            var reportsToAdd = Array.Empty<Report>();
-            var reportsToUpdate = Array.Empty<Report>();
-
-            if (loadedReports.Any())
-            {
-                reportsToAdd = loadedReports.Where(x => IsNewQuarter((x.Year, x.Quarter), (lastReport.Year, lastReport.Quarter))).ToArray();
-                reportsToUpdate = loadedReports.Where(x => !IsNewQuarter((x.Year, x.Quarter), (lastReport.Year, lastReport.Quarter))).ToArray();
-            }
-
-            return (reportsToAdd, reportsToUpdate);
-        }
         private async Task<int> SaveReportsAsync(Report[] toAdd, Report[] toUpdate)
         {
             if (toAdd is not null && toAdd.Any())
                 await context.Reports.AddRangeAsync(toAdd);
-
+            
             if (toUpdate is not null && toUpdate.Any())
                 for (int j = 0; j < toUpdate.Length; j++)
                 {
@@ -143,24 +136,5 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
 
             return await context.SaveChangesAsync();
         }
-
-        private static bool IsMissingLastQuarter(int lastYear, byte lastQuarter)
-        {
-            int controlYear = DateTime.UtcNow.Year;
-            byte controlQuarter = ReportLoaderHelper.GetQuarter(DateTime.UtcNow.Month);
-
-            if (controlQuarter == 1)
-            {
-                controlYear--;
-                controlQuarter = 4;
-            }
-            else
-                controlQuarter--;
-
-            return IsNewQuarter((controlYear, controlQuarter), (lastYear, lastQuarter));
-        }
-        private static bool IsNewQuarter((int year, byte quarter) current, (int year, byte qarter) last) =>
-            current.year > last.year
-            || (current.year == last.year && current.quarter > last.qarter);
     }
 }

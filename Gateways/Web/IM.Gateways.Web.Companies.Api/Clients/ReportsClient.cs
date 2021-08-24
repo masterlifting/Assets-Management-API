@@ -27,9 +27,9 @@ namespace IM.Gateways.Web.Companies.Api.Clients
 
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(PaginationRequestModel pagination) =>
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<ReportDto>>>
-                ($"{settings.Sсhema}://{settings.Host}:{settings.Port}/{reports}?{pagination.QueryParams}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{reports}?{pagination.QueryParams}") ?? new();
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(string ticker, PaginationRequestModel pagination) =>
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<ReportDto>>>
-                ($"{settings.Sсhema}://{settings.Host}:{settings.Port}/{reports}/{ticker}?{pagination.QueryParams}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{reports}/{ticker}?{pagination.QueryParams}") ?? new();
     }
 }

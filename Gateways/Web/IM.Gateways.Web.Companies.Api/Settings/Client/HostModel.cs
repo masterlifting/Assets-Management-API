@@ -2,7 +2,7 @@
 {
     public class HostModel
     {
-        public string Sсhema { get; set; } = null!;
+        public string Schema { get; set; } = null!;
         public string Host { get; set; } = null!;
         public int Port { get; set; }
     }

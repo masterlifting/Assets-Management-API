@@ -14,7 +14,7 @@ namespace CommonServices.RabbitServices
             {
                 Queues = new Queue[]
                 {
-                    new Queue(QueueNames.companiesreportscrud,false,true)
+                    new Queue(QueueNames.companiesreports,false,true)
                     {
                         Params = new QueueParam[]
                         {
@@ -37,7 +37,7 @@ namespace CommonServices.RabbitServices
                             }
                         }
                     },
-                    new Queue(QueueNames.companiespricescrud,false,true)
+                    new Queue(QueueNames.companiesprices,false,true)
                     {
                         Params = new QueueParam[]
                         {
@@ -52,8 +52,20 @@ namespace CommonServices.RabbitServices
                             }
                         }
                     },
-                    new Queue(QueueNames.companiesanalyzercrud,false,true)
+                    new Queue(QueueNames.companiesanalyzer,false,true)
                     {
+                        Params = new QueueParam[]
+                        {
+                            new QueueParam(QueueEntities.ticker)
+                            {
+                                Actions = new QueueActions[]
+                                {
+                                    QueueActions.create,
+                                    QueueActions.update,
+                                    QueueActions.delete
+                                }
+                            }
+                        }
 
                     }
                 }
@@ -62,7 +74,7 @@ namespace CommonServices.RabbitServices
             {
                 Queues = new Queue[]
                 {
-                    new Queue(QueueNames.companiesreportsloader)
+                    new Queue(QueueNames.companiesreports,false,true)
                     {
                         Params = new QueueParam[]
                         {
@@ -75,7 +87,7 @@ namespace CommonServices.RabbitServices
                             }
                         }
                     },
-                    new Queue(QueueNames.companiespricesloader)
+                    new Queue(QueueNames.companiesprices,false,true)
                     {
                         Params = new QueueParam[]
                         {
@@ -94,7 +106,7 @@ namespace CommonServices.RabbitServices
             {
                 Queues = new Queue[]
                 {
-                    new Queue(QueueNames.companiesanalyzercalculator)
+                    new Queue(QueueNames.companiesanalyzer)
                     {
 
                     }
@@ -112,12 +124,9 @@ namespace CommonServices.RabbitServices
 
     public enum QueueNames
     {
-        companiesreportscrud,
-        companiesreportsloader,
-        companiespricescrud,
-        companiespricesloader,
-        companiesanalyzercrud,
-        companiesanalyzercalculator
+        companiesreports,
+        companiesprices,
+        companiesanalyzer,
     }
     public enum QueueExchanges
     {
@@ -140,14 +149,4 @@ namespace CommonServices.RabbitServices
         download,
         calculate
     }
-}
-class ExchangeComparer : IEqualityComparer<QueueExchange>
-{
-    public bool Equals(QueueExchange? x, QueueExchange? y) => x!.NameEnum == y!.NameEnum;
-    public int GetHashCode([DisallowNull] QueueExchange obj) => obj.GetHashCode();
-}
-class QueueComparer : IEqualityComparer<Queue>
-{
-    public bool Equals(Queue? x, Queue? y) => x!.NameEnum == y!.NameEnum;
-    public int GetHashCode([DisallowNull] Queue obj) => obj.GetHashCode();
 }

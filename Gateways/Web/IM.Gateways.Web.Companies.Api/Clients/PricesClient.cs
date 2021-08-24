@@ -27,9 +27,9 @@ namespace IM.Gateways.Web.Companies.Api.Clients
 
         public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(PaginationRequestModel pagination) =>
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<PriceDto>>>
-                ($"{settings.Sсhema}://{settings.Host}:{settings.Port}/{prices}?{pagination.QueryParams}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{prices}?{pagination.QueryParams}") ?? new();
         public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, PaginationRequestModel pagination) => 
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<PriceDto>>>
-                ($"{settings.Sсhema}://{settings.Host}:{settings.Port}/{prices}/{ticker}?{pagination.QueryParams}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{prices}/{ticker}?{pagination.QueryParams}") ?? new();
     }
 }
