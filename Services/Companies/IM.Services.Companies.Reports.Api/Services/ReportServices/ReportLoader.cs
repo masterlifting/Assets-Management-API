@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using static IM.Services.Companies.Reports.Api.DataAccess.DataEnums;
 using static IM.Services.Companies.Reports.Api.Services.ReportServices.ReportLoaderHelper;
 
 namespace IM.Services.Companies.Reports.Api.Services.ReportServices
@@ -39,8 +38,6 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
 
             foreach (var group in groupedSources)
             {
-                var sourceType = Enum.Parse<ReportSourceTypes>(group.Key.ToString());
-
                 var lastReports = await GetLastReportsAsync(group.Select(x => x.Id));
                 var reportsWithoutLastQuarter = GetReportsWithoutLastQuarter(lastReports).ToArray();
                 var reportSources = reportsWithoutLastQuarter.Join(group, x => x.ReportSourceId, y => y.Id, (_, y) => y).ToArray();
@@ -48,7 +45,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
                 foreach (var item in reportSources.Join(lastReports, x => x.Id, y => y.ReportSourceId, (x, y) => new { source = x, lastReport = y }))
                 {
                     await Task.Delay(5000);
-                    var loadedReports = await parser.GetReportsAsync(sourceType, item.source);
+                    var loadedReports = await parser.GetReportsAsync(item.source);
                     (Report[] toAdd, Report[] toUpdate) = SeparateReports(loadedReports, item.lastReport);
                     int saveResult = await SaveReportsAsync(toAdd, toUpdate);
                     loadedReportsCount += saveResult;
@@ -65,18 +62,17 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
             
             if (_source is not null)
             {
-                var sourceType = Enum.Parse<ReportSourceTypes>(_source.ReportSourceTypeId.ToString());
                 var lastReport = await GetLastReportAsync(_source);
 
                 if (IsMissingLastQuarter(lastReport.Year, lastReport.Quarter))
                 {
-                    var loadedReports = await parser.GetReportsAsync(sourceType, _source);
+                    var loadedReports = await parser.GetReportsAsync(_source);
                     (Report[] toAdd, Report[] toUpdate) = SeparateReports(loadedReports, lastReport);
                     result = await SaveReportsAsync(toAdd, toUpdate);
                 }
             }
 
-            Console.WriteLine($"saved reports count: {result}");
+            Console.WriteLine($"\nSaved report count: {result}");
 
             return result;
         }

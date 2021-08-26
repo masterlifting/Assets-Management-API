@@ -1,4 +1,6 @@
-﻿using IM.Services.Companies.Prices.Api.DataAccess.Entities;
+﻿using CommonServices.RepositoryService;
+
+using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 
 using System;
 using System.Threading.Tasks;

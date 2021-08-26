@@ -1,4 +1,4 @@
-using CommonServices.RabbitServices;
+using CommonServices.RepositoryService;
 
 using IM.Services.Companies.Prices.Api.DataAccess;
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
@@ -57,8 +57,8 @@ namespace IM.Services.Companies.Prices.Api
             services.AddScoped<PriceLoader>();
             services.AddScoped<PriceDtoAgregator>();
 
-            services.AddScoped(typeof(EntityRepository<>));
             services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
+            services.AddScoped(typeof(EntityRepository<,>));
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();

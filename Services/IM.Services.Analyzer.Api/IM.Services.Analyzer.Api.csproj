@@ -15,15 +15,15 @@
 
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0-preview.5.21301.9" />
-	  <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="6.0.0-preview.5.21301.9" />
-	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.0-preview5" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.9" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="5.0.9" />
+	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.7" />
 	  <PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
 	</ItemGroup>
 
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Common\CommonServices\CommonServices.csproj" />
+	  <ProjectReference Include="..\..\CommonDotNet\CommonServices.csproj" />
 	</ItemGroup>
 
 </Project>

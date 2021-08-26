@@ -47,7 +47,7 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
                 result = await SavePricesAsync(new[] { loadedPrices });
             }
 
-            Console.WriteLine($"saved prices count: {result}");
+            Console.WriteLine($"\nSaved price count: {result}");
 
             return result;
         }

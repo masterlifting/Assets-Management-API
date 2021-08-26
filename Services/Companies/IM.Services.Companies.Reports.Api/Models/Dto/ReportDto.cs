@@ -10,7 +10,7 @@ namespace IM.Services.Companies.Reports.Api.Models.Dto
             if (report is not null)
             {
                 Ticker = ticker;
-                ReportSourceType = sourceType;
+                SourceType = sourceType;
                 Year = report.Year;
                 Quarter = report.Quarter;
                 StockVolume = report.StockVolume;
@@ -27,7 +27,7 @@ namespace IM.Services.Companies.Reports.Api.Models.Dto
             }
         }
         public string Ticker { get; set; }
-        public string ReportSourceType { get; }
+        public string SourceType { get; }
         public int Year { get; }
         public byte Quarter { get; }
 

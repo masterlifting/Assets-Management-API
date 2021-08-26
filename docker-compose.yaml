@@ -53,12 +53,10 @@ services:
   #     - ASPNETCORE_URLS=http://+:3101
   #     - ServiceSettings__ConnectionStrings__Db=Server=postgresql;Port=5432;Database=CompanyPrices;UserId=${DB_USERID};Password=${DB_PASSWORD}
   #     - ServiceSettings__ConnectionStrings__Mq=Server=rabbitmq;UserId=${MQ_USER};Password=${MQ_PASSWORD}
-  #     - ServiceSettings__MqSettings__QueueCompaniesPrices=Name=${QUEUENAME_COMPANIES_PRICESSERVICE}
   #     - ServiceSettings__ClientSettings__TdAmeritrade__ApiKey=${DTAMERITRADE_APIKEY}
   #   depends_on:
   #     - postgresql
   #     - rabbitmq
-
   # services_companies_reports:
   #   container_name: services_companies_reports
   #   build: ./Services/Companies/IM.Services.Companies.Reports.Api/
@@ -69,11 +67,9 @@ services:
   #     - ASPNETCORE_URLS=http://+:3102
   #     - ServiceSettings__ConnectionStrings__Db=Server=postgresql;Port=5432;Database=CompanyReports;UserId=${DB_USERID};Password=${DB_PASSWORD}
   #     - ServiceSettings__ConnectionStrings__Mq=Server=rabbitmq;UserId=${MQ_USER};Password=${MQ_PASSWORD}
-  #     - ServiceSettings__MqSettings__QueueCompaniesReports=Name=${QUEUENAME_COMPANIES_REPORTSSERVICE}
   #   depends_on:
   #     - postgresql
   #     - rabbitmq
-
   # services_analyzer:
   #   container_name: services_analyzer
   #   build: ./Services/IM.Services.Analyzer.Api/
@@ -84,20 +80,19 @@ services:
   #     - ASPNETCORE_URLS=http://+:3200
   #     - ServiceSettings__ConnectionStrings__Db=Server=postgresql;Port=5432;Database=Analyzer;UserId=${DB_USERID};Password=${DB_PASSWORD}
   #     - ServiceSettings__ConnectionStrings__Mq=Server=rabbitmq;UserId=${MQ_USER};Password=${MQ_PASSWORD}
-  #     - ServiceSettings__MqSettings__QueueAnalyzer=Name=${QUEUENAME_ANALYZERSERVICE}
   #   depends_on:
   #     - postgresql
   #     - rabbitmq
-# # traefik:
-#   image: traefik:v2.0
-#   container_name: traefik
-#   restart: always
-#   ports:
-#     - 80:80
-#     - 443:443
-#   volumes:
-#     - /var/run/docker.sock:/var/run/docker.sock
-#     - ./volumes/traefik/traefik.yml:/etc/traefik/traefik.yml
-#   depends_on:
-#     - gateways_web_companies
 
+  # traefik:
+  # image: traefik:v2.0
+  # container_name: traefik
+  # restart: always
+  # ports:
+  #   - 80:80
+  #   - 443:443
+  # volumes:
+  #   - /var/run/docker.sock:/var/run/docker.sock
+  #   - ./volumes/traefik/traefik.yml:/etc/traefik/traefik.yml
+  # depends_on:
+  #   - gateways_web_companies

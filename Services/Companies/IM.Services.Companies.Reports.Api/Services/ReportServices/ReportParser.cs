@@ -14,16 +14,14 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
     public class ReportParser
     {
         private readonly Dictionary<ReportSourceTypes, IReportParser> parser;
-        public ReportParser(InvestingClient investingClient)
+        public ReportParser(InvestingClient investingClient) => parser = new()
         {
-            parser = new()
-            {
-                { ReportSourceTypes.investing, new InvestingParser(investingClient) }
-            };
-        }
-        public async Task<Report[]> GetReportsAsync(ReportSourceTypes sourceType, ReportSource source) => 
-            parser.ContainsKey(sourceType) 
-            ? await parser[sourceType].GetReportsAsync(source) 
+            { ReportSourceTypes.investing, new InvestingParser(investingClient) }
+        };
+
+        public async Task<Report[]> GetReportsAsync(ReportSource source) =>
+            Enum.TryParse(source.ReportSourceTypeId.ToString(), out ReportSourceTypes sourceType) && parser.ContainsKey(sourceType)
+            ? await parser[sourceType].GetReportsAsync(source)
             : Array.Empty<Report>();
     }
 }

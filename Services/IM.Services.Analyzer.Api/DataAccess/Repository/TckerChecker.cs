@@ -1,4 +1,6 @@
-﻿using IM.Services.Analyzer.Api.DataAccess.Entities;
+﻿using CommonServices.RepositoryService;
+
+using IM.Services.Analyzer.Api.DataAccess.Entities;
 
 using System;
 using System.Threading.Tasks;

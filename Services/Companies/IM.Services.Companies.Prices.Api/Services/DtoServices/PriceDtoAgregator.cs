@@ -22,18 +22,16 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
             var query = context.Tickers.AsQueryable();
             int count = await query.CountAsync();
 
-            var prices = context.Prices
+            var prices = await context.Prices
                 .Where(x => x.Date >= DateTime.UtcNow.AddMonths(-1))
                 .OrderByDescending(x => x.Date)
                 .ThenBy(x => x.TickerName)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit)
-                .ToArray();
+                .Join(query, x => x.TickerName, y => y.Name, (x, y) => new PriceDto(x, y.PriceSourceTypeId, x.TickerName))
+                .ToArrayAsync();
 
-            var lastPrices = prices
-                .GroupBy(x => x.TickerName)
-                .Select(x => new PriceDto(x.FirstOrDefault(), x.Key))
-                .ToArray();
+            var lastPrices = prices.GroupBy(x => x.Ticker).Select(x => x.First()).ToArray();
 
             return new()
             {
@@ -50,6 +48,7 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
             var errors = Array.Empty<string>();
             string tickerName = ticker.ToUpperInvariant();
             var _ticker = await context.Tickers.FindAsync(tickerName);
+
             if (_ticker is null)
                 return new()
                 {
@@ -64,7 +63,7 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
                 .OrderByDescending(x => x.Date)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit)
-                .Select(x => new PriceDto(x, tickerName))
+                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new PriceDto(x, y.PriceSourceTypeId, x.TickerName))
                 .ToArray();
 
             return new()

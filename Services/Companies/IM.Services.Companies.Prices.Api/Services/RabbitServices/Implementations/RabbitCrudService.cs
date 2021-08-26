@@ -1,7 +1,8 @@
 ﻿using CommonServices.RabbitServices;
+using CommonServices.RepositoryService;
 
+using IM.Services.Companies.Prices.Api.DataAccess;
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
-using IM.Services.Companies.Prices.Api.DataAccess.Repository;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,11 +14,7 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
     public class RabbitCrudService : IRabbitActionService
     {
         private readonly string rabbitConnectionString;
-
-        public RabbitCrudService(string rabbitConnectionString)
-        {
-            this.rabbitConnectionString = rabbitConnectionString;
-        }
+        public RabbitCrudService(string rabbitConnectionString) => this.rabbitConnectionString = rabbitConnectionString;
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope) => entity switch
         {
@@ -27,7 +24,10 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
 
         private async Task<bool> GetTickerResultAsync(QueueActions action, string data, IServiceScope scope)
         {
-            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker>>();
+            if (!RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is null)
+                return false;
+
+            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker,PricesContext>>();
 
             if (repository is null)
                 return false;
@@ -35,8 +35,6 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
             if (action == QueueActions.delete)
                 return await repository.DeleteAsync(data, data);
 
-            if (!RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is null)
-                return false;
 
             var result = await GetActionAsync(repository, action, ticker, ticker.Name);
 
@@ -49,7 +47,7 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
             return result;
         }
 
-        private static async Task<bool> GetActionAsync<T>(EntityRepository<T> repository, QueueActions action, T data, string value) where T : class => action switch
+        private static async Task<bool> GetActionAsync<T>(EntityRepository<T,PricesContext> repository, QueueActions action, T data, string value) where T : class => action switch
         {
             QueueActions.create => await repository.CreateAsync(data, value),
             QueueActions.update => await repository.UpdateAsync(data, value),

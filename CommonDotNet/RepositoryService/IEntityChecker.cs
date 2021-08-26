@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace IM.Services.Analyzer.Api.DataAccess.Repository
+namespace CommonServices.RepositoryService
 {
     public interface IEntityChecker<T> where T : class
     {

@@ -6,6 +6,7 @@ using IM.Services.Companies.Reports.Api.Services.ReportServices;
 
 using Microsoft.Extensions.DependencyInjection;
 
+using System;
 using System.Threading.Tasks;
 
 namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementations
@@ -19,6 +20,8 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
         {
             if (entity == QueueEntities.report && action == QueueActions.download && RabbitHelper.TrySerialize(data, out ReportSource source) && source is not null)
                 await reportLoader.LoadReportsAsync(source);
+            else
+                Console.WriteLine(nameof(RabbitReportService) + " error!");
 
             return true;
         }

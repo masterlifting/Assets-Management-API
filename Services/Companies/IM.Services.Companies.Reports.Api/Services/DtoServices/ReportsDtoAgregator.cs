@@ -31,13 +31,14 @@ namespace IM.Services.Companies.Reports.Api.Services.DtoServices
                .Join(context.ReportSourceTypes, x => x.sourceTypeId, y => y.Id, (x, y) => new ReportDto(x.report, y.Name, x.ticker))
                .ToArrayAsync();
 
+            var lastReports = reports.GroupBy(x => x.Ticker).Select(x => x.First()).ToArray();
 
             return new()
             {
                 Errors = errors,
                 Data = new()
                 {
-                    Items = reports,
+                    Items = lastReports,
                     Count = count
                 }
             };

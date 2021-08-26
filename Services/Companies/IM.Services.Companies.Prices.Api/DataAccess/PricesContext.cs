@@ -20,8 +20,8 @@ namespace IM.Services.Companies.Prices.Api.DataAccess
             modelBuilder.Entity<PriceSourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<PriceSourceType>().HasData(new PriceSourceType[]
             {
-                new (){Id = 1, Name = "moex" },
-                new (){Id = 2, Name = "tdameritrade" }
+                new (){Id = 1, Name = nameof(DataEnums.PriceSourceTypes.moex) },
+                new (){Id = 2, Name = nameof(DataEnums.PriceSourceTypes.tdameritrade) }
             });
         }
     }

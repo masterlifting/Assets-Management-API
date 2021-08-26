@@ -6,7 +6,7 @@ using IM.Services.Companies.Prices.Api.Services.PriceServices;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using System.Text.Json;
+using System;
 using System.Threading.Tasks;
 
 namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementations
@@ -20,6 +20,8 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
         {
             if (entity == QueueEntities.price && action == QueueActions.download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
                 await priceLoader.LoadPricesAsync(ticker);
+            else
+                Console.WriteLine(nameof(RabbitPriceService) + " error!");
 
             return true;
         }

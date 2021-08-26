@@ -6,6 +6,7 @@ using IM.Services.Companies.Reports.Api.Services.ReportServices.Interfaces;
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,7 +16,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
     {
         private readonly InvestingClient client;
         public InvestingParser(InvestingClient client) => this.client = client;
-        
+
         public async Task<Report[]> GetReportsAsync(ReportSource source)
         {
             Report[] result;
@@ -24,8 +25,9 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
                 var pages = await LoadSiteAsync(source.Value);
                 result = GetReports(pages, source.Id);
             }
-            catch
+            catch(Exception ex)
             {
+                Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
                 return Array.Empty<Report>();
             }
 
@@ -42,9 +44,10 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
         private static Report[] GetReports(HtmlDocument[] site, int reportSourceId)
         {
             var result = new Report[4];
+            var culture = CultureInfo.CreateSpecificCulture("ru-RU");
 
             var mainPage = new MainPage(site[0]);
-            var financialPage = new FinancialPage(site[1]);
+            var financialPage = new FinancialPage(site[1], culture);
             var balancePage = new BalancePage(site[2]);
             var dividendPage = new DividendPage(site[3], financialPage.Dates.ToArray());
 
@@ -93,10 +96,10 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
     class FinancialPage
     {
         private readonly HtmlDocument page;
-        public FinancialPage(HtmlDocument page)
+        public FinancialPage(HtmlDocument page, CultureInfo culture)
         {
             this.page = page;
-            Dates = GetDates();
+            Dates = GetDates(culture);
             Revenues = GetFinantialData(0, "Общий доход");
             ProfitsGross = GetFinantialData(0, "Валовая прибыль");
             ProfitsNet = GetFinantialData(0, "Чистая прибыль");
@@ -132,7 +135,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
 
             return result;
         }
-        List<DateTime> GetDates()
+        List<DateTime> GetDates(CultureInfo culture)
         {
             var result = new List<DateTime>(4);
 
@@ -141,7 +144,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
             {
                 var dates = dateNode.ParentNode.InnerText.Split("\n");
                 for (int i = 0; i < dates.Length; i++)
-                    if (DateTime.TryParse(dates[i], out DateTime date))
+                    if (DateTime.TryParse(dates[i], culture, DateTimeStyles.AssumeLocal, out DateTime date))
                         result.Add(date);
             }
 

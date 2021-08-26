@@ -1,4 +1,5 @@
 using IM.Services.Companies.Reports.Api.DataAccess.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace IM.Services.Companies.Reports.Api.DataAccess
@@ -21,8 +22,8 @@ namespace IM.Services.Companies.Reports.Api.DataAccess
             modelBuilder.Entity<ReportSourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<ReportSourceType>().HasData(new ReportSourceType[]
             {
-                new (){Id = 1, Name = "official" },
-                new (){Id = 2, Name = "investing" }
+                new (){Id = 1, Name = nameof(DataEnums.ReportSourceTypes.official) },
+                new (){Id = 2, Name = nameof(DataEnums.ReportSourceTypes.investing) }
             });
         }
     }

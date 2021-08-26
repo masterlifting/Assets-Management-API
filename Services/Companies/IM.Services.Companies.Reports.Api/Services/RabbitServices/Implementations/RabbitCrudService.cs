@@ -1,7 +1,8 @@
 ﻿using CommonServices.RabbitServices;
+using CommonServices.RepositoryService;
 
+using IM.Services.Companies.Reports.Api.DataAccess;
 using IM.Services.Companies.Reports.Api.DataAccess.Entities;
-using IM.Services.Companies.Reports.Api.DataAccess.Repository;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,7 +29,7 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
 
         private static async Task<bool> GetTickerResultAsync(QueueActions action, string data, IServiceScope scope)
         {
-            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker>>();
+            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker, ReportsContext>>();
 
             if (repository is null)
                 return false;
@@ -43,7 +44,7 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
         }
         private async Task<bool> GetReportSourceResultAsync(QueueActions action, string data, IServiceScope scope)
         {
-            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<ReportSource>>();
+            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<ReportSource, ReportsContext>>();
 
             if (repository is null)
                 return false;
@@ -65,7 +66,7 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
             return result;
         }
 
-        private static async Task<bool> GetActionAsync<T>(EntityRepository<T> repository, QueueActions action, T data, string value) where T : class => action switch
+        private static async Task<bool> GetActionAsync<T>(EntityRepository<T, ReportsContext> repository, QueueActions action, T data, string value) where T : class => action switch
         {
             QueueActions.create => await repository.CreateAsync(data, value),
             QueueActions.update => await repository.UpdateAsync(data, value),

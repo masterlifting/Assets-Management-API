@@ -1,4 +1,4 @@
-using CommonServices.RabbitServices;
+using CommonServices.RepositoryService;
 
 using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
@@ -38,8 +38,8 @@ namespace IM.Services.Analyzer.Api
             services.AddScoped<RatingDtoAgregator>();
             services.AddScoped<RecommendationDtoAgregator>();
 
-            services.AddScoped(typeof(EntityRepository<>));
             services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
+            services.AddScoped(typeof(EntityRepository<,>));
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();

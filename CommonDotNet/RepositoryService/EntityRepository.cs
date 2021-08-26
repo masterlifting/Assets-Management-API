@@ -1,23 +1,24 @@
-﻿using System;
-using System.Text.Json;
+﻿using Microsoft.EntityFrameworkCore;
+
+using System;
 using System.Threading.Tasks;
 
-using static IM.Services.Companies.Prices.Api.DataAccess.DataEnums;
+using static CommonServices.RepositoryService.RepositoryEnums;
 
-namespace IM.Services.Companies.Prices.Api.DataAccess.Repository
+namespace CommonServices.RepositoryService
 {
-    public class EntityRepository<T> where T : class
+    public class EntityRepository<TEntity,TContext> where TEntity : class where TContext : DbContext
     {
-        private readonly PricesContext context;
-        private readonly IEntityChecker<T> checker;
+        private readonly TContext context;
+        private readonly IEntityChecker<TEntity> checker;
 
-        public EntityRepository(PricesContext context, IEntityChecker<T> checker)
+        public EntityRepository(TContext context, IEntityChecker<TEntity> checker)
         {
             this.context = context;
             this.checker = checker;
         }
 
-        public async Task<bool> CreateAsync(T entity, string info)
+        public async Task<bool> CreateAsync(TEntity entity, string info)
         {
             if (checker.WithError(entity))
                 return false;
@@ -25,22 +26,22 @@ namespace IM.Services.Companies.Prices.Api.DataAccess.Repository
             if (await checker.IsAlreadyAsync(entity))
                 return true;
 
-            await context.Set<T>().AddAsync(entity);
+            await context.Set<TEntity>().AddAsync(entity);
 
             return await SaveAsync(info, RepositoryActionType.create);
         }
-        public async Task<bool> UpdateAsync(T entity, string info)
+        public async Task<bool> UpdateAsync(TEntity entity, string info)
         {
             if (checker.WithError(entity))
                 return false;
 
-            context.Set<T>().Update(entity);
+            context.Set<TEntity>().Update(entity);
 
             return await SaveAsync(info, RepositoryActionType.update);
         }
         public async Task<bool> DeleteAsync<TId>(TId id, string info)
         {
-            var ctxEntity = await context.Set<T>().FindAsync(id);
+            var ctxEntity = await context.Set<TEntity>().FindAsync(id);
 
             if (ctxEntity is null)
             {
@@ -48,7 +49,7 @@ namespace IM.Services.Companies.Prices.Api.DataAccess.Repository
                 return true;
             }
 
-            context.Set<T>().Remove(ctxEntity);
+            context.Set<TEntity>().Remove(ctxEntity);
 
             return await SaveAsync(info, RepositoryActionType.delete);
         }

@@ -1,7 +1,8 @@
 ﻿using CommonServices.RabbitServices;
+using CommonServices.RepositoryService;
 
+using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
-using IM.Services.Analyzer.Api.DataAccess.Repository;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,8 +12,8 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
 {
     public class RabbitCrudService : IRabbitActionService
     {
-        private readonly RabbitHelper rabbitService;
-        public RabbitCrudService(RabbitHelper rabbitService) => this.rabbitService = rabbitService;
+        private readonly string rabbitConnectionString;
+        public RabbitCrudService(string rabbitConnectionString) => this.rabbitConnectionString = rabbitConnectionString;
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope) => entity switch
         {
@@ -25,7 +26,7 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
             if (!RabbitHelper.TrySerialize(data, out Ticker? ticker) && ticker is null)
                 return false;
 
-            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker>>();
+            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker,AnalyzerContext>>();
 
             if (repository is null)
                 return false;
@@ -35,7 +36,7 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
                 : await GetActionAsync(repository!, action, ticker!, ticker!.Name);
         }
 
-        private static async Task<bool> GetActionAsync<T>(EntityRepository<T> repository, QueueActions action, T data, string value) where T : class => action switch
+        private static async Task<bool> GetActionAsync<T>(EntityRepository<T,AnalyzerContext> repository, QueueActions action, T data, string value) where T : class => action switch
         {
             QueueActions.create => await repository.CreateAsync(data, value),
             QueueActions.update => await repository.UpdateAsync(data, value),

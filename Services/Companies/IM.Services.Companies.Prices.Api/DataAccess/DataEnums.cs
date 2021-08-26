@@ -7,11 +7,5 @@ namespace IM.Services.Companies.Prices.Api.DataAccess
             moex = 1,
             tdameritrade = 2
         }
-        public enum RepositoryActionType
-        {
-            create,
-            update,
-            delete
-        }
     }
 }

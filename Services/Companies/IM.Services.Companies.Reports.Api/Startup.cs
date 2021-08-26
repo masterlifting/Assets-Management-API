@@ -1,4 +1,6 @@
 
+using CommonServices.RepositoryService;
+
 using IM.Services.Companies.Reports.Api.Clients;
 using IM.Services.Companies.Reports.Api.DataAccess;
 using IM.Services.Companies.Reports.Api.DataAccess.Entities;
@@ -41,9 +43,9 @@ namespace IM.Services.Companies.Reports.Api
             services.AddScoped<ReportLoader>();
             services.AddScoped<ReportsDtoAgregator>();
 
-            services.AddScoped(typeof(EntityRepository<>));
             services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
             services.AddScoped<IEntityChecker<ReportSource>, ReportSourceChecker>();
+            services.AddScoped(typeof(EntityRepository<,>));
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();
