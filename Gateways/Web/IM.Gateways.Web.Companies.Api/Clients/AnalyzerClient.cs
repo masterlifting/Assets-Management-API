@@ -1,5 +1,6 @@
-﻿using IM.Gateways.Web.Companies.Api.Models.Dto;
-using IM.Gateways.Web.Companies.Api.Models.Http;
+﻿using CommonServices.Models.Dto.Http;
+
+using IM.Gateways.Web.Companies.Api.Models.Dto;
 using IM.Gateways.Web.Companies.Api.Settings;
 using IM.Gateways.Web.Companies.Api.Settings.Client;
 

@@ -57,7 +57,7 @@ namespace IM.Services.Companies.Prices.Api
             services.AddScoped<PriceLoader>();
             services.AddScoped<PriceDtoAgregator>();
 
-            services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
+            services.AddScoped<IEntityChecker<Ticker>, TickerChecker>();
             services.AddScoped(typeof(EntityRepository<,>));
 
             services.AddScoped<RabbitActionService>();

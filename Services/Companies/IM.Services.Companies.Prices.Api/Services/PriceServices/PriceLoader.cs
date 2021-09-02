@@ -8,8 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using static IM.Services.Companies.Prices.Api.DataAccess.DataEnums;
-using static IM.Services.Companies.Prices.Api.Services.PriceServices.PriceLoaderHelper;
+using static CommonServices.CommonEnums;
+using static CommonServices.CommonHelper;
 
 namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 {
@@ -25,21 +25,22 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 
         public async Task<int> LoadPricesAsync()
         {
-            if (IsWeekend(DateTime.UtcNow))
+            if (IsExchangeWeekend(DateTime.UtcNow))
                 return 0;
 
             var lastPrices = await GetLastPricesAsync(1);
-            var moexPrices = await GetPricesAsync(PriceSourceTypes.moex, lastPrices);
-            var tdameritradePrices = await GetPricesAsync(PriceSourceTypes.tdameritrade, lastPrices);
-            return await SavePricesAsync(new[] { moexPrices, tdameritradePrices });
+            var moexPrices = await GetPricesAsync(PriceSourceTypes.MOEX, lastPrices);
+            var tdameritradePrices = await GetPricesAsync(PriceSourceTypes.Tdameritrade, lastPrices);
+            var savedPrices = await SavePricesAsync(new[] { moexPrices, tdameritradePrices });
+            return savedPrices.Length;
         }
-        public async Task<int> LoadPricesAsync(Ticker ticker)
+        public async Task<Price[]> LoadPricesAsync(Ticker ticker)
         {
-            var result = 0;
+            var result = Array.Empty<Price>();
 
             var _ticker = await context.Tickers.FindAsync(ticker.Name);
 
-            if (_ticker is not null && !IsWeekend(DateTime.UtcNow) && Enum.TryParse(_ticker.PriceSourceTypeId.ToString(), out PriceSourceTypes sourceType))
+            if (_ticker is not null && !IsExchangeWeekend(DateTime.UtcNow) && Enum.TryParse(_ticker.PriceSourceTypeId.ToString(), out PriceSourceTypes sourceType))
             {
                 var lastPrices = await GetLastPricesAsync(1);
                 var loadedPrices = await GetPricesAsync(sourceType, lastPrices);
@@ -47,7 +48,7 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
                 result = await SavePricesAsync(new[] { loadedPrices });
             }
 
-            Console.WriteLine($"\nSaved price count: {result}");
+            Console.WriteLine($"\nSaved price count: {result.Length}");
 
             return result;
         }
@@ -98,7 +99,7 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 
             (IEnumerable<Price> forHistory, IEnumerable<Price> forLastToUpdate, IEnumerable<Price> forLastToAdd) GetSeparatedPrices(PriceSourceTypes sourceType, IEnumerable<Price> prices)
             {
-                var lastWorkday = GetLastWorkday(sourceType);
+                var lastWorkday = GetExchangeLastWorkday(sourceType);
 
                 var pricesForHistory = prices.Where(x => x.Date < lastWorkday);
                 var pricesForLastToUpdate = prices.Where(x => x.Date == DateTime.UtcNow.Date);
@@ -136,22 +137,32 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
                 return (toUpdate, toAdd);
             }
         }
-        private async Task<int> SavePricesAsync((List<Price> toUpdate, List<Price> toAdd)[] data)
+        private async Task<Price[]> SavePricesAsync((List<Price> toUpdate, List<Price> toAdd)[] data)
         {
+            var result = Array.Empty<Price>();
+
             for (int i = 0; i < data.Length; i++)
             {
                 if (data[i].toAdd.Count > 0)
+                {
                     await context.Prices.AddRangeAsync(data[i].toAdd);
+                    result = result.Concat(data[i].toAdd).ToArray();
+                }
                 
                 if (data[i].toUpdate.Count > 0)
+                {
                     for (int j = 0; j < data[i].toUpdate.Count; j++)
                     {
                         var price = await context.Prices.FindAsync(data[i].toUpdate[j].TickerName, data[i].toUpdate[j].Date);
                         price.Value = data[i].toUpdate[j].Value;
                     }
+                    result = result.Concat(data[i].toUpdate).ToArray();
+                }
             }
 
-            return await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
+
+            return result;
         }
     }
 }

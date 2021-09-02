@@ -3,11 +3,11 @@
 using System;
 using System.Threading.Tasks;
 
-using static CommonServices.RepositoryService.RepositoryEnums;
+using static CommonServices.CommonEnums;
 
 namespace CommonServices.RepositoryService
 {
-    public class EntityRepository<TEntity,TContext> where TEntity : class where TContext : DbContext
+    public class EntityRepository<TEntity, TContext> where TEntity : class where TContext : DbContext
     {
         private readonly TContext context;
         private readonly IEntityChecker<TEntity> checker;
@@ -38,6 +38,11 @@ namespace CommonServices.RepositoryService
             context.Set<TEntity>().Update(entity);
 
             return await SaveAsync(info, RepositoryActionType.update);
+        }
+        public async Task<bool> CreateOrUpdateAsync<TId>(TId id, TEntity entity, string info)
+        {
+            var ctxEntity = await context.Set<TEntity>().FindAsync(id);
+            return ctxEntity is null ? await CreateAsync(entity, info) : await UpdateAsync(entity, info);
         }
         public async Task<bool> DeleteAsync<TId>(TId id, string info)
         {

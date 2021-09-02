@@ -1,3 +1,5 @@
+using CommonServices;
+
 using HtmlAgilityPack;
 
 using IM.Services.Companies.Reports.Api.Clients;
@@ -56,7 +58,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
                 {
                     ReportSourceId = reportSourceId,
                     Year = financialPage.Dates[i].Year,
-                    Quarter = ReportLoaderHelper.GetQuarter(financialPage.Dates[i].Month),
+                    Quarter = CommonHelper.GetQuarter(financialPage.Dates[i].Month),
                     StockVolume = mainPage.StockVolume,
                     Turnover = balancePage.Turnovers[i],
                     LongTermDebt = balancePage.LongDebts[i],
@@ -231,12 +233,12 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
                             for (int i = 0; i < dates.Length; i++)
                             {
                                 var reportYear = dates[i].Year;
-                                var reportQuarter = ReportLoaderHelper.GetQuarter(dates[i].Month);
+                                var reportQuarter = CommonHelper.GetQuarter(dates[i].Month);
 
                                 for (int j = 0; j < dividendDates.Count; j++)
                                 {
                                     var dividendYear = dividendDates[j].Year;
-                                    var dividendQuarter = ReportLoaderHelper.GetQuarter(dividendDates[j].Month);
+                                    var dividendQuarter = CommonHelper.GetQuarter(dividendDates[j].Month);
 
                                     if (reportYear == dividendYear && reportQuarter == dividendQuarter)
                                     {
@@ -247,7 +249,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
                                             if (j > 0)
                                             {
                                                 var previousDividendYear = dividendDates[j - 1].Year;
-                                                var previousDividendQuarter = ReportLoaderHelper.GetQuarter(dividendDates[j - 1].Month);
+                                                var previousDividendQuarter = CommonHelper.GetQuarter(dividendDates[j - 1].Month);
                                                 if (dividendYear == previousDividendYear && dividendQuarter == previousDividendQuarter)
                                                 {
                                                     var dividendPreviousValue = dividendValues[j - 1].Replace(".", "", StringComparison.CurrentCultureIgnoreCase);

@@ -1,16 +1,14 @@
+using CommonServices.Models.Entity;
+
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IM.Services.Companies.Reports.Api.DataAccess.Entities
 {
-    public class Report
+    public class Report : ReportIdentity
     {
         public virtual ReportSource ReportSource { get; set; }
-        public int ReportSourceId { get; set; }
-        public int Year { get; set; }
-        public byte Quarter { get; set; }
 
         public long StockVolume { get; set; }
-
         [Column(TypeName = "Decimal(18,4)")]
         public decimal? Revenue { get; set; }
         [Column(TypeName = "Decimal(18,4)")]

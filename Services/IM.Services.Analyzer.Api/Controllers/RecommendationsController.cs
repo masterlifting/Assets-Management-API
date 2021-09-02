@@ -1,5 +1,6 @@
-﻿using IM.Services.Analyzer.Api.Models.Dto;
-using IM.Services.Analyzer.Api.Models.Http;
+﻿using CommonServices.Models.Dto.Http;
+
+using IM.Services.Analyzer.Api.Models.Dto;
 using IM.Services.Analyzer.Api.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;

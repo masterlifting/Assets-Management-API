@@ -1,6 +1,9 @@
+using CommonServices;
+
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 
 using Microsoft.EntityFrameworkCore;
+
 
 namespace IM.Services.Companies.Prices.Api.DataAccess
 {
@@ -20,8 +23,8 @@ namespace IM.Services.Companies.Prices.Api.DataAccess
             modelBuilder.Entity<PriceSourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<PriceSourceType>().HasData(new PriceSourceType[]
             {
-                new (){Id = 1, Name = nameof(DataEnums.PriceSourceTypes.moex) },
-                new (){Id = 2, Name = nameof(DataEnums.PriceSourceTypes.tdameritrade) }
+                new (){Id = (byte)CommonEnums.PriceSourceTypes.MOEX, Name = nameof(CommonEnums.PriceSourceTypes.MOEX) },
+                new (){Id = (byte)CommonEnums.PriceSourceTypes.Tdameritrade, Name = nameof(CommonEnums.PriceSourceTypes.Tdameritrade) }
             });
         }
     }

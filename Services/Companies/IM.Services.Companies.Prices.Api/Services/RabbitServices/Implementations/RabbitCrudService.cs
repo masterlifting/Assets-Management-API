@@ -24,10 +24,7 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
 
         private async Task<bool> GetTickerResultAsync(QueueActions action, string data, IServiceScope scope)
         {
-            if (!RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is null)
-                return false;
-
-            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker,PricesContext>>();
+            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker, PricesContext>>();
 
             if (repository is null)
                 return false;
@@ -35,19 +32,21 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
             if (action == QueueActions.delete)
                 return await repository.DeleteAsync(data, data);
 
+            if (!RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is null)
+                return false;
 
-            var result = await GetActionAsync(repository, action, ticker, ticker.Name);
-
-            if (result)
+            if (await GetActionAsync(repository, action, ticker, ticker.Name))
             {
                 var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.loader);
                 publisher.PublishTask(QueueNames.companiesprices, QueueEntities.price, QueueActions.download, JsonSerializer.Serialize(ticker));
+
+                return true;
             }
 
-            return result;
+            return false;
         }
 
-        private static async Task<bool> GetActionAsync<T>(EntityRepository<T,PricesContext> repository, QueueActions action, T data, string value) where T : class => action switch
+        private static async Task<bool> GetActionAsync<T>(EntityRepository<T, PricesContext> repository, QueueActions action, T data, string value) where T : class => action switch
         {
             QueueActions.create => await repository.CreateAsync(data, value),
             QueueActions.update => await repository.UpdateAsync(data, value),

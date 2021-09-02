@@ -1,7 +1,8 @@
-﻿using IM.Gateways.Web.Companies.Api.Clients;
+﻿using CommonServices.Models.Dto.Http;
+
+using IM.Gateways.Web.Companies.Api.Clients;
 using IM.Gateways.Web.Companies.Api.DataAccess;
 using IM.Gateways.Web.Companies.Api.Models.Dto;
-using IM.Gateways.Web.Companies.Api.Models.Http;
 
 using Microsoft.EntityFrameworkCore;
 

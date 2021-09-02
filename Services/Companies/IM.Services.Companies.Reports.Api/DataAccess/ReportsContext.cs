@@ -1,3 +1,5 @@
+using CommonServices;
+
 using IM.Services.Companies.Reports.Api.DataAccess.Entities;
 
 using Microsoft.EntityFrameworkCore;
@@ -22,8 +24,8 @@ namespace IM.Services.Companies.Reports.Api.DataAccess
             modelBuilder.Entity<ReportSourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<ReportSourceType>().HasData(new ReportSourceType[]
             {
-                new (){Id = 1, Name = nameof(DataEnums.ReportSourceTypes.official) },
-                new (){Id = 2, Name = nameof(DataEnums.ReportSourceTypes.investing) }
+                new (){Id = (byte)CommonEnums.ReportSourceTypes.Official, Name = nameof(CommonEnums.ReportSourceTypes.Official) },
+                new (){Id = (byte)CommonEnums.ReportSourceTypes.Investing, Name = nameof(CommonEnums.ReportSourceTypes.Investing) }
             });
         }
     }

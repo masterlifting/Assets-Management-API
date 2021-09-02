@@ -14,11 +14,7 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
     public class RabbitCrudService : IRabbitActionService
     {
         private readonly string rabbitConnectionString;
-
-        public RabbitCrudService(string rabbitConnectionString)
-        {
-            this.rabbitConnectionString = rabbitConnectionString;
-        }
+        public RabbitCrudService(string rabbitConnectionString) => this.rabbitConnectionString = rabbitConnectionString;
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope) => entity switch
         {
@@ -31,16 +27,10 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
         {
             var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker, ReportsContext>>();
 
-            if (repository is null)
-                return false;
-
-            if (action == QueueActions.delete)
-                return await repository.DeleteAsync(data, data);
-
-            if (!RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is null)
-                return false;
-
-            return await GetActionAsync(repository, action, ticker, ticker.Name);
+            return repository is not null 
+                && (action == QueueActions.delete
+                    ? await repository.DeleteAsync(data, data)
+                    : RabbitHelper.TrySerialize(data, out Ticker ticker) && await GetActionAsync(repository, action, ticker, ticker.Name));
         }
         private async Task<bool> GetReportSourceResultAsync(QueueActions action, string data, IServiceScope scope)
         {
@@ -55,15 +45,15 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
             if (!RabbitHelper.TrySerialize(data, out ReportSource source) && source is null)
                 return false;
 
-            var result = await GetActionAsync(repository, action, source, source.Value);
 
-            if (result)
+            if (await GetActionAsync(repository, action, source, source.Value))
             {
                 var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.loader);
                 publisher.PublishTask(QueueNames.companiesreports, QueueEntities.report, QueueActions.download, JsonSerializer.Serialize(source));
+                return true;
             }
-
-            return result;
+            
+            return false;
         }
 
         private static async Task<bool> GetActionAsync<T>(EntityRepository<T, ReportsContext> repository, QueueActions action, T data, string value) where T : class => action switch

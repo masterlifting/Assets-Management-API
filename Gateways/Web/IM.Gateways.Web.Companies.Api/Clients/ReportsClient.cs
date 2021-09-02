@@ -1,5 +1,6 @@
-﻿using IM.Gateways.Web.Companies.Api.Models.Dto;
-using IM.Gateways.Web.Companies.Api.Models.Http;
+﻿using CommonServices.Models.Dto;
+using CommonServices.Models.Dto.Http;
+
 using IM.Gateways.Web.Companies.Api.Settings;
 using IM.Gateways.Web.Companies.Api.Settings.Client;
 
@@ -23,7 +24,6 @@ namespace IM.Gateways.Web.Companies.Api.Clients
             this.httpClient = httpClient;
             settings = options.Value.ClientSettings.ClientCompaniesReports;
         }
-
 
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(PaginationRequestModel pagination) =>
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<ReportDto>>>

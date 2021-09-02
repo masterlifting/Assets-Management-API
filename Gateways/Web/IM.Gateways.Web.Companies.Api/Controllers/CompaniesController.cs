@@ -1,6 +1,8 @@
-﻿using IM.Gateways.Web.Companies.Api.Models.Dto;
+﻿using CommonServices.Models.Dto;
+using CommonServices.Models.Dto.Http;
+
+using IM.Gateways.Web.Companies.Api.Models.Dto;
 using IM.Gateways.Web.Companies.Api.Models.Dto.State;
-using IM.Gateways.Web.Companies.Api.Models.Http;
 using IM.Gateways.Web.Companies.Api.Services.CompanyServices;
 using IM.Gateways.Web.Companies.Api.Services.DtoServices;
 

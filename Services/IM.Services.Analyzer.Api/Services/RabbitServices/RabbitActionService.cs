@@ -12,7 +12,7 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices
         public RabbitActionService(IOptions<ServiceSettings> options) : base(
             new()
             {
-                { QueueExchanges.crud, new RabbitCrudService(options.Value.ConnectionStrings.Mq) },
+                { QueueExchanges.crud, new RabbitCrudService() },
                 { QueueExchanges.calculator, new RabbitCalculatorService() }
             })
         { }

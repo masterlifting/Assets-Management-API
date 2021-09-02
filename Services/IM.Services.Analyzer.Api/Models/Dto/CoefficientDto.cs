@@ -1,23 +1,21 @@
-﻿using IM.Services.Analyzer.Api.DataAccess.Entities;
-using IM.Services.Analyzer.Api.Models.Calculator.Rating;
+﻿using CommonServices.Models.Entity;
+
+using IM.Services.Analyzer.Api.Models.Calculator;
+
 using System;
 
 namespace IM.Services.Analyzer.Api.Models.Dto
 {
-    public class CoefficientDto : CoefficientCalculatorModel
+    public class CoefficientDto : Coefficient
     {
         public CoefficientDto() { }
-        public CoefficientDto(Coefficient coefficient)
+        public CoefficientDto(ReportIdentity report, Coefficient coefficient)
         {
             if (coefficient is null)
                 throw new NullReferenceException($"{nameof(coefficient)} is null");
 
-            Ticker = coefficient.TickerName;
-            ReportSourceType = coefficient.ReportSourceType;
-            
-            ReportSource = coefficient.ReportSource;
-            Year = coefficient.Year;
-            Quarter = coefficient.Quarter;
+            Year = report.Year;
+            Quarter = report.Quarter;
 
             Pe = coefficient.Pe;
             Pb = coefficient.Pb;
@@ -28,13 +26,7 @@ namespace IM.Services.Analyzer.Api.Models.Dto
             Eps = coefficient.Eps;
         }
 
-        public string Ticker { get; } = null!;
-        public string ReportSourceType { get; } = null!;
-        
-        public string ReportSource { get; } = null!;
         public int Year { get; }
         public byte Quarter { get; }
-
-        public DateTime UpdateTime { get; }
     }
 }

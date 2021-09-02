@@ -47,16 +47,16 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
                     await Task.Delay(5000);
                     var loadedReports = await parser.GetReportsAsync(item.source);
                     (Report[] toAdd, Report[] toUpdate) = SeparateReports(loadedReports, item.lastReport);
-                    int saveResult = await SaveReportsAsync(toAdd, toUpdate);
-                    loadedReportsCount += saveResult;
+                    var savedReports = await SaveReportsAsync(toAdd, toUpdate);
+                    loadedReportsCount += savedReports.Length;
                 }
             }
 
             return loadedReportsCount;
         }
-        public async Task<int> LoadReportsAsync(ReportSource source)
+        public async Task<Report[]> LoadReportsAsync(ReportSource source)
         {
-            int result = 0;
+            var result = Array.Empty<Report>();
 
             var _source = await context.ReportSources.FindAsync(source.Id);
             
@@ -72,7 +72,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
                 }
             }
 
-            Console.WriteLine($"\nSaved report count: {result}");
+            Console.WriteLine($"\nSaved report count: {result.Length}");
 
             return result;
         }
@@ -108,12 +108,18 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
             return reports.Any() ? FindLastReport(reports) : new() { ReportSourceId = source.Id, ReportSource = source, Year = 0, Quarter = 0 };
         }
 
-        private async Task<int> SaveReportsAsync(Report[] toAdd, Report[] toUpdate)
+        private async Task<Report[]> SaveReportsAsync(Report[] toAdd, Report[] toUpdate)
         {
+            var result = Array.Empty<Report>();
+
             if (toAdd is not null && toAdd.Any())
+            {
                 await context.Reports.AddRangeAsync(toAdd);
-            
+                result = result.Concat(toAdd).ToArray();
+            }
+
             if (toUpdate is not null && toUpdate.Any())
+            {
                 for (int j = 0; j < toUpdate.Length; j++)
                 {
                     var report = await context.Reports.FindAsync(toUpdate[j].ReportSourceId, toUpdate[j].Year, toUpdate[j].Quarter);
@@ -130,7 +136,12 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
                     report.Dividend = toUpdate[j].Dividend;
                 }
 
-            return await context.SaveChangesAsync();
+                result = result.Concat(toUpdate).ToArray();
+            }
+
+            await context.SaveChangesAsync();
+
+            return result;
         }
     }
 }

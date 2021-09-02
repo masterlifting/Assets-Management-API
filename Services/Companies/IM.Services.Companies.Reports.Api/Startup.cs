@@ -43,7 +43,7 @@ namespace IM.Services.Companies.Reports.Api
             services.AddScoped<ReportLoader>();
             services.AddScoped<ReportsDtoAgregator>();
 
-            services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
+            services.AddScoped<IEntityChecker<Ticker>, TickerChecker>();
             services.AddScoped<IEntityChecker<ReportSource>, ReportSourceChecker>();
             services.AddScoped(typeof(EntityRepository<,>));
 

@@ -4,6 +4,8 @@ using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
 using IM.Services.Analyzer.Api.DataAccess.Repository;
 using IM.Services.Analyzer.Api.Services.BackgroundServices;
+using IM.Services.Analyzer.Api.Services.CalculatorServices;
+using IM.Services.Analyzer.Api.Services.CalculatorServices.Interfaces;
 using IM.Services.Analyzer.Api.Services.DtoServices;
 using IM.Services.Analyzer.Api.Services.RabbitServices;
 using IM.Services.Analyzer.Api.Settings;
@@ -38,8 +40,13 @@ namespace IM.Services.Analyzer.Api
             services.AddScoped<RatingDtoAgregator>();
             services.AddScoped<RecommendationDtoAgregator>();
 
-            services.AddScoped<IEntityChecker<Ticker>, TckerChecker>();
+            services.AddScoped<IEntityChecker<Ticker>, TickerChecker>();
+            services.AddScoped<IEntityChecker<Price>, PriceChecker>();
+            services.AddScoped<IEntityChecker<Report>, ReportChecker>();
             services.AddScoped(typeof(EntityRepository<,>));
+
+            services.AddScoped<IAnalyzerCalculator, ReportCalculator>();
+            services.AddScoped<IAnalyzerCalculator, PriceCalculator>();
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();

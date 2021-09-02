@@ -1,6 +1,7 @@
-﻿using IM.Gateways.Web.Companies.Api.DataAccess;
+﻿using CommonServices.Models.Dto.Http;
+
+using IM.Gateways.Web.Companies.Api.DataAccess;
 using IM.Gateways.Web.Companies.Api.Models.Dto.State;
-using IM.Gateways.Web.Companies.Api.Models.Http;
 using IM.Gateways.Web.Companies.Api.Services.RabbitServices;
 
 using System;

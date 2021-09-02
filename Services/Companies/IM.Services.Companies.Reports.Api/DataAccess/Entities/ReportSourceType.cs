@@ -1,12 +1,11 @@
-using System.ComponentModel.DataAnnotations;
+using CommonServices.Models.Entity;
+
+using System.Collections.Generic;
 
 namespace IM.Services.Companies.Reports.Api.DataAccess.Entities
 {
-    public class ReportSourceType
+    public class ReportSourceType : CommonEntityType
     {
-        [Key]
-        public byte Id { get; set; }
-        [Required, StringLength(50)]
-        public string Name { get; set; }
+        public virtual IEnumerable<ReportSource> ReportSources { get; set; }
     }
 }

@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using static IM.Services.Companies.Reports.Api.DataAccess.DataEnums;
+using static CommonServices.CommonEnums;
 
 namespace IM.Services.Companies.Reports.Api.Services.ReportServices
 {
@@ -16,7 +16,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
         private readonly Dictionary<ReportSourceTypes, IReportParser> parser;
         public ReportParser(InvestingClient investingClient) => parser = new()
         {
-            { ReportSourceTypes.investing, new InvestingParser(investingClient) }
+            { ReportSourceTypes.Investing, new InvestingParser(investingClient) }
         };
 
         public async Task<Report[]> GetReportsAsync(ReportSource source) =>

@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using static IM.Services.Companies.Prices.Api.DataAccess.DataEnums;
+using static CommonServices.CommonEnums;
 
 namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 {
@@ -17,8 +17,8 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
         public PriceParser(MoexClient moexClient, TdAmeritradeClient tdAmeritradeClient, PriceMapper priceMapper) =>
             parser = new()
             {
-                { PriceSourceTypes.moex, new MoexParser(moexClient, priceMapper) },
-                { PriceSourceTypes.tdameritrade, new TdameritradeParser(tdAmeritradeClient, priceMapper) }
+                { PriceSourceTypes.MOEX, new MoexParser(moexClient, priceMapper) },
+                { PriceSourceTypes.Tdameritrade, new TdameritradeParser(tdAmeritradeClient, priceMapper) }
             };
         public async Task<Price[]> GetLastPricesToAddAsync(PriceSourceTypes sourceType, IEnumerable<(string ticker, DateTime priceDate)> data) =>
             parser.ContainsKey(sourceType)

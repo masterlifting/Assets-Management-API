@@ -6,13 +6,6 @@
 	  <UserSecretsId>f84af758-58ac-4aed-b74e-f17abb55ae43</UserSecretsId>
   </PropertyGroup>
 
-	<ItemGroup>
-	  <Compile Remove="Services\CalculatorServices\Implementations\RecommendationCalculator\**" />
-	  <Content Remove="Services\CalculatorServices\Implementations\RecommendationCalculator\**" />
-	  <EmbeddedResource Remove="Services\CalculatorServices\Implementations\RecommendationCalculator\**" />
-	  <None Remove="Services\CalculatorServices\Implementations\RecommendationCalculator\**" />
-	</ItemGroup>
-
 
 	<ItemGroup>
 	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.9" />

@@ -1,13 +1,10 @@
-using System;
+using CommonServices.Models.Entity;
 
 namespace IM.Services.Companies.Prices.Api.DataAccess.Entities
 {
-    public class Price
+    public class Price : PriceIdentity
     {
-        public decimal Value { get; set; }
-        public DateTime Date { get; set; }
-
         public virtual Ticker Ticker { get; set; }
-        public string TickerName { get; set; }
+        public decimal Value { get; set; }
     }
 }

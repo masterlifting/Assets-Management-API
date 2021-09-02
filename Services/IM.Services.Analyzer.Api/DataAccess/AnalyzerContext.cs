@@ -1,12 +1,17 @@
 using IM.Services.Analyzer.Api.DataAccess.Entities;
+
 using Microsoft.EntityFrameworkCore;
+
+using static IM.Services.Analyzer.Api.Enums;
 
 namespace IM.Services.Analyzer.Api.DataAccess
 {
     public class AnalyzerContext : DbContext
     {
         public DbSet<Ticker> Tickers { get; set; } = null!;
-        public DbSet<Coefficient> Coefficients { get; set; } = null!;
+        public DbSet<Report> Reports { get; set; } = null!;
+        public DbSet<Price> Prices { get; set; } = null!;
+        public DbSet<Status> Statuses { get; set; } = null!;
         public DbSet<Rating> Ratings { get; set; } = null!;
         public DbSet<Recommendation> Recommendations { get; set; } = null!;
         public DbSet<ToBuy> ToBuy { get; set; } = null!;
@@ -17,11 +22,22 @@ namespace IM.Services.Analyzer.Api.DataAccess
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<Report>().HasKey(x => new { x.ReportSourceId, x.Year, x.Quarter });
+            modelBuilder.Entity<Price>().HasKey(x => new { x.TickerName, x.Date });
             modelBuilder.Entity<Recommendation>().HasOne(x => x.Ticker).WithOne(x => x.Recommendation).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<Coefficient>().HasKey(x => new { x.ReportSource, x.Year, x.Quarter });
-            modelBuilder.Entity<Coefficient>().HasOne(x => x.Ticker).WithMany(x => x.Coefficients).OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<Rating>().Property(x => x.Place).ValueGeneratedNever();
             modelBuilder.Entity<Rating>().HasOne(x => x.Ticker).WithOne(x => x.Rating).OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Status>().Property(x => x.Id).ValueGeneratedNever();
+            modelBuilder.Entity<Status>().HasData(new Status[]
+            {
+                new(){Id = (byte)StatusType.ToCalculate,Name =nameof(StatusType.ToCalculate),Description = "before calculating"},
+                new(){Id = (byte)StatusType.Calculating,Name =nameof(StatusType.Calculating),Description = "calculating now"},
+                new(){Id = (byte)StatusType.CalculatedPartial,Name =nameof(StatusType.CalculatedPartial),Description = "after calculating with partial result"},
+                new(){Id = (byte)StatusType.Calculated,Name =nameof(StatusType.Calculated),Description = "calculating done"},
+                new(){Id = (byte)StatusType.Error,Name =nameof(StatusType.Error),Description = "error on calculating"}
+            });
         }
     }
 }

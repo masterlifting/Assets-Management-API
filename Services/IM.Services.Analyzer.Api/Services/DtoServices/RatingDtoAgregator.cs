@@ -1,6 +1,7 @@
-﻿using IM.Services.Analyzer.Api.DataAccess;
+﻿using CommonServices.Models.Dto.Http;
+
+using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.Models.Dto;
-using IM.Services.Analyzer.Api.Models.Http;
 
 using Microsoft.EntityFrameworkCore;
 

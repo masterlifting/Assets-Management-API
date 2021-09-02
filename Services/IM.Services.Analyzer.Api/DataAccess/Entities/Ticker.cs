@@ -1,16 +1,15 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using CommonServices.Models.Entity;
+
+using System.Collections.Generic;
 
 namespace IM.Services.Analyzer.Api.DataAccess.Entities
 {
-    public class Ticker
+    public class Ticker : TickerIdentity
     {
-        [Key, StringLength(10, MinimumLength = 1)]
-        public string Name { get; set; } = null!;
-
-        public virtual List<Coefficient> Coefficients { get; set; } = null!;
-        
         public virtual Rating Rating { get; set; } = null!;
         public virtual Recommendation Recommendation { get; set; } = null!;
+
+        public virtual IEnumerable<Report>? Reports { get; set; }
+        public virtual IEnumerable<Price>? Prices { get; set; }
     }
 }

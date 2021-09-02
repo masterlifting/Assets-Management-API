@@ -14,7 +14,7 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices
             new()
             {
                 { QueueExchanges.crud, new RabbitCrudService(options.Value.ConnectionStrings.Mq) },
-                { QueueExchanges.loader, new RabbitPriceService(priceLoader) }
+                { QueueExchanges.loader, new RabbitPriceService(priceLoader, options.Value.ConnectionStrings.Mq) }
             })
         { }
     }

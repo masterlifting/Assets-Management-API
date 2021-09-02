@@ -12,9 +12,6 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
 {
     public class RabbitCrudService : IRabbitActionService
     {
-        private readonly string rabbitConnectionString;
-        public RabbitCrudService(string rabbitConnectionString) => this.rabbitConnectionString = rabbitConnectionString;
-
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope) => entity switch
         {
             QueueEntities.ticker => await GetTickerResultAsync(action, data, scope),
@@ -23,20 +20,15 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
 
         private static async Task<bool> GetTickerResultAsync(QueueActions action, string data, IServiceScope scope)
         {
-            if (!RabbitHelper.TrySerialize(data, out Ticker? ticker) && ticker is null)
-                return false;
+            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker, AnalyzerContext>>();
 
-            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker,AnalyzerContext>>();
-
-            if (repository is null)
-                return false;
-
-            return action == QueueActions.delete
-                ? await repository.DeleteAsync(data, data)
-                : await GetActionAsync(repository!, action, ticker!, ticker!.Name);
+            return repository is not null
+                && (action == QueueActions.delete
+                    ? await repository.DeleteAsync(data, data)
+                    : RabbitHelper.TrySerialize(data, out Ticker? ticker) && await GetActionAsync(repository!, action, ticker!, ticker!.Name));
         }
 
-        private static async Task<bool> GetActionAsync<T>(EntityRepository<T,AnalyzerContext> repository, QueueActions action, T data, string value) where T : class => action switch
+        private static async Task<bool> GetActionAsync<T>(EntityRepository<T, AnalyzerContext> repository, QueueActions action, T data, string value) where T : class => action switch
         {
             QueueActions.create => await repository.CreateAsync(data, value),
             QueueActions.update => await repository.UpdateAsync(data, value),

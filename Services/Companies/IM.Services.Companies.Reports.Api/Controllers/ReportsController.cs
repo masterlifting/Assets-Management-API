@@ -1,5 +1,6 @@
-﻿using IM.Services.Companies.Reports.Api.Models;
-using IM.Services.Companies.Reports.Api.Models.Dto;
+﻿using CommonServices.Models.Dto;
+using CommonServices.Models.Dto.Http;
+
 using IM.Services.Companies.Reports.Api.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
@@ -16,9 +17,13 @@ namespace IM.Services.Companies.Reports.Api.Controllers
 
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> Get(int page = 1, int limit = 10) =>
             await agregator.GetReportsAsync(new(page, limit));
-        
+
         [HttpGet("{ticker}")]
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> Get(string ticker, int page = 1, int limit = 10) =>
             await agregator.GetReportsAsync(ticker, new(page, limit));
+
+        [HttpGet("{ticker}/{sourceId}")]
+        public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> Get(string ticker, int sourceId, int year = 2021, byte quarter = 1, int page = 1, int limit = 10) =>
+          await agregator.GetReportsAsync(ticker, sourceId, new(year, quarter), new(page, limit));
     }
 }

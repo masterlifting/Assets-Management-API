@@ -1,6 +1,7 @@
-﻿using IM.Services.Companies.Prices.Api.DataAccess;
-using IM.Services.Companies.Prices.Api.Models;
-using IM.Services.Companies.Prices.Api.Models.Dto;
+﻿using CommonServices.Models.Dto;
+using CommonServices.Models.Dto.Http;
+
+using IM.Services.Companies.Prices.Api.DataAccess;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -28,10 +29,11 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
                 .ThenBy(x => x.TickerName)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit)
-                .Join(query, x => x.TickerName, y => y.Name, (x, y) => new PriceDto(x, y.PriceSourceTypeId, x.TickerName))
+                .Join(query, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, SourceTypeId = y.PriceSourceTypeId, x.TickerName })
+                .Join(context.PriceSourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, y.Name, x.TickerName))
                 .ToArrayAsync();
 
-            var lastPrices = prices.GroupBy(x => x.Ticker).Select(x => x.First()).ToArray();
+            var lastPrices = prices.GroupBy(x => x.TickerName).Select(x => x.First()).ToArray();
 
             return new()
             {
@@ -63,7 +65,40 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
                 .OrderByDescending(x => x.Date)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit)
-                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new PriceDto(x, y.PriceSourceTypeId, x.TickerName))
+                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, SourceTypeId = y.PriceSourceTypeId, x.TickerName })
+                .Join(context.PriceSourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, y.Name, x.TickerName))
+                .ToArray();
+
+            return new()
+            {
+                Errors = errors,
+                Data = new()
+                {
+                    Items = tickerPrices,
+                    Count = count
+                }
+            };
+        }
+        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination)
+        {
+            var errors = Array.Empty<string>();
+            string tickerName = ticker.ToUpperInvariant();
+            var _ticker = await context.Tickers.FindAsync(tickerName);
+
+            if (_ticker is null)
+                return new()
+                {
+                    Errors = new string[] { "Ticker not found" }
+                };
+
+            int count = _ticker.Prices.Count();
+            var tickerPrices = _ticker.Prices
+                .Where(x => filter.FilterDate(x.Date.Year, x.Date.Month, x.Date.Day))
+                .OrderByDescending(x => x.Date)
+                .Skip((pagination.Page - 1) * pagination.Limit)
+                .Take(pagination.Limit)
+                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, SourceTypeId = y.PriceSourceTypeId, x.TickerName })
+                .Join(context.PriceSourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, y.Name, x.TickerName))
                 .ToArray();
 
             return new()
