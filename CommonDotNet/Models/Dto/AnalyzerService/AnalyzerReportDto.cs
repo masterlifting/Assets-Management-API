@@ -1,9 +1,9 @@
 ﻿using CommonServices.Models.Entity;
 
-namespace CommonServices.Models.AnalyzerService
+namespace CommonServices.Models.Dto.AnalyzerService
 {
     public class AnalyzerReportDto : ReportIdentity
     {
-        public string TickerName { get; set; } = null!;
+        public byte SourceTypeId { get; set; }
     }
 }

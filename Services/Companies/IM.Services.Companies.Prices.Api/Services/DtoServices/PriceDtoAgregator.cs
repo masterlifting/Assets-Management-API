@@ -29,8 +29,8 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
                 .ThenBy(x => x.TickerName)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit)
-                .Join(query, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, SourceTypeId = y.PriceSourceTypeId, x.TickerName })
-                .Join(context.PriceSourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, y.Name, x.TickerName))
+                .Join(query, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
+                .Join(context.SourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
                 .ToArrayAsync();
 
             var lastPrices = prices.GroupBy(x => x.TickerName).Select(x => x.First()).ToArray();
@@ -65,8 +65,8 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
                 .OrderByDescending(x => x.Date)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit)
-                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, SourceTypeId = y.PriceSourceTypeId, x.TickerName })
-                .Join(context.PriceSourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, y.Name, x.TickerName))
+                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId, })
+                .Join(context.SourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
                 .ToArray();
 
             return new()
@@ -97,8 +97,8 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
                 .OrderByDescending(x => x.Date)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit)
-                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, SourceTypeId = y.PriceSourceTypeId, x.TickerName })
-                .Join(context.PriceSourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, y.Name, x.TickerName))
+                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
+                .Join(context.SourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
                 .ToArray();
 
             return new()

@@ -4,8 +4,8 @@ namespace CommonServices.Models.Dto
 {
     public abstract class ReportDto : ReportIdentity
     {
-        public string Ticker { get; set; } = null!;
-        public string SourceType { get; set; } = null!;
+        public string? SourceType { get; set; }
+        public byte SourceTypeId { get; set; }
 
         public long StockVolume { get; set; }
         public decimal? Revenue { get; set; }

@@ -19,9 +19,9 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
             { ReportSourceTypes.Investing, new InvestingParser(investingClient) }
         };
 
-        public async Task<Report[]> GetReportsAsync(ReportSource source) =>
-            Enum.TryParse(source.ReportSourceTypeId.ToString(), out ReportSourceTypes sourceType) && parser.ContainsKey(sourceType)
-            ? await parser[sourceType].GetReportsAsync(source)
+        public async Task<Report[]> GetReportsAsync(Ticker ticker) =>
+            Enum.TryParse(ticker.SourceTypeId.ToString(), out ReportSourceTypes sourceType) && parser.ContainsKey(sourceType)
+            ? await parser[sourceType].GetReportsAsync(ticker)
             : Array.Empty<Report>();
     }
 }

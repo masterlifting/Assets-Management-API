@@ -22,51 +22,19 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
             this.parser = parser;
         }
 
-        public async Task<int> LoadReportsAsync()
-        {
-            int loadedReportsCount = 0;
-
-            var activeSources = await context.ReportSources.Where(x => x.IsActive).Select(x => new ReportSource
-            {
-                Id = x.Id,
-                ReportSourceTypeId = x.ReportSourceTypeId,
-                IsActive = x.IsActive,
-                Value = x.Value,
-                TickerName = x.TickerName
-            }).ToArrayAsync();
-            var groupedSources = activeSources.GroupBy(x => x.ReportSourceTypeId);
-
-            foreach (var group in groupedSources)
-            {
-                var lastReports = await GetLastReportsAsync(group.Select(x => x.Id));
-                var reportsWithoutLastQuarter = GetReportsWithoutLastQuarter(lastReports).ToArray();
-                var reportSources = reportsWithoutLastQuarter.Join(group, x => x.ReportSourceId, y => y.Id, (_, y) => y).ToArray();
-
-                foreach (var item in reportSources.Join(lastReports, x => x.Id, y => y.ReportSourceId, (x, y) => new { source = x, lastReport = y }))
-                {
-                    await Task.Delay(5000);
-                    var loadedReports = await parser.GetReportsAsync(item.source);
-                    (Report[] toAdd, Report[] toUpdate) = SeparateReports(loadedReports, item.lastReport);
-                    var savedReports = await SaveReportsAsync(toAdd, toUpdate);
-                    loadedReportsCount += savedReports.Length;
-                }
-            }
-
-            return loadedReportsCount;
-        }
-        public async Task<Report[]> LoadReportsAsync(ReportSource source)
+        public async Task<Report[]> LoadReportsAsync(Ticker ticker)
         {
             var result = Array.Empty<Report>();
 
-            var _source = await context.ReportSources.FindAsync(source.Id);
-            
-            if (_source is not null)
+            var _ticker = await context.Tickers.FindAsync(ticker.Name);
+
+            if (_ticker is not null)
             {
-                var lastReport = await GetLastReportAsync(_source);
+                var lastReport = await GetLastReportAsync(_ticker);
 
                 if (IsMissingLastQuarter(lastReport.Year, lastReport.Quarter))
                 {
-                    var loadedReports = await parser.GetReportsAsync(_source);
+                    var loadedReports = await parser.GetReportsAsync(_ticker);
                     (Report[] toAdd, Report[] toUpdate) = SeparateReports(loadedReports, lastReport);
                     result = await SaveReportsAsync(toAdd, toUpdate);
                 }
@@ -76,38 +44,32 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
 
             return result;
         }
-
-        private async Task<List<Report>> GetLastReportsAsync(IEnumerable<int> reportSourceIds)
+        public async Task<Report[]> LoadReportsAsync()
         {
-            var result = new List<Report>();
-            if (reportSourceIds is null || !reportSourceIds.Any())
-                return result;
+            var tickers = await context.Tickers.ToArrayAsync();
+            var result = new List<Report>(tickers.Length);
 
-            var sources = context.ReportSources.Where(x => reportSourceIds.Contains(x.Id));
-            var reports = await context.Reports.Join(sources, x => x.ReportSourceId, y => y.Id, (x, _) => x).ToArrayAsync();
-            var groupedReports = reports.GroupBy(x => x.ReportSourceId);
+            foreach (var ticker in tickers)
+            {
+                var lastReport = await GetLastReportAsync(ticker);
 
-            var sourceIdsWithOutReports = reportSourceIds.Except(reports.Select(x => x.ReportSourceId));
-            if (sourceIdsWithOutReports.Any())
-                result.AddRange(sources.Where(x => sourceIdsWithOutReports.Contains(x.Id)).Select(x => new Report
+                if (IsMissingLastQuarter(lastReport.Year, lastReport.Quarter))
                 {
-                    ReportSourceId = x.Id,
-                    ReportSource = x,
-                    Year = 0,
-                    Quarter = 0
-                }));
+                    var loadedReports = await parser.GetReportsAsync(ticker);
+                    (Report[] toAdd, Report[] toUpdate) = SeparateReports(loadedReports, lastReport);
+                    var reports = await SaveReportsAsync(toAdd, toUpdate);
+                    result.AddRange(reports);
+                }
+            }
 
-            foreach (var item in groupedReports)
-                result.Add(FindLastReport(item));
-
-            return result;
+            return result.ToArray();
         }
-        private async Task<Report> GetLastReportAsync(ReportSource source)
+
+        private async Task<Report> GetLastReportAsync(Ticker ticker)
         {
-            var reports = await context.Reports.Where(x => x.ReportSourceId == source.Id).ToArrayAsync();
-            return reports.Any() ? FindLastReport(reports) : new() { ReportSourceId = source.Id, ReportSource = source, Year = 0, Quarter = 0 };
+            var reports = await context.Reports.Where(x => x.TickerName == ticker.Name).ToArrayAsync();
+            return reports.Any() ? FindLastReport(reports) : new() { TickerName = ticker.Name, Year = 0, Quarter = 0 };
         }
-
         private async Task<Report[]> SaveReportsAsync(Report[] toAdd, Report[] toUpdate)
         {
             var result = Array.Empty<Report>();
@@ -122,7 +84,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices
             {
                 for (int j = 0; j < toUpdate.Length; j++)
                 {
-                    var report = await context.Reports.FindAsync(toUpdate[j].ReportSourceId, toUpdate[j].Year, toUpdate[j].Quarter);
+                    var report = await context.Reports.FindAsync(toUpdate[j].TickerName, toUpdate[j].Year, toUpdate[j].Quarter);
 
                     report.Turnover = toUpdate[j].Turnover;
                     report.LongTermDebt = toUpdate[j].LongTermDebt;

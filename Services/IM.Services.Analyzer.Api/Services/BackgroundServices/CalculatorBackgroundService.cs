@@ -12,11 +12,13 @@ namespace IM.Services.Analyzer.Api.Services.BackgroundServices
     {
         private readonly ReportCalculator reportCalculator;
         private readonly PriceCalculator priceCalculator;
+        private readonly RatingCalculator ratingCalculator;
 
-        public CalculatorBackgroundService(ReportCalculator reportCalculator, PriceCalculator priceCalculator)
+        public CalculatorBackgroundService(ReportCalculator reportCalculator, PriceCalculator priceCalculator, RatingCalculator ratingCalculator)
         {
             this.reportCalculator = reportCalculator;
             this.priceCalculator = priceCalculator;
+            this.ratingCalculator = ratingCalculator;
         }
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -27,6 +29,7 @@ namespace IM.Services.Analyzer.Api.Services.BackgroundServices
             {
                 await priceCalculator.CalculateAsync();
                 await reportCalculator.CalculateAsync();
+                await ratingCalculator.CalculateAsync();
 
                 await Task.Delay(delay, stoppingToken);
             }

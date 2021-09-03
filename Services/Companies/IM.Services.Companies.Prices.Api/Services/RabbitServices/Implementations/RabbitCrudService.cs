@@ -1,10 +1,9 @@
-﻿using CommonServices.RabbitServices;
+﻿using CommonServices.Models.Dto.CompaniesPricesService;
+using CommonServices.RabbitServices;
 using CommonServices.RepositoryService;
 
 using IM.Services.Companies.Prices.Api.DataAccess;
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
-
-using Microsoft.Extensions.DependencyInjection;
 
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -14,28 +13,32 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
     public class RabbitCrudService : IRabbitActionService
     {
         private readonly string rabbitConnectionString;
-        public RabbitCrudService(string rabbitConnectionString) => this.rabbitConnectionString = rabbitConnectionString;
+        private readonly EntityRepository<Ticker, PricesContext> repository;
 
-        public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope) => entity switch
+        public RabbitCrudService(string rabbitConnectionString, EntityRepository<Ticker, PricesContext> repository)
         {
-            QueueEntities.ticker => await GetTickerResultAsync(action, data, scope),
+            this.rabbitConnectionString = rabbitConnectionString;
+            this.repository = repository;
+        }
+
+        public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data) => entity switch
+        {
+            QueueEntities.ticker => await GetTickerResultAsync(action, data),
             _ => true
         };
 
-        private async Task<bool> GetTickerResultAsync(QueueActions action, string data, IServiceScope scope)
+        private async Task<bool> GetTickerResultAsync(QueueActions action, string data)
         {
-            var repository = scope.ServiceProvider.GetRequiredService<EntityRepository<Ticker, PricesContext>>();
-
             if (repository is null)
                 return false;
 
             if (action == QueueActions.delete)
                 return await repository.DeleteAsync(data, data);
 
-            if (!RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is null)
+            if (!RabbitHelper.TrySerialize(data, out CompaniesPricesTickerDto ticker) && ticker is null)
                 return false;
 
-            if (await GetActionAsync(repository, action, ticker, ticker.Name))
+            if (await GetActionAsync(repository, action, new Ticker(ticker), ticker.Name))
             {
                 var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.loader);
                 publisher.PublishTask(QueueNames.companiesprices, QueueEntities.price, QueueActions.download, JsonSerializer.Serialize(ticker));

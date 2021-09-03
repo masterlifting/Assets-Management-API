@@ -2,6 +2,6 @@
 {
     public interface IAnalyzerComparator<T> where T : class
     {
-        public T[] GetCoparedSample();
+        public T[] GetComparedSample();
     }
 }

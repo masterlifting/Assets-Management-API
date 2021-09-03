@@ -10,7 +10,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 {
     public static class RatingComparator
     {
-        public static Sample[] CompareSample(Sample[] sample )
+        public static Sample[] CompareSample(Sample[] sample)
         {
             var results = Array.Empty<Sample>();
             var cleanedValues = sample.Where(x => x.Value != 0).ToArray();
@@ -20,13 +20,13 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 
             return results;
         }
-        public static decimal ComputeSampleResult(Sample[] results)
+        public static decimal ComputeSampleResult(decimal[] results)
         {
-            int zeroDeviationCount = results.Where(x => x.Value != 0).Count();
+            int zeroDeviationCount = results.Where(x => x != 0).Count();
             decimal deviationCoefficient = zeroDeviationCount / results.Length;
-            return results.Average(x => x.Value) * deviationCoefficient;
+            return results.Average() * deviationCoefficient;
         }
-        
+
         static Sample[] ComputeValues(Sample[] sample)
         {
             var results = new Sample[sample.Length - 1];

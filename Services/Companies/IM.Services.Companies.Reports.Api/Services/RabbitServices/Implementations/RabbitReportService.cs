@@ -1,11 +1,8 @@
-﻿
-using CommonServices.Models.AnalyzerService;
+﻿using CommonServices.Models.Dto.AnalyzerService;
 using CommonServices.RabbitServices;
 
 using IM.Services.Companies.Reports.Api.DataAccess.Entities;
 using IM.Services.Companies.Reports.Api.Services.ReportServices;
-
-using Microsoft.Extensions.DependencyInjection;
 
 using System;
 using System.Text.Json;
@@ -24,11 +21,11 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
             this.rabbitConnectionString = rabbitConnectionString;
         }
 
-        public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope)
+        public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data)
         {
-            if (entity == QueueEntities.report && action == QueueActions.download && RabbitHelper.TrySerialize(data, out ReportSource source) && source is not null)
+            if (entity == QueueEntities.report && action == QueueActions.download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
             {
-                var reports = await reportLoader.LoadReportsAsync(source);
+                var reports = await reportLoader.LoadReportsAsync(ticker);
                 if (reports.Length > 0)
                 {
                     var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.calculator);
@@ -39,10 +36,10 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
                             , QueueActions.calculate
                             , JsonSerializer.Serialize(new AnalyzerReportDto
                             {
-                                TickerName = source.TickerName,
-                                ReportSourceId = reports[i].ReportSourceId,
+                                TickerName = ticker.Name,
                                 Year = reports[i].Year,
-                                Quarter = reports[i].Quarter
+                                Quarter = reports[i].Quarter,
+                                SourceTypeId = ticker.SourceTypeId
                             }));
                 }
             }

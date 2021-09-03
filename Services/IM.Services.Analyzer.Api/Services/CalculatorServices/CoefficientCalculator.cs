@@ -5,16 +5,18 @@ using IM.Services.Analyzer.Api.Models.Calculator;
 using System;
 using System.Collections.Generic;
 
+using static CommonServices.CommonEnums;
+
 namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 {
     public class CoefficientCalculator
     {
-        private readonly Dictionary<string, int> multiplicity;
+        private readonly Dictionary<byte, int> multiplicity;
         public CoefficientCalculator()
         {
             multiplicity = new()
             {
-                { "INVESTING", 1_000_000 }
+                { (byte)ReportSourceTypes.Investing, 1_000_000 }
             };
         }
 
@@ -30,7 +32,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
             decimal shareCapital = report.ShareCapital ?? throw new ArgumentNullException($"{nameof(report.ShareCapital)} is null!");
             decimal obligation = report.Obligation ?? throw new ArgumentNullException($"{nameof(report.Obligation)} is null!");
 
-            int multi = multiplicity.ContainsKey(report.SourceType.ToUpperInvariant()) ? multiplicity[report.SourceType.ToUpperInvariant()] : 1;
+            int multi = multiplicity.ContainsKey(report.SourceTypeId) ? multiplicity[report.SourceTypeId] : 1_000_000;
 
             try
             {

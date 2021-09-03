@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace IM.Services.Companies.Prices.Api.DataAccess.Entities
 {
-    public class PriceSourceType : CommonEntityType
+    public class SourceType : CommonEntityType
     {
         public virtual IEnumerable<Ticker> Tickers { get; set; }
     }

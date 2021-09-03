@@ -19,18 +19,25 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
         private readonly InvestingClient client;
         public InvestingParser(InvestingClient client) => this.client = client;
 
-        public async Task<Report[]> GetReportsAsync(ReportSource source)
+        public async Task<Report[]> GetReportsAsync(Ticker ticker)
         {
-            Report[] result;
+            Report[] result = Array.Empty<Report>();
+
+            if (ticker?.SourceValue is null)
+            {
+                Console.WriteLine($"Отсутствует источник для поиска отчетов по тикеру: '{ticker?.Name}'");
+                return result;
+            }
+
             try
             {
-                var pages = await LoadSiteAsync(source.Value);
-                result = GetReports(pages, source.Id);
+                var pages = await LoadSiteAsync(ticker.SourceValue);
+                result = GetReports(pages, ticker.Name);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
-                return Array.Empty<Report>();
+                return result;
             }
 
             return result;
@@ -43,7 +50,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
                 client.GetBalancePageAsync(sourceValue),
                 client.GetDividendPageAsync(sourceValue)
             });
-        private static Report[] GetReports(HtmlDocument[] site, int reportSourceId)
+        private static Report[] GetReports(HtmlDocument[] site, string tickerName)
         {
             var result = new Report[4];
             var culture = CultureInfo.CreateSpecificCulture("ru-RU");
@@ -56,7 +63,7 @@ namespace IM.Services.Companies.Reports.Api.Services.ReportServices.Implementati
             for (int i = 0; i < 4; i++)
                 result[i] = new()
                 {
-                    ReportSourceId = reportSourceId,
+                    TickerName = tickerName,
                     Year = financialPage.Dates[i].Year,
                     Quarter = CommonHelper.GetQuarter(financialPage.Dates[i].Month),
                     StockVolume = mainPage.StockVolume,

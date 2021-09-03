@@ -6,13 +6,14 @@ using IM.Gateways.Web.Companies.Api.Settings.Client;
 
 using Microsoft.Extensions.Options;
 
+using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace IM.Gateways.Web.Companies.Api.Clients
 {
-    public class ReportsClient
+    public class ReportsClient : IDisposable
     {
         private const string reports = "reports";
 
@@ -31,5 +32,11 @@ namespace IM.Gateways.Web.Companies.Api.Clients
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(string ticker, PaginationRequestModel pagination) =>
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<ReportDto>>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{reports}/{ticker}?{pagination.QueryParams}") ?? new();
+
+        public void Dispose()
+        {
+            httpClient.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

@@ -7,7 +7,6 @@ using IM.Services.Analyzer.Api.DataAccess.Entities;
 using IM.Services.Analyzer.Api.Services.CalculatorServices.Interfaces;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 using System;
 using System.Linq;
@@ -17,27 +16,27 @@ using static IM.Services.Analyzer.Api.Enums;
 
 namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 {
-    public class ReportCalculator : IAnalyzerCalculator
+    public class ReportCalculator : IAnalyzerCalculator<Report>
     {
-        private readonly IServiceProvider services;
         private readonly AnalyzerContext context;
+        private readonly EntityRepository<Report, AnalyzerContext> repository;
         private readonly ReportsClient reportsClient;
         private readonly PricesClient pricesClient;
 
-        public ReportCalculator(IServiceProvider services, AnalyzerContext context, ReportsClient reportsClient, PricesClient pricesClient)
+        public ReportCalculator(AnalyzerContext context, EntityRepository<Report, AnalyzerContext> repository, ReportsClient reportsClient, PricesClient pricesClient)
         {
-            this.services = services;
             this.context = context;
+            this.repository = repository;
             this.reportsClient = reportsClient;
             this.pricesClient = pricesClient;
         }
 
-        async Task<Report[]> GetReportsAsync() => await context.Reports.Where(x =>
+        public async Task<Report[]> GetDataAsync() => await context.Reports.Where(x =>
                     x.StatusId == ((byte)StatusType.ToCalculate)
-                    && x.StatusId == ((byte)StatusType.CalculatedPartial)
-                    && x.StatusId == ((byte)StatusType.Error))
+                    || x.StatusId == ((byte)StatusType.CalculatedPartial)
+                    || x.StatusId == ((byte)StatusType.Error))
                     .ToArrayAsync();
-        async Task<bool> IsSetCalculatingStatusAsync(Report[] reports)
+        public async Task<bool> IsSetCalculatingStatusAsync(Report[] reports)
         {
             for (int i = 0; i < reports.Length; i++)
                 reports[i].StatusId = (byte)StatusType.Calculating;
@@ -46,49 +45,41 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
         }
         public async Task CalculateAsync()
         {
-            var reports = await GetReportsAsync();
+            var reports = await GetDataAsync();
             if (reports.Any() && await IsSetCalculatingStatusAsync(reports))
-            {
-                var repository = services.CreateScope().ServiceProvider.GetRequiredService<EntityRepository<Report, AnalyzerContext>>();
+                foreach (var reportGroup in reports.GroupBy(x => x.TickerName))
+                {
+                    var firstReport = reportGroup.First();
 
-                var tickerReports = reports.GroupBy(x => x.TickerName);
+                    var reportTargetDate = CommonHelper.SubstractQuarter(firstReport.Year, firstReport.Quarter);
+                    var priceTargetDate = CommonHelper.GetQuarterFirstDate(reportTargetDate.year, reportTargetDate.quarter);
 
-                foreach (var i in tickerReports)
-                    foreach (var j in i.GroupBy(x => x.ReportSourceId))
+                    var reportResponse = await reportsClient.GetReportsAsync(reportGroup.Key, new(reportTargetDate.year, reportTargetDate.quarter), new(1, int.MaxValue));
+
+                    if (!reportResponse.Errors.Any() && reportResponse.Data!.Count > 0)
                     {
-                        var targetReports = j.OrderBy(x => x.Year).ThenBy(x => x.Quarter);
-                        var firstReport = targetReports.First();
+                        var pricesResponse = await pricesClient.GetPricesAsync(reportGroup.Key, new(priceTargetDate.year, priceTargetDate.month), new(1, int.MaxValue));
 
-                        var reportTargetDate = CommonHelper.SubstractQuarter(firstReport.Year, firstReport.Quarter);
-                        var priceTargetDate = CommonHelper.GetQuarterFirstDate(reportTargetDate.year, reportTargetDate.quarter);
-
-                        var reportResponse = await reportsClient.GetReportsAsync(i.Key, j.Key, new(reportTargetDate.year, reportTargetDate.quarter), new(1, int.MaxValue));
-
-                        if (!reportResponse.Errors.Any() && reportResponse.Data!.Count > 0)
+                        Report[] result = reportGroup.ToArray();
+                        try
                         {
-                            var pricesResponse = await pricesClient.GetPricesAsync(i.Key, new(priceTargetDate.year, priceTargetDate.month), new(1, int.MaxValue));
-
-                            Report[] result = targetReports.ToArray();
-                            try
-                            {
-                                var calculator = new ReportComporator(reportResponse.Data.Items, pricesResponse.Data?.Items);
-                                result = calculator.GetCoparedSample();
-                            }
-                            catch (Exception ex)
-                            {
-                                for (int k = 0; k < result.Length; k++)
-                                    result[k].StatusId = (byte)StatusType.Error;
-
-                                Console.ForegroundColor = ConsoleColor.Red;
-                                Console.WriteLine($"Calculating reports for {i.Key} failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
-                                Console.ForegroundColor = ConsoleColor.Gray;
-                            }
-
-                            for (int k = 0; k < result.Length; k++)
-                                await repository.CreateOrUpdateAsync(new { result[k].ReportSourceId, result[k].Year, result[k].Quarter }, result[k], $"analyzer report for {result[k].TickerName}");
+                            var calculator = new ReportComporator(reportResponse.Data.Items, pricesResponse.Data?.Items);
+                            result = calculator.GetComparedSample();
                         }
+                        catch (Exception ex)
+                        {
+                            for (int k = 0; k < result.Length; k++)
+                                result[k].StatusId = (byte)StatusType.Error;
+
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.WriteLine($"Calculating reports for {reportGroup.Key} failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                        }
+
+                        for (int k = 0; k < result.Length; k++)
+                            await repository.CreateOrUpdateAsync(result[k], $"analyzer report for {result[k].TickerName}");
                     }
-            }
+                }
         }
     }
 }

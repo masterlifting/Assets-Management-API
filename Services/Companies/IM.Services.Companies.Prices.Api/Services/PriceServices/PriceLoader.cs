@@ -1,3 +1,5 @@
+using CommonServices.Models.Entity;
+
 using IM.Services.Companies.Prices.Api.DataAccess;
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 
@@ -40,7 +42,7 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 
             var _ticker = await context.Tickers.FindAsync(ticker.Name);
 
-            if (_ticker is not null && !IsExchangeWeekend(DateTime.UtcNow) && Enum.TryParse(_ticker.PriceSourceTypeId.ToString(), out PriceSourceTypes sourceType))
+            if (_ticker is not null && !IsExchangeWeekend(DateTime.UtcNow) && Enum.TryParse(_ticker.SourceTypeId.ToString(), out PriceSourceTypes sourceType))
             {
                 var lastPrices = await GetLastPricesAsync(1);
                 var loadedPrices = await GetPricesAsync(sourceType, lastPrices);
@@ -90,7 +92,7 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
         private async Task<(List<Price> toUpdate, List<Price> toAdd)> GetPricesAsync(PriceSourceTypes sourceType, IEnumerable<Price> lastPrices)
         {
             int sourceTypeId = (int)sourceType;
-            var tickerNames = await context.Tickers.Where(x => x.PriceSourceTypeId == sourceTypeId).Select(x => x.Name).ToArrayAsync();
+            var tickerNames = await context.Tickers.Where(x => x.SourceTypeId == sourceTypeId).Select(x => x.Name).ToArrayAsync();
             var prices = lastPrices.Join(tickerNames, x => x.TickerName, y => y, (x, _) => x).ToArray();
             var separatedPrices = GetSeparatedPrices(sourceType, prices);
             var pricesResult = await GetPricesResultAsync(sourceType, separatedPrices);
@@ -115,21 +117,21 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 
                 if (separated.forHistory.Any())
                 {
-                    var data = separated.forHistory.Select(x => (x.TickerName, x.Date));
+                    var data = separated.forHistory.Select(x => new PriceIdentity { TickerName = x.TickerName, Date = x.Date });
                     var dataResult = await parser.GetHistoryPricesAsync(sourceType, data);
                     toAdd.AddRange(dataResult);
                 }
 
                 if (separated.forLastToAdd.Any())
                 {
-                    var data = separated.forLastToAdd.Select(x => (x.TickerName, x.Date));
+                    var data = separated.forLastToAdd.Select(x => new PriceIdentity { TickerName = x.TickerName, Date = x.Date });
                     var dataResult = await parser.GetLastPricesToAddAsync(sourceType, data);
                     toAdd.AddRange(dataResult);
                 }
 
                 if (separated.forLastToUpdate.Any())
                 {
-                    var data = separated.forLastToUpdate.Select(x => (x.TickerName, x.Date));
+                    var data = separated.forLastToUpdate.Select(x => new PriceIdentity { TickerName = x.TickerName, Date = x.Date });
                     var dataResult = await parser.GetLastPricesToUpdateAsync(sourceType, data);
                     toUpdate.AddRange(dataResult);
                 }
@@ -148,7 +150,7 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
                     await context.Prices.AddRangeAsync(data[i].toAdd);
                     result = result.Concat(data[i].toAdd).ToArray();
                 }
-                
+
                 if (data[i].toUpdate.Count > 0)
                 {
                     for (int j = 0; j < data[i].toUpdate.Count; j++)

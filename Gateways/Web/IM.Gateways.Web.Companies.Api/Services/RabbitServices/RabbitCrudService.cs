@@ -1,8 +1,9 @@
-﻿using CommonServices.RabbitServices;
+﻿using CommonServices.Models.Dto.AnalyzerService;
+using CommonServices.Models.Dto.CompaniesPricesService;
+using CommonServices.Models.Dto.CompaniesReportsService;
+using CommonServices.RabbitServices;
 
 using IM.Gateways.Web.Companies.Api.Models.Dto.State;
-using IM.Gateways.Web.Companies.Api.Models.Rabbit.CompaniesReports;
-using IM.Gateways.Web.Companies.Api.Models.Rabbit.Ticker;
 using IM.Gateways.Web.Companies.Api.Settings;
 
 using Microsoft.Extensions.Options;
@@ -15,15 +16,14 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitServices
     public class RabbitCrudService
     {
         private readonly RabbitPublisher publisher;
-        public RabbitCrudService(IOptions<ServiceSettings> options) => 
+        public RabbitCrudService(IOptions<ServiceSettings> options) =>
             publisher = new RabbitPublisher(options.Value.ConnectionStrings.Mq, QueueExchanges.crud);
 
         public void CreateCompany(CompanyModel company)
         {
-            var analyzerTicker = JsonSerializer.Serialize(new AnalyzerTicker { Name = company.Ticker });
-            var companiesPricesTicker = JsonSerializer.Serialize(new CompaniesPricesTicker { Name = company.Ticker, PriceSourceTypeId = company.PriceSourceTypeId });
-            var companiesReportsTicker = JsonSerializer.Serialize(new CompaniesReportsTicker { Name = company.Ticker });
-            var reportSourceData = new List<string>(company.ReportSources.Length);
+            var analyzerTicker = JsonSerializer.Serialize(new AnalyzerTickerDto { Name = company.Ticker });
+            var companiesPricesTicker = JsonSerializer.Serialize(new CompaniesPricesTickerDto { Name = company.Ticker, SourceTypeId = company.PriceSourceTypeId });
+            var companiesReportsTicker = JsonSerializer.Serialize(new CompaniesReportsTickerDto { Name = company.Ticker, SourceTypeId = company.ReportSourceTypeId, SourceValue = company.ReportSourceValue });
 
             var tickerData = new Dictionary<QueueNames, string>()
             {
@@ -32,38 +32,16 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitServices
                 {QueueNames.companiesanalyzer,analyzerTicker }
             };
 
-            foreach (var reportSource in company.ReportSources)
-                reportSourceData.Add(JsonSerializer.Serialize(new CompaniesReportsReportSource
-                {
-                    IsActive = reportSource.IsActive,
-                    ReportSourceTypeId = reportSource.ReportSourceTypeId,
-                    Value = reportSource.Value,
-                    TickerName = company.Ticker
-                }));
-
             foreach (var data in tickerData)
                 publisher.PublishTask(data.Key, QueueEntities.ticker, QueueActions.create, data.Value);
-
-            publisher.PublishTask(QueueNames.companiesreports, QueueEntities.reportsource, QueueActions.create, reportSourceData.ToArray());
         }
         public void UpdateCompany(CompanyModel company)
         {
-            var companiesPricesTicker = JsonSerializer.Serialize(new CompaniesPricesTicker { Name = company.Ticker, PriceSourceTypeId = company.PriceSourceTypeId });
-            var reportSourceData = new List<string>(company.ReportSources.Length);
-
-            foreach (var reportSource in company.ReportSources)
-                reportSourceData.Add(JsonSerializer.Serialize(new CompaniesReportsReportSource
-                {
-                    Id = reportSource.Id,
-                    IsActive = reportSource.IsActive,
-                    ReportSourceTypeId = reportSource.ReportSourceTypeId,
-                    Value = reportSource.Value,
-                    TickerName = company.Ticker
-                }));
+            var companiesPricesTicker = JsonSerializer.Serialize(new CompaniesPricesTickerDto { Name = company.Ticker, SourceTypeId = company.PriceSourceTypeId });
+            var companiesReportsTicker = JsonSerializer.Serialize(new CompaniesReportsTickerDto { Name = company.Ticker, SourceTypeId = company.ReportSourceTypeId, SourceValue = company.ReportSourceValue });
 
             publisher.PublishTask(QueueNames.companiesprices, QueueEntities.ticker, QueueActions.update, companiesPricesTicker);
-
-            publisher.PublishTask(QueueNames.companiesreports, QueueEntities.reportsource, QueueActions.update, reportSourceData.ToArray());
+            publisher.PublishTask(QueueNames.companiesreports, QueueEntities.ticker, QueueActions.update, companiesReportsTicker);
         }
         public void DeleteCompany(string ticker) => publisher.PublishTask(new QueueNames[]
         {

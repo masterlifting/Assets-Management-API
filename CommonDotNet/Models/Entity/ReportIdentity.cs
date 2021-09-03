@@ -2,7 +2,7 @@
 {
     public class ReportIdentity
     {
-        public int ReportSourceId { get; set; }
+        public string TickerName { get; set; } = null!;
         public int Year { get; set; }
         public byte Quarter { get; set; }
     }

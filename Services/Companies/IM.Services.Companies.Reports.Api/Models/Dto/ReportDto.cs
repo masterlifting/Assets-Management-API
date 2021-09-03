@@ -5,12 +5,14 @@ namespace IM.Services.Companies.Reports.Api.Models.Dto
 {
     public class ReportDto : CommonServices.Models.Dto.ReportDto
     {
-        public ReportDto(Report report, string sourceType, string ticker)
+        public ReportDto(Report report, byte sourceTypeId, string sourceType)
         {
+            SourceTypeId = sourceTypeId;
+            SourceType = sourceType;
+
             if (report is not null)
             {
-                Ticker = ticker;
-                SourceType = sourceType;
+                TickerName = report.TickerName;
                 Year = report.Year;
                 Quarter = report.Quarter;
                 StockVolume = report.StockVolume;

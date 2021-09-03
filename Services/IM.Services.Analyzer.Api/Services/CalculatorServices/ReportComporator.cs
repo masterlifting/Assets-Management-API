@@ -12,7 +12,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 {
     public class ReportComporator : IAnalyzerComparator<Report>
     {
-        private readonly ReportDto[] reportsDto;
+        private readonly ReportDto[] reports;
         private readonly Sample[][] samples;
 
         private readonly Sample[] revenueCollection;
@@ -34,32 +34,32 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
         private readonly Sample[]? roa;
         private readonly Sample[]? roe;
         private readonly Sample[]? eps;
-        public ReportComporator(ReportDto[] reportsDto, PriceDto[]? prices)
+        public ReportComporator(ReportDto[] reports, PriceDto[]? prices)
         {
-            this.reportsDto = reportsDto;
+            this.reports = reports;
 
-            revenueCollection = new Sample[reportsDto.Length];
-            profitNetCollection = new Sample[reportsDto.Length];
-            profitGrossCollection = new Sample[reportsDto.Length];
-            assetCollection = new Sample[reportsDto.Length];
-            turnoverCollection = new Sample[reportsDto.Length];
-            shareCapitalCollection = new Sample[reportsDto.Length];
-            dividendCollection = new Sample[reportsDto.Length];
-            obligationCollection = new Sample[reportsDto.Length];
-            longTermDebtCollection = new Sample[reportsDto.Length];
-            cashFlowCollection = new Sample[reportsDto.Length];
+            revenueCollection = new Sample[reports.Length];
+            profitNetCollection = new Sample[reports.Length];
+            profitGrossCollection = new Sample[reports.Length];
+            assetCollection = new Sample[reports.Length];
+            turnoverCollection = new Sample[reports.Length];
+            shareCapitalCollection = new Sample[reports.Length];
+            dividendCollection = new Sample[reports.Length];
+            obligationCollection = new Sample[reports.Length];
+            longTermDebtCollection = new Sample[reports.Length];
+            cashFlowCollection = new Sample[reports.Length];
 
             if (prices is not null && prices.Any())
             {
                 coefficientCalculator = new();
 
-                pe = new Sample[reportsDto.Length];
-                pb = new Sample[reportsDto.Length];
-                debtLoad = new Sample[reportsDto.Length];
-                profitability = new Sample[reportsDto.Length];
-                roa = new Sample[reportsDto.Length];
-                roe = new Sample[reportsDto.Length];
-                eps = new Sample[reportsDto.Length];
+                pe = new Sample[reports.Length];
+                pb = new Sample[reports.Length];
+                debtLoad = new Sample[reports.Length];
+                profitability = new Sample[reports.Length];
+                roa = new Sample[reports.Length];
+                roe = new Sample[reports.Length];
+                eps = new Sample[reports.Length];
 
                 samples = new Sample[17][]
                 {
@@ -99,47 +99,59 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 
             SetData(prices);
         }
-        public Report[] GetCoparedSample()
+        public Report[] GetComparedSample()
         {
-            var result = new Report[samples.Length * reportsDto.Length];
+            var result = new Report[reports.Length];
+            var comparedSample = new Sample[samples.Length][];
             byte statusId = samples.Length == 17 ? (byte)StatusType.Calculated : (byte)StatusType.CalculatedPartial;
 
             for (uint i = 0; i < samples.Length; i++)
+                comparedSample[i] = RatingComparator.CompareSample(samples[i]);
+
+            for (uint i = 0; i < reports.Length; i++)
             {
-                var comparedSample = RatingComparator.CompareSample(samples[i]);
+                var results = new decimal[comparedSample.Length];
 
                 for (uint j = 0; j < comparedSample.Length; j++)
-                    result[i] = new()
-                    {
-                        TickerName = reportsDto[comparedSample[j].Index].Ticker,
-                        ReportSourceId = reportsDto[comparedSample[j].Index].ReportSourceId,
-                        Year = reportsDto[comparedSample[j].Index].Year,
-                        Quarter = reportsDto[comparedSample[j].Index].Quarter,
-                        Result = comparedSample[j].Value,
-                        StatusId = statusId
-                    };
-            }
+                    for (uint k = 0; k < comparedSample[j].Length; k++)
+                        if (comparedSample[j][k].Index == i)
+                        {
+                            results[j] = comparedSample[j][k].Value;
+                            break;
+                        }
 
+                result[i] = new()
+                {
+                    TickerName = reports[i].TickerName,
+                    Year = reports[i].Year,
+                    Quarter = reports[i].Quarter,
+                    SourceTypeId = reports[i].SourceTypeId,
+                    Result = RatingComparator.ComputeSampleResult(results),
+                    StatusId = statusId
+                };
+            }
             return result;
         }
         void SetData(PriceDto[]? prices)
         {
-            for (uint i = 0; i < reportsDto.Length; i++)
+            for (uint i = 0; i < reports.Length; i++)
             {
-                revenueCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reportsDto[i].Revenue.HasValue ? reportsDto[i].Revenue!.Value : 0 };
-                profitNetCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reportsDto[i].ProfitNet.HasValue ? reportsDto[i].ProfitNet!.Value : 0 };
-                profitGrossCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reportsDto[i].ProfitGross.HasValue ? reportsDto[i].ProfitGross!.Value : 0 };
-                assetCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reportsDto[i].Asset.HasValue ? reportsDto[i].Asset!.Value : 0 };
-                turnoverCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reportsDto[i].Turnover.HasValue ? reportsDto[i].Turnover!.Value : 0 };
-                shareCapitalCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reportsDto[i].ShareCapital.HasValue ? reportsDto[i].ShareCapital!.Value : 0 };
-                dividendCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reportsDto[i].Dividend.HasValue ? reportsDto[i].Dividend!.Value : 0 };
-                cashFlowCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reportsDto[i].CashFlow.HasValue ? reportsDto[i].CashFlow!.Value : 0 };
-                obligationCollection[i] = new() { Index = i, CompareType = CompareType.Desc, Value = reportsDto[i].Obligation.HasValue ? reportsDto[i].Obligation!.Value : 0 };
-                longTermDebtCollection[i] = new() { Index = i, CompareType = CompareType.Desc, Value = reportsDto[i].LongTermDebt.HasValue ? reportsDto[i].LongTermDebt!.Value : 0 };
-
-                if (prices is not null && prices.Any())
+                revenueCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reports[i].Revenue.HasValue ? reports[i].Revenue!.Value : 0 };
+                profitNetCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reports[i].ProfitNet.HasValue ? reports[i].ProfitNet!.Value : 0 };
+                profitGrossCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reports[i].ProfitGross.HasValue ? reports[i].ProfitGross!.Value : 0 };
+                assetCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reports[i].Asset.HasValue ? reports[i].Asset!.Value : 0 };
+                turnoverCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reports[i].Turnover.HasValue ? reports[i].Turnover!.Value : 0 };
+                shareCapitalCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reports[i].ShareCapital.HasValue ? reports[i].ShareCapital!.Value : 0 };
+                dividendCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reports[i].Dividend.HasValue ? reports[i].Dividend!.Value : 0 };
+                cashFlowCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = reports[i].CashFlow.HasValue ? reports[i].CashFlow!.Value : 0 };
+                obligationCollection[i] = new() { Index = i, CompareType = CompareType.Desc, Value = reports[i].Obligation.HasValue ? reports[i].Obligation!.Value : 0 };
+                longTermDebtCollection[i] = new() { Index = i, CompareType = CompareType.Desc, Value = reports[i].LongTermDebt.HasValue ? reports[i].LongTermDebt!.Value : 0 };
+            }
+            if (prices is not null && prices.Any())
+            {
+                for (uint i = 0; i < reports.Length; i++)
                 {
-                    var coefficients = coefficientCalculator!.Calculate(reportsDto[i], prices.Max(x => x.Value));
+                    var coefficients = coefficientCalculator!.Calculate(reports[i], prices.Max(x => x.Value));
 
                     pe![i] = new() { Index = i, CompareType = CompareType.Desc, Value = coefficients.Pe };
                     pb![i] = new() { Index = i, CompareType = CompareType.Desc, Value = coefficients.Pb };

@@ -24,8 +24,6 @@ namespace IM.Services.Companies.Prices.Api
             tdAmeritradeSetting = options.Value.ClientSettings.TdAmeritrade;
         }
 
-       
-
         public async Task<TdAmeritradeLastPriceResultModel> GetLastPricesAsync(IEnumerable<string> tickers)
         {
             if (tickers is null)
@@ -51,6 +49,10 @@ namespace IM.Services.Companies.Prices.Api
             return new(data, ticker);
         }
 
-        public void Dispose() => httpClient.Dispose();
+        public void Dispose()
+        {
+            httpClient.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

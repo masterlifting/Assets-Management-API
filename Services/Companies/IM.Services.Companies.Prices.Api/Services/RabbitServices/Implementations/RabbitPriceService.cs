@@ -1,11 +1,8 @@
-﻿
-using CommonServices.Models.AnalyzerService;
+﻿using CommonServices.Models.Dto.AnalyzerService;
 using CommonServices.RabbitServices;
 
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 using IM.Services.Companies.Prices.Api.Services.PriceServices;
-
-using Microsoft.Extensions.DependencyInjection;
 
 using System;
 using System.Text.Json;
@@ -24,7 +21,7 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
             this.rabbitConnectionString = rabbitConnectionString;
         }
 
-        public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data, IServiceScope scope)
+        public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data)
         {
             if (entity == QueueEntities.price && action == QueueActions.download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
             {
@@ -41,7 +38,7 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
                             {
                                 TickerName = ticker.Name,
                                 Date = prices[i].Date,
-                                PriceSourceTypeId = ticker.PriceSourceTypeId
+                                SourceTypeId = ticker.SourceTypeId
                             }));
                 }
             }

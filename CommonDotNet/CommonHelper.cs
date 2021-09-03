@@ -100,5 +100,16 @@ namespace CommonServices
                     ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
                     : checkingDate.Date;
         }
+        public static DateTime GetExchangeLastWorkday(PriceSourceTypes sourceType, DateTime date)
+        {
+            return CheckWorkday(sourceType, date.AddDays(-1));
+
+            static DateTime CheckWorkday(PriceSourceTypes sourceType, DateTime checkingDate) =>
+                IsExchangeWeekend(checkingDate)
+                ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
+                : IsExchangeWeekend(sourceType, checkingDate)
+                    ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
+                    : checkingDate.Date;
+        }
     }
 }

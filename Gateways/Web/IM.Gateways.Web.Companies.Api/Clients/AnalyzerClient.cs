@@ -6,13 +6,14 @@ using IM.Gateways.Web.Companies.Api.Settings.Client;
 
 using Microsoft.Extensions.Options;
 
+using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace IM.Gateways.Web.Companies.Api.Clients
 {
-    public class AnalyzerClient
+    public class AnalyzerClient : IDisposable
     {
         private const string recommendations = "recommendations";
         private const string ratings = "ratings";
@@ -47,5 +48,11 @@ namespace IM.Gateways.Web.Companies.Api.Clients
         public async Task<ResponseModel<PaginationResponseModel<CoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination) => 
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<CoefficientDto>>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{coefficients}/{ticker}?{pagination.QueryParams}") ?? new();
+
+        public void Dispose()
+        {
+            httpClient.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

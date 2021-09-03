@@ -4,12 +4,14 @@ namespace IM.Services.Companies.Prices.Api.Models.Dto
 {
     public class PriceDto : CommonServices.Models.Dto.PriceDto
     {
-        public PriceDto(Price price, string sourceType, string ticker)
+        public PriceDto(Price price, byte sourceTypeId, string sourceType)
         {
-            TickerName = ticker.ToUpperInvariant();
+            SourceTypeId = sourceTypeId;
             SourceType = sourceType;
+
             if (price is not null)
             {
+                TickerName = price.TickerName;
                 Date = price.Date;
                 Value = price.Value;
             }

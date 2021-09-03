@@ -1,7 +1,5 @@
 ﻿using CommonServices.RabbitServices.Configuration;
 
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace CommonServices.RabbitServices
@@ -25,14 +23,6 @@ namespace CommonServices.RabbitServices
                                     QueueActions.create,
                                     QueueActions.update,
                                     QueueActions.delete
-                                }
-                            },
-                            new QueueParam(QueueEntities.reportsource)
-                            {
-                                Actions = new QueueActions[]
-                                {
-                                    QueueActions.create,
-                                    QueueActions.update
                                 }
                             }
                         }
@@ -66,7 +56,6 @@ namespace CommonServices.RabbitServices
                                 }
                             }
                         }
-
                     }
                 }
             },
@@ -108,7 +97,23 @@ namespace CommonServices.RabbitServices
                 {
                     new Queue(QueueNames.companiesanalyzer)
                     {
-
+                         Params = new QueueParam[]
+                        {
+                            new QueueParam(QueueEntities.price)
+                            {
+                                Actions = new QueueActions[]
+                                {
+                                    QueueActions.calculate
+                                }
+                            },
+                            new QueueParam(QueueEntities.report)
+                            {
+                                Actions = new QueueActions[]
+                                {
+                                    QueueActions.calculate
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -117,7 +122,7 @@ namespace CommonServices.RabbitServices
         {
             var exchanges = Exchanges.Where(x => ex.Contains(x.NameEnum)).Distinct(new ExchangeComparer()).ToArray();
             var queues = exchanges.SelectMany(x => x.Queues).Where(x => qn.Contains(x.NameEnum)).Distinct(new QueueComparer()).ToArray();
-            
+
             return (exchanges, queues);
         }
     }
@@ -138,7 +143,6 @@ namespace CommonServices.RabbitServices
     {
         ticker,
         report,
-        reportsource,
         price
     }
     public enum QueueActions

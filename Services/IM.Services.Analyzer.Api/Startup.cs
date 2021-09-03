@@ -43,10 +43,12 @@ namespace IM.Services.Analyzer.Api
             services.AddScoped<IEntityChecker<Ticker>, TickerChecker>();
             services.AddScoped<IEntityChecker<Price>, PriceChecker>();
             services.AddScoped<IEntityChecker<Report>, ReportChecker>();
+            services.AddScoped<IEntityChecker<Rating>, RatingChecker>();
             services.AddScoped(typeof(EntityRepository<,>));
 
-            services.AddScoped<IAnalyzerCalculator, ReportCalculator>();
-            services.AddScoped<IAnalyzerCalculator, PriceCalculator>();
+            services.AddScoped<IAnalyzerCalculator<Report>, ReportCalculator>();
+            services.AddScoped<IAnalyzerCalculator<Price>, PriceCalculator>();
+            services.AddScoped<RatingCalculator>();
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();

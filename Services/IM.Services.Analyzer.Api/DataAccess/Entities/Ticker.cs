@@ -1,4 +1,5 @@
-﻿using CommonServices.Models.Entity;
+﻿using CommonServices.Models.Dto.AnalyzerService;
+using CommonServices.Models.Entity;
 
 using System.Collections.Generic;
 
@@ -6,6 +7,11 @@ namespace IM.Services.Analyzer.Api.DataAccess.Entities
 {
     public class Ticker : TickerIdentity
     {
+        public Ticker() { }
+        public Ticker(AnalyzerTickerDto ticker)
+        {
+            Name = ticker.Name;
+        }
         public virtual Rating Rating { get; set; } = null!;
         public virtual Recommendation Recommendation { get; set; } = null!;
 

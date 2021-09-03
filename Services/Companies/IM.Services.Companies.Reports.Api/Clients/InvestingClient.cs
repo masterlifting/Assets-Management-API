@@ -44,6 +44,10 @@ namespace IM.Services.Companies.Reports.Api.Clients
             return htmlDocument;
         }
 
-        public void Dispose() => httpClient.Dispose();
+        public void Dispose()
+        {
+            httpClient.Dispose();
+            GC.SuppressFinalize(this);
+        }
     }
 }

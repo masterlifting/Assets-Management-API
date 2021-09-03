@@ -22,7 +22,7 @@ namespace IM.Services.Companies.Prices.Api.Services.BackgroundServices
         {
             var targetExchanges = new[] { QueueExchanges.crud, QueueExchanges.loader };
             var targetQueues = new[] { QueueNames.companiesprices };
-            subscriber = new RabbitSubscriber(options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues, services);
+            subscriber = new RabbitSubscriber(options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
             this.services = services;
         }
 

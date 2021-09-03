@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -11,7 +10,7 @@ namespace CommonServices.RabbitServices
         private readonly Dictionary<QueueExchanges, IRabbitActionService> actions;
         public RabbitService(Dictionary<QueueExchanges, IRabbitActionService> actions) => this.actions = actions is null ? new() : actions;
 
-        public virtual async Task<bool> GetActionResultAsync(QueueExchanges exchange, string routingKey, string data, IServiceScope scope)
+        public virtual async Task<bool> GetActionResultAsync(QueueExchanges exchange, string routingKey, string data)
         {
             var route = routingKey.Split('.');
 
@@ -19,7 +18,7 @@ namespace CommonServices.RabbitServices
                         && Enum.TryParse(route[1].ToLowerInvariant().Trim(), out QueueEntities entity)
                         && Enum.TryParse(route[2].ToLowerInvariant().Trim(), out QueueActions action)
                         && actions.ContainsKey(exchange)
-                        && await actions[exchange].GetActionResultAsync(entity, action, data, scope);
+                        && await actions[exchange].GetActionResultAsync(entity, action, data);
         }
     }
 }

@@ -1,4 +1,6 @@
-﻿using IM.Services.Companies.Prices.Api.DataAccess.Entities;
+﻿using CommonServices.Models.Entity;
+
+using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 using IM.Services.Companies.Prices.Api.Services.MapServices;
 using IM.Services.Companies.Prices.Api.Services.PriceServices.Implementations;
 using IM.Services.Companies.Prices.Api.Services.PriceServices.Interfaces;
@@ -20,17 +22,17 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
                 { PriceSourceTypes.MOEX, new MoexParser(moexClient, priceMapper) },
                 { PriceSourceTypes.Tdameritrade, new TdameritradeParser(tdAmeritradeClient, priceMapper) }
             };
-        public async Task<Price[]> GetLastPricesToAddAsync(PriceSourceTypes sourceType, IEnumerable<(string ticker, DateTime priceDate)> data) =>
+        public async Task<Price[]> GetLastPricesToAddAsync(PriceSourceTypes sourceType, IEnumerable<PriceIdentity> prices) =>
             parser.ContainsKey(sourceType)
-            ? await parser[sourceType].GetLastPricesToAddAsync(data)
+            ? await parser[sourceType].GetLastPricesToAddAsync(prices)
             : Array.Empty<Price>();
-        public async Task<Price[]> GetLastPricesToUpdateAsync(PriceSourceTypes sourceType, IEnumerable<(string ticker, DateTime priceDate)> data) =>
+        public async Task<Price[]> GetLastPricesToUpdateAsync(PriceSourceTypes sourceType, IEnumerable<PriceIdentity> prices) =>
             parser.ContainsKey(sourceType)
-            ? await parser[sourceType].GetLastPricesToUpdateAsync(data)
+            ? await parser[sourceType].GetLastPricesToUpdateAsync(prices)
             : Array.Empty<Price>();
-        public async Task<Price[]> GetHistoryPricesAsync(PriceSourceTypes sourceType, IEnumerable<(string ticker, DateTime priceDate)> data) =>
+        public async Task<Price[]> GetHistoryPricesAsync(PriceSourceTypes sourceType, IEnumerable<PriceIdentity> prices) =>
             parser.ContainsKey(sourceType)
-            ? await parser[sourceType].GetHistoryPricesAsync(data)
+            ? await parser[sourceType].GetHistoryPricesAsync(prices)
             : Array.Empty<Price>();
     }
 }

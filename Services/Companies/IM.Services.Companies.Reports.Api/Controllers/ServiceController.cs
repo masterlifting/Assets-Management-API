@@ -15,8 +15,8 @@ namespace IM.Services.Companies.Reports.Api.Controllers
         [HttpPost("update")]
         public async Task<string> UpdateReports()
         {
-            int updatedCount = await reportUpdater.LoadReportsAsync();
-            return $"updated reports count: {updatedCount}";
+            var loadedReports = await reportUpdater.LoadReportsAsync();
+            return $"updated reports count: {loadedReports.Length}";
         }
     }
 }

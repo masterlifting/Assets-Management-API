@@ -19,9 +19,6 @@ namespace IM.Services.Analyzer.Api.Models.Dto
 
             PriceComparison = rating.PriceComparison;
             ReportComparison = rating.ReportComparison;
-            CashFlowPositiveBalance = rating.CashFlowPositiveBalance;
-            CoefficientComparison = rating.CoefficientComparison;
-            CoefficientAverage = rating.CoefficientAverage;
         }
         public string Ticker { get; } = null!;
         public DateTime UpdateTime { get; }
@@ -29,10 +26,7 @@ namespace IM.Services.Analyzer.Api.Models.Dto
         public int Place { get; }
         public decimal Result { get; }
 
-        public decimal? PriceComparison { get; }
-        public decimal? ReportComparison { get; }
-        public decimal? CashFlowPositiveBalance { get; }
-        public decimal? CoefficientComparison { get; }
-        public decimal? CoefficientAverage { get; }
+        public decimal PriceComparison { get; }
+        public decimal ReportComparison { get; }
     }
 }

@@ -6,7 +6,7 @@ namespace IM.Services.Companies.Reports.Api.DataAccess.Entities
 {
     public class Report : ReportIdentity
     {
-        public virtual ReportSource ReportSource { get; set; }
+        public virtual Ticker Ticker { get; set; }
 
         public long StockVolume { get; set; }
         [Column(TypeName = "Decimal(18,4)")]

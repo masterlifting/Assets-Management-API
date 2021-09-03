@@ -39,10 +39,22 @@ namespace CommonServices.RepositoryService
 
             return await SaveAsync(info, RepositoryActionType.update);
         }
-        public async Task<bool> CreateOrUpdateAsync<TId>(TId id, TEntity entity, string info)
+        public async Task<bool> CreateOrUpdateAsync(TEntity entity, string info)
         {
-            var ctxEntity = await context.Set<TEntity>().FindAsync(id);
-            return ctxEntity is null ? await CreateAsync(entity, info) : await UpdateAsync(entity, info);
+            RepositoryActionType actionType = RepositoryActionType.create;
+            
+            if (checker.WithError(entity))
+                return false;
+
+            if (await checker.IsAlreadyAsync(entity))
+            {
+                actionType = RepositoryActionType.update;
+                context.Set<TEntity>().Update(entity);
+            }
+            else
+                await context.Set<TEntity>().AddAsync(entity);
+
+            return await SaveAsync(info, actionType);
         }
         public async Task<bool> DeleteAsync<TId>(TId id, string info)
         {

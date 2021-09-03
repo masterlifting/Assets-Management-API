@@ -7,6 +7,7 @@ namespace IM.Gateways.Web.Companies.Api.Models.Dto.State
     {
         [Zero]
         public byte PriceSourceTypeId { get; set; }
-        public ReportSourceModel[] ReportSources { get; set; } = null!;
+        public byte ReportSourceTypeId { get; set; }
+        public string? ReportSourceValue { get; set; }
     }
 }

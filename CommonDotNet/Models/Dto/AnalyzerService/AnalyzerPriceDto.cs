@@ -1,9 +1,9 @@
 ﻿using CommonServices.Models.Entity;
 
-namespace CommonServices.Models.AnalyzerService
+namespace CommonServices.Models.Dto.AnalyzerService
 {
     public class AnalyzerPriceDto : PriceIdentity
     {
-        public byte PriceSourceTypeId { get; set; }
+        public byte SourceTypeId { get; set; }
     }
 }

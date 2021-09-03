@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IM.Services.Analyzer.Api.DataAccess.Entities
 {
@@ -13,12 +14,17 @@ namespace IM.Services.Analyzer.Api.DataAccess.Entities
 
         public DateTime UpdateTime { get; set; } = DateTime.UtcNow;
 
+        [Column(TypeName = "Decimal(18,2)")]
         public decimal Result { get; set; }
 
-        public decimal? PriceComparison { get; set; }
-        public decimal? ReportComparison { get; set; }
-        public decimal? CashFlowPositiveBalance { get; set; }
-        public decimal? CoefficientComparison { get; set; }
-        public decimal? CoefficientAverage { get; set; }
+        [Column(TypeName = "Decimal(18,4)")]
+        public decimal PriceComparison { get; set; }
+        [Column(TypeName = "Decimal(18,4)")]
+        public decimal ReportComparison { get; set; }
+
+        internal void Sort(Func<object, object, object> p)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -19,20 +19,26 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
             valueCollection = new Sample[prices.Length];
             SetData();
         }
-        public Price[] GetCoparedSample()
+        public Price[] GetComparedSample()
         {
             var comparedSample = RatingComparator.CompareSample(valueCollection);
             var result = new Price[comparedSample.Length];
 
-            for (uint i = 0; i < comparedSample.Length; i++)
-                result[i] = new()
-                {
-                    TickerName = prices[comparedSample[i].Index].TickerName,
-                    Date = prices[comparedSample[i].Index].Date,
-                    PriceSourceTypeId = prices[comparedSample[i].Index].PriceSourceTypeId,
-                    Result = comparedSample[i].Value,
-                    StatusId = (byte)StatusType.Calculated
-                };
+            for (int i = 0; i < prices.Length; i++)
+                for (uint j = 0; j < comparedSample.Length; j++)
+                    if (comparedSample[j].Index == i)
+                    {
+                        result[j] = new()
+                        {
+                            TickerName = prices[i].TickerName,
+                            Date = prices[i].Date,
+                            SourceTypeId = prices[i].SourceTypeId,
+                            Result = comparedSample[j].Value,
+                            StatusId = (byte)StatusType.Calculated
+                        };
+
+                        break;
+                    }
 
             return result;
         }

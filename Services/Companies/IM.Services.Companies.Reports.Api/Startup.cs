@@ -44,7 +44,6 @@ namespace IM.Services.Companies.Reports.Api
             services.AddScoped<ReportsDtoAgregator>();
 
             services.AddScoped<IEntityChecker<Ticker>, TickerChecker>();
-            services.AddScoped<IEntityChecker<ReportSource>, ReportSourceChecker>();
             services.AddScoped(typeof(EntityRepository<,>));
 
             services.AddScoped<RabbitActionService>();

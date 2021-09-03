@@ -22,7 +22,7 @@ namespace IM.Services.Analyzer.Api.DataAccess
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Report>().HasKey(x => new { x.ReportSourceId, x.Year, x.Quarter });
+            modelBuilder.Entity<Report>().HasKey(x => new { x.TickerName, x.Year, x.Quarter });
             modelBuilder.Entity<Price>().HasKey(x => new { x.TickerName, x.Date });
             modelBuilder.Entity<Recommendation>().HasOne(x => x.Ticker).WithOne(x => x.Recommendation).OnDelete(DeleteBehavior.Cascade);
 

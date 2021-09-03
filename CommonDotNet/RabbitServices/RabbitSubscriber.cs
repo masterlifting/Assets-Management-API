@@ -3,8 +3,6 @@ using CommonServices.Models;
 using CommonServices.ParserServices;
 using CommonServices.RabbitServices.Configuration;
 
-using Microsoft.Extensions.DependencyInjection;
-
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -23,11 +21,10 @@ namespace CommonServices.RabbitServices
 
         private readonly IModel channel;
         private readonly IConnection connection;
-        private readonly IServiceProvider services;
         private readonly List<Queue> queues;
         private readonly string[] queuesWithConfirm;
 
-        public RabbitSubscriber(string connectionString, QueueExchanges[] exchangeNames, QueueNames[] queueNames, IServiceProvider services)
+        public RabbitSubscriber(string connectionString, QueueExchanges[] exchangeNames, QueueNames[] queueNames)
         {
             var mqConnection = new SettingsConverter<ConnectionModel>(connectionString).Model;
 
@@ -59,11 +56,10 @@ namespace CommonServices.RabbitServices
                 }
             }
 
-            this.services = services;
             queuesWithConfirm = queues.Where(x => x.WithConfirm).Select(x => x.NameString).ToArray();
         }
 
-        public void Subscribe(Func<QueueExchanges, string, string, IServiceScope, Task<bool>> getActionResult)
+        public void Subscribe(Func<QueueExchanges, string, string, Task<bool>> getActionResult)
         {
             foreach (var queue in queues)
                 SubscribeQueue(getActionResult, queue);
@@ -73,14 +69,13 @@ namespace CommonServices.RabbitServices
             channel.Dispose();
             connection.Dispose();
         }
-        private void SubscribeQueue(Func<QueueExchanges, string, string, IServiceScope, Task<bool>> getActionResult, Queue queue)
+        private void SubscribeQueue(Func<QueueExchanges, string, string, Task<bool>> getActionResult, Queue queue)
         {
             var consumer = new EventingBasicConsumer(channel);
 
             consumer.Received += async (model, ea) =>
             {
                 var data = Encoding.UTF8.GetString(ea.Body.ToArray());
-                using var scope = services.CreateScope();
                 string queueName = string.Empty;
                 bool result = false;
 
@@ -90,7 +85,7 @@ namespace CommonServices.RabbitServices
 
                     queueName = ea.RoutingKey.Split('.')[0];
                     var exchange = Enum.Parse<QueueExchanges>(ea.Exchange.ToLowerInvariant());
-                    result = await getActionResult(exchange, ea.RoutingKey, data, scope);
+                    result = await getActionResult(exchange, ea.RoutingKey, data);
 
                     semaphore.Release();
                 }

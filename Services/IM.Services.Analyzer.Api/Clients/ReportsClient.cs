@@ -24,9 +24,9 @@ namespace IM.Services.Analyzer.Api.Clients
             settings = options.Value.ClientSettings.ClientCompaniesReports;
         }
 
-        public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(string ticker, int sourceId, FilterRequestModel filter, PaginationRequestModel pagination) =>
+        public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination) =>
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<ReportDto>>>
-                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{settings.Controller}/{ticker}/{sourceId}?{filter.QueryParams}&{pagination.QueryParams}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{settings.Controller}/{ticker}?{filter.QueryParams}&{pagination.QueryParams}") ?? new();
 
         public void Dispose()
         {
