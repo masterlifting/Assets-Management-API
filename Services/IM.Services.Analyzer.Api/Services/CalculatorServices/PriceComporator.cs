@@ -4,6 +4,8 @@ using IM.Services.Analyzer.Api.DataAccess.Entities;
 using IM.Services.Analyzer.Api.Models.Calculator;
 using IM.Services.Analyzer.Api.Services.CalculatorServices.Interfaces;
 
+using System.Linq;
+
 using static IM.Services.Analyzer.Api.Enums;
 
 namespace IM.Services.Analyzer.Api.Services.CalculatorServices
@@ -15,7 +17,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 
         public PriceComporator(PriceDto[] prices)
         {
-            this.prices = prices;
+            this.prices = prices.OrderBy(x => x.Date).ToArray();
             valueCollection = new Sample[prices.Length];
             SetData();
         }
@@ -24,7 +26,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
             var comparedSample = RatingComparator.CompareSample(valueCollection);
             var result = new Price[comparedSample.Length];
 
-            for (int i = 0; i < prices.Length; i++)
+            for (uint i = 0; i < prices.Length; i++)
                 for (uint j = 0; j < comparedSample.Length; j++)
                     if (comparedSample[j].Index == i)
                     {
@@ -32,14 +34,13 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
                         {
                             TickerName = prices[i].TickerName,
                             Date = prices[i].Date,
-                            SourceTypeId = prices[i].SourceTypeId,
+                            SourceType = prices[i].SourceType,
                             Result = comparedSample[j].Value,
                             StatusId = (byte)StatusType.Calculated
                         };
 
                         break;
                     }
-
             return result;
         }
         void SetData()

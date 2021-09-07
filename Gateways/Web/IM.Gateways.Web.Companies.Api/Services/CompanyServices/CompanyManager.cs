@@ -1,7 +1,7 @@
 ﻿using CommonServices.Models.Dto.Http;
 
 using IM.Gateways.Web.Companies.Api.DataAccess;
-using IM.Gateways.Web.Companies.Api.Models.Dto.State;
+using IM.Gateways.Web.Companies.Api.Models.Dto;
 using IM.Gateways.Web.Companies.Api.Services.RabbitServices;
 
 using System;
@@ -20,15 +20,15 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyServices
             this.rabbitCrudService = rabbitCrudService;
         }
 
-        public async Task<ResponseModel<string>> CreateCompanyAsync(CompanyModel company)
+        public async Task<ResponseModel<string>> CreateCompanyAsync(CompanyPostDto company)
         {
             company.Ticker = company.Ticker.ToUpperInvariant();
             var ctxCompany = await context.Companies.FindAsync(company.Ticker);
 
             if (ctxCompany is not null)
-                return new() { Errors = new string[1] { "this company is already" } };
+                return new() { Errors = new string[1] { $"'{company.Name}' is already!" } };
 
-            string contextResultMessage = "failed";
+            string contextResultMessage = "failed!";
 
             await context.Companies.AddAsync(new()
             {
@@ -39,7 +39,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyServices
 
             if (await context.SaveChangesAsync() > 0)
             {
-                contextResultMessage = "success";
+                contextResultMessage = "success.";
                 rabbitCrudService.CreateCompany(company);
             }
 
@@ -48,10 +48,10 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyServices
                 Data = $"created '{company.Name}' is {contextResultMessage}.",
             };
         }
-        public async Task<ResponseModel<string>> UpdateCompanyAsync(string ticker, CompanyModel company)
+        public async Task<ResponseModel<string>> UpdateCompanyAsync(string ticker, CompanyPostDto company)
         {
             var errors = Array.Empty<string>();
-            string contextResultMessage = "failed";
+            string contextResultMessage = "failed!";
             
             ticker = ticker.ToUpperInvariant();
             company.Ticker = ticker;
@@ -59,23 +59,23 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyServices
             var ctxCompany = await context.Companies.FindAsync(ticker);
 
             if (ctxCompany is null)
-                return new() { Errors = new string[1] { "this is company not found" } };
+                return new() { Errors = new string[1] { $"'{company.Name}' not found!" } };
 
-            if (!company.Ticker.Equals(ticker, StringComparison.OrdinalIgnoreCase))
-                errors = new string[1] { "ticker modified  is denied" };
+            if (!company.Ticker.Equals(ticker, StringComparison.InvariantCultureIgnoreCase))
+                errors = new string[1] { "ticker modified is denied!" };
 
             ctxCompany.Name = company.Name;
             ctxCompany.Description = company.Description;
 
             if (await context.SaveChangesAsync() >= 0)
             {
-                contextResultMessage = "success";
+                contextResultMessage = "success.";
                 rabbitCrudService.UpdateCompany(company);
             }
 
             return new()
             {
-                Data = $"updated '{company.Name}' is {contextResultMessage}",
+                Data = $"updated '{company.Name}' is {contextResultMessage}.",
                 Errors = errors
             };
         }
@@ -85,20 +85,20 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyServices
             var company = await context.Companies.FindAsync(ticker);
 
             if (company is null)
-                return new() { Errors = new string[1] { "this is company not found" } };
+                return new() { Errors = new string[1] { $"'{ticker}' not found" } };
 
             context.Companies.Remove(company);
 
-            string contextResultMessage = "failed";
+            string contextResultMessage = "failed!";
             if (await context.SaveChangesAsync() >= 0)
             {
-                contextResultMessage = "success";
+                contextResultMessage = "success.";
                 rabbitCrudService.DeleteCompany(ticker);
             }
 
             return new()
             {
-                Data = $"deleted '{company.Name}' is {contextResultMessage}"
+                Data = $"deleted '{company.Name}' is {contextResultMessage}."
             };
         }
     }

@@ -16,14 +16,14 @@ namespace IM.Services.Analyzer.Api.Services.BackgroundServices
     public class RabbitBackgroundService : BackgroundService
     {
         private readonly RabbitSubscriber subscriber;
-        private readonly IServiceProvider services;
+        private readonly IServiceScope scope;
 
         public RabbitBackgroundService(IServiceProvider services, IOptions<ServiceSettings> options)
         {
             var targetExchanges = new[] { QueueExchanges.crud, QueueExchanges.calculator };
             var targetQueues = new[] { QueueNames.companiesanalyzer };
             subscriber = new RabbitSubscriber(options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
-            this.services = services;
+            scope = services.CreateScope();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -31,11 +31,12 @@ namespace IM.Services.Analyzer.Api.Services.BackgroundServices
             if (stoppingToken.IsCancellationRequested)
             {
                 subscriber.Unsubscribe();
+                scope.Dispose();
                 return Task.CompletedTask;
             }
 
-            var actionService = services.CreateScope().ServiceProvider.GetRequiredService<RabbitActionService>();
-            subscriber.Subscribe(actionService.GetActionResultAsync);
+            var rabbitService = scope.ServiceProvider.GetRequiredService<RabbitActionService>();
+            subscriber.Subscribe(rabbitService.GetActionResultAsync);
 
             return Task.CompletedTask;
         }
@@ -43,6 +44,7 @@ namespace IM.Services.Analyzer.Api.Services.BackgroundServices
         {
             base.StopAsync(stoppingToken);
             subscriber.Unsubscribe();
+            scope.Dispose();
             return Task.CompletedTask;
         }
     }

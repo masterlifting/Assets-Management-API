@@ -1,11 +1,9 @@
 ﻿using IM.Gateways.Web.Companies.Api.DataAccess.Entities;
-using IM.Gateways.Web.Companies.Api.Services.Attributes;
 
-namespace IM.Gateways.Web.Companies.Api.Models.Dto.State
+namespace IM.Gateways.Web.Companies.Api.Models.Dto
 {
-    public class CompanyModel : Company
+    public class CompanyPostDto : Company
     {
-        [Zero]
         public byte PriceSourceTypeId { get; set; }
         public byte ReportSourceTypeId { get; set; }
         public string? ReportSourceValue { get; set; }

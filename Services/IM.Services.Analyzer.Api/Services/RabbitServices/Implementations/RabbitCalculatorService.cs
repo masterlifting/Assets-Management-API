@@ -1,9 +1,8 @@
 ﻿using CommonServices.Models.Dto.AnalyzerService;
 using CommonServices.RabbitServices;
-using CommonServices.RepositoryService;
 
-using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
+using IM.Services.Analyzer.Api.DataAccess.Repository;
 
 using System.Threading.Tasks;
 
@@ -13,10 +12,10 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
 {
     public class RabbitCalculatorService : IRabbitActionService
     {
-        private readonly EntityRepository<Report, AnalyzerContext> reportRepository;
-        private readonly EntityRepository<Price, AnalyzerContext> priceRepository;
+        private readonly AnalyzerRepository<Report> reportRepository;
+        private readonly AnalyzerRepository<Price> priceRepository;
 
-        public RabbitCalculatorService(EntityRepository<Report, AnalyzerContext> reportRepository, EntityRepository<Price, AnalyzerContext> priceRepository)
+        public RabbitCalculatorService(AnalyzerRepository<Report> reportRepository, AnalyzerRepository<Price> priceRepository)
         {
             this.reportRepository = reportRepository;
             this.priceRepository = priceRepository;
@@ -29,28 +28,25 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
                 _ => true
             };
 
-        public async Task<bool> SetReportToCalculateAsync(string data)
-        {
-            return (RabbitHelper.TrySerialize(data, out AnalyzerReportDto? report) || report is not null)
+        public async Task<bool> SetReportToCalculateAsync(string data) =>
+            (RabbitHelper.TrySerialize(data, out AnalyzerReportDto? report) || report is not null)
             && await reportRepository.CreateOrUpdateAsync(new Report
             {
                 TickerName = report!.TickerName,
                 Year = report.Year,
                 Quarter = report.Quarter,
-                SourceTypeId = report.SourceTypeId,
+                SourceType = report.SourceType,
                 StatusId = (byte)StatusType.ToCalculate
-            }, $"analyzer report for {report.TickerName}");
-        }
-        public async Task<bool> SetPriceToCalculateAsync(string data)
-        {
-            return (RabbitHelper.TrySerialize(data, out AnalyzerPriceDto? price) || price is not null)
+            }, report.TickerName);
+        
+        public async Task<bool> SetPriceToCalculateAsync(string data) => 
+            (RabbitHelper.TrySerialize(data, out AnalyzerPriceDto? price) || price is not null)
             && await priceRepository.CreateOrUpdateAsync(new Price
             {
                 TickerName = price!.TickerName,
                 Date = price.Date,
-                SourceTypeId = price.SourceTypeId,
+                SourceType = price.SourceType,
                 StatusId = (byte)StatusType.ToCalculate
-            }, $"analyzer price for {price.TickerName}");
-        }
+            }, price.TickerName);
     }
 }

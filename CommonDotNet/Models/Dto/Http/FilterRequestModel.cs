@@ -17,17 +17,19 @@ namespace CommonServices.Models.Dto.Http
 
             string queryParams = $"year={Year}&month={Month}";
 
-            if (day.HasValue)
+            if (day is not null)
             {
                 Day = day.Value > 31 ? 31 : day.Value <= 0 ? 1 : day.Value;
                 queryParams += $"&day={Day}";
             }
+            else
+                Day = 1;
 
             QueryParams = queryParams;
         }
         public int Year { get; }
         public int Month { get; }
-        public int? Day { get; }
+        public int Day { get; }
         public byte Quarter { get; }
         public string QueryParams { get; }
         /// <summary>
@@ -35,16 +37,14 @@ namespace CommonServices.Models.Dto.Http
         /// </summary>
         public Func<int, byte, bool> FilterQuarter
         {
-            get => (int year, byte quarter) => 
-                year == Year && quarter >= Quarter && Year < DateTime.UtcNow.Year && year > Year;
+            get => (int year, byte quarter) => year > Year || year == Year && quarter >= Quarter;
         }
         /// <summary>
         /// Year, Month, Day
         /// </summary>
         public Func<int, int, int, bool> FilterDate
         {
-            get => (int year, int month, int day) => 
-                year == Year && month >= Month && (Day.HasValue ? day >= Day.Value : day >= 1) && Year < DateTime.UtcNow.Year && year > Year;
+            get => (int year, int month, int day) => year > Year || year == Year && ((month == Month && day >= Day) || (month > Month));
         }
     }
 }

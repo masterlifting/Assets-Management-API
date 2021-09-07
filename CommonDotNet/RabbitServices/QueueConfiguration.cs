@@ -1,7 +1,5 @@
 ﻿using CommonServices.RabbitServices.Configuration;
 
-using System.Linq;
-
 namespace CommonServices.RabbitServices
 {
     public static class QueueConfiguration
@@ -95,7 +93,7 @@ namespace CommonServices.RabbitServices
             {
                 Queues = new Queue[]
                 {
-                    new Queue(QueueNames.companiesanalyzer)
+                    new Queue(QueueNames.companiesanalyzer,false,false)
                     {
                          Params = new QueueParam[]
                         {
@@ -118,13 +116,6 @@ namespace CommonServices.RabbitServices
                 }
             }
         };
-        public static (QueueExchange[] exchanges, Queue[] queues) GetConfiguredData(QueueExchanges[] ex, QueueNames[] qn)
-        {
-            var exchanges = Exchanges.Where(x => ex.Contains(x.NameEnum)).Distinct(new ExchangeComparer()).ToArray();
-            var queues = exchanges.SelectMany(x => x.Queues).Where(x => qn.Contains(x.NameEnum)).Distinct(new QueueComparer()).ToArray();
-
-            return (exchanges, queues);
-        }
     }
 
     public enum QueueNames

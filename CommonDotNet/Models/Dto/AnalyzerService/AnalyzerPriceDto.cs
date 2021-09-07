@@ -4,6 +4,6 @@ namespace CommonServices.Models.Dto.AnalyzerService
 {
     public class AnalyzerPriceDto : PriceIdentity
     {
-        public byte SourceTypeId { get; set; }
+        public string SourceType { get; set; } = null!;
     }
 }

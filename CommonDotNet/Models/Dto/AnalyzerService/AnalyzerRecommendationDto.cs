@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace IM.Gateways.Web.Companies.Api.Models.Dto
+namespace CommonServices.Models.Dto.AnalyzerService
 {
-    public class RecommendationDto
+    public class AnalyzerRecommendationDto
     {
         public string Ticker { get; set; } = null!;
         public DateTime UpdateTime { get; set; }
@@ -13,13 +13,13 @@ namespace IM.Gateways.Web.Companies.Api.Models.Dto
     }
     public class ToBuyDto
     {
-        public decimal Price { get; }
-        public int Percent { get; }
+        public decimal Price { get; set; }
+        public int Percent { get; set; }
     }
     public class ToSellDto
     {
-        public int Lot { get; }
-        public decimal Price { get; }
-        public int Percent { get; }
+        public int Lot { get; set; }
+        public decimal Price { get; set; }
+        public int Percent { get; set; }
     }
 }

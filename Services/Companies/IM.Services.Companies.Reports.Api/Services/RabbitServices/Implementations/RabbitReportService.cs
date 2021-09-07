@@ -8,6 +8,8 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using static IM.Services.Companies.Reports.Api.Enums;
+
 namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementations
 {
     public class RabbitReportService : IRabbitActionService
@@ -28,7 +30,9 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
                 var reports = await reportLoader.LoadReportsAsync(ticker);
                 if (reports.Length > 0)
                 {
+                    string sourceType = Enum.Parse<ReportSourceTypes>(ticker.SourceTypeId.ToString()).ToString();
                     var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.calculator);
+
                     for (int i = 0; i < reports.Length; i++)
                         publisher.PublishTask(
                             QueueNames.companiesanalyzer
@@ -39,7 +43,7 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
                                 TickerName = ticker.Name,
                                 Year = reports[i].Year,
                                 Quarter = reports[i].Quarter,
-                                SourceTypeId = ticker.SourceTypeId
+                                SourceType = sourceType
                             }));
                 }
             }

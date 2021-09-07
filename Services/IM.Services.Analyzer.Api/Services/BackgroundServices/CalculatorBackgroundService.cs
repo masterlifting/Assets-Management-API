@@ -1,5 +1,6 @@
 ﻿using IM.Services.Analyzer.Api.Services.CalculatorServices;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using System;
@@ -10,28 +11,36 @@ namespace IM.Services.Analyzer.Api.Services.BackgroundServices
 {
     public class CalculatorBackgroundService : BackgroundService
     {
-        private readonly ReportCalculator reportCalculator;
-        private readonly PriceCalculator priceCalculator;
-        private readonly RatingCalculator ratingCalculator;
-
-        public CalculatorBackgroundService(ReportCalculator reportCalculator, PriceCalculator priceCalculator, RatingCalculator ratingCalculator)
-        {
-            this.reportCalculator = reportCalculator;
-            this.priceCalculator = priceCalculator;
-            this.ratingCalculator = ratingCalculator;
-        }
+        private readonly IServiceProvider services;
+        public CalculatorBackgroundService(IServiceProvider services) => this.services = services;
 
         protected async override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var delay = new TimeSpan(0, 5, 0);
+            var delay = new TimeSpan(0, 0, 10);
 
             while (true)
             {
-                await priceCalculator.CalculateAsync();
-                await reportCalculator.CalculateAsync();
-                await ratingCalculator.CalculateAsync();
-
                 await Task.Delay(delay, stoppingToken);
+                var scope = services.CreateScope();
+                var reportCalculator = scope.ServiceProvider.GetRequiredService<ReportCalculator>();
+                var priceCalculator = scope.ServiceProvider.GetRequiredService<PriceCalculator>();
+                var ratingCalculator = scope.ServiceProvider.GetRequiredService<RatingCalculator>();
+
+                try
+                {
+                    await priceCalculator.CalculateAsync();
+                    await reportCalculator.CalculateAsync();
+                    await ratingCalculator.CalculateAsync();
+                }
+                catch (Exception ex)
+                {
+                    scope.Dispose();
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"Analyzer exeption: {ex.InnerException?.Message ?? ex.Message}");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
+
+                scope.Dispose();
             }
         }
         public override Task StopAsync(CancellationToken stoppingToken)

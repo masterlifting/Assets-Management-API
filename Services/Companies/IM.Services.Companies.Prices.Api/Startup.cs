@@ -57,8 +57,9 @@ namespace IM.Services.Companies.Prices.Api
             services.AddScoped<PriceLoader>();
             services.AddScoped<PriceDtoAgregator>();
 
-            services.AddScoped<IEntityChecker<Ticker>, TickerChecker>();
-            services.AddScoped(typeof(EntityRepository<,>));
+            services.AddScoped<IRepository<Ticker>, TickerRepositoryHandler>();
+            services.AddScoped<IRepository<Price>, PriceRepositoryHandler>();
+            services.AddScoped(typeof(PricesRepository<>));
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();

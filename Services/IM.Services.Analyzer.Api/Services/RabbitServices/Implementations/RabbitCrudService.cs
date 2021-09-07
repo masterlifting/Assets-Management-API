@@ -1,9 +1,8 @@
 ﻿using CommonServices.Models.Dto.AnalyzerService;
 using CommonServices.RabbitServices;
-using CommonServices.RepositoryService;
 
-using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
+using IM.Services.Analyzer.Api.DataAccess.Repository;
 
 using System.Threading.Tasks;
 
@@ -11,8 +10,8 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
 {
     public class RabbitCrudService : IRabbitActionService
     {
-        private readonly EntityRepository<Ticker, AnalyzerContext> repository;
-        public RabbitCrudService(EntityRepository<Ticker, AnalyzerContext> repository)
+        private readonly AnalyzerRepository<Ticker> repository;
+        public RabbitCrudService(AnalyzerRepository<Ticker> repository)
         {
             this.repository = repository;
         }
@@ -29,10 +28,10 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
                     : RabbitHelper.TrySerialize(data, out AnalyzerTickerDto? ticker) && await GetActionAsync(repository!, action, new Ticker(ticker!), ticker!.Name);
         }
 
-        private static async Task<bool> GetActionAsync<T>(EntityRepository<T, AnalyzerContext> repository, QueueActions action, T data, string value) where T : class => action switch
+        private static async Task<bool> GetActionAsync<T>(AnalyzerRepository<T> repository, QueueActions action, T data, string value) where T : class => action switch
         {
-            QueueActions.create => await repository.CreateAsync(data, value),
-            QueueActions.update => await repository.UpdateAsync(data, value),
+            QueueActions.create => await repository.CreateAsync(data, value) is not null,
+            QueueActions.update => await repository.CreateOrUpdateAsync(data, value),
             _ => true
         };
     }

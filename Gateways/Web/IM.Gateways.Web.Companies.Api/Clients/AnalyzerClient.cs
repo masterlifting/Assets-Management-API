@@ -1,6 +1,6 @@
-﻿using CommonServices.Models.Dto.Http;
+﻿using CommonServices.Models.Dto.AnalyzerService;
+using CommonServices.Models.Dto.Http;
 
-using IM.Gateways.Web.Companies.Api.Models.Dto;
 using IM.Gateways.Web.Companies.Api.Settings;
 using IM.Gateways.Web.Companies.Api.Settings.Client;
 
@@ -29,24 +29,24 @@ namespace IM.Gateways.Web.Companies.Api.Clients
         }
 
 
-        public async Task<ResponseModel<PaginationResponseModel<RecommendationDto>>> GetRecommendationsAsync(PaginationRequestModel pagination) => 
-            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<RecommendationDto>>>
+        public async Task<ResponseModel<PaginationResponseModel<AnalyzerRecommendationDto>>> GetRecommendationsAsync(PaginationRequestModel pagination) => 
+            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<AnalyzerRecommendationDto>>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{recommendations}?{pagination.QueryParams}") ?? new();
-        public async Task<ResponseModel<RecommendationDto>> GetRecommendationAsync(string ticker) => 
-            await httpClient.GetFromJsonAsync<ResponseModel<RecommendationDto>>
+        public async Task<ResponseModel<AnalyzerRecommendationDto>> GetRecommendationAsync(string ticker) => 
+            await httpClient.GetFromJsonAsync<ResponseModel<AnalyzerRecommendationDto>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{recommendations}/{ticker}") ?? new();
 
 
-        public async Task<ResponseModel<PaginationResponseModel<RatingDto>>> GetRatingsAsync(PaginationRequestModel pagination) => 
-            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<RatingDto>>>
+        public async Task<ResponseModel<PaginationResponseModel<AnalyzerRatingDto>>> GetRatingsAsync(PaginationRequestModel pagination) => 
+            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<AnalyzerRatingDto>>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{ratings}?{pagination.QueryParams}") ?? new();
-        public async Task<ResponseModel<RatingDto>> GetRatingAsync(string ticker) => 
-            await httpClient.GetFromJsonAsync<ResponseModel<RatingDto>>
+        public async Task<ResponseModel<AnalyzerRatingDto>> GetRatingAsync(string ticker) => 
+            await httpClient.GetFromJsonAsync<ResponseModel<AnalyzerRatingDto>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{ratings}/{ticker}") ?? new();
 
 
-        public async Task<ResponseModel<PaginationResponseModel<CoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination) => 
-            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<CoefficientDto>>>
+        public async Task<ResponseModel<PaginationResponseModel<AnalyzerCoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination) => 
+            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<AnalyzerCoefficientDto>>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{coefficients}/{ticker}?{pagination.QueryParams}") ?? new();
 
         public void Dispose()

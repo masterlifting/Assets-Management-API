@@ -1,10 +1,13 @@
-﻿using CommonServices.RepositoryService;
-
+﻿
 using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
+using IM.Services.Analyzer.Api.DataAccess.Repository;
 
 using Microsoft.EntityFrameworkCore;
 
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,9 +18,9 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
     public class RatingCalculator
     {
         private readonly AnalyzerContext context;
-        private readonly EntityRepository<Rating, AnalyzerContext> ratingRepository;
+        private readonly AnalyzerRepository<Rating> ratingRepository;
 
-        public RatingCalculator(AnalyzerContext context, EntityRepository<Rating, AnalyzerContext> ratingRepository)
+        public RatingCalculator(AnalyzerContext context, AnalyzerRepository<Rating> ratingRepository)
         {
             this.context = context;
             this.ratingRepository = ratingRepository;
@@ -26,7 +29,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
         public async Task CalculateAsync()
         {
             var tickers = await context.Tickers.Select(x => x.Name).ToArrayAsync();
-            var ratings = new Rating[tickers.Length];
+            var ratings = new List<Rating>(tickers.Length);
 
             for (int i = 0; i < tickers.Length; i++)
             {
@@ -43,23 +46,30 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
                 decimal priceResult = RatingComparator.ComputeSampleResult(priceResults);
                 decimal reportResult = RatingComparator.ComputeSampleResult(reportResults);
 
-                ratings[i] = new()
+                ratings.Add(new()
                 {
-                    Place = i,
+                    Place = i + 1,
                     PriceComparison = priceResult,
                     ReportComparison = reportResult,
-                    Result = (priceResult + reportResult) * 0.5m,
+                    Result = RatingComparator.ComputeSampleResult(new[] { priceResult, reportResult }),
                     TickerName = tickers[i]
-                };
+                });
             }
 
-            var sortedRatings = ratings.OrderByDescending(x => x.Result).ToArray();
+            ratings.Sort((x, y) => x.Result < y.Result ? 1 : x.Result > y.Result ? -1 : 0);
+            for (int i = 0; i < ratings.Count; i++)
+                ratings[i].Place = i + 1;
 
-            for (int i = 0; i < sortedRatings.Length; i++)
-            {
-                sortedRatings[i].Place = i + 1;
-                await ratingRepository.CreateOrUpdateAsync(sortedRatings[i], $"rating for {sortedRatings[i].TickerName}. Place: {sortedRatings[i].Place}");
-            }
+            context.Database.ExecuteSqlRaw("DELETE FROM \"Ratings\"");
+
+            Console.WriteLine($"ratings count: {ratings.Count}");
+            await ratingRepository.CreateAsync(ratings, new RatingComparer(), "ratings");
         }
+    }
+
+    public class RatingComparer : IEqualityComparer<Rating>
+    {
+        public bool Equals(Rating? x, Rating? y) => x is not null && y is not null && x.TickerName == y.TickerName;
+        public int GetHashCode([DisallowNull] Rating obj) => obj.TickerName.GetHashCode();
     }
 }

@@ -2,16 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using static CommonServices.CommonEnums;
-
 namespace CommonServices
 {
     public static class CommonHelper
     {
-        public static readonly Dictionary<PriceSourceTypes, DateTime[]> ExchangeWeekend = new()
+        public static readonly Dictionary<string, DateTime[]> ExchangeWeekend = new(StringComparer.InvariantCultureIgnoreCase)
         {
             {
-                PriceSourceTypes.MOEX,
+                "MOEX",
                 new DateTime[]
                 {
                             new(2021, 06, 14),
@@ -21,7 +19,7 @@ namespace CommonServices
                 }
             },
             {
-                PriceSourceTypes.Tdameritrade,
+                "Tdameritrade",
                 new DateTime[]
                 {
                             new(2021, 05, 31),
@@ -88,23 +86,15 @@ namespace CommonServices
             return (year, quarter);
         }
         public static bool IsExchangeWeekend(DateTime date) => date.DayOfWeek == DayOfWeek.Sunday || date.DayOfWeek == DayOfWeek.Saturday;
-        public static bool IsExchangeWeekend(PriceSourceTypes sourceType, DateTime date) => ExchangeWeekend[sourceType].Contains(date.Date);
-        public static DateTime GetExchangeLastWorkday(PriceSourceTypes sourceType)
+        public static bool IsExchangeWeekend(string sourceType, DateTime date) => 
+            sourceType is not null && ExchangeWeekend.ContainsKey(sourceType) && ExchangeWeekend[sourceType].Contains(date.Date);
+        public static DateTime GetExchangeLastWorkday(string sourceType, DateTime? date = null)
         {
-            return CheckWorkday(sourceType, DateTime.UtcNow.AddDays(-1));
+            DateTime _date = date is null ? DateTime.UtcNow : date!.Value;
 
-            static DateTime CheckWorkday(PriceSourceTypes sourceType, DateTime checkingDate) =>
-                IsExchangeWeekend(checkingDate)
-                ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
-                : IsExchangeWeekend(sourceType, checkingDate)
-                    ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
-                    : checkingDate.Date;
-        }
-        public static DateTime GetExchangeLastWorkday(PriceSourceTypes sourceType, DateTime date)
-        {
-            return CheckWorkday(sourceType, date.AddDays(-1));
+            return  CheckWorkday(sourceType, _date.AddDays(-1));
 
-            static DateTime CheckWorkday(PriceSourceTypes sourceType, DateTime checkingDate) =>
+            static DateTime CheckWorkday(string sourceType, DateTime checkingDate) =>
                 IsExchangeWeekend(checkingDate)
                 ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
                 : IsExchangeWeekend(sourceType, checkingDate)

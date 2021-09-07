@@ -8,6 +8,8 @@ using System;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+using static IM.Services.Companies.Prices.Api.Enums;
+
 namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementations
 {
     public class RabbitPriceService : IRabbitActionService
@@ -28,7 +30,9 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
                 var prices = await priceLoader.LoadPricesAsync(ticker);
                 if (prices.Length > 0)
                 {
+                    string sourceType = Enum.Parse<PriceSourceTypes>(ticker.SourceTypeId.ToString()).ToString();
                     var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.calculator);
+
                     for (int i = 0; i < prices.Length; i++)
                         publisher.PublishTask(
                             QueueNames.companiesanalyzer
@@ -38,12 +42,10 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
                             {
                                 TickerName = ticker.Name,
                                 Date = prices[i].Date,
-                                SourceTypeId = ticker.SourceTypeId
+                                SourceType = sourceType
                             }));
                 }
             }
-            else
-                Console.WriteLine(nameof(RabbitPriceService) + " error!");
 
             return true;
         }

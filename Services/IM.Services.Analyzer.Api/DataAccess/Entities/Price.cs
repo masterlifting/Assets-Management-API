@@ -7,7 +7,7 @@ namespace IM.Services.Analyzer.Api.DataAccess.Entities
     public class Price : PriceIdentity
     {
         public virtual Ticker Ticker { get; set; } = null!;
-        public byte SourceTypeId { get; set; }
+        public string SourceType { get; set; } = null!;
 
 
         [Column(TypeName = "Decimal(18,4)")]

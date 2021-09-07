@@ -21,10 +21,5 @@ namespace IM.Services.Analyzer.Api.DataAccess.Entities
         public decimal PriceComparison { get; set; }
         [Column(TypeName = "Decimal(18,4)")]
         public decimal ReportComparison { get; set; }
-
-        internal void Sort(Func<object, object, object> p)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

@@ -12,6 +12,7 @@ namespace IM.Services.Companies.Reports.Api.DataAccess.Entities
         {
             Name = ticker.Name;
             SourceTypeId = ticker.SourceTypeId;
+            SourceValue = ticker.SourceValue;
         }
         public virtual SourceType SourceType { get; set; }
         public byte SourceTypeId { get; set; }

@@ -1,11 +1,11 @@
 using CommonServices.RepositoryService;
 
+using IM.Services.Analyzer.Api.Clients;
 using IM.Services.Analyzer.Api.DataAccess;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
 using IM.Services.Analyzer.Api.DataAccess.Repository;
 using IM.Services.Analyzer.Api.Services.BackgroundServices;
 using IM.Services.Analyzer.Api.Services.CalculatorServices;
-using IM.Services.Analyzer.Api.Services.CalculatorServices.Interfaces;
 using IM.Services.Analyzer.Api.Services.DtoServices;
 using IM.Services.Analyzer.Api.Services.RabbitServices;
 using IM.Services.Analyzer.Api.Settings;
@@ -32,26 +32,31 @@ namespace IM.Services.Analyzer.Api
             {
                 provider.UseLazyLoadingProxies();
                 provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
+                provider.EnableSensitiveDataLogging();
             });
 
             services.AddControllers();
+
+            services.AddHttpClient<PricesClient>();
+            services.AddHttpClient<ReportsClient>();
 
             services.AddScoped<CoefficientDtoAgregator>();
             services.AddScoped<RatingDtoAgregator>();
             services.AddScoped<RecommendationDtoAgregator>();
 
-            services.AddScoped<IEntityChecker<Ticker>, TickerChecker>();
-            services.AddScoped<IEntityChecker<Price>, PriceChecker>();
-            services.AddScoped<IEntityChecker<Report>, ReportChecker>();
-            services.AddScoped<IEntityChecker<Rating>, RatingChecker>();
-            services.AddScoped(typeof(EntityRepository<,>));
+            services.AddScoped<IRepository<Ticker>, TickerRepositoryHandler>();
+            services.AddScoped<IRepository<Price>, PriceRepositoryHandler>();
+            services.AddScoped<IRepository<Report>, ReportRepositoryHandler>();
+            services.AddScoped<IRepository<Rating>, RatingRepositoryHandler>();
+            services.AddScoped(typeof(AnalyzerRepository<>));
 
-            services.AddScoped<IAnalyzerCalculator<Report>, ReportCalculator>();
-            services.AddScoped<IAnalyzerCalculator<Price>, PriceCalculator>();
+            services.AddScoped<ReportCalculator>();
+            services.AddScoped<PriceCalculator>();
             services.AddScoped<RatingCalculator>();
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();
+            services.AddHostedService<CalculatorBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

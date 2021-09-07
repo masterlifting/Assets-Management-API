@@ -125,7 +125,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
                     TickerName = reports[i].TickerName,
                     Year = reports[i].Year,
                     Quarter = reports[i].Quarter,
-                    SourceTypeId = reports[i].SourceTypeId,
+                    SourceType = reports[i].SourceType,
                     Result = RatingComparator.ComputeSampleResult(results),
                     StatusId = statusId
                 };

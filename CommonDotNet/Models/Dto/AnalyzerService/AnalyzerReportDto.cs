@@ -4,6 +4,6 @@ namespace CommonServices.Models.Dto.AnalyzerService
 {
     public class AnalyzerReportDto : ReportIdentity
     {
-        public byte SourceTypeId { get; set; }
+        public string SourceType { get; set; } = null!;
     }
 }

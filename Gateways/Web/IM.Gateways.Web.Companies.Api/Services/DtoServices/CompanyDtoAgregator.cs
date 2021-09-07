@@ -34,7 +34,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.DtoServices
         public ReportsDtoAgregator ReportsDtoAgregator { get => new(reportsClient); }
         public AnalyzerDtoAgregator AnalyzerDtoAgregator { get => new(analyzerClient); }
 
-        public async Task<ResponseModel<PaginationResponseModel<CompanyDto>>> GetCompaniesAsync(PaginationRequestModel pagination)
+        public async Task<ResponseModel<PaginationResponseModel<CompanyGetDto>>> GetCompaniesAsync(PaginationRequestModel pagination)
         {
             var errors = Array.Empty<string>();
 
@@ -45,7 +45,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.DtoServices
                 .OrderBy(x => x.Name)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit)
-                .Select(x => new CompanyDto()
+                .Select(x => new CompanyGetDto()
                 {
                     Name = x.Name,
                     Ticker = x.Ticker,
@@ -63,7 +63,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.DtoServices
                 }
             };
         }
-        public async Task<ResponseModel<CompanyDto>> GetCompanyAsync(string ticker)
+        public async Task<ResponseModel<CompanyGetDto>> GetCompanyAsync(string ticker)
         {
             var company = await context.Companies.FindAsync(ticker.ToUpperInvariant());
 

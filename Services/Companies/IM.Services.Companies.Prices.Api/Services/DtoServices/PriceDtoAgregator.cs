@@ -21,7 +21,7 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
             var errors = Array.Empty<string>();
 
             var query = context.Tickers.AsQueryable();
-            int count = await query.CountAsync();
+            int count = await query.Join(context.Prices, x => x.Name, y => y.TickerName,(x,y) => y).CountAsync();
 
             var prices = await context.Prices
                 .Where(x => x.Date >= DateTime.UtcNow.AddMonths(-1))

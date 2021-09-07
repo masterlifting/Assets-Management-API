@@ -1,6 +1,6 @@
 ﻿namespace IM.Gateways.Web.Companies.Api.Models.Dto
 {
-    public class CompanyDto
+    public class CompanyGetDto
     {
         public string Ticker { get; set; } = null!;
         public string Name { get; set; } = null!;

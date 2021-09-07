@@ -6,6 +6,5 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices.Interfaces
     {
         Task CalculateAsync();
         Task<bool> IsSetCalculatingStatusAsync(T[] collection);
-        Task<T[]> GetDataAsync();
     }
 }

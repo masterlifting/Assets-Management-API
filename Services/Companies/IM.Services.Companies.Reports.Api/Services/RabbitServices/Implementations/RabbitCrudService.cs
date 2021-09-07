@@ -1,9 +1,8 @@
 ﻿using CommonServices.Models.Dto.CompaniesReportsService;
 using CommonServices.RabbitServices;
-using CommonServices.RepositoryService;
 
-using IM.Services.Companies.Reports.Api.DataAccess;
 using IM.Services.Companies.Reports.Api.DataAccess.Entities;
+using IM.Services.Companies.Reports.Api.DataAccess.Repository;
 
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -13,9 +12,9 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
     public class RabbitCrudService : IRabbitActionService
     {
         private readonly string rabbitConnectionString;
-        private readonly EntityRepository<Ticker, ReportsContext> repository;
+        private readonly ReportsRepository<Ticker> repository;
 
-        public RabbitCrudService(string rabbitConnectionString, EntityRepository<Ticker, ReportsContext> repository)
+        public RabbitCrudService(string rabbitConnectionString, ReportsRepository<Ticker> repository)
         {
             this.rabbitConnectionString = rabbitConnectionString;
             this.repository = repository;
@@ -45,10 +44,10 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
 
             return false;
         }
-        private static async Task<bool> GetActionAsync<T>(EntityRepository<T, ReportsContext> repository, QueueActions action, T data, string value) where T : class => action switch
+        private static async Task<bool> GetActionAsync<T>(ReportsRepository<T> repository, QueueActions action, T data, string value) where T : class => action switch
         {
-            QueueActions.create => await repository.CreateAsync(data, value),
-            QueueActions.update => await repository.UpdateAsync(data, value),
+            QueueActions.create => await repository.CreateAsync(data, value) is not null,
+            QueueActions.update => await repository.CreateOrUpdateAsync(data, value),
             _ => true
         };
     }

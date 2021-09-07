@@ -3,7 +3,7 @@ using IM.Services.Companies.Reports.Api.DataAccess.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
-using static CommonServices.CommonEnums;
+using static IM.Services.Companies.Reports.Api.Enums;
 
 namespace IM.Services.Companies.Reports.Api.DataAccess
 {
@@ -22,7 +22,7 @@ namespace IM.Services.Companies.Reports.Api.DataAccess
             modelBuilder.Entity<SourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<SourceType>().HasData(new SourceType[]
             {
-                new (){Id = (byte)ReportSourceTypes.Official, Name = nameof(ReportSourceTypes.Official) },
+                new (){Id = (byte)ReportSourceTypes.Default, Name = "Select report source!" },
                 new (){Id = (byte)ReportSourceTypes.Investing, Name = nameof(ReportSourceTypes.Investing) }
             });
         }

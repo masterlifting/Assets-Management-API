@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using static CommonServices.CommonEnums;
+using static IM.Services.Companies.Prices.Api.Enums;
 
 namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 {

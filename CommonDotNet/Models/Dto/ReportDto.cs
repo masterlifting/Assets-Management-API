@@ -4,7 +4,7 @@ namespace CommonServices.Models.Dto
 {
     public abstract class ReportDto : ReportIdentity
     {
-        public string? SourceType { get; set; }
+        public string SourceType { get; set; } = null!;
         public byte SourceTypeId { get; set; }
 
         public long StockVolume { get; set; }

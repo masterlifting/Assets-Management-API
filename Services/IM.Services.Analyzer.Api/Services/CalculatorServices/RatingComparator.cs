@@ -22,21 +22,31 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
         }
         public static decimal ComputeSampleResult(decimal[] results)
         {
+            if (!results.Any())
+                return 0;
+
             int zeroDeviationCount = results.Where(x => x != 0).Count();
-            decimal deviationCoefficient = zeroDeviationCount / results.Length;
-            return results.Average() * deviationCoefficient;
+            decimal deviationCoefficient = (decimal)zeroDeviationCount / results.Length;
+            return results.Sum() * deviationCoefficient;
         }
 
         static Sample[] ComputeValues(Sample[] sample)
         {
-            var results = new Sample[sample.Length - 1];
+            var results = new Sample[sample.Length];
+            results[0] = new()
+            {
+                Value = 0,
+                Index = sample[0].Index,
+                CompareType = sample[0].CompareType
+            };
 
             for (int i = 1; i < sample.Length; i++)
-            {
-                results[i - 1].Value = ComputeDeviationPercent(sample[i - 1].Value, sample[i].Value, sample[i].CompareType);
-                results[i - 1].Index = sample[i].Index;
-                results[i - 1].CompareType = sample[i].CompareType;
-            }
+                results[i] = new()
+                {
+                    Value = ComputeDeviationPercent(sample[i - 1].Value, sample[i].Value, sample[i].CompareType),
+                    Index = sample[i].Index,
+                    CompareType = sample[i].CompareType
+                };
 
             return results;
         }

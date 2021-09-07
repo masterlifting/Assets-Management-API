@@ -1,7 +1,9 @@
 using CommonServices.Models.Entity;
+using CommonServices.RepositoryService;
 
 using IM.Services.Companies.Prices.Api.DataAccess;
 using IM.Services.Companies.Prices.Api.DataAccess.Entities;
+using IM.Services.Companies.Prices.Api.DataAccess.Repository;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -10,18 +12,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using static CommonServices.CommonEnums;
 using static CommonServices.CommonHelper;
+using static IM.Services.Companies.Prices.Api.Enums;
 
 namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 {
     public class PriceLoader
     {
         private readonly PricesContext context;
+        private readonly PricesRepository<Price> repository;
         private readonly PriceParser parser;
-        public PriceLoader(PricesContext context, PriceParser parser)
+        public PriceLoader(PricesContext context, PricesRepository<Price> repository, PriceParser parser)
         {
             this.context = context;
+            this.repository = repository;
             this.parser = parser;
         }
 
@@ -42,12 +46,23 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 
             var _ticker = await context.Tickers.FindAsync(ticker.Name);
 
-            if (_ticker is not null && !IsExchangeWeekend(DateTime.UtcNow) && Enum.TryParse(_ticker.SourceTypeId.ToString(), out PriceSourceTypes sourceType))
+            if (_ticker is not null
+                && !IsExchangeWeekend(DateTime.UtcNow)
+                && Enum.TryParse(_ticker.SourceTypeId.ToString(), out PriceSourceTypes sourceType))
             {
                 var lastPrices = await GetLastPricesAsync(1);
-                var loadedPrices = await GetPricesAsync(sourceType, lastPrices);
+                var (toUpdate, toAdd) = await GetPricesAsync(sourceType, lastPrices);
 
-                result = await SavePricesAsync(new[] { loadedPrices });
+                result = new Price[toUpdate.Count + toAdd.Count];
+
+                if (toAdd.Any())
+                    result = await repository.CreateAsync(toAdd, new PriceComparer(), "loaded prices");
+
+                if (toUpdate.Any())
+                {
+                    var updatedResult = await repository.UpdateAsync(toUpdate, "updated prices");
+                    result = result.Concat(updatedResult).ToArray();
+                }
             }
 
             Console.WriteLine($"\nSaved price count: {result.Length}");
@@ -91,7 +106,7 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
         }
         private async Task<(List<Price> toUpdate, List<Price> toAdd)> GetPricesAsync(PriceSourceTypes sourceType, IEnumerable<Price> lastPrices)
         {
-            int sourceTypeId = (int)sourceType;
+            byte sourceTypeId = (byte)sourceType;
             var tickerNames = await context.Tickers.Where(x => x.SourceTypeId == sourceTypeId).Select(x => x.Name).ToArrayAsync();
             var prices = lastPrices.Join(tickerNames, x => x.TickerName, y => y, (x, _) => x).ToArray();
             var separatedPrices = GetSeparatedPrices(sourceType, prices);
@@ -101,7 +116,7 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
 
             (IEnumerable<Price> forHistory, IEnumerable<Price> forLastToUpdate, IEnumerable<Price> forLastToAdd) GetSeparatedPrices(PriceSourceTypes sourceType, IEnumerable<Price> prices)
             {
-                var lastWorkday = GetExchangeLastWorkday(sourceType);
+                var lastWorkday = GetExchangeLastWorkday(sourceType.ToString());
 
                 var pricesForHistory = prices.Where(x => x.Date < lastWorkday);
                 var pricesForLastToUpdate = prices.Where(x => x.Date == DateTime.UtcNow.Date);

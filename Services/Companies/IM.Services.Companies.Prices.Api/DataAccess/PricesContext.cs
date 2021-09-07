@@ -3,7 +3,7 @@ using IM.Services.Companies.Prices.Api.DataAccess.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
-using static CommonServices.CommonEnums;
+using static IM.Services.Companies.Prices.Api.Enums;
 
 namespace IM.Services.Companies.Prices.Api.DataAccess
 {
@@ -13,7 +13,7 @@ namespace IM.Services.Companies.Prices.Api.DataAccess
         public DbSet<Price> Prices { get; set; }
         public DbSet<SourceType> SourceTypes { get; set; }
 
-        public PricesContext(DbContextOptions<PricesContext> options) : base(options) {}
+        public PricesContext(DbContextOptions<PricesContext> options) : base(options) { }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -23,6 +23,7 @@ namespace IM.Services.Companies.Prices.Api.DataAccess
             modelBuilder.Entity<SourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<SourceType>().HasData(new SourceType[]
             {
+                new (){Id = (byte)PriceSourceTypes.Default, Name = "Select price source!" },
                 new (){Id = (byte)PriceSourceTypes.MOEX, Name = nameof(PriceSourceTypes.MOEX) },
                 new (){Id = (byte)PriceSourceTypes.Tdameritrade, Name = nameof(PriceSourceTypes.Tdameritrade) }
             });
