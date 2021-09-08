@@ -18,9 +18,9 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
     public class RatingCalculator
     {
         private readonly AnalyzerContext context;
-        private readonly AnalyzerRepository<Rating> ratingRepository;
+        private readonly RepositorySet<Rating> ratingRepository;
 
-        public RatingCalculator(AnalyzerContext context, AnalyzerRepository<Rating> ratingRepository)
+        public RatingCalculator(AnalyzerContext context, RepositorySet<Rating> ratingRepository)
         {
             this.context = context;
             this.ratingRepository = ratingRepository;

@@ -9,9 +9,9 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices
     public class RabbitActionService : RabbitService
     {
         public RabbitActionService(
-            AnalyzerRepository<Ticker> tickerRepository,
-            AnalyzerRepository<Report> reportRepository,
-            AnalyzerRepository<Price> priceRepository) : base(
+            RepositorySet<Ticker> tickerRepository,
+            RepositorySet<Report> reportRepository,
+            RepositorySet<Price> priceRepository) : base(
             new()
             {
                 { QueueExchanges.crud, new RabbitCrudService(tickerRepository) },

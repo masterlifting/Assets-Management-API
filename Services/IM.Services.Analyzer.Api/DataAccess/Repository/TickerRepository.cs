@@ -8,10 +8,10 @@ using System.Linq;
 
 namespace IM.Services.Analyzer.Api.DataAccess.Repository
 {
-    public class TickerRepositoryHandler : IRepository<Ticker>
+    public class TickerRepository : IRepository<Ticker>
     {
         private readonly AnalyzerContext context;
-        public TickerRepositoryHandler(AnalyzerContext context) => this.context = context;
+        public TickerRepository(AnalyzerContext context) => this.context = context;
 
         public bool TryCheckEntity(Ticker entity, out Ticker? result)
         {

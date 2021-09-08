@@ -1,5 +1,5 @@
 ﻿using CommonServices;
-using CommonServices.RepositoryService;
+using CommonServices.Models.Entity;
 
 using IM.Services.Analyzer.Api.Clients;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
@@ -16,11 +16,11 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 {
     public class ReportCalculator : IAnalyzerCalculator<Report>
     {
-        private readonly AnalyzerRepository<Report> repository;
+        private readonly RepositorySet<Report> repository;
         private readonly ReportsClient reportsClient;
         private readonly PricesClient pricesClient;
 
-        public ReportCalculator(AnalyzerRepository<Report> repository, ReportsClient reportsClient, PricesClient pricesClient)
+        public ReportCalculator(RepositorySet<Report> repository, ReportsClient reportsClient, PricesClient pricesClient)
         {
             this.repository = repository;
             this.reportsClient = reportsClient;
@@ -32,9 +32,9 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
             for (int i = 0; i < reports.Length; i++)
                 reports[i].StatusId = (byte)StatusType.Calculating;
 
-            var updatedResult = await repository.UpdateAsync(reports, $"reports calculating status count: {reports.Length}");
+            var (errors, _) = await repository.UpdateAsync(reports, $"reports set calculating status count: {reports.Length}");
 
-            return updatedResult.Length == reports.Length;
+            return !errors.Any();
         }
         public async Task CalculateAsync()
         {
@@ -74,7 +74,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
                             Console.ForegroundColor = ConsoleColor.Gray;
                         }
 
-                        await repository.CreateOrUpdateAsync(result, new ReportComparer(), $"analyzer reports");
+                        await repository.CreateUpdateAsync(result, new ReportComparer(), $"analyzer reports");
                     }
                 }
         }

@@ -12,7 +12,7 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices
 {
     public class RabbitActionService : RabbitService
     {
-        public RabbitActionService(IOptions<ServiceSettings> options, ReportLoader reportLoader, ReportsRepository<Ticker> tickerRepository) : base(
+        public RabbitActionService(IOptions<ServiceSettings> options, ReportLoader reportLoader, RepositorySet<Ticker> tickerRepository) : base(
             new()
             {
                 { QueueExchanges.crud, new RabbitCrudService(options.Value.ConnectionStrings.Mq, tickerRepository) },

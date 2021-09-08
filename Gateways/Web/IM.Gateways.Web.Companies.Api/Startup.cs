@@ -1,6 +1,10 @@
 
+using CommonServices.RepositoryService;
+
 using IM.Gateways.Web.Companies.Api.Clients;
 using IM.Gateways.Web.Companies.Api.DataAccess;
+using IM.Gateways.Web.Companies.Api.DataAccess.Entities;
+using IM.Gateways.Web.Companies.Api.DataAccess.Repository;
 using IM.Gateways.Web.Companies.Api.Services.CompanyServices;
 using IM.Gateways.Web.Companies.Api.Services.DtoServices;
 using IM.Gateways.Web.Companies.Api.Services.RabbitServices;
@@ -35,6 +39,9 @@ namespace IM.Gateways.Web.Companies.Api
             });
 
             services.AddControllers();
+
+            services.AddScoped<IRepository<Company>, CompanyRepository>();
+            services.AddScoped(typeof(RepositorySet<>));
 
             services.AddScoped<CompanyManager>();
             services.AddScoped<CompanyDtoAgregator>();

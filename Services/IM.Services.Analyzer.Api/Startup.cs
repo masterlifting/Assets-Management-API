@@ -44,11 +44,11 @@ namespace IM.Services.Analyzer.Api
             services.AddScoped<RatingDtoAgregator>();
             services.AddScoped<RecommendationDtoAgregator>();
 
-            services.AddScoped<IRepository<Ticker>, TickerRepositoryHandler>();
-            services.AddScoped<IRepository<Price>, PriceRepositoryHandler>();
-            services.AddScoped<IRepository<Report>, ReportRepositoryHandler>();
-            services.AddScoped<IRepository<Rating>, RatingRepositoryHandler>();
-            services.AddScoped(typeof(AnalyzerRepository<>));
+            services.AddScoped<IRepository<Ticker>, TickerRepository>();
+            services.AddScoped<IRepository<Price>, PriceRepository>();
+            services.AddScoped<IRepository<Report>, ReportRepository>();
+            services.AddScoped<IRepository<Rating>, RatingRepository>();
+            services.AddScoped(typeof(RepositorySet<>));
 
             services.AddScoped<ReportCalculator>();
             services.AddScoped<PriceCalculator>();

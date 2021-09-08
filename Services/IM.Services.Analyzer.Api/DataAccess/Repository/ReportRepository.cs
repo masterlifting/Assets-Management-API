@@ -8,10 +8,10 @@ using System.Linq;
 
 namespace IM.Services.Analyzer.Api.DataAccess.Repository
 {
-    public class ReportRepositoryHandler : IRepository<Report>
+    public class ReportRepository : IRepository<Report>
     {
         private readonly AnalyzerContext context;
-        public ReportRepositoryHandler(AnalyzerContext context) => this.context = context;
+        public ReportRepository(AnalyzerContext context) => this.context = context;
 
         public bool TryCheckEntity(Report entity, out Report? result)
         {

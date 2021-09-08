@@ -20,9 +20,9 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
     public class PriceLoader
     {
         private readonly PricesContext context;
-        private readonly PricesRepository<Price> repository;
+        private readonly RepositorySet<Price> repository;
         private readonly PriceParser parser;
-        public PriceLoader(PricesContext context, PricesRepository<Price> repository, PriceParser parser)
+        public PriceLoader(PricesContext context, RepositorySet<Price> repository, PriceParser parser)
         {
             this.context = context;
             this.repository = repository;
@@ -56,12 +56,18 @@ namespace IM.Services.Companies.Prices.Api.Services.PriceServices
                 result = new Price[toUpdate.Count + toAdd.Count];
 
                 if (toAdd.Any())
-                    result = await repository.CreateAsync(toAdd, new PriceComparer(), "loaded prices");
+                {
+                    var createResult = await repository.CreateAsync(toAdd, new PriceComparer(), "loaded prices");
+                    
+                    if (!createResult.errors.Any())
+                        result = createResult.result;
+                }
 
                 if (toUpdate.Any())
                 {
                     var updatedResult = await repository.UpdateAsync(toUpdate, "updated prices");
-                    result = result.Concat(updatedResult).ToArray();
+                    if(!updatedResult.errors.Any())
+                        result = result.Concat(updatedResult.result).ToArray();
                 }
             }
 

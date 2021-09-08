@@ -1,5 +1,5 @@
 ﻿using CommonServices;
-using CommonServices.RepositoryService;
+using CommonServices.Models.Entity;
 
 using IM.Services.Analyzer.Api.Clients;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
@@ -16,10 +16,10 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 {
     public class PriceCalculator : IAnalyzerCalculator<Price>
     {
-        private readonly AnalyzerRepository<Price> repository;
+        private readonly RepositorySet<Price> repository;
         private readonly PricesClient pricesClient;
 
-        public PriceCalculator(AnalyzerRepository<Price> repository, PricesClient pricesClient)
+        public PriceCalculator(RepositorySet<Price> repository, PricesClient pricesClient)
         {
             this.repository = repository;
             this.pricesClient = pricesClient;
@@ -29,15 +29,15 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
         {
             for (int i = 0; i < prices.Length; i++)
                 prices[i].StatusId = (byte)StatusType.Calculating;
+            
+            var (errors, _) = await repository.UpdateAsync(prices, $"prices set calculating status count: {prices.Length}");
 
-            var updateResult = await repository.UpdateAsync(prices, $"prices calculating status count: {prices.Length}");
-
-            return updateResult.Length == prices.Length;
-                    }
+            return !errors.Any();
+        }
         public async Task CalculateAsync()
         {
-            var prices = await repository.FindAsync(x => 
-                    x.StatusId == ((byte)StatusType.ToCalculate) 
+            var prices = await repository.FindAsync(x =>
+                    x.StatusId == ((byte)StatusType.ToCalculate)
                     || x.StatusId == ((byte)StatusType.CalculatedPartial)
                     || x.StatusId == ((byte)StatusType.Error));
 
@@ -72,7 +72,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
                             Console.ForegroundColor = ConsoleColor.Gray;
                         }
 
-                        await repository.CreateOrUpdateAsync(result, new PriceComparer(), "analyzer prices");
+                        await repository.CreateUpdateAsync(result, new PriceComparer(), "analyzer prices");
                     }
                 }
         }

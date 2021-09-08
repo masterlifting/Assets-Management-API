@@ -12,10 +12,10 @@ using static IM.Services.Companies.Prices.Api.Enums;
 
 namespace IM.Services.Companies.Prices.Api.DataAccess.Repository
 {
-    public class TickerRepositoryHandler : IRepository<Ticker>
+    public class TickerRepository : IRepository<Ticker>
     {
         private readonly PricesContext context;
-        public TickerRepositoryHandler(PricesContext context) => this.context = context;
+        public TickerRepository(PricesContext context) => this.context = context;
 
         public bool TryCheckEntity(Ticker entity, out Ticker result)
         {

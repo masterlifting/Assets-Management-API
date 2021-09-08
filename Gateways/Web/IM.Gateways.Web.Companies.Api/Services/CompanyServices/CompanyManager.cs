@@ -1,105 +1,72 @@
 ﻿using CommonServices.Models.Dto.Http;
 
-using IM.Gateways.Web.Companies.Api.DataAccess;
+using IM.Gateways.Web.Companies.Api.DataAccess.Entities;
+using IM.Gateways.Web.Companies.Api.DataAccess.Repository;
 using IM.Gateways.Web.Companies.Api.Models.Dto;
 using IM.Gateways.Web.Companies.Api.Services.RabbitServices;
 
-using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace IM.Gateways.Web.Companies.Api.Services.CompanyServices
 {
     public class CompanyManager
     {
-        private readonly GatewaysContext context;
+        private readonly RepositorySet<Company> repository;
         private readonly RabbitCrudService rabbitCrudService;
 
-        public CompanyManager(GatewaysContext context, RabbitCrudService rabbitCrudService)
+        public CompanyManager(RepositorySet<Company> repository, RabbitCrudService rabbitCrudService)
         {
-            this.context = context;
+            this.repository = repository;
             this.rabbitCrudService = rabbitCrudService;
         }
 
         public async Task<ResponseModel<string>> CreateCompanyAsync(CompanyPostDto company)
         {
-            company.Ticker = company.Ticker.ToUpperInvariant();
-            var ctxCompany = await context.Companies.FindAsync(company.Ticker);
-
-            if (ctxCompany is not null)
-                return new() { Errors = new string[1] { $"'{company.Name}' is already!" } };
-
-            string contextResultMessage = "failed!";
-
-            await context.Companies.AddAsync(new()
+            var ctxCompany = new Company()
             {
-                Ticker = company.Ticker.ToUpperInvariant(),
+                Ticker = company.Ticker,
                 Name = company.Name,
                 Description = company.Description
-            });
-
-            if (await context.SaveChangesAsync() > 0)
-            {
-                contextResultMessage = "success.";
-                rabbitCrudService.CreateCompany(company);
-            }
-
-            return new()
-            {
-                Data = $"created '{company.Name}' is {contextResultMessage}.",
             };
+
+            var (errors, _) = await repository.CreateAsync(ctxCompany, company.Name);
+
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            rabbitCrudService.CreateCompany(company);
+
+            return new() { Data = $"'{company.Name}' created." };
         }
         public async Task<ResponseModel<string>> UpdateCompanyAsync(string ticker, CompanyPostDto company)
         {
-            var errors = Array.Empty<string>();
-            string contextResultMessage = "failed!";
-            
-            ticker = ticker.ToUpperInvariant();
-            company.Ticker = ticker;
-
-            var ctxCompany = await context.Companies.FindAsync(ticker);
-
-            if (ctxCompany is null)
-                return new() { Errors = new string[1] { $"'{company.Name}' not found!" } };
-
-            if (!company.Ticker.Equals(ticker, StringComparison.InvariantCultureIgnoreCase))
-                errors = new string[1] { "ticker modified is denied!" };
-
-            ctxCompany.Name = company.Name;
-            ctxCompany.Description = company.Description;
-
-            if (await context.SaveChangesAsync() >= 0)
+            var ctxCompany = new Company()
             {
-                contextResultMessage = "success.";
-                rabbitCrudService.UpdateCompany(company);
-            }
-
-            return new()
-            {
-                Data = $"updated '{company.Name}' is {contextResultMessage}.",
-                Errors = errors
+                Ticker = ticker,
+                Name = company.Name,
+                Description = company.Description
             };
+
+            var (errors, _) = await repository.UpdateAsync(ctxCompany, company.Name);
+
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            rabbitCrudService.UpdateCompany(company);
+
+            return new() { Data = $"'{company.Name}' updated." };
         }
         public async Task<ResponseModel<string>> DeleteCompanyAsync(string ticker)
         {
-            ticker = ticker.ToUpperInvariant();
-            var company = await context.Companies.FindAsync(ticker);
+            var errors = await repository.DeleteAsync(ticker.ToUpperInvariant().Trim(), ticker);
 
-            if (company is null)
-                return new() { Errors = new string[1] { $"'{ticker}' not found" } };
+            if (errors.Any())
+                return new() { Errors = errors };
 
-            context.Companies.Remove(company);
+            rabbitCrudService.DeleteCompany(ticker);
 
-            string contextResultMessage = "failed!";
-            if (await context.SaveChangesAsync() >= 0)
-            {
-                contextResultMessage = "success.";
-                rabbitCrudService.DeleteCompany(ticker);
-            }
-
-            return new()
-            {
-                Data = $"deleted '{company.Name}' is {contextResultMessage}."
-            };
+            return new() { Data = $"'{ticker}' deleted." };
         }
     }
 }

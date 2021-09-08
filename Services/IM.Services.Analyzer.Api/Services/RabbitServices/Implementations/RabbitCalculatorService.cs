@@ -4,6 +4,7 @@ using CommonServices.RabbitServices;
 using IM.Services.Analyzer.Api.DataAccess.Entities;
 using IM.Services.Analyzer.Api.DataAccess.Repository;
 
+using System.Linq;
 using System.Threading.Tasks;
 
 using static IM.Services.Analyzer.Api.Enums;
@@ -12,10 +13,10 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
 {
     public class RabbitCalculatorService : IRabbitActionService
     {
-        private readonly AnalyzerRepository<Report> reportRepository;
-        private readonly AnalyzerRepository<Price> priceRepository;
+        private readonly RepositorySet<Report> reportRepository;
+        private readonly RepositorySet<Price> priceRepository;
 
-        public RabbitCalculatorService(AnalyzerRepository<Report> reportRepository, AnalyzerRepository<Price> priceRepository)
+        public RabbitCalculatorService(RepositorySet<Report> reportRepository, RepositorySet<Price> priceRepository)
         {
             this.reportRepository = reportRepository;
             this.priceRepository = priceRepository;
@@ -30,23 +31,23 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
 
         public async Task<bool> SetReportToCalculateAsync(string data) =>
             (RabbitHelper.TrySerialize(data, out AnalyzerReportDto? report) || report is not null)
-            && await reportRepository.CreateOrUpdateAsync(new Report
+            && !(await reportRepository.CreateUpdateAsync(new Report
             {
                 TickerName = report!.TickerName,
                 Year = report.Year,
                 Quarter = report.Quarter,
                 SourceType = report.SourceType,
                 StatusId = (byte)StatusType.ToCalculate
-            }, report.TickerName);
+            }, report.TickerName)).Any();
         
         public async Task<bool> SetPriceToCalculateAsync(string data) => 
             (RabbitHelper.TrySerialize(data, out AnalyzerPriceDto? price) || price is not null)
-            && await priceRepository.CreateOrUpdateAsync(new Price
+            && !(await priceRepository.CreateUpdateAsync(new Price
             {
                 TickerName = price!.TickerName,
                 Date = price.Date,
                 SourceType = price.SourceType,
                 StatusId = (byte)StatusType.ToCalculate
-            }, price.TickerName);
+            }, price.TickerName)).Any();
     }
 }
