@@ -2,6 +2,7 @@
 using IM.Services.Analyzer.Api.Models.Calculator;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using static IM.Services.Analyzer.Api.Enums;
@@ -10,7 +11,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 {
     public static class RatingComparator
     {
-        public static Sample[] CompareSample(Sample[] sample)
+        public static Sample[] CompareSample(IEnumerable<Sample> sample)
         {
             var results = Array.Empty<Sample>();
             var cleanedValues = sample.Where(x => x.Value != 0).ToArray();
@@ -25,23 +26,23 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
             if (!results.Any())
                 return 0;
 
-            int zeroDeviationCount = results.Where(x => x != 0).Count();
-            decimal deviationCoefficient = (decimal)zeroDeviationCount / results.Length;
+            var zeroDeviationCount = results.Count(x => x != 0);
+            var deviationCoefficient = (decimal)zeroDeviationCount / results.Length;
             return results.Sum() * deviationCoefficient;
         }
 
-        static Sample[] ComputeValues(Sample[] sample)
+        private static Sample[] ComputeValues(IReadOnlyList<Sample> sample)
         {
-            var results = new Sample[sample.Length];
-            results[0] = new()
+            var results = new Sample[sample.Count];
+            results[0] = new Sample
             {
                 Value = 0,
                 Index = sample[0].Index,
                 CompareType = sample[0].CompareType
             };
 
-            for (int i = 1; i < sample.Length; i++)
-                results[i] = new()
+            for (var i = 1; i < sample.Count; i++)
+                results[i] = new Sample
                 {
                     Value = ComputeDeviationPercent(sample[i - 1].Value, sample[i].Value, sample[i].CompareType),
                     Index = sample[i].Index,
@@ -50,8 +51,8 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 
             return results;
         }
-        static decimal ComputeDeviationPercent(decimal previousValue, decimal nextValue, CompareType compareType) =>
-            (nextValue - previousValue) / Math.Abs(previousValue) * ((short)compareType);
+        private static decimal ComputeDeviationPercent(decimal previousValue, decimal nextValue, CompareType compareType) =>
+            (nextValue - previousValue) / Math.Abs(previousValue) * (short)compareType;
     }
 }
 

@@ -22,14 +22,14 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
             this.priceRepository = priceRepository;
         }
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data) =>
-            action == QueueActions.calculate && entity switch
+            action == QueueActions.Calculate && entity switch
             {
-                QueueEntities.report => await SetReportToCalculateAsync(data),
-                QueueEntities.price => await SetPriceToCalculateAsync(data),
+                QueueEntities.Report => await SetReportToCalculateAsync(data),
+                QueueEntities.Price => await SetPriceToCalculateAsync(data),
                 _ => true
             };
 
-        public async Task<bool> SetReportToCalculateAsync(string data) =>
+        private async Task<bool> SetReportToCalculateAsync(string data) =>
             (RabbitHelper.TrySerialize(data, out AnalyzerReportDto? report) || report is not null)
             && !(await reportRepository.CreateUpdateAsync(new Report
             {
@@ -39,8 +39,8 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices.Implementations
                 SourceType = report.SourceType,
                 StatusId = (byte)StatusType.ToCalculate
             }, report.TickerName)).Any();
-        
-        public async Task<bool> SetPriceToCalculateAsync(string data) => 
+
+        private async Task<bool> SetPriceToCalculateAsync(string data) => 
             (RabbitHelper.TrySerialize(data, out AnalyzerPriceDto? price) || price is not null)
             && !(await priceRepository.CreateUpdateAsync(new Price
             {

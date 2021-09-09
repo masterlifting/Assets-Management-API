@@ -23,14 +23,14 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data) => entity switch
         {
-            QueueEntities.ticker => await GetTickerResultAsync(action, data),
+            QueueEntities.Ticker => await GetTickerResultAsync(action, data),
             _ => true
         };
 
         private async Task<bool> GetTickerResultAsync(QueueActions action, string data)
         {
-            if (action == QueueActions.delete)
-                return !(await repository.DeleteAsync(int.Parse(data), data)).Any();
+            if (action == QueueActions.Delete)
+                return !(await repository.DeleteAsync(data, data)).Any();
 
             if (!RabbitHelper.TrySerialize(data, out CompaniesReportsTickerDto ticker) && ticker is null)
                 return false;
@@ -38,8 +38,8 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
 
             if (await GetActionAsync(repository, action, new Ticker(ticker), ticker.Name))
             {
-                var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.loader);
-                publisher.PublishTask(QueueNames.companiesreports, QueueEntities.report, QueueActions.download, JsonSerializer.Serialize(ticker));
+                var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Loader);
+                publisher.PublishTask(QueueNames.CompaniesReports, QueueEntities.Report, QueueActions.Download, JsonSerializer.Serialize(ticker));
                 return true;
             }
 
@@ -47,8 +47,8 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
         }
         private static async Task<bool> GetActionAsync<T>(RepositorySet<T> repository, QueueActions action, T data, string value) where T : class => action switch
         {
-            QueueActions.create => !(await repository.CreateAsync(data, value)).errors.Any(),
-            QueueActions.update => !(await repository.CreateUpdateAsync(data, value)).Any(),
+            QueueActions.Create => !(await repository.CreateAsync(data, value)).errors.Any(),
+            QueueActions.Update => !(await repository.CreateUpdateAsync(data, value)).Any(),
             _ => true
         };
     }

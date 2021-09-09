@@ -1,4 +1,5 @@
-﻿using CommonServices.RabbitServices;
+﻿using System.Collections.Generic;
+using CommonServices.RabbitServices;
 
 using IM.Services.Analyzer.Api.DataAccess.Entities;
 using IM.Services.Analyzer.Api.DataAccess.Repository;
@@ -12,10 +13,10 @@ namespace IM.Services.Analyzer.Api.Services.RabbitServices
             RepositorySet<Ticker> tickerRepository,
             RepositorySet<Report> reportRepository,
             RepositorySet<Price> priceRepository) : base(
-            new()
+            new Dictionary<QueueExchanges, IRabbitActionService>
             {
-                { QueueExchanges.crud, new RabbitCrudService(tickerRepository) },
-                { QueueExchanges.calculator, new RabbitCalculatorService(reportRepository, priceRepository) }
+                { QueueExchanges.Crud, new RabbitCrudService(tickerRepository) },
+                { QueueExchanges.Calculator, new RabbitCalculatorService(reportRepository, priceRepository) }
             })
         { }
     }

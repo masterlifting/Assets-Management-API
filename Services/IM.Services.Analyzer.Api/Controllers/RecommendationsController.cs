@@ -12,8 +12,8 @@ namespace IM.Services.Analyzer.Api.Controllers
     [ApiController, Route("[controller]")]
     public class RecommendationsController : Controller
     {
-        private readonly RecommendationDtoAgregator agregator;
-        public RecommendationsController(RecommendationDtoAgregator agregator) => this.agregator = agregator;
+        private readonly RecommendationDtoAggregator agregator;
+        public RecommendationsController(RecommendationDtoAggregator agregator) => this.agregator = agregator;
 
         public async Task<ResponseModel<PaginationResponseModel<RecommendationDto>>> Get(int page = 1, int limit = 10) => 
             await agregator.GetRecommendationsAsync(new(page, limit));

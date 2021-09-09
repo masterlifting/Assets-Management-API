@@ -25,19 +25,19 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices.Implementati
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data)
         {
-            if (entity == QueueEntities.report && action == QueueActions.download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
+            if (entity == QueueEntities.Report && action == QueueActions.Download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
             {
                 var reports = await reportLoader.LoadReportsAsync(ticker);
                 if (reports.Length > 0)
                 {
                     string sourceType = Enum.Parse<ReportSourceTypes>(ticker.SourceTypeId.ToString()).ToString();
-                    var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.calculator);
+                    var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Calculator);
 
                     for (int i = 0; i < reports.Length; i++)
                         publisher.PublishTask(
-                            QueueNames.companiesanalyzer
-                            , QueueEntities.report
-                            , QueueActions.calculate
+                            QueueNames.CompaniesAnalyzer
+                            , QueueEntities.Report
+                            , QueueActions.Calculate
                             , JsonSerializer.Serialize(new AnalyzerReportDto
                             {
                                 TickerName = ticker.Name,

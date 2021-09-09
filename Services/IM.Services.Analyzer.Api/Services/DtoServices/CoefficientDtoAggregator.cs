@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace IM.Services.Analyzer.Api.Services.DtoServices
 {
-    public class CoefficientDtoAgregator
+    public class CoefficientDtoAggregator
     {
         public Task<ResponseModel<PaginationResponseModel<CoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination)
         {

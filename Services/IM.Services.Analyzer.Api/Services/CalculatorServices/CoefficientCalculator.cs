@@ -12,7 +12,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
         private readonly Dictionary<string, int> multiplicity;
         public CoefficientCalculator()
         {
-            multiplicity = new(StringComparer.InvariantCultureIgnoreCase)
+            multiplicity = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase)
             {
                 { "investing", 1_000_000 }
             };
@@ -24,22 +24,22 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
                 throw new ArgumentException($"{nameof(Calculate)} parameters is incorrect");
 
             decimal stockVolume = report.StockVolume == 0 ? throw new ArgumentNullException($"{nameof(report.StockVolume)} is 0!") : report.StockVolume;
-            decimal profitNet = report.ProfitNet ?? throw new ArgumentNullException($"{nameof(report.ProfitNet)} is null!");
-            decimal revenue = report.Revenue ?? throw new ArgumentNullException($"{nameof(report.Revenue)} is null!");
-            decimal asset = report.Asset ?? throw new ArgumentNullException($"{nameof(report.Asset)} is null!");
-            decimal shareCapital = report.ShareCapital ?? throw new ArgumentNullException($"{nameof(report.ShareCapital)} is null!");
-            decimal obligation = report.Obligation ?? throw new ArgumentNullException($"{nameof(report.Obligation)} is null!");
+            var profitNet = report.ProfitNet ?? throw new ArgumentNullException($"{nameof(report.ProfitNet)} is null!");
+            var revenue = report.Revenue ?? throw new ArgumentNullException($"{nameof(report.Revenue)} is null!");
+            var asset = report.Asset ?? throw new ArgumentNullException($"{nameof(report.Asset)} is null!");
+            var shareCapital = report.ShareCapital ?? throw new ArgumentNullException($"{nameof(report.ShareCapital)} is null!");
+            var obligation = report.Obligation ?? throw new ArgumentNullException($"{nameof(report.Obligation)} is null!");
 
-            int multi = report.SourceType is not null && multiplicity.ContainsKey(report.SourceType) ? multiplicity[report.SourceType] : 1_000_000;
+            var multi = multiplicity.ContainsKey(report.SourceType) ? multiplicity[report.SourceType] : 1_000_000;
 
             try
             {
-                decimal eps = profitNet * multi / stockVolume;
+                var eps = profitNet * multi / stockVolume;
 
-                return new()
+                return new Coefficient
                 {
                     Eps = eps,
-                    Profitability = ((profitNet / revenue) + (revenue / asset)) / 2,
+                    Profitability = (profitNet / revenue + revenue / asset) * 0.5m,
                     Roa = profitNet / asset * 100,
                     Roe = profitNet / shareCapital * 100,
                     DebtLoad = obligation / asset,

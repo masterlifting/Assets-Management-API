@@ -2,7 +2,6 @@
 
 using IM.Gateways.Web.Companies.Api.DataAccess.Entities;
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -27,11 +26,12 @@ namespace IM.Gateways.Web.Companies.Api.DataAccess.Repository
         }
         public bool TryCheckEntities(IEnumerable<Company> entities, out Company[] result)
         {
-            var _entities = entities.Where(x => x.Ticker != null).ToArray();
-            for (int i = 0; i < _entities.Length; i++)
-                _entities[i].Ticker = _entities[i].Ticker.ToUpperInvariant().Trim();
+            var checkedEntities = entities.Where(x => x?.Ticker is not null).ToArray();
 
-            result = _entities;
+            foreach (var t in checkedEntities)
+                t.Ticker = t.Ticker.ToUpperInvariant().Trim();
+
+            result = checkedEntities;
             return true;
         }
         public Company? GetIntersectedContextEntity(Company entity) => context.Companies.Find(entity.Ticker);

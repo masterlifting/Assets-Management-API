@@ -11,31 +11,25 @@ using System.Threading.Tasks;
 
 namespace IM.Services.Analyzer.Api.Services.DtoServices
 {
-    public class RatingDtoAgregator
+    public class RatingDtoAggregator
     {
         private readonly AnalyzerContext context;
-        public RatingDtoAgregator(AnalyzerContext context) => this.context = context;
+        public RatingDtoAggregator(AnalyzerContext context) => this.context = context;
 
         public async Task<ResponseModel<RatingDto>> GetRatingAsync(string ticker)
         {
             var errors = Array.Empty<string>();
 
             string tickerName = ticker.ToUpperInvariant();
-            var _ticker = await context.Tickers.FindAsync(tickerName);
+            var ctxTicker = await context.Tickers.FindAsync(tickerName);
 
-            if (_ticker is null)
+            if (ctxTicker is null)
                 return new()
                 {
-                    Errors = new string[] { "Ticker not found" }
+                    Errors = new[] { "Ticker not found" }
                 };
 
-            var rating = _ticker.Rating;
-
-            if (rating is null)
-                return new()
-                {
-                    Errors = new string[] { "Rating not found" }
-                };
+            var rating = ctxTicker.Rating;
 
             return new()
             {
@@ -47,11 +41,12 @@ namespace IM.Services.Analyzer.Api.Services.DtoServices
         {
             var errors = Array.Empty<string>();
 
-            int count = await context.Ratings.CountAsync();
+            var count = await context.Ratings.CountAsync();
             var ratings = Array.Empty<RatingDto>();
 
             if (count > 0)
                 ratings = await context.Ratings
+                .OrderBy(x => x.Place)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit)
                 .Select(x => new RatingDto(x))

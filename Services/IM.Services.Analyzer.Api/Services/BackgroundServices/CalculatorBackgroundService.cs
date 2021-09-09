@@ -14,13 +14,14 @@ namespace IM.Services.Analyzer.Api.Services.BackgroundServices
         private readonly IServiceProvider services;
         public CalculatorBackgroundService(IServiceProvider services) => this.services = services;
 
-        protected async override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var delay = new TimeSpan(0, 0, 10);
 
             while (true)
             {
                 await Task.Delay(delay, stoppingToken);
+
                 var scope = services.CreateScope();
                 var reportCalculator = scope.ServiceProvider.GetRequiredService<ReportCalculator>();
                 var priceCalculator = scope.ServiceProvider.GetRequiredService<PriceCalculator>();
@@ -36,7 +37,7 @@ namespace IM.Services.Analyzer.Api.Services.BackgroundServices
                 {
                     scope.Dispose();
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Analyzer exeption: {ex.InnerException?.Message ?? ex.Message}");
+                    Console.WriteLine($"Analyzer exception: {ex.InnerException?.Message ?? ex.Message}");
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
 

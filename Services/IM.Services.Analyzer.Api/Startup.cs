@@ -40,9 +40,9 @@ namespace IM.Services.Analyzer.Api
             services.AddHttpClient<PricesClient>();
             services.AddHttpClient<ReportsClient>();
 
-            services.AddScoped<CoefficientDtoAgregator>();
-            services.AddScoped<RatingDtoAgregator>();
-            services.AddScoped<RecommendationDtoAgregator>();
+            services.AddScoped<CoefficientDtoAggregator>();
+            services.AddScoped<RatingDtoAggregator>();
+            services.AddScoped<RecommendationDtoAggregator>();
 
             services.AddScoped<IRepository<Ticker>, TickerRepository>();
             services.AddScoped<IRepository<Price>, PriceRepository>();

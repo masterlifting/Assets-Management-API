@@ -1,4 +1,5 @@
-﻿using CommonServices.Models.Dto;
+﻿using System.Collections.Generic;
+using CommonServices.Models.Dto;
 
 using IM.Services.Analyzer.Api.DataAccess.Entities;
 using IM.Services.Analyzer.Api.Models.Calculator;
@@ -15,10 +16,10 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
         private readonly PriceDto[] prices;
         private readonly Sample[] valueCollection;
 
-        public PriceComporator(PriceDto[] prices)
+        public PriceComporator(IReadOnlyCollection<PriceDto> prices)
         {
             this.prices = prices.OrderBy(x => x.Date).ToArray();
-            valueCollection = new Sample[prices.Length];
+            valueCollection = new Sample[prices.Count];
             SetData();
         }
         public Price[] GetComparedSample()
@@ -30,7 +31,7 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
                 for (uint j = 0; j < comparedSample.Length; j++)
                     if (comparedSample[j].Index == i)
                     {
-                        result[j] = new()
+                        result[j] = new Price
                         {
                             TickerName = prices[i].TickerName,
                             Date = prices[i].Date,
@@ -43,10 +44,11 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
                     }
             return result;
         }
-        void SetData()
+
+        private void SetData()
         {
             for (uint i = 0; i < prices.Length; i++)
-                valueCollection[i] = new() { Index = i, CompareType = CompareType.Asc, Value = prices[i].Value };
+                valueCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = prices[i].Value };
         }
     }
 }

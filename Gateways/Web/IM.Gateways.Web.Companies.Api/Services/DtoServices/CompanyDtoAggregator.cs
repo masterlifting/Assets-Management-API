@@ -12,14 +12,14 @@ using System.Threading.Tasks;
 
 namespace IM.Gateways.Web.Companies.Api.Services.DtoServices
 {
-    public class CompanyDtoAgregator
+    public class CompanyDtoAggregator
     {
         private readonly GatewaysContext context;
         private readonly PricesClient pricesClient;
         private readonly ReportsClient reportsClient;
         private readonly AnalyzerClient analyzerClient;
 
-        public CompanyDtoAgregator(
+        public CompanyDtoAggregator(
             GatewaysContext context
             , PricesClient pricesClient
             , ReportsClient reportsClient
@@ -30,16 +30,16 @@ namespace IM.Gateways.Web.Companies.Api.Services.DtoServices
             this.reportsClient = reportsClient;
             this.analyzerClient = analyzerClient;
         }
-        public PricesDtoAgregator PricesDtoAgregator { get => new(pricesClient); }
-        public ReportsDtoAgregator ReportsDtoAgregator { get => new(reportsClient); }
-        public AnalyzerDtoAgregator AnalyzerDtoAgregator { get => new(analyzerClient); }
+        public PricesDtoAggregator PricesDtoAggregator => new(pricesClient);
+        public ReportsDtoAggregator ReportsDtoAggregator => new(reportsClient);
+        public AnalyzerDtoAggregator AnalyzerDtoAggregator => new(analyzerClient);
 
         public async Task<ResponseModel<PaginationResponseModel<CompanyGetDto>>> GetCompaniesAsync(PaginationRequestModel pagination)
         {
             var errors = Array.Empty<string>();
 
             var query = context.Companies.AsQueryable();
-            int count = await query.CountAsync();
+            var count = await query.CountAsync();
 
             var companies = await context.Companies
                 .OrderBy(x => x.Name)
@@ -68,7 +68,7 @@ namespace IM.Gateways.Web.Companies.Api.Services.DtoServices
             var company = await context.Companies.FindAsync(ticker.ToUpperInvariant());
 
             return company is null
-                ? new() { Errors = new string[1] { "company not found" } }
+                ? new() { Errors = new[] { "company not found" } }
                 : new()
                     {
                         Data = new()

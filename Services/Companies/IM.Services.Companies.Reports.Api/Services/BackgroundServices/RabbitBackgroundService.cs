@@ -21,8 +21,8 @@ namespace IM.Services.Companies.Reports.Api.Services.BackgroundServices
 
         public RabbitBackgroundService(IServiceProvider services, IOptions<ServiceSettings> options)
         {
-            var targetExchanges = new[] { QueueExchanges.crud, QueueExchanges.loader };
-            var targetQueues = new[] { QueueNames.companiesreports };
+            var targetExchanges = new[] { QueueExchanges.Crud, QueueExchanges.Loader };
+            var targetQueues = new[] { QueueNames.CompaniesReports };
             subscriber = new RabbitSubscriber(options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
             scope = services.CreateScope();
         }

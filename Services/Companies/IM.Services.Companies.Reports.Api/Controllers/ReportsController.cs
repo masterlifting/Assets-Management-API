@@ -12,18 +12,14 @@ namespace IM.Services.Companies.Reports.Api.Controllers
     [ApiController, Route("[controller]")]
     public class ReportsController : Controller
     {
-        private readonly ReportsDtoAgregator agregator;
-        public ReportsController(ReportsDtoAgregator agregator) => this.agregator = agregator;
+        private readonly ReportsDtoAggregator aggregator;
+        public ReportsController(ReportsDtoAggregator aggregator) => this.aggregator = aggregator;
 
-        public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> Get(int page = 1, int limit = 10) =>
-            await agregator.GetReportsAsync(new(page, limit));
+        public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> Get(int year = 0, byte quarter = 0, int page = 0, int limit = 0) =>
+            await aggregator.GetReportsAsync(new(year, quarter), new(page, limit));
 
         [HttpGet("{ticker}")]
-        public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> Get(string ticker, int page = 1, int limit = 10) =>
-            await agregator.GetReportsAsync(ticker, new(page, limit));
-
-        [HttpGet("{ticker}/filter/")]
-        public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> Get(string ticker, int year, byte quarter, int page = 1, int limit = 10) =>
-          await agregator.GetReportsAsync(ticker, new(year, quarter), new(page, limit));
+        public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> Get(string ticker, int year = 0, byte quarter = 0, int page = 0, int limit = 0) =>
+            await aggregator.GetReportsAsync(ticker, new(year, quarter), new(page, limit));
     }
 }

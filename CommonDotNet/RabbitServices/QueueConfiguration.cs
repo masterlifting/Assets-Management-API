@@ -1,114 +1,115 @@
-﻿using CommonServices.RabbitServices.Configuration;
+﻿using System.Collections.Generic;
+using CommonServices.RabbitServices.Configuration;
 
 namespace CommonServices.RabbitServices
 {
     public static class QueueConfiguration
     {
-        public static QueueExchange[] Exchanges => new QueueExchange[]
+        public static IEnumerable<QueueExchange> Exchanges => new[]
         {
-            new QueueExchange (QueueExchanges.crud)
+            new QueueExchange (QueueExchanges.Crud)
             {
-                Queues = new Queue[]
+                Queues = new[]
                 {
-                    new Queue(QueueNames.companiesreports,false,true)
+                    new Queue(QueueNames.CompaniesReports,false,true)
                     {
-                        Params = new QueueParam[]
+                        Params = new[]
                         {
-                            new QueueParam(QueueEntities.ticker)
+                            new QueueParam(QueueEntities.Ticker)
                             {
-                                Actions = new QueueActions[]
+                                Actions = new[]
                                 {
-                                    QueueActions.create,
-                                    QueueActions.update,
-                                    QueueActions.delete
+                                    QueueActions.Create,
+                                    QueueActions.Update,
+                                    QueueActions.Delete
                                 }
                             }
                         }
                     },
-                    new Queue(QueueNames.companiesprices,false,true)
+                    new Queue(QueueNames.CompaniesPrices,false,true)
                     {
-                        Params = new QueueParam[]
+                        Params = new[]
                         {
-                            new QueueParam(QueueEntities.ticker)
+                            new QueueParam(QueueEntities.Ticker)
                             {
-                                Actions = new QueueActions[]
+                                Actions = new[]
                                 {
-                                    QueueActions.create,
-                                    QueueActions.update,
-                                    QueueActions.delete
+                                    QueueActions.Create,
+                                    QueueActions.Update,
+                                    QueueActions.Delete
                                 }
                             }
                         }
                     },
-                    new Queue(QueueNames.companiesanalyzer,false,true)
+                    new Queue(QueueNames.CompaniesAnalyzer,false,true)
                     {
-                        Params = new QueueParam[]
+                        Params = new[]
                         {
-                            new QueueParam(QueueEntities.ticker)
+                            new QueueParam(QueueEntities.Ticker)
                             {
-                                Actions = new QueueActions[]
+                                Actions = new[]
                                 {
-                                    QueueActions.create,
-                                    QueueActions.update,
-                                    QueueActions.delete
+                                    QueueActions.Create,
+                                    QueueActions.Update,
+                                    QueueActions.Delete
                                 }
                             }
                         }
                     }
                 }
             },
-            new QueueExchange (QueueExchanges.loader)
+            new QueueExchange (QueueExchanges.Loader)
             {
-                Queues = new Queue[]
+                Queues = new[]
                 {
-                    new Queue(QueueNames.companiesreports,false,true)
+                    new Queue(QueueNames.CompaniesReports,false,true)
                     {
-                        Params = new QueueParam[]
+                        Params = new[]
                         {
-                            new QueueParam(QueueEntities.report)
+                            new QueueParam(QueueEntities.Report)
                             {
-                                Actions = new QueueActions[]
+                                Actions = new[]
                                 {
-                                    QueueActions.download
+                                    QueueActions.Download
                                 }
                             }
                         }
                     },
-                    new Queue(QueueNames.companiesprices,false,true)
+                    new Queue(QueueNames.CompaniesPrices,false,true)
                     {
-                        Params = new QueueParam[]
+                        Params = new[]
                         {
-                            new QueueParam(QueueEntities.price)
+                            new QueueParam(QueueEntities.Price)
                             {
-                                Actions = new QueueActions[]
+                                Actions = new[]
                                 {
-                                    QueueActions.download
+                                    QueueActions.Download
                                 }
                             }
                         }
                     }
                 }
             },
-            new QueueExchange (QueueExchanges.calculator)
+            new QueueExchange (QueueExchanges.Calculator)
             {
-                Queues = new Queue[]
+                Queues = new[]
                 {
-                    new Queue(QueueNames.companiesanalyzer,false,false)
+                    new Queue(QueueNames.CompaniesAnalyzer,false)
                     {
-                         Params = new QueueParam[]
+                         Params = new[]
                         {
-                            new QueueParam(QueueEntities.price)
+                            new QueueParam(QueueEntities.Price)
                             {
-                                Actions = new QueueActions[]
+                                Actions = new[]
                                 {
-                                    QueueActions.calculate
+                                    QueueActions.Calculate
                                 }
                             },
-                            new QueueParam(QueueEntities.report)
+                            new QueueParam(QueueEntities.Report)
                             {
-                                Actions = new QueueActions[]
+                                Actions = new[]
                                 {
-                                    QueueActions.calculate
+                                    QueueActions.Calculate
                                 }
                             }
                         }
@@ -120,28 +121,28 @@ namespace CommonServices.RabbitServices
 
     public enum QueueNames
     {
-        companiesreports,
-        companiesprices,
-        companiesanalyzer,
+        CompaniesReports,
+        CompaniesPrices,
+        CompaniesAnalyzer,
     }
     public enum QueueExchanges
     {
-        crud,
-        loader,
-        calculator
+        Crud,
+        Loader,
+        Calculator
     }
     public enum QueueEntities
     {
-        ticker,
-        report,
-        price
+        Ticker,
+        Report,
+        Price
     }
     public enum QueueActions
     {
-        create,
-        update,
-        delete,
-        download,
-        calculate
+        Create,
+        Update,
+        Delete,
+        Download,
+        Calculate
     }
 }

@@ -15,8 +15,6 @@ namespace IM.Gateways.Web.Companies.Api.Clients
 {
     public class PricesClient : IDisposable
     {
-        private const string prices = "prices";
-
         private readonly HttpClient httpClient;
         private readonly HostModel settings;
 
@@ -27,12 +25,12 @@ namespace IM.Gateways.Web.Companies.Api.Clients
         }
 
 
-        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(PaginationRequestModel pagination) =>
+        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(FilterRequestModel filter, PaginationRequestModel pagination) =>
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<PriceDto>>>
-                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{prices}?{pagination.QueryParams}") ?? new();
-        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, PaginationRequestModel pagination) => 
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{settings.Controller}?{filter.QueryParams}&{pagination.QueryParams}") ?? new();
+        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination) => 
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<PriceDto>>>
-                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{prices}/{ticker}?{pagination.QueryParams}") ?? new();
+                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{settings.Controller}/{ticker}?{filter.QueryParams}&{pagination.QueryParams}") ?? new();
 
         public void Dispose()
         {

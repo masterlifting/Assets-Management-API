@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace IM.Gateways.Web.Companies.Api.Services.DtoServices
 {
-    public class AnalyzerDtoAgregator
+    public class AnalyzerDtoAggregator
     {
         private readonly AnalyzerClient httpClient;
-        public AnalyzerDtoAgregator(AnalyzerClient httpClient) => this.httpClient = httpClient;
+        public AnalyzerDtoAggregator(AnalyzerClient httpClient) => this.httpClient = httpClient;
 
         public Task<ResponseModel<PaginationResponseModel<AnalyzerRecommendationDto>>> GetRecommendationsAsync(PaginationRequestModel pagination) =>
             httpClient.GetRecommendationsAsync(pagination);

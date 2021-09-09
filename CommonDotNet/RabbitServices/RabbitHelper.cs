@@ -3,7 +3,6 @@ using CommonServices.RabbitServices.Configuration;
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 
 namespace CommonServices.RabbitServices
@@ -21,19 +20,15 @@ namespace CommonServices.RabbitServices
             }
             catch (JsonException ex)
             {
-                Console.WriteLine("Unserializable! Exception: " + ex.Message);
+                Console.WriteLine("Serializable exception: " + ex.Message);
                 return false;
             }
         }
     }
-    class ExchangeComparer : IEqualityComparer<QueueExchange>
-    {
-        public bool Equals(QueueExchange? x, QueueExchange? y) => x!.NameEnum == y!.NameEnum;
-        public int GetHashCode([DisallowNull] QueueExchange obj) => obj.GetHashCode();
-    }
-    class QueueComparer : IEqualityComparer<Queue>
+
+    internal class QueueComparer : IEqualityComparer<Queue>
     {
         public bool Equals(Queue? x, Queue? y) => x!.NameEnum == y!.NameEnum;
-        public int GetHashCode([DisallowNull] Queue obj) => obj.GetHashCode();
+        public int GetHashCode(Queue obj) => obj.NameString.GetHashCode();
     }
 }

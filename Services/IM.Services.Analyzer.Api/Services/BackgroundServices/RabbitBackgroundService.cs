@@ -20,8 +20,8 @@ namespace IM.Services.Analyzer.Api.Services.BackgroundServices
 
         public RabbitBackgroundService(IServiceProvider services, IOptions<ServiceSettings> options)
         {
-            var targetExchanges = new[] { QueueExchanges.crud, QueueExchanges.calculator };
-            var targetQueues = new[] { QueueNames.companiesanalyzer };
+            var targetExchanges = new[] { QueueExchanges.Crud, QueueExchanges.Calculator };
+            var targetQueues = new[] { QueueNames.CompaniesAnalyzer };
             subscriber = new RabbitSubscriber(options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
             scope = services.CreateScope();
         }

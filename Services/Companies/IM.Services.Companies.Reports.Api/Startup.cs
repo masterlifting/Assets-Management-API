@@ -41,7 +41,7 @@ namespace IM.Services.Companies.Reports.Api
 
             services.AddScoped<ReportParser>();
             services.AddScoped<ReportLoader>();
-            services.AddScoped<ReportsDtoAgregator>();
+            services.AddScoped<ReportsDtoAggregator>();
 
             services.AddScoped<IRepository<Ticker>, TickerRepository>();
             services.AddScoped(typeof(RepositorySet<>));

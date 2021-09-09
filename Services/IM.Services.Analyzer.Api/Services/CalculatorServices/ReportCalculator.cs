@@ -29,8 +29,8 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 
         public async Task<bool> IsSetCalculatingStatusAsync(Report[] reports)
         {
-            for (int i = 0; i < reports.Length; i++)
-                reports[i].StatusId = (byte)StatusType.Calculating;
+            foreach (var t in reports)
+                t.StatusId = (byte)StatusType.Calculating;
 
             var (errors, _) = await repository.UpdateAsync(reports, $"reports set calculating status count: {reports.Length}");
 
@@ -53,29 +53,29 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 
                     var response = await reportsClient.GetReportsAsync(reportGroup.Key, new(reportTargetDate.year, reportTargetDate.quarter), new(1, int.MaxValue));
 
-                    if (!response.Errors.Any() && response.Data!.Count > 0)
+                    if (response.Errors.Any() || response.Data!.Count <= 0)
+                        continue;
+
+                    var pricesResponse = await pricesClient.GetPricesAsync(reportGroup.Key, new(priceTargetDate.year, priceTargetDate.month, 1), new(1, int.MaxValue));
+
+                    Report[] result = reportGroup.ToArray();
+
+                    try
                     {
-                        var pricesResponse = await pricesClient.GetPricesAsync(reportGroup.Key, new(priceTargetDate.year, priceTargetDate.month), new(1, int.MaxValue));
-
-                        Report[] result = reportGroup.ToArray();
-
-                        try
-                        {
-                            var calculator = new ReportComporator(response.Data.Items, pricesResponse.Data?.Items);
-                            result = calculator.GetComparedSample();
-                        }
-                        catch (Exception ex)
-                        {
-                            for (int k = 0; k < result.Length; k++)
-                                result[k].StatusId = (byte)StatusType.Error;
-
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine($"calculating reports for {reportGroup.Key} failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
-                            Console.ForegroundColor = ConsoleColor.Gray;
-                        }
-
-                        await repository.CreateUpdateAsync(result, new ReportComparer(), $"analyzer reports");
+                        var calculator = new ReportComporator(response.Data.Items, pricesResponse.Data?.Items);
+                        result = calculator.GetComparedSample();
                     }
+                    catch (Exception ex)
+                    {
+                        foreach (var report in result)
+                            report.StatusId = (byte)StatusType.Error;
+
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"calculating reports for {reportGroup.Key} failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
+
+                    await repository.CreateUpdateAsync(result, new ReportComparer(), "analyzer reports");
                 }
         }
     }

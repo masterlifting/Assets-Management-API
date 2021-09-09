@@ -15,8 +15,8 @@ namespace IM.Services.Companies.Reports.Api.Services.RabbitServices
         public RabbitActionService(IOptions<ServiceSettings> options, ReportLoader reportLoader, RepositorySet<Ticker> tickerRepository) : base(
             new()
             {
-                { QueueExchanges.crud, new RabbitCrudService(options.Value.ConnectionStrings.Mq, tickerRepository) },
-                { QueueExchanges.loader, new RabbitReportService(reportLoader, options.Value.ConnectionStrings.Mq) }
+                { QueueExchanges.Crud, new RabbitCrudService(options.Value.ConnectionStrings.Mq, tickerRepository) },
+                { QueueExchanges.Loader, new RabbitReportService(reportLoader, options.Value.ConnectionStrings.Mq) }
             })
         { }
     }

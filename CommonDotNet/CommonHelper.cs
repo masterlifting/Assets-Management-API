@@ -6,7 +6,7 @@ namespace CommonServices
 {
     public static class CommonHelper
     {
-        public static readonly Dictionary<string, DateTime[]> ExchangeWeekend = new(StringComparer.InvariantCultureIgnoreCase)
+        private static readonly Dictionary<string, DateTime[]> ExchangeWeekend = new(StringComparer.InvariantCultureIgnoreCase)
         {
             {
                 "MOEX",
@@ -33,12 +33,24 @@ namespace CommonServices
                 }
             }
         };
+        
+        public static DateTime GetExchangeLastWorkday(string sourceType, DateTime? date = null)
+        {
+            return  CheckWorkday(sourceType, date ?? DateTime.UtcNow.AddDays(-1));
+
+            static DateTime CheckWorkday(string sourceType, DateTime checkingDate) =>
+                IsExchangeWeekend(checkingDate)
+                ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
+                : IsExchangeWeekend(sourceType, checkingDate)
+                    ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
+                    : checkingDate.Date;
+        }
         public static byte GetQuarter(int month) => month switch
         {
-            int x when x >= 1 && x < 4 => 1,
-            int x when x >= 4 && x < 7 => 2,
-            int x when x >= 7 && x < 10 => 3,
-            int x when x >= 10 && x <= 12 => 4,
+            >= 1 and < 4 => 1,
+            < 7 and >= 4 => 2,
+            >= 7 and < 10 => 3,
+            <= 12 and >= 10 => 4,
             _ => throw new NotSupportedException()
         };
         public static byte GetLastMonth(byte quarter) => quarter switch
@@ -49,15 +61,6 @@ namespace CommonServices
             4 => 12,
             _ => throw new NotSupportedException()
         };
-        public static byte GetFirstMonth(byte quarter) => quarter switch
-        {
-            1 => 1,
-            2 => 4,
-            3 => 7,
-            4 => 10,
-            _ => throw new NotSupportedException()
-        };
-        public static (int year, byte quarter) GetYearAndQuarter(DateTime date) => (date.Year, GetQuarter(date.Month));
         public static (int year, int month, int day) GetQuarterFirstDate(int year, byte quarter) => (year, GetFirstMonth(quarter), 1);
         public static (int year, byte quarter) SubstractQuarter(DateTime date)
         {
@@ -85,21 +88,18 @@ namespace CommonServices
 
             return (year, quarter);
         }
-        public static bool IsExchangeWeekend(DateTime date) => date.DayOfWeek == DayOfWeek.Sunday || date.DayOfWeek == DayOfWeek.Saturday;
-        public static bool IsExchangeWeekend(string sourceType, DateTime date) => 
-            sourceType is not null && ExchangeWeekend.ContainsKey(sourceType) && ExchangeWeekend[sourceType].Contains(date.Date);
-        public static DateTime GetExchangeLastWorkday(string sourceType, DateTime? date = null)
+        public static bool IsExchangeWeekend(DateTime date) => date.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday;
+
+        private static byte GetFirstMonth(byte quarter) => quarter switch
         {
-            DateTime _date = date is null ? DateTime.UtcNow : date!.Value;
-
-            return  CheckWorkday(sourceType, _date.AddDays(-1));
-
-            static DateTime CheckWorkday(string sourceType, DateTime checkingDate) =>
-                IsExchangeWeekend(checkingDate)
-                ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
-                : IsExchangeWeekend(sourceType, checkingDate)
-                    ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
-                    : checkingDate.Date;
-        }
+            1 => 1,
+            2 => 4,
+            3 => 7,
+            4 => 10,
+            _ => throw new NotSupportedException()
+        };
+        private static bool IsExchangeWeekend(string sourceType, DateTime date) => 
+            ExchangeWeekend.ContainsKey(sourceType) && ExchangeWeekend[sourceType].Contains(date.Date);
+        private static (int year, byte quarter) GetYearAndQuarter(DateTime date) => (date.Year, GetQuarter(date.Month));
     }
 }

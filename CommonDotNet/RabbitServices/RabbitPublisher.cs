@@ -6,6 +6,7 @@ using CommonServices.RabbitServices.Configuration;
 using RabbitMQ.Client;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -14,17 +15,13 @@ namespace CommonServices.RabbitServices
     public class RabbitPublisher
     {
         private readonly IModel channel;
-        private readonly IConnection connection;
         private readonly QueueExchange exchange;
 
         public RabbitPublisher(string connectionString, QueueExchanges exchangeName)
         {
-            var exchange = QueueConfiguration.Exchanges.FirstOrDefault(x => x.NameEnum == exchangeName);
+            var currentExchange = QueueConfiguration.Exchanges.FirstOrDefault(x => x.NameEnum == exchangeName);
 
-            if (exchange is null)
-                throw new NullReferenceException(nameof(exchangeName));
-
-            this.exchange = exchange;
+            exchange = currentExchange ?? throw new NullReferenceException(nameof(exchangeName));
 
             var mqConnection = new SettingsConverter<ConnectionModel>(connectionString).Model;
 
@@ -35,23 +32,23 @@ namespace CommonServices.RabbitServices
                 Password = mqConnection.Password
             };
 
-            connection = factory.CreateConnection();
+            IConnection connection = factory.CreateConnection();
             channel = connection.CreateModel();
 
-            channel.ExchangeDeclare(exchange.NameString, exchange.Type);
+            channel.ExchangeDeclare(currentExchange.NameString, currentExchange.Type);
 
-            foreach (var queue in exchange.Queues.Distinct(new QueueComparer()))
+            foreach (var queue in currentExchange.Queues.Distinct(new QueueComparer()))
             {
                 channel.QueueDeclare(queue.NameString, false, false, false, null);
 
                 foreach (var route in queue.Params)
-                    channel.QueueBind(queue.NameString, exchange.NameString, $"{queue.NameString}.{route.EntityNameString}.*");
+                    channel.QueueBind(queue.NameString, currentExchange.NameString, $"{queue.NameString}.{route.EntityNameString}.*");
             }
         }
 
-        public void PublishTask(QueueNames[] queues, QueueEntities entity, QueueActions action, string data)
+        public void PublishTask(IEnumerable<QueueNames> queues, QueueEntities entity, QueueActions action, string data)
         {
-            foreach (var queue in exchange.Queues.Join(queues, x => x.NameEnum, y => y, (x, y) => x))
+            foreach (var queue in exchange.Queues.Join(queues, x => x.NameEnum, y => y, (x, _) => x))
                 foreach (var routingKey in queue.Params.Where(x => x.EntityNameEnum == entity && x.Actions.Contains(action)))
                     channel.BasicPublish(
                     exchange.NameString
@@ -59,44 +56,44 @@ namespace CommonServices.RabbitServices
                     , null
                     , Encoding.UTF8.GetBytes(data));
         }
-        public void PublishTask(QueueNames[] queues, QueueEntities entity, QueueActions action, string[] data)
+        public void PublishTask(IEnumerable<QueueNames> queues, QueueEntities entity, QueueActions action, string[] data)
         {
-            foreach (var queue in exchange.Queues.Join(queues, x => x.NameEnum, y => y, (x, y) => x))
+            foreach (var queue in exchange.Queues.Join(queues, x => x.NameEnum, y => y, (x, _) => x))
                 foreach (var routingKey in queue.Params.Where(x => x.EntityNameEnum == entity && x.Actions.Contains(action)))
-                    foreach (var _data in data)
+                    foreach (var d in data)
                         channel.BasicPublish(
                         exchange.NameString
                         , $"{queue.NameString}.{routingKey.EntityNameString}.{action}"
                         , null
-                        , Encoding.UTF8.GetBytes(_data));
+                        , Encoding.UTF8.GetBytes(d));
         }
 
         public void PublishTask(QueueNames queue, QueueEntities entity, QueueActions action, string data)
         {
-            var _queue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
+            var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
 
-            if (_queue is null)
+            if (currentQueue is null)
                 throw new NullReferenceException($"{nameof(queue)} not found");
 
-            var queueParams = _queue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
+            var queueParams = currentQueue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
 
             if (queueParams is null)
                 throw new NullReferenceException($"{nameof(queueParams)} not found");
 
             channel.BasicPublish(
             exchange.NameString
-            , $"{_queue.NameString}.{queueParams.EntityNameString}.{action}"
+            , $"{currentQueue.NameString}.{queueParams.EntityNameString}.{action}"
             , null
             , Encoding.UTF8.GetBytes(data));
         }
         public void PublishTask(QueueNames queue, QueueEntities entity, QueueActions action, string[] data)
         {
-            var _queue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
+            var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
 
-            if (_queue is null)
+            if (currentQueue is null)
                 throw new NullReferenceException($"{nameof(queue)} not found");
 
-            var queueParams = _queue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
+            var queueParams = currentQueue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
 
             if (queueParams is null)
                 throw new NullReferenceException($"{nameof(queueParams)} not found");
@@ -104,7 +101,7 @@ namespace CommonServices.RabbitServices
             foreach (var item in data)
                 channel.BasicPublish(
                     exchange.NameString
-                    , $"{_queue.NameString}.{queueParams.EntityNameString}.{action}"
+                    , $"{currentQueue.NameString}.{queueParams.EntityNameString}.{action}"
                     , null
                     , Encoding.UTF8.GetBytes(item));
         }

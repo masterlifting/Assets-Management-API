@@ -55,7 +55,7 @@ namespace IM.Services.Companies.Prices.Api
             services.AddTransient<PriceMapper>();
             services.AddScoped<PriceParser>();
             services.AddScoped<PriceLoader>();
-            services.AddScoped<PriceDtoAgregator>();
+            services.AddScoped<PriceDtoAggregator>();
 
             services.AddScoped<IRepository<Ticker>, TickerRepository>();
             services.AddScoped<IRepository<Price>, PriceRepository>();

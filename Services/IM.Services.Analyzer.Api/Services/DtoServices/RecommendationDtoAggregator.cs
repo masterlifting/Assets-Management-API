@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 
 namespace IM.Services.Analyzer.Api.Services.DtoServices
 {
-    public class RecommendationDtoAgregator
+    public class RecommendationDtoAggregator
     {
         private readonly AnalyzerContext context;
-        public RecommendationDtoAgregator(AnalyzerContext context) => this.context = context;
+        public RecommendationDtoAggregator(AnalyzerContext context) => this.context = context;
 
         public async Task<ResponseModel<RecommendationDto>> GetRecommendationAsync(string ticker)
         {

@@ -44,7 +44,7 @@ namespace IM.Gateways.Web.Companies.Api
             services.AddScoped(typeof(RepositorySet<>));
 
             services.AddScoped<CompanyManager>();
-            services.AddScoped<CompanyDtoAgregator>();
+            services.AddScoped<CompanyDtoAggregator>();
             services.AddScoped<RabbitCrudService>();
 
             services.AddHttpClient<PricesClient>()

@@ -25,19 +25,19 @@ namespace IM.Services.Companies.Prices.Api.Services.RabbitServices.Implementatio
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data)
         {
-            if (entity == QueueEntities.price && action == QueueActions.download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
+            if (entity == QueueEntities.Price && action == QueueActions.Download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
             {
                 var prices = await priceLoader.LoadPricesAsync(ticker);
                 if (prices.Length > 0)
                 {
                     string sourceType = Enum.Parse<PriceSourceTypes>(ticker.SourceTypeId.ToString()).ToString();
-                    var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.calculator);
+                    var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Calculator);
 
                     for (int i = 0; i < prices.Length; i++)
                         publisher.PublishTask(
-                            QueueNames.companiesanalyzer
-                            , QueueEntities.price
-                            , QueueActions.calculate
+                            QueueNames.CompaniesAnalyzer
+                            , QueueEntities.Price
+                            , QueueActions.Calculate
                             , JsonSerializer.Serialize(new AnalyzerPriceDto
                             {
                                 TickerName = ticker.Name,

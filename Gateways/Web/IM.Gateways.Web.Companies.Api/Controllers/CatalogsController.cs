@@ -7,7 +7,7 @@ namespace IM.Gateways.Web.Companies.Api.Controllers
     {
         public IActionResult Index()
         {
-            return View();
+            return Ok();
         }
     }
 }

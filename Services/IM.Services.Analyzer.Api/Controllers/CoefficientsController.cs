@@ -12,8 +12,8 @@ namespace IM.Services.Analyzer.Api.Controllers
     [ApiController, Route("[controller]")]
     public class CoefficientsController : Controller
     {
-        private readonly CoefficientDtoAgregator agregator;
-        public CoefficientsController(CoefficientDtoAgregator agregator) => this.agregator = agregator;
+        private readonly CoefficientDtoAggregator agregator;
+        public CoefficientsController(CoefficientDtoAggregator agregator) => this.agregator = agregator;
 
         [HttpGet("{ticker}")]
         public async Task<ResponseModel<PaginationResponseModel<CoefficientDto>>> Get(string ticker, int page = 1, int limit = 10) =>

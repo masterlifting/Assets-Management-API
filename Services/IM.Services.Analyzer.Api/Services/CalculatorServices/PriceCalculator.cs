@@ -9,7 +9,7 @@ using IM.Services.Analyzer.Api.Services.CalculatorServices.Interfaces;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-
+using CommonServices.Models.Dto.Http;
 using static IM.Services.Analyzer.Api.Enums;
 
 namespace IM.Services.Analyzer.Api.Services.CalculatorServices
@@ -27,9 +27,9 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
 
         public async Task<bool> IsSetCalculatingStatusAsync(Price[] prices)
         {
-            for (int i = 0; i < prices.Length; i++)
-                prices[i].StatusId = (byte)StatusType.Calculating;
-            
+            foreach (var t in prices)
+                t.StatusId = (byte)StatusType.Calculating;
+
             var (errors, _) = await repository.UpdateAsync(prices, $"prices set calculating status count: {prices.Length}");
 
             return !errors.Any();
@@ -46,34 +46,31 @@ namespace IM.Services.Analyzer.Api.Services.CalculatorServices
                 {
                     var firstElement = priceGroup.OrderBy(x => x.Date).First();
 
-                    if (firstElement.SourceType is null)
-                        continue;
-
                     var targetDate = CommonHelper.GetExchangeLastWorkday(firstElement.SourceType, firstElement.Date);
 
-                    var response = await pricesClient.GetPricesAsync(priceGroup.Key, new(targetDate.Year, targetDate.Month, targetDate.Day), new(1, int.MaxValue));
+                    var response = await pricesClient.GetPricesAsync(priceGroup.Key, new FilterRequestModel(targetDate.Year, targetDate.Month, targetDate.Day), new PaginationRequestModel(1, int.MaxValue));
 
-                    if (!response.Errors.Any() && response.Data!.Count > 0)
+                    if (response.Errors.Any() || response.Data!.Count <= 0) 
+                        continue;
+                    
+                    Price[] result = priceGroup.ToArray();
+
+                    try
                     {
-                        Price[] result = priceGroup.ToArray();
-
-                        try
-                        {
-                            var calculator = new PriceComporator(response.Data.Items);
-                            result = calculator.GetComparedSample();
-                        }
-                        catch (Exception ex)
-                        {
-                            for (int j = 0; j < result.Length; j++)
-                                result[j].StatusId = (byte)StatusType.Error;
-
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine($"calculating prices for {priceGroup.Key} failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
-                            Console.ForegroundColor = ConsoleColor.Gray;
-                        }
-
-                        await repository.CreateUpdateAsync(result, new PriceComparer(), "analyzer prices");
+                        var calculator = new PriceComporator(response.Data.Items);
+                        result = calculator.GetComparedSample();
                     }
+                    catch (Exception ex)
+                    {
+                        foreach (var price in result)
+                            price.StatusId = (byte)StatusType.Error;
+
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"calculating prices for {priceGroup.Key} failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
+
+                    await repository.CreateUpdateAsync(result, new PriceComparer(), "analyzer prices");
                 }
         }
     }

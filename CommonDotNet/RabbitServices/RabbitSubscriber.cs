@@ -24,7 +24,7 @@ namespace CommonServices.RabbitServices
         private readonly List<Queue> queues;
         private readonly string[] queuesWithConfirm;
 
-        public RabbitSubscriber(string connectionString, QueueExchanges[] exchangeNames, QueueNames[] queueNames)
+        public RabbitSubscriber(string connectionString, IEnumerable<QueueExchanges> exchangeNames, IReadOnlyCollection<QueueNames> queueNames)
         {
             var mqConnection = new SettingsConverter<ConnectionModel>(connectionString).Model;
 
@@ -37,22 +37,22 @@ namespace CommonServices.RabbitServices
 
             connection = factory.CreateConnection();
             channel = connection.CreateModel();
-            queues = new List<Queue>(queueNames.Length);
+            queues = new List<Queue>(queueNames.Count);
 
-            foreach (var exchange in QueueConfiguration.Exchanges.Join(exchangeNames, x => x.NameEnum, y => y, (x, y) => x))
+            foreach (var exchange in QueueConfiguration.Exchanges.Join(exchangeNames, x => x.NameEnum, y => y, (x, _) => x))
             {
                 channel.ExchangeDeclare(exchange.NameString, exchange.Type);
 
-                foreach (var queue in exchange.Queues.Join(queueNames, x => x.NameEnum, y => y, (x, y) => x))
+                foreach (var queue in exchange.Queues.Join(queueNames, x => x.NameEnum, y => y, (x, _) => x))
                 {
-                    if (!queues.Contains(queue, new QueueComparer()))
-                    {
-                        channel.QueueDeclare(queue.NameString, false, false, false, null);
-                        queues.Add(queue);
+                    if (queues.Contains(queue, new QueueComparer()))
+                        continue;
 
-                        foreach (var route in queue.Params)
-                            channel.QueueBind(queue.NameString, exchange.NameString, $"{queue.NameString}.{route.EntityNameString}.*");
-                    }
+                    channel.QueueDeclare(queue.NameString, false, false, false, null);
+                    queues.Add(queue);
+
+                    foreach (var route in queue.Params)
+                        channel.QueueBind(queue.NameString, exchange.NameString, $"{queue.NameString}.{route.EntityNameString}.*");
                 }
             }
 
@@ -72,12 +72,14 @@ namespace CommonServices.RabbitServices
         private void SubscribeQueue(Func<QueueExchanges, string, string, Task<bool>> getActionResult, Queue queue)
         {
             var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += OnConsumerOnReceivedAsync;
+            channel.BasicConsume(queue.NameString, queue.IsAutoAck, consumer);
 
-            consumer.Received += async (model, ea) =>
+            async void OnConsumerOnReceivedAsync(object? _, BasicDeliverEventArgs ea)
             {
                 var data = Encoding.UTF8.GetString(ea.Body.ToArray());
                 string queueName = string.Empty;
-                bool result = false;
+                var result = false;
 
                 try
                 {
@@ -100,9 +102,7 @@ namespace CommonServices.RabbitServices
 
                 if (queuesWithConfirm.Contains(queueName) && result)
                     channel.BasicAck(ea.DeliveryTag, false);
-            };
-
-            channel.BasicConsume(queue.NameString, queue.IsAutoAck, consumer);
+            }
         }
     }
 }

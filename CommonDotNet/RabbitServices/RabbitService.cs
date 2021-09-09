@@ -8,9 +8,9 @@ namespace CommonServices.RabbitServices
     public class RabbitService
     {
         private readonly Dictionary<QueueExchanges, IRabbitActionService> actions;
-        public RabbitService(Dictionary<QueueExchanges, IRabbitActionService> actions) => this.actions = actions is null ? new() : actions;
+        protected RabbitService(Dictionary<QueueExchanges, IRabbitActionService> actions) => this.actions = actions;
 
-        public virtual async Task<bool> GetActionResultAsync(QueueExchanges exchange, string routingKey, string data)
+        public async Task<bool> GetActionResultAsync(QueueExchanges exchange, string routingKey, string data)
         {
             var route = routingKey.Split('.');
 
