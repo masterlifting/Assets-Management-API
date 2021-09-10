@@ -15,8 +15,8 @@ namespace CommonServices.RabbitServices
             var route = routingKey.Split('.');
 
             return route.Length >= 3
-                        && Enum.TryParse(route[1].ToLowerInvariant().Trim(), out QueueEntities entity)
-                        && Enum.TryParse(route[2].ToLowerInvariant().Trim(), out QueueActions action)
+                        && Enum.TryParse(route[1], true, out QueueEntities entity)
+                        && Enum.TryParse(route[2], true, out QueueActions action)
                         && actions.ContainsKey(exchange)
                         && await actions[exchange].GetActionResultAsync(entity, action, data);
         }

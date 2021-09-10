@@ -4,7 +4,7 @@ namespace CommonServices.RabbitServices.Configuration
 {
     public class Queue
     {
-        public Queue(QueueNames name, bool isAutoAck = true, bool withConfirm = false)
+        public Queue(QueueNames name, bool isAutoAck = false, bool withConfirm = false)
         {
             NameString = name.ToString();
             NameEnum = name;

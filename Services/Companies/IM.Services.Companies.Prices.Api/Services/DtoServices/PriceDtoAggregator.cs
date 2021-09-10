@@ -19,24 +19,30 @@ namespace IM.Services.Companies.Prices.Api.Services.DtoServices
         public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(FilterRequestModel filter, PaginationRequestModel pagination)
         {
             var prices = context.Prices.Where(x => x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month));
-            var count = await prices.CountAsync();
-            var result = await prices
+            
+            var queryResult = await prices
                 .OrderBy(x => x.Date)
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit)
                 .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
                 .Join(context.SourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) =>
                     new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
                 .ToArrayAsync();
 
-            var groupedResult = result.GroupBy(x => x.TickerName).Select(x => x.First()).ToArray();
+            var groupedResult = queryResult
+                .GroupBy(x => x.TickerName)
+                .Select(x => x.Last())
+                .ToArray();
+
+            var result = groupedResult
+                .Skip((pagination.Page - 1) * pagination.Limit)
+                .Take(pagination.Limit)
+                .ToArray();
 
             return new()
             {
                 Errors = Array.Empty<string>(),
                 Data = new()
                 {
-                    Items = groupedResult,
+                    Items = result,
                     Count = groupedResult.Length
                 }
             };

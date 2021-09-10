@@ -86,7 +86,7 @@ namespace CommonServices.RabbitServices
                     await semaphore.WaitAsync();
 
                     queueName = ea.RoutingKey.Split('.')[0];
-                    var exchange = Enum.Parse<QueueExchanges>(ea.Exchange.ToLowerInvariant());
+                    var exchange = Enum.Parse<QueueExchanges>(ea.Exchange, true);
                     result = await getActionResult(exchange, ea.RoutingKey, data);
 
                     semaphore.Release();

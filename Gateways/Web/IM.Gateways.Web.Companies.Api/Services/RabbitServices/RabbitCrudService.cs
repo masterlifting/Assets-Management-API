@@ -32,8 +32,8 @@ namespace IM.Gateways.Web.Companies.Api.Services.RabbitServices
                 {QueueNames.CompaniesAnalyzer,analyzerTicker }
             };
 
-            foreach (var data in tickerData)
-                publisher.PublishTask(data.Key, QueueEntities.Ticker, QueueActions.Create, data.Value);
+            foreach (var (key, value) in tickerData)
+                publisher.PublishTask(key, QueueEntities.Ticker, QueueActions.Create, value);
         }
         public void UpdateCompany(CompanyPostDto company)
         {

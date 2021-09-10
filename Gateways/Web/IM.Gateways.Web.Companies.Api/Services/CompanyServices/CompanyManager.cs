@@ -30,12 +30,20 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyServices
                 Description = company.Description
             };
 
-            var (errors, _) = await repository.CreateAsync(ctxCompany, company.Name);
+            var (errors, createdCompany) = await repository.CreateAsync(ctxCompany, company.Name);
 
             if (errors.Any())
                 return new ResponseModel<string> { Errors = errors };
 
-            rabbitCrudService.CreateCompany(company);
+            rabbitCrudService.CreateCompany(new ()
+            {
+                Name = createdCompany!.Name,
+                Ticker = createdCompany.Ticker,
+                Description = createdCompany.Description,
+                PriceSourceTypeId = company.PriceSourceTypeId,
+                ReportSourceTypeId = company.ReportSourceTypeId,
+                ReportSourceValue = company.ReportSourceValue
+            });
 
             return new ResponseModel<string> { Data = $"'{company.Name}' created" };
         }
@@ -48,12 +56,20 @@ namespace IM.Gateways.Web.Companies.Api.Services.CompanyServices
                 Description = company.Description
             };
 
-            var (errors, _) = await repository.UpdateAsync(ctxCompany, company.Name);
+            var (errors, updatedCompany) = await repository.UpdateAsync(ctxCompany, ticker);
 
             if (errors.Any())
                 return new ResponseModel<string> { Errors = errors };
 
-            rabbitCrudService.UpdateCompany(company);
+            rabbitCrudService.UpdateCompany(new()
+            {
+                Name = updatedCompany!.Name,
+                Ticker = updatedCompany.Ticker,
+                Description = updatedCompany.Description,
+                PriceSourceTypeId = company.PriceSourceTypeId,
+                ReportSourceTypeId = company.ReportSourceTypeId,
+                ReportSourceValue = company.ReportSourceValue
+            });
 
             return new ResponseModel<string> { Data = $"'{company.Name}' updated" };
         }

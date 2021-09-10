@@ -19,25 +19,31 @@ namespace IM.Services.Companies.Reports.Api.Services.DtoServices
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(FilterRequestModel filter, PaginationRequestModel pagination)
         {
             var reports = context.Reports.Where(x => x.Year > filter.Year || x.Year == filter.Year && x.Quarter >= filter.Quarter);
-            var count = await reports.CountAsync();
-            var result = await reports
+            
+            var queryResult = await reports
                 .OrderBy(x => x.Year)
                 .ThenBy(x => x.Quarter)
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit)
                 .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Report = x, y.SourceTypeId, })
                 .Join(context.SourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.ReportDto(x.Report, x.SourceTypeId, y.Name))
                 .ToArrayAsync();
 
-            var groupedResult = result.GroupBy(x => x.TickerName).Select(x => x.First()).ToArray();
+            var groupedResult = queryResult
+                .GroupBy(x => x.TickerName)
+                .Select(x => x.Last())
+                .ToArray();
+
+            var result = groupedResult
+                .Skip((pagination.Page - 1) * pagination.Limit)
+                .Take(pagination.Limit)
+                .ToArray();
 
             return new()
             {
                 Errors = Array.Empty<string>(),
                 Data = new()
                 {
-                    Items = groupedResult,
-                    Count = count
+                    Items = result,
+                    Count = groupedResult.Length
                 }
             };
         }
