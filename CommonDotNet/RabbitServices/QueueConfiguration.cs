@@ -62,7 +62,7 @@ namespace CommonServices.RabbitServices
             {
                 Queues = new[]
                 {
-                    new Queue(QueueNames.CompaniesReports,false,true)
+                    new Queue(QueueNames.CompaniesReports)
                     {
                         Params = new[]
                         {
@@ -75,7 +75,7 @@ namespace CommonServices.RabbitServices
                             }
                         }
                     },
-                    new Queue(QueueNames.CompaniesPrices,false,true)
+                    new Queue(QueueNames.CompaniesPrices)
                     {
                         Params = new[]
                         {
@@ -94,7 +94,7 @@ namespace CommonServices.RabbitServices
             {
                 Queues = new[]
                 {
-                    new Queue(QueueNames.CompaniesAnalyzer,false)
+                    new Queue(QueueNames.CompaniesAnalyzer)
                     {
                          Params = new[]
                         {

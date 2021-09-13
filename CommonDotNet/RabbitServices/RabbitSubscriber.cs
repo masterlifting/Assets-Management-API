@@ -73,7 +73,7 @@ namespace CommonServices.RabbitServices
         {
             var consumer = new EventingBasicConsumer(channel);
             consumer.Received += OnConsumerOnReceivedAsync;
-            channel.BasicConsume(queue.NameString, queue.IsAutoAck, consumer);
+            channel.BasicConsume(queue.NameString, !queue.WithConfirm, consumer);
 
             async void OnConsumerOnReceivedAsync(object? _, BasicDeliverEventArgs ea)
             {
