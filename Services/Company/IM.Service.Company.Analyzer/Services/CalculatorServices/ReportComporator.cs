@@ -1,0 +1,166 @@
+﻿using CommonServices.Models.Dto;
+using System.Linq;
+using IM.Service.Company.Analyzer.DataAccess.Entities;
+using IM.Service.Company.Analyzer.Models.Calculator;
+using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
+using static IM.Service.Company.Analyzer.Enums;
+
+namespace IM.Service.Company.Analyzer.Services.CalculatorServices
+{
+    public class ReportComporator : IAnalyzerComparator<Report>
+    {
+        private readonly ReportDto[] reports;
+        private readonly Sample[][] samples;
+
+        private readonly Sample[] revenueCollection;
+        private readonly Sample[] profitNetCollection;
+        private readonly Sample[] profitGrossCollection;
+        private readonly Sample[] assetCollection;
+        private readonly Sample[] turnoverCollection;
+        private readonly Sample[] shareCapitalCollection;
+        private readonly Sample[] dividendCollection;
+        private readonly Sample[] obligationCollection;
+        private readonly Sample[] longTermDebtCollection;
+        private readonly Sample[] cashFlowCollection;
+
+        private readonly CoefficientCalculator? coefficientCalculator;
+        private readonly Sample[]? pe;
+        private readonly Sample[]? pb;
+        private readonly Sample[]? debtLoad;
+        private readonly Sample[]? profitability;
+        private readonly Sample[]? roa;
+        private readonly Sample[]? roe;
+        private readonly Sample[]? eps;
+        public ReportComporator(ReportDto[] reports, PriceDto[]? prices)
+        {
+            this.reports = reports;
+
+            revenueCollection = new Sample[reports.Length];
+            profitNetCollection = new Sample[reports.Length];
+            profitGrossCollection = new Sample[reports.Length];
+            assetCollection = new Sample[reports.Length];
+            turnoverCollection = new Sample[reports.Length];
+            shareCapitalCollection = new Sample[reports.Length];
+            dividendCollection = new Sample[reports.Length];
+            obligationCollection = new Sample[reports.Length];
+            longTermDebtCollection = new Sample[reports.Length];
+            cashFlowCollection = new Sample[reports.Length];
+
+            if (prices is not null && prices.Any())
+            {
+                coefficientCalculator = new CoefficientCalculator();
+
+                pe = new Sample[reports.Length];
+                pb = new Sample[reports.Length];
+                debtLoad = new Sample[reports.Length];
+                profitability = new Sample[reports.Length];
+                roa = new Sample[reports.Length];
+                roe = new Sample[reports.Length];
+                eps = new Sample[reports.Length];
+
+                samples = new[]
+                {
+                    revenueCollection,
+                    profitNetCollection,
+                    profitGrossCollection,
+                    assetCollection,
+                    turnoverCollection,
+                    shareCapitalCollection,
+                    dividendCollection,
+                    obligationCollection,
+                    longTermDebtCollection,
+                    cashFlowCollection,
+                    pe,
+                    pb,
+                    debtLoad,
+                    profitability,
+                    roa,
+                    roe,
+                    eps
+                };
+            }
+            else
+                samples = new[]
+                {
+                    revenueCollection,
+                    profitNetCollection,
+                    profitGrossCollection,
+                    assetCollection,
+                    turnoverCollection,
+                    shareCapitalCollection,
+                    dividendCollection,
+                    obligationCollection,
+                    longTermDebtCollection,
+                    cashFlowCollection
+                };
+
+            SetData(prices);
+        }
+        public Report[] GetComparedSample()
+        {
+            var result = new Report[reports.Length];
+            var comparedSample = new Sample[samples.Length][];
+            var statusId = samples.Length == 17 ? (byte)Enums.StatusType.Calculated : (byte)Enums.StatusType.CalculatedPartial;
+
+            for (uint i = 0; i < samples.Length; i++)
+                comparedSample[i] = RatingComparator.CompareSample(samples[i]);
+
+            for (uint i = 0; i < reports.Length; i++)
+            {
+                var results = new decimal[comparedSample.Length];
+
+                for (uint j = 0; j < comparedSample.Length; j++)
+                    for (uint k = 0; k < comparedSample[j].Length; k++)
+                        if (comparedSample[j][k].Index == i)
+                        {
+                            results[j] = comparedSample[j][k].Value;
+                            break;
+                        }
+
+                result[i] = new Report
+                {
+                    TickerName = reports[i].TickerName,
+                    Year = reports[i].Year,
+                    Quarter = reports[i].Quarter,
+                    SourceType = reports[i].SourceType,
+                    Result = RatingComparator.ComputeSampleResult(results),
+                    StatusId = statusId
+                };
+            }
+            return result;
+        }
+
+        private void SetData(PriceDto[]? prices)
+        {
+            for (uint i = 0; i < reports.Length; i++)
+            {
+                revenueCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].Revenue.HasValue ? reports[i].Revenue!.Value : 0 };
+                profitNetCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].ProfitNet.HasValue ? reports[i].ProfitNet!.Value : 0 };
+                profitGrossCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].ProfitGross.HasValue ? reports[i].ProfitGross!.Value : 0 };
+                assetCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].Asset.HasValue ? reports[i].Asset!.Value : 0 };
+                turnoverCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].Turnover.HasValue ? reports[i].Turnover!.Value : 0 };
+                shareCapitalCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].ShareCapital.HasValue ? reports[i].ShareCapital!.Value : 0 };
+                dividendCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].Dividend.HasValue ? reports[i].Dividend!.Value : 0 };
+                cashFlowCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].CashFlow.HasValue ? reports[i].CashFlow!.Value : 0 };
+                obligationCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = reports[i].Obligation.HasValue ? reports[i].Obligation!.Value : 0 };
+                longTermDebtCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = reports[i].LongTermDebt.HasValue ? reports[i].LongTermDebt!.Value : 0 };
+            }
+
+            if (prices is null || !prices.Any())
+                return;
+
+            for (uint i = 0; i < reports.Length; i++)
+            {
+                var coefficients = coefficientCalculator!.Calculate(reports[i], prices.Max(x => x.Value));
+
+                pe![i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = coefficients.Pe };
+                pb![i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = coefficients.Pb };
+                debtLoad![i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = coefficients.DebtLoad };
+                profitability![i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = coefficients.Profitability };
+                roa![i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = coefficients.Roa };
+                roe![i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = coefficients.Roe };
+                eps![i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = coefficients.Eps };
+            }
+        }
+    }
+}

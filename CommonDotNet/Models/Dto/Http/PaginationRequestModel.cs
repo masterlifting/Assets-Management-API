@@ -1,3 +1,6 @@
+using System;
+using System.Linq;
+
 namespace CommonServices.Models.Dto.Http
 {
     public class PaginationRequestModel
@@ -11,5 +14,7 @@ namespace CommonServices.Models.Dto.Http
         public int Page { get; }
         public int Limit { get; }
         public string QueryParams => $"page={Page}&limit={Limit}";
+
+        public T[] GetPaginatedResult<T>(T[]? data) where T : class => data is not null ? data.Skip((Page - 1) * Limit).Take(Limit).ToArray() : Array.Empty<T>();
     }
 }

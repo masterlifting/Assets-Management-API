@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using CommonServices.Models.Dto.Http;
 
 namespace CommonServices.RepositoryService
 {
@@ -297,7 +298,33 @@ namespace CommonServices.RepositoryService
             return errors;
         }
 
+        public DbSet<QEntity> GetDbSetBy<QEntity>() where QEntity : class => context.Set<QEntity>();
+        public IQueryable<TEntity> QueryFindResult(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
+
         public async Task<TEntity[]> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync();
+        public async Task<TEntity>? FindAsync(params object[] key) => await context.Set<TEntity>().FindAsync(key);
+
+        public IQueryable<TEntity> QueryPaginatedResult(PaginationRequestModel pagination) =>
+            context.Set<TEntity>()
+                .Skip((pagination.Page - 1) * pagination.Limit)
+                .Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult<TSelector>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+            context.Set<TEntity>()
+                .OrderBy(orderSelector)
+                .Skip((pagination.Page - 1) * pagination.Limit)
+                .Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult<TSelector1, TSelector2>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+            context.Set<TEntity>()
+                .OrderBy(orderSelector1)
+                .ThenBy(orderSelector2)
+                .Skip((pagination.Page - 1) * pagination.Limit)
+                .Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult(IQueryable<TEntity> query, PaginationRequestModel pagination) =>
+           query.Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult<TSelector>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+            query.OrderBy(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult<TSelector1, TSelector2>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+            query.OrderBy(orderSelector1).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
 
         private async Task<string[]> SaveAsync(string info, ActionType actionType)
         {

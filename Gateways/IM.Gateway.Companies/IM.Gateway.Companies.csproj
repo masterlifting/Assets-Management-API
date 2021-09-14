@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<UserSecretsId>8b4f9de8-5949-4713-878d-5ca962449d55</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="Clients\Models\**" />
+		<Content Remove="Clients\Models\**" />
+		<EmbeddedResource Remove="Clients\Models\**" />
+		<None Remove="Clients\Models\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.9" />
+		<PackageReference Include="Microsoft.Extensions.Http.Polly" Version="5.0.1" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.7" />
+		<PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\CommonDotNet\CommonServices.csproj" />
+	</ItemGroup>
+
+	<ProjectExtensions>
+		<VisualStudio>
+			<UserProperties appsettings_1json__JsonSchema="" />
+		</VisualStudio>
+	</ProjectExtensions>
+
+</Project>
