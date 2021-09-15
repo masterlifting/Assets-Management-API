@@ -1,15 +1,17 @@
 
-using System;
 using CommonServices.RepositoryService;
+
 using IM.Service.Company.Reports.Clients;
 using IM.Service.Company.Reports.DataAccess;
 using IM.Service.Company.Reports.DataAccess.Entities;
 using IM.Service.Company.Reports.DataAccess.Repository;
 using IM.Service.Company.Reports.Services.BackgroundServices;
 using IM.Service.Company.Reports.Services.DtoServices;
+using IM.Service.Company.Reports.Services.HealthCheck;
 using IM.Service.Company.Reports.Services.RabbitServices;
 using IM.Service.Company.Reports.Services.ReportServices;
 using IM.Service.Company.Reports.Settings;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +20,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Polly;
+
+using System;
 
 namespace IM.Service.Company.Reports
 {
@@ -37,6 +41,8 @@ namespace IM.Service.Company.Reports
            });
 
             services.AddControllers();
+            services.AddHealthChecks()
+                .AddCheck<InvestingHealthCheck>("Investing health check");
 
             services.AddHttpClient<InvestingClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
@@ -65,6 +71,7 @@ namespace IM.Service.Company.Reports
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks("/health");
             });
         }
     }

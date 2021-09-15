@@ -2,7 +2,7 @@
 
 namespace CommonServices.Models.Entity
 {
-    public abstract class CommonEntityType
+    public class CommonEntityType
     {
         [Key]
         public byte Id { get; init; }

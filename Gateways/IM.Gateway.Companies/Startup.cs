@@ -1,6 +1,15 @@
 
 using CommonServices.RepositoryService;
+
+using IM.Gateway.Companies.Clients;
+using IM.Gateway.Companies.DataAccess;
 using IM.Gateway.Companies.DataAccess.Entities;
+using IM.Gateway.Companies.DataAccess.Repository;
+using IM.Gateway.Companies.Services.DtoServices;
+using IM.Gateway.Companies.Services.HealthCheck;
+using IM.Gateway.Companies.Services.RabbitServices;
+using IM.Gateway.Companies.Settings;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -11,14 +20,6 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
-using IM.Gateway.Companies.Clients;
-using IM.Gateway.Companies.DataAccess;
-using IM.Gateway.Companies.DataAccess.Repository;
-using IM.Gateway.Companies.Services.CompanyServices;
-using IM.Gateway.Companies.Services.DtoServices;
-using IM.Gateway.Companies.Services.HealthCheck;
-using IM.Gateway.Companies.Services.RabbitServices;
-using IM.Gateway.Companies.Settings;
 
 namespace IM.Gateway.Companies
 {
@@ -38,6 +39,11 @@ namespace IM.Gateway.Companies
 
             services.AddControllers();
 
+            services.AddHealthChecks()
+                .AddCheck<ReportsHealthCheck>("Company reports service health check")
+                .AddCheck<PricesHealthCheck>("Company prices service health check")
+                .AddCheck<AnalyzerHealthCheck>("Company analyzer service health check");
+
             services.AddHttpClient<PricesClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
@@ -48,16 +54,13 @@ namespace IM.Gateway.Companies
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
-            services.AddHealthChecks()
-                .AddCheck<ReportsHealthCheck>("Company reports service")
-                .AddCheck<PricesHealthCheck>("Company prices service")
-                .AddCheck<AnalyzerHealthCheck>("Company analyzer service");
 
             services.AddScoped<IRepository<Company>, CompanyRepository>();
+            services.AddScoped<IRepository<StockSplit>, StockSplitRepository>();
             services.AddScoped(typeof(RepositorySet<>));
 
-            services.AddScoped<CompanyManager>();
             services.AddScoped<CompanyDtoAggregator>();
+            services.AddScoped<StockSplitDtoAggregator>();
             services.AddScoped<RabbitCrudService>();
         }
 
@@ -75,6 +78,7 @@ namespace IM.Gateway.Companies
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks("/health");
             });
         }
     }

@@ -5,7 +5,7 @@ using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.DataAccess
 {
-    public class DatabaseContext : DbContext
+    public sealed class DatabaseContext : DbContext
     {
         public DbSet<Ticker> Tickers { get; set; } = null!;
         public DbSet<Report> Reports { get; set; } = null!;

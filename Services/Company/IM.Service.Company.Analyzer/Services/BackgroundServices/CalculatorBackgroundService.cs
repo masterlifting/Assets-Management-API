@@ -22,17 +22,15 @@ namespace IM.Service.Company.Analyzer.Services.BackgroundServices
                 await Task.Delay(delay, stoppingToken);
 
                 var scope = services.CreateScope();
-                var reportCalculator = scope.ServiceProvider.GetRequiredService<ReportCalculator>();
                 var priceCalculator = scope.ServiceProvider.GetRequiredService<PriceCalculator>();
+                var reportCalculator = scope.ServiceProvider.GetRequiredService<ReportCalculator>();
                 var ratingCalculator = scope.ServiceProvider.GetRequiredService<RatingCalculator>();
 
                 try
                 {
-                    var priceResult = await priceCalculator.CalculateAsync();
-                    var reportResult = await reportCalculator.CalculateAsync();
-                    
-                    if (priceResult || reportResult)
-                        await ratingCalculator.CalculateAsync();
+                    if (await priceCalculator.CalculateAsync())
+                        if (await reportCalculator.CalculateAsync())
+                            await ratingCalculator.CalculateAsync();
                 }
                 catch (Exception ex)
                 {
@@ -44,6 +42,7 @@ namespace IM.Service.Company.Analyzer.Services.BackgroundServices
 
                 scope.Dispose();
             }
+            // ReSharper disable once FunctionNeverReturns
         }
         public override Task StopAsync(CancellationToken stoppingToken)
         {

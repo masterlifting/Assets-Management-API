@@ -1,13 +1,15 @@
 ﻿using CommonServices.Models.Dto;
 using CommonServices.Models.Dto.Http;
+
+using IM.Service.Company.Analyzer.Settings;
+using IM.Service.Company.Analyzer.Settings.Client;
+
 using Microsoft.Extensions.Options;
 
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using IM.Service.Company.Analyzer.Settings;
-using IM.Service.Company.Analyzer.Settings.Client;
 
 namespace IM.Service.Company.Analyzer.Clients
 {

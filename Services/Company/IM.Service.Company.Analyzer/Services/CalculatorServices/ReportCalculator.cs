@@ -1,12 +1,15 @@
 ﻿using CommonServices;
 using CommonServices.Models.Entity;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
@@ -17,7 +20,10 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         private readonly CompanyReportsClient reportsClient;
         private readonly CompanyPricesClient pricesClient;
 
-        public ReportCalculator(RepositorySet<Report> repository, CompanyReportsClient reportsClient, CompanyPricesClient pricesClient)
+        public ReportCalculator(
+            RepositorySet<Report> repository,
+            CompanyReportsClient reportsClient,
+            CompanyPricesClient pricesClient)
         {
             this.repository = repository;
             this.reportsClient = reportsClient;

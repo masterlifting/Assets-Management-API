@@ -6,7 +6,7 @@ using static IM.Service.Company.Prices.Enums;
 
 namespace IM.Service.Company.Prices.DataAccess
 {
-    public class DatabaseContext : DbContext
+    public sealed class DatabaseContext : DbContext
     {
         public DbSet<Ticker> Tickers { get; set; } = null!;
         public DbSet<Price> Prices { get; set; } = null!;

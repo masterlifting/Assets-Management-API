@@ -6,6 +6,7 @@ using IM.Service.Company.Prices.DataAccess.Entities;
 using IM.Service.Company.Prices.DataAccess.Repository;
 using IM.Service.Company.Prices.Services.BackgroundServices;
 using IM.Service.Company.Prices.Services.DtoServices;
+using IM.Service.Company.Prices.Services.HealthCheck;
 using IM.Service.Company.Prices.Services.PriceServices;
 using IM.Service.Company.Prices.Services.RabbitServices;
 using IM.Service.Company.Prices.Settings;
@@ -39,6 +40,10 @@ namespace IM.Service.Company.Prices
             });
 
             services.AddControllers();
+
+            services.AddHealthChecks()
+                .AddCheck<TdAmeritradeHealthCheck>("TdAmeritrade health check")
+                .AddCheck<MoexHealthCheck>("Moex health check");
 
             services.AddHttpClient<TdAmeritradeClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))

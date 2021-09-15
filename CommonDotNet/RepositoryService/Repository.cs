@@ -316,6 +316,13 @@ namespace CommonServices.RepositoryService
             return errors;
         }
 
+        public async Task DeleteAsync(string info)
+        {
+            context.Set<TEntity>().RemoveRange(context.Set<TEntity>());
+
+            await SaveAsync(info, ActionType.Delete);
+        }
+
         private async Task<string[]> SaveAsync(string info, ActionType actionType)
         {
             var errors = Array.Empty<string>();
@@ -385,13 +392,19 @@ namespace CommonServices.RepositoryService
             Console.ForegroundColor = ConsoleColor.Gray;
         }
 
-
-
         public DbSet<QEntity> GetDbSetBy<QEntity>() where QEntity : class => context.Set<QEntity>();
-        public IQueryable<TEntity> QueryFindResult(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
+        public IQueryable<TEntity> QueryFilter(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
+
+        public async Task<int> GetCountAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().CountAsync(predicate);
+        public async Task<int> GetCountAsync() => await context.Set<TEntity>().AsNoTracking().CountAsync();
 
         public async Task<TEntity[]> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync();
-        public async Task<TEntity>? FindAsync(params object[] key) => await context.Set<TEntity>().FindAsync(key);
+        public async Task<TEntity?> FindAsync(params object[] key) => await context.Set<TEntity>().FindAsync(key);
+
+        public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, TResult>> selector) =>
+            await context.Set<TEntity>().Select(selector).ToArrayAsync();
+        public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector) =>
+            await context.Set<TEntity>().Where(predicate).Select(selector).ToArrayAsync();
 
         public IQueryable<TEntity> QueryPaginatedResult(PaginationRequestModel pagination) =>
             context.Set<TEntity>()

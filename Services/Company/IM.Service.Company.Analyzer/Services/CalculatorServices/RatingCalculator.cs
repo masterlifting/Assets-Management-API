@@ -1,41 +1,48 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using IM.Service.Company.Analyzer.DataAccess;
-using IM.Service.Company.Analyzer.DataAccess.Entities;
+﻿using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
+
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 {
     public class RatingCalculator
     {
-        private readonly DatabaseContext context;
+        private readonly RepositorySet<Ticker> tickerRepository;
         private readonly RepositorySet<Rating> ratingRepository;
+        private readonly RepositorySet<Price> priceRepository;
+        private readonly RepositorySet<Report> reportsRepository;
 
-        public RatingCalculator(DatabaseContext context, RepositorySet<Rating> ratingRepository)
+        public RatingCalculator(
+            RepositorySet<Ticker> tickerRepository,
+            RepositorySet<Rating> ratingRepository,
+            RepositorySet<Price> priceRepository,
+            RepositorySet<Report> reportsRepository)
         {
-            this.context = context;
+            this.tickerRepository = tickerRepository;
             this.ratingRepository = ratingRepository;
+            this.priceRepository = priceRepository;
+            this.reportsRepository = reportsRepository;
         }
 
         public async Task CalculateAsync()
         {
-            var tickers = await context.Tickers.Select(x => x.Name).ToArrayAsync();
+            var tickers = await tickerRepository.GetSampleAsync(x => x.Name);
             var ratings = new List<Rating>(tickers.Length);
 
             for (var i = 0; i < tickers.Length; i++)
             {
-                var priceResults = await context.Prices
-                    .Where(x => x.TickerName == tickers[i] && x.StatusId == (byte)StatusType.Calculated)
-                    .Select(x => x.Result)
-                    .ToArrayAsync();
+                var index = i;
 
-                var reportResults = await context.Reports
-                    .Where(x => x.TickerName == tickers[i] && x.StatusId == (byte)StatusType.Calculated)
-                    .Select(x => x.Result)
-                    .ToArrayAsync();
+                var priceResults = await priceRepository.GetSampleAsync(
+                    x => x.TickerName == tickers[index] && x.StatusId == (byte)StatusType.Calculated,
+                    x => x.Result);
+
+                var reportResults = await reportsRepository.GetSampleAsync(
+                    x => x.TickerName == tickers[index] && x.StatusId == (byte)StatusType.Calculated,
+                    x => x.Result);
 
                 var priceResult = RatingComparator.ComputeSampleResult(priceResults);
                 var reportResult = RatingComparator.ComputeSampleResult(reportResults);
@@ -55,7 +62,9 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             for (var i = 0; i < ratings.Count; i++)
                 ratings[i].Place = i + 1;
 
-            await context.Database.ExecuteSqlRawAsync("DELETE FROM \"Ratings\"");
+            
+            await ratingRepository.DeleteAsync("ratings");
+            
             await ratingRepository.CreateAsync(ratings, new RatingComparer(), $"ratings count {ratings.Count}");
         }
     }

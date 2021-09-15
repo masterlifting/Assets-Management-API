@@ -4,15 +4,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IM.Gateway.Companies.DataAccess
 {
-    public class DatabaseContext : DbContext
+    public sealed class DatabaseContext : DbContext
     {
         public DbSet<Company> Companies { get; set; } = null!;
+        public DbSet<StockSplit> StockSplits { get; set; } = null!;
 
-        public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
-
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
         {
-            base.OnModelCreating(modelBuilder);
         }
     }
 }

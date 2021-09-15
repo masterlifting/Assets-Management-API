@@ -1,9 +1,11 @@
+﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+
 using System.Net.NetworkInformation;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace IM.Gateway.Companies.Services.HealthCheck
+
+namespace CommonServices.HttpServices
 {
     public class ExternalEndpointHealthCheck : IHealthCheck
     {

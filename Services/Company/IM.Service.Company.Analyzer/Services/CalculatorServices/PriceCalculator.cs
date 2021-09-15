@@ -1,13 +1,16 @@
 ﻿using CommonServices;
-using CommonServices.Models.Entity;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 using CommonServices.Models.Dto.Http;
+using CommonServices.Models.Entity;
+
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
+
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
@@ -17,7 +20,9 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         private readonly RepositorySet<Price> repository;
         private readonly CompanyPricesClient pricesClient;
 
-        public PriceCalculator(RepositorySet<Price> repository, CompanyPricesClient pricesClient)
+        public PriceCalculator(
+            RepositorySet<Price> repository,
+            CompanyPricesClient pricesClient)
         {
             this.repository = repository;
             this.pricesClient = pricesClient;

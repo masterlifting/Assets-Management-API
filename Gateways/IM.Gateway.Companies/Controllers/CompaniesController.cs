@@ -1,12 +1,13 @@
 ﻿using CommonServices.Models.Dto;
 using CommonServices.Models.Dto.CompanyAnalyzer;
 using CommonServices.Models.Dto.Http;
+
+using IM.Gateway.Companies.Models.Dto;
+using IM.Gateway.Companies.Services.DtoServices;
+
 using Microsoft.AspNetCore.Mvc;
 
 using System.Threading.Tasks;
-using IM.Gateway.Companies.Models.Dto;
-using IM.Gateway.Companies.Services.CompanyServices;
-using IM.Gateway.Companies.Services.DtoServices;
 
 namespace IM.Gateway.Companies.Controllers
 {
@@ -14,26 +15,20 @@ namespace IM.Gateway.Companies.Controllers
     public class CompaniesController : Controller
     {
         private readonly CompanyDtoAggregator aggregator;
-        private readonly CompanyManager manager;
-
-        public CompaniesController(CompanyDtoAggregator aggregator, CompanyManager manager)
-        {
-            this.aggregator = aggregator;
-            this.manager = manager;
-        }
+        public CompaniesController(CompanyDtoAggregator aggregator) => this.aggregator = aggregator;
 
         public async Task<ResponseModel<PaginationResponseModel<CompanyGetDto>>> Get(int page = 0, int limit = 0) =>
-            await aggregator.GetCompaniesAsync(new(page, limit));
+            await aggregator.GetAsync((PaginationRequestModel) new(page, limit));
 
         [HttpGet("{ticker}")]
-        public async Task<ResponseModel<CompanyGetDto>> Get(string ticker) => await aggregator.GetCompanyAsync(ticker);
+        public async Task<ResponseModel<CompanyGetDto>> Get(string ticker) => await aggregator.GetAsync(ticker);
         [HttpPost]
-        public async Task<ResponseModel<string>> Post(CompanyPostDto company) => await manager.CreateCompanyAsync(company);
+        public async Task<ResponseModel<string>> Post(CompanyPostDto company) => await aggregator.CreateAsync(company);
 
         [HttpPut("{ticker}")]
-        public async Task<ResponseModel<string>> Put(string ticker, CompanyPostDto company) => await manager.UpdateCompanyAsync(ticker, company);
+        public async Task<ResponseModel<string>> Put(string ticker, CompanyPostDto company) => await aggregator.UpdateAsync(ticker, company);
         [HttpDelete("{ticker}")]
-        public async Task<ResponseModel<string>> Delete(string ticker) => await manager.DeleteCompanyAsync(ticker);
+        public async Task<ResponseModel<string>> Delete(string ticker) => await aggregator.DeleteAsync(ticker);
 
 
         [HttpGet("prices/")]
@@ -54,7 +49,7 @@ namespace IM.Gateway.Companies.Controllers
 
         [HttpGet("ratings/")]
         public async Task<ResponseModel<PaginationResponseModel<AnalyzerRatingDto>>> GetRatings(int page = 1, int limit = 10) => await aggregator.AnalyzerDtoAggregator.GetRatingsAsync(new(page, limit));
-        [HttpGet("{ticker}/rating/")]
+        [HttpGet("{ticker}/ratings/")]
         public async Task<ResponseModel<AnalyzerRatingDto>> GetRating(string ticker) => await aggregator.AnalyzerDtoAggregator.GetRatingAsync(ticker);
 
 

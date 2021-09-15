@@ -1,48 +1,53 @@
 ﻿using CommonServices.Models.Dto.Http;
+
+using IM.Gateway.Companies.Clients;
+using IM.Gateway.Companies.DataAccess.Entities;
+using IM.Gateway.Companies.DataAccess.Repository;
+using IM.Gateway.Companies.Models.Dto;
+using IM.Gateway.Companies.Services.RabbitServices;
+
 using Microsoft.EntityFrameworkCore;
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Gateway.Companies.Clients;
-using IM.Gateway.Companies.DataAccess;
-using IM.Gateway.Companies.Models.Dto;
 
 namespace IM.Gateway.Companies.Services.DtoServices
 {
     public class CompanyDtoAggregator
     {
-        private readonly DatabaseContext context;
         private readonly PricesClient pricesClient;
         private readonly ReportsClient reportsClient;
         private readonly AnalyzerClient analyzerClient;
+        private readonly RepositorySet<Company> repository;
+        private readonly RabbitCrudService rabbitCrudService;
 
         public CompanyDtoAggregator(
-            DatabaseContext context
+            RepositorySet<Company> repository
             , PricesClient pricesClient
             , ReportsClient reportsClient
-            , AnalyzerClient analyzerClient)
+            , AnalyzerClient analyzerClient
+            , RabbitCrudService rabbitCrudService)
         {
-            this.context = context;
             this.pricesClient = pricesClient;
             this.reportsClient = reportsClient;
             this.analyzerClient = analyzerClient;
+            this.repository = repository;
+            this.rabbitCrudService = rabbitCrudService;
         }
         public PricesDtoAggregator PricesDtoAggregator => new(pricesClient);
         public ReportsDtoAggregator ReportsDtoAggregator => new(reportsClient);
         public AnalyzerDtoAggregator AnalyzerDtoAggregator => new(analyzerClient);
 
-        public async Task<ResponseModel<PaginationResponseModel<CompanyGetDto>>> GetCompaniesAsync(PaginationRequestModel pagination)
+        public async Task<ResponseModel<PaginationResponseModel<CompanyGetDto>>> GetAsync(PaginationRequestModel pagination)
         {
             var errors = Array.Empty<string>();
 
-            var query = context.Companies.AsQueryable();
-            var count = await query.CountAsync();
+            var count = await repository.GetDbSetBy<Company>().CountAsync();
 
-            var companies = await context.Companies
-                .OrderBy(x => x.Name)
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit)
+            var paginatedResult = repository.QueryPaginatedResult(pagination, x => x.Name);
+
+            var companies = await paginatedResult
                 .Select(x => new CompanyGetDto()
                 {
                     Name = x.Name,
@@ -61,21 +66,84 @@ namespace IM.Gateway.Companies.Services.DtoServices
                 }
             };
         }
-        public async Task<ResponseModel<CompanyGetDto>> GetCompanyAsync(string ticker)
+        public async Task<ResponseModel<CompanyGetDto>> GetAsync(string ticker)
         {
-            var company = await context.Companies.FindAsync(ticker.ToUpperInvariant());
+            var company = await repository.FindAsync(ticker.ToUpperInvariant());
 
             return company is null
-                ? new() { Errors = new[] { "company not found" } }
+                ? new() { Errors = new[] { "model not found" } }
                 : new()
+                {
+                    Data = new()
                     {
-                        Data = new()
-                        {
-                            Ticker = company.Ticker,
-                            Name = company.Name,
-                            Description = company.Description
-                        }
-                    };
+                        Ticker = company.Ticker,
+                        Name = company.Name,
+                        Description = company.Description
+                    }
+                };
+        }
+        public async Task<ResponseModel<string>> CreateAsync(CompanyPostDto model)
+        {
+            var ctxCompany = new Company()
+            {
+                Ticker = model.Ticker!,
+                Name = model.Name,
+                Description = model.Description
+            };
+
+            var (errors, createdCompany) = await repository.CreateAsync(ctxCompany, model.Name);
+
+            if (errors.Any())
+                return new ResponseModel<string> { Errors = errors };
+
+            rabbitCrudService.CreateCompany(new()
+            {
+                Name = createdCompany!.Name,
+                Ticker = createdCompany.Ticker,
+                Description = createdCompany.Description,
+                PriceSourceTypeId = model.PriceSourceTypeId,
+                ReportSourceTypeId = model.ReportSourceTypeId,
+                ReportSourceValue = model.ReportSourceValue
+            });
+
+            return new ResponseModel<string> { Data = $"'{model.Name}' created" };
+        }
+        public async Task<ResponseModel<string>> UpdateAsync(string ticker, CompanyPostDto model)
+        {
+            var ctxCompany = new Company()
+            {
+                Ticker = ticker,
+                Name = model.Name,
+                Description = model.Description
+            };
+
+            var (errors, updatedCompany) = await repository.UpdateAsync(ctxCompany, ticker);
+
+            if (errors.Any())
+                return new ResponseModel<string> { Errors = errors };
+
+            rabbitCrudService.UpdateCompany(new()
+            {
+                Name = updatedCompany!.Name,
+                Ticker = updatedCompany.Ticker,
+                Description = updatedCompany.Description,
+                PriceSourceTypeId = model.PriceSourceTypeId,
+                ReportSourceTypeId = model.ReportSourceTypeId,
+                ReportSourceValue = model.ReportSourceValue
+            });
+
+            return new ResponseModel<string> { Data = $"'{model.Name}' updated" };
+        }
+        public async Task<ResponseModel<string>> DeleteAsync(string ticker)
+        {
+            var errors = await repository.DeleteAsync(ticker.ToUpperInvariant().Trim(), ticker);
+
+            if (errors.Any())
+                return new ResponseModel<string> { Errors = errors };
+
+            rabbitCrudService.DeleteCompany(ticker);
+
+            return new ResponseModel<string> { Data = $"'{ticker}' deleted" };
         }
     }
 }

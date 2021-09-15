@@ -17,7 +17,7 @@ namespace IM.Service.Company.Reports.Services.DtoServices
 
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(FilterRequestModel filter, PaginationRequestModel pagination)
         {
-            var reports = repository.QueryFindResult(x => x.Year > filter.Year || x.Year == filter.Year && x.Quarter >= filter.Quarter);
+            var reports = repository.QueryFilter(x => x.Year > filter.Year || x.Year == filter.Year && x.Quarter >= filter.Quarter);
             var tickers = repository.GetDbSetBy<Ticker>();
             var sourceTypes = repository.GetDbSetBy<SourceType>();
 
@@ -55,7 +55,7 @@ namespace IM.Service.Company.Reports.Services.DtoServices
                     Errors = new[] { "Ticker not found" }
                 };
 
-            var filteredReports = repository.QueryFindResult(x => x.TickerName == ctxTicker.Name && (x.Year > filter.Year || x.Year == filter.Year && x.Quarter >= filter.Quarter));
+            var filteredReports = repository.QueryFilter(x => x.TickerName == ctxTicker.Name && (x.Year > filter.Year || x.Year == filter.Year && x.Quarter >= filter.Quarter));
             var count = await filteredReports.CountAsync();
 
             var tickers = repository.GetDbSetBy<Ticker>();

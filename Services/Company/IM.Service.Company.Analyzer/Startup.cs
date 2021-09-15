@@ -1,5 +1,5 @@
-using System;
 using CommonServices.RepositoryService;
+
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
@@ -7,16 +7,20 @@ using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.BackgroundServices;
 using IM.Service.Company.Analyzer.Services.CalculatorServices;
 using IM.Service.Company.Analyzer.Services.DtoServices;
+using IM.Service.Company.Analyzer.Services.HealthCheck;
 using IM.Service.Company.Analyzer.Services.RabbitServices;
 using IM.Service.Company.Analyzer.Settings;
-using IM.Service.Company.Analyzer.Services.HealthCheck;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using Polly;
+
+using System;
 
 namespace IM.Service.Company.Analyzer
 {
@@ -38,6 +42,10 @@ namespace IM.Service.Company.Analyzer
 
             services.AddControllers();
 
+            services.AddHealthChecks()
+                .AddCheck<CompanyReportsHealthCheck>("Company reports service health check")
+                .AddCheck<CompanyPricesHealthCheck>("Company prices service health check");
+
             services.AddHttpClient<CompanyPricesClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
@@ -45,9 +53,9 @@ namespace IM.Service.Company.Analyzer
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
-            services.AddHealthChecks()
-                .AddCheck<CompanyReportsHealthCheck>("Company reports service")
-                .AddCheck<CompanyPricesHealthCheck>("Company prices service");
+            services.AddScoped<ReportCalculator>();
+            services.AddScoped<PriceCalculator>();
+            services.AddScoped<RatingCalculator>();
 
             services.AddScoped<CoefficientDtoAggregator>();
             services.AddScoped<RatingDtoAggregator>();
@@ -58,9 +66,6 @@ namespace IM.Service.Company.Analyzer
             services.AddScoped<IRepository<Rating>, RatingRepository>();
             services.AddScoped(typeof(RepositorySet<>));
 
-            services.AddScoped<ReportCalculator>();
-            services.AddScoped<PriceCalculator>();
-            services.AddScoped<RatingCalculator>();
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();
@@ -79,6 +84,7 @@ namespace IM.Service.Company.Analyzer
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHealthChecks("/health");
             });
         }
     }

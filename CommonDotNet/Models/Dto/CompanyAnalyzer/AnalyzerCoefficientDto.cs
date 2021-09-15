@@ -2,7 +2,8 @@
 
 namespace CommonServices.Models.Dto.CompanyAnalyzer
 {
-    public abstract class AnalyzerCoefficientDto
+    // ReSharper disable once ClassNeverInstantiated.Global
+    public class AnalyzerCoefficientDto
     {
         public string Ticker { get; set; } = null!;
         public string ReportSourceType { get; set; } = null!;

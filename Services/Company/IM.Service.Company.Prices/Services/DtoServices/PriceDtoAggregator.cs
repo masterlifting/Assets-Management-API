@@ -16,15 +16,14 @@ namespace IM.Service.Company.Prices.Services.DtoServices
 
         public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(FilterRequestModel filter, PaginationRequestModel pagination)
         {
-            var prices = repository.QueryFindResult(x => x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month));
+            var pricesQuery = repository.QueryFilter(x => x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month));
             var tickers = repository.GetDbSetBy<Ticker>();
             var sourceTypes = repository.GetDbSetBy<SourceType>();
 
-            var queryResult = await prices
+            var queryResult = await pricesQuery
                 .OrderBy(x => x.Date)
                 .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
-                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) =>
-                    new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
+                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
                 .ToArrayAsync();
 
             var groupedResult = queryResult
@@ -54,7 +53,7 @@ namespace IM.Service.Company.Prices.Services.DtoServices
                     Errors = new[] { "Ticker not found" }
                 };
 
-            var filteredPrices = repository.QueryFindResult(x => x.TickerName == ctxTicker.Name && (x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month)));
+            var filteredPrices = repository.QueryFilter(x => x.TickerName == ctxTicker.Name && (x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month)));
             var count = await filteredPrices.CountAsync();
 
             var tickers = repository.GetDbSetBy<Ticker>();
