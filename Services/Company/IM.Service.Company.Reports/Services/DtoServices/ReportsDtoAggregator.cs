@@ -58,10 +58,9 @@ namespace IM.Service.Company.Reports.Services.DtoServices
             var filteredReports = repository.QueryFindResult(x => x.TickerName == ctxTicker.Name && (x.Year > filter.Year || x.Year == filter.Year && x.Quarter >= filter.Quarter));
             var count = await filteredReports.CountAsync();
 
-            var paginatedReports= repository.QueryPaginatedResult(filteredReports, pagination, x => x.Year, x => x.Quarter);
-            
             var tickers = repository.GetDbSetBy<Ticker>();
             var sourceTypes = repository.GetDbSetBy<SourceType>();
+            var paginatedReports= repository.QueryPaginatedResult(filteredReports, pagination, x => x.Year, x => x.Quarter);
 
             var result = await paginatedReports
                 .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Report = x, y.SourceTypeId, })

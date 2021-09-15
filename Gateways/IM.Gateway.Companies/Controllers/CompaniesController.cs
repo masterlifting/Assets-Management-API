@@ -1,5 +1,5 @@
 ﻿using CommonServices.Models.Dto;
-using CommonServices.Models.Dto.AnalyzerService;
+using CommonServices.Models.Dto.CompanyAnalyzer;
 using CommonServices.Models.Dto.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -50,13 +50,6 @@ namespace IM.Gateway.Companies.Controllers
         [HttpGet("{ticker}/reports/")]
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetHistoryReports(string ticker, int year = 0, byte quarter = 0, int page = 0, int limit = 0) =>
             await aggregator.ReportsDtoAggregator.GetReportsAsync(ticker, new(year, quarter), new(page, limit));
-
-
-        [HttpGet("recommendations/")]
-        public async Task<ResponseModel<PaginationResponseModel<AnalyzerRecommendationDto>>> GetRecommendations(int page = 1, int limit = 10) =>
-           await aggregator.AnalyzerDtoAggregator.GetRecommendationsAsync(new(page, limit));
-        [HttpGet("{ticker}/recommendation/")]
-        public async Task<ResponseModel<AnalyzerRecommendationDto>> GetRecommendation(string ticker) => await aggregator.AnalyzerDtoAggregator.GetRecommendationAsync(ticker);
 
 
         [HttpGet("ratings/")]

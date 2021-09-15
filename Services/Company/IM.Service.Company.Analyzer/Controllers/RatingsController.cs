@@ -10,13 +10,13 @@ namespace IM.Service.Company.Analyzer.Controllers
     [ApiController, Route("[controller]")]
     public class RatingsController : Controller
     {
-        private readonly RatingDtoAggregator agregator;
-        public RatingsController(RatingDtoAggregator agregator) => this.agregator = agregator;
+        private readonly RatingDtoAggregator aggregator;
+        public RatingsController(RatingDtoAggregator aggregator) => this.aggregator = aggregator;
 
         public async Task<ResponseModel<PaginationResponseModel<RatingDto>>> Get(int page = 1, int limit = 10) => 
-            await agregator.GetRatingsAsync(new(page, limit));
+            await aggregator.GetRatingsAsync(new(page, limit));
 
         [HttpGet("{ticker}")]
-        public async Task<ResponseModel<RatingDto>> Get(string ticker) => await agregator.GetRatingAsync(ticker);
+        public async Task<ResponseModel<RatingDto>> Get(string ticker) => await aggregator.GetRatingAsync(ticker);
     }
 }

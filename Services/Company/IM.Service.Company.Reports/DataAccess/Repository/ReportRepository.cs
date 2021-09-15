@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using CommonServices.RepositoryService;
 using IM.Service.Company.Reports.DataAccess.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Company.Reports.DataAccess.Repository
 {
@@ -10,42 +12,40 @@ namespace IM.Service.Company.Reports.DataAccess.Repository
         private readonly DatabaseContext context;
         public ReportRepository(DatabaseContext context) => this.context = context;
 
-        public bool TryCheckEntity(Report entity, out Report result)
+        public async Task<(bool trySuccess, Report? checkedEntity)>TryCheckEntityAsync(Report entity) =>
+            (await context.Tickers.AnyAsync(x => x.Name.Equals(entity.TickerName)), entity);
+        public async Task<(bool isSuccess, Report[] checkedEntities)>TryCheckEntitiesAsync(IEnumerable<Report> entities)
         {
-            result = entity;
-            return entity is not null && context.Tickers.Any(x => x.Name.Equals(entity.TickerName));
-        }
-        public bool TryCheckEntities(IEnumerable<Report> entities, out Report[] result)
-        {
-            result = entities.ToArray();
+            var result = entities.ToArray();
 
             var tickers = result.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
-            var count = context.Tickers.Count(x => tickers.Contains(x.Name));
+            var count = await context.Tickers.CountAsync(x => tickers.Contains(x.Name));
 
-            return tickers.Length == count;
+            return (tickers.Length == count, result);
         }
-        public Report GetIntersectedContextEntity(Report entity) => context.Reports.Find(entity.TickerName, entity.Year, entity.Quarter);
-        public IQueryable<Report> GetIntersectedContextEntities(IEnumerable<Report> entities)
+        public async Task<Report?>GetAlreadyEntityAsync(Report entity) => await context.Reports.FindAsync(entity.TickerName, entity.Year, entity.Quarter);
+        public IQueryable<Report> GetAlreadyEntitiesQuery(IEnumerable<Report> entities)
         {
             var tickers = entities.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
             return context.Reports.Where(x => tickers.Contains(x.TickerName));
         }
-        public bool UpdateEntity(Report oldResult, Report newResult)
+        public bool IsUpdate(Report contextEntity, Report newEntity)
         {
-            var isCompare = (oldResult.TickerName, oldResult.Year, oldResult.Quarter) == (newResult.TickerName, newResult.Year, newResult.Quarter);
+            var isCompare = (contextEntity.TickerName, contextEntity.Year, contextEntity.Quarter) == (newEntity.TickerName, newEntity.Year, newEntity.Quarter);
 
+            // ReSharper disable once InvertIf
             if (isCompare)
             {
-                oldResult.Turnover = newResult.Turnover;
-                oldResult.LongTermDebt = newResult.LongTermDebt;
-                oldResult.Asset = newResult.Asset;
-                oldResult.CashFlow = newResult.CashFlow;
-                oldResult.Obligation = newResult.Obligation;
-                oldResult.ProfitGross = newResult.ProfitGross;
-                oldResult.ProfitNet = newResult.ProfitNet;
-                oldResult.Revenue = newResult.Revenue;
-                oldResult.ShareCapital = newResult.ShareCapital;
-                oldResult.Dividend = newResult.Dividend;
+                contextEntity.Turnover = newEntity.Turnover;
+                contextEntity.LongTermDebt = newEntity.LongTermDebt;
+                contextEntity.Asset = newEntity.Asset;
+                contextEntity.CashFlow = newEntity.CashFlow;
+                contextEntity.Obligation = newEntity.Obligation;
+                contextEntity.ProfitGross = newEntity.ProfitGross;
+                contextEntity.ProfitNet = newEntity.ProfitNet;
+                contextEntity.Revenue = newEntity.Revenue;
+                contextEntity.ShareCapital = newEntity.ShareCapital;
+                contextEntity.Dividend = newEntity.Dividend;
             }
 
             return isCompare;

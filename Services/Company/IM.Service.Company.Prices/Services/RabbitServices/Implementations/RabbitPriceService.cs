@@ -1,4 +1,4 @@
-﻿using CommonServices.Models.Dto.AnalyzerService;
+﻿using CommonServices.Models.Dto.CompanyAnalyzer;
 using CommonServices.RabbitServices;
 using System;
 using System.Text.Json;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using IM.Service.Company.Prices.DataAccess.Entities;
 using IM.Service.Company.Prices.Services.PriceServices;
 using static IM.Service.Company.Prices.Enums;
+// ReSharper disable InvertIf
 
 namespace IM.Service.Company.Prices.Services.RabbitServices.Implementations
 {
@@ -22,19 +23,21 @@ namespace IM.Service.Company.Prices.Services.RabbitServices.Implementations
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data)
         {
-            if (entity == QueueEntities.Price && action == QueueActions.Download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
+            if (entity == QueueEntities.Price 
+                && action == QueueActions.GetData 
+                && RabbitHelper.TrySerialize(data, out Ticker? ticker))
             {
-                var prices = await priceLoader.LoadPricesAsync(ticker);
+                var prices = await priceLoader.LoadPricesAsync(ticker!);
                 if (prices.Length > 0)
                 {
-                    var sourceType = Enum.Parse<Enums.PriceSourceTypes>(ticker.SourceTypeId.ToString(),true).ToString();
-                    var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Calculator);
+                    var sourceType = Enum.Parse<PriceSourceTypes>(ticker!.SourceTypeId.ToString(),true).ToString();
+                    var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
 
                     foreach (var price in prices)
                         publisher.PublishTask(
-                            QueueNames.CompaniesAnalyzer
+                            QueueNames.CompanyAnalyzer
                             , QueueEntities.Price
-                            , QueueActions.Calculate
+                            , QueueActions.GetLogic
                             , JsonSerializer.Serialize(new AnalyzerPriceDto
                             {
                                 TickerName = ticker.Name,

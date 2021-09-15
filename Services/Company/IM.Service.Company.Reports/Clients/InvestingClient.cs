@@ -24,7 +24,7 @@ namespace IM.Service.Company.Reports.Clients
         }
 
         public async Task<HtmlDocument> GetMainPageAsync(string value) => await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}");
-        public async Task<HtmlDocument> GetFinancialPageAsync(string value) => await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}-{settings.Finantial}");
+        public async Task<HtmlDocument> GetFinancialPageAsync(string value) => await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}-{settings.Financial}");
         public async Task<HtmlDocument> GetBalancePageAsync(string value) => await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}-{settings.Balance}");
         public async Task<HtmlDocument> GetDividendPageAsync(string value) => await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}-{settings.Dividends}");
 
@@ -36,10 +36,7 @@ namespace IM.Service.Company.Reports.Clients
 
             htmlDocument.LoadHtml(pageAsString);
 
-            if (htmlDocument is null)
-                throw new NullReferenceException($"Страница по адресу {uri} не была загружена");
-
-            return htmlDocument;
+            return htmlDocument ?? throw new NullReferenceException($"{uri} not loaded!");
         }
 
         public void Dispose()

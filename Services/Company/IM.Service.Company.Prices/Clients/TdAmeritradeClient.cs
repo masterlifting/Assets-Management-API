@@ -11,9 +11,9 @@ using IM.Service.Company.Prices.Models.Client.TdAmeritradeModels;
 using IM.Service.Company.Prices.Settings;
 using IM.Service.Company.Prices.Settings.Client;
 
-namespace IM.Service.Company.Prices
+namespace IM.Service.Company.Prices.Clients
 {
-    public partial class TdAmeritradeClient : IDisposable
+    public class TdAmeritradeClient : IDisposable
     {
         private readonly HttpClient httpClient;
         private readonly HostModel tdAmeritradeSetting;
@@ -27,16 +27,16 @@ namespace IM.Service.Company.Prices
         public async Task<TdAmeritradeLastPriceResultModel> GetLastPricesAsync(IEnumerable<string> tickers)
         {
             var tickerArray = tickers.ToArray();
-            
-            if (!tickerArray.Any())
-                throw new NullReferenceException("tickers not found!");
 
-            StringBuilder urlsb = new($"https://{tdAmeritradeSetting.Host}/v1/marketdata/quotes?apikey={tdAmeritradeSetting.ApiKey}&symbol=");
+            if (!tickerArray.Any())
+                return new(null);
+
+            StringBuilder urlBuilder = new($"https://{tdAmeritradeSetting.Host}/v1/marketdata/quotes?apikey={tdAmeritradeSetting.ApiKey}&symbol=");
 
             foreach (var ticker in tickerArray)
-                urlsb.Append($"{ticker}%2C");
+                urlBuilder.Append($"{ticker}%2C");
 
-            var url = urlsb.ToString();
+            var url = urlBuilder.ToString();
             url = url.Remove(url.Length - 3, 3);
             var data = await httpClient.GetFromJsonAsync<Dictionary<string, TdAmeritradeLastPriceData>>(url);
 

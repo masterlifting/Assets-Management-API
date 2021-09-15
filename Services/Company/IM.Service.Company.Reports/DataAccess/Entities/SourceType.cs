@@ -4,8 +4,10 @@ using System.Collections.Generic;
 
 namespace IM.Service.Company.Reports.DataAccess.Entities
 {
+    // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
     public class SourceType : CommonEntityType
     {
-        public virtual IEnumerable<Ticker> Tickers { get; set; }
+        // ReSharper disable once UnusedMember.Global
+        public virtual IEnumerable<Ticker>? Tickers { get; set; }
     }
 }

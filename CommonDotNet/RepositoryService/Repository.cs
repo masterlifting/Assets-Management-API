@@ -25,9 +25,11 @@ namespace CommonServices.RepositoryService
         {
             var errors = Array.Empty<string>();
 
-            if (handler.TryCheckEntity(entity, out var checkedEntity))
+            var (trySuccess, checkedEntity) = await handler.TryCheckEntityAsync(entity);
+
+            if (trySuccess)
             {
-                if (handler.GetIntersectedContextEntity(checkedEntity!) is null)
+                if (await handler.GetAlreadyEntityAsync(checkedEntity!) is null)
                 {
                     await context.Set<TEntity>().AddAsync(checkedEntity!);
                     errors = await SaveAsync(info, ActionType.Create);
@@ -45,11 +47,13 @@ namespace CommonServices.RepositoryService
         {
             var errors = Array.Empty<string>();
 
-            if (handler.TryCheckEntities(entities, out TEntity[] checkedEntities))
-            {
-                var intersectedEntities = handler.GetIntersectedContextEntities(checkedEntities);
+            var (trySuccess, checkedEntities) = await handler.TryCheckEntitiesAsync(entities);
 
-                if (intersectedEntities is not null && intersectedEntities.Any())
+            if (trySuccess)
+            {
+                var intersectedEntities = handler.GetAlreadyEntitiesQuery(checkedEntities);
+
+                if (intersectedEntities.Any())
                 {
                     var intersected = await intersectedEntities.ToArrayAsync();
 
@@ -77,9 +81,11 @@ namespace CommonServices.RepositoryService
         {
             var errors = Array.Empty<string>();
 
-            if (handler.TryCheckEntity(entity, out var checkedEntity))
+            var (trySuccess, checkedEntity) = await handler.TryCheckEntityAsync(entity);
+
+            if (trySuccess)
             {
-                var intersectedEntity = handler.GetIntersectedContextEntity(checkedEntity!);
+                var intersectedEntity = await handler.GetAlreadyEntityAsync(checkedEntity!);
 
                 if (intersectedEntity is not null)
                 {
@@ -100,17 +106,19 @@ namespace CommonServices.RepositoryService
         {
             var errors = Array.Empty<string>();
 
-            if (handler.TryCheckEntities(entities, out TEntity[] checkedEntities))
-            {
-                var intersectedEntities = handler.GetIntersectedContextEntities(checkedEntities);
+            var (trySuccess, checkedEntities) = await handler.TryCheckEntitiesAsync(entities);
 
-                if (intersectedEntities is not null && intersectedEntities.Any())
+            if (trySuccess)
+            {
+                var intersectedEntities = handler.GetAlreadyEntitiesQuery(checkedEntities);
+
+                if (intersectedEntities.Any())
                 {
                     var intersected = await intersectedEntities.ToArrayAsync();
 
-                    foreach (var oldResult in intersected)
-                        foreach (var newResult in checkedEntities)
-                            if (handler.UpdateEntity(oldResult, newResult))
+                    foreach (var contextEntity in intersected)
+                        foreach (var newEntity in checkedEntities)
+                            if (handler.IsUpdate(contextEntity, newEntity))
                                 break;
 
                     errors = await SaveAsync(info, ActionType.Update);
@@ -128,11 +136,13 @@ namespace CommonServices.RepositoryService
         {
             var errors = Array.Empty<string>();
 
-            if (handler.TryCheckEntity(entity, out var checkedEntity))
+            var (trySuccess, checkedEntity) = await handler.TryCheckEntityAsync(entity);
+
+            if (trySuccess)
             {
                 var actionType = ActionType.Create;
 
-                var intersectedEntity = handler.GetIntersectedContextEntity(checkedEntity!);
+                var intersectedEntity = await handler.GetAlreadyEntityAsync(checkedEntity!);
 
                 if (intersectedEntity is not null)
                 {
@@ -156,11 +166,13 @@ namespace CommonServices.RepositoryService
 
             var arrayEntities = entities.ToArray();
 
-            if (handler.TryCheckEntities(arrayEntities, out TEntity[] checkedEntities))
-            {
-                var intersectedEntities = handler.GetIntersectedContextEntities(checkedEntities);
+            var (trySuccess, checkedEntities) = await handler.TryCheckEntitiesAsync(arrayEntities);
 
-                if (intersectedEntities is not null && intersectedEntities.Any())
+            if (trySuccess)
+            {
+                var intersectedEntities = handler.GetAlreadyEntitiesQuery(checkedEntities);
+
+                if (intersectedEntities.Any())
                 {
                     var intersected = await intersectedEntities.ToArrayAsync();
 
@@ -172,11 +184,11 @@ namespace CommonServices.RepositoryService
                         errors = await SaveAsync(info, ActionType.Create);
                     }
 
-                    var newResult = arrayEntities.Except(toAdd, comparer).ToArray();
+                    var toUpdate = arrayEntities.Except(toAdd, comparer).ToArray();
 
-                    foreach (var oldEntity in intersected)
-                        foreach (var t in newResult)
-                            if (handler.UpdateEntity(oldEntity, t))
+                    foreach (var contextEntity in intersected)
+                        foreach (var newEntity in toUpdate)
+                            if (handler.IsUpdate(contextEntity, newEntity))
                                 break;
 
                     errors = errors.Concat(await SaveAsync(info, ActionType.Update)).ToArray();
@@ -200,11 +212,13 @@ namespace CommonServices.RepositoryService
 
             var arrayEntities = entities.ToArray();
 
-            if (handler.TryCheckEntities(arrayEntities, out TEntity[] checkedEntities))
-            {
-                var intersectedEntities = handler.GetIntersectedContextEntities(checkedEntities);
+            var (trySuccess, checkedEntities) = await handler.TryCheckEntitiesAsync(arrayEntities);
 
-                if (intersectedEntities is not null && intersectedEntities.Any())
+            if (trySuccess)
+            {
+                var intersectedEntities = handler.GetAlreadyEntitiesQuery(checkedEntities);
+
+                if (intersectedEntities.Any())
                 {
                     var toUpdate = await intersectedEntities.ToArrayAsync();
                     var toAdd = arrayEntities.Except(toUpdate, comparer).ToArray();
@@ -219,13 +233,14 @@ namespace CommonServices.RepositoryService
 
                     foreach (var oldEntity in toUpdate)
                         foreach (var newEntity in newUpdateResult)
-                            if (handler.UpdateEntity(oldEntity, newEntity))
+                            if (handler.IsUpdate(oldEntity, newEntity))
                                 break;
 
                     errors = errors.Concat(await SaveAsync(info, ActionType.Update)).ToArray();
 
                     var toDelete = all.Except(toAdd.Union(toUpdate), comparer).ToArray();
 
+                    // ReSharper disable once InvertIf
                     if (toDelete.Any())
                     {
                         context.Set<TEntity>().RemoveRange(toDelete);
@@ -238,6 +253,7 @@ namespace CommonServices.RepositoryService
                     errors = await SaveAsync(info, ActionType.Create);
 
                     var toDelete = all.Except(arrayEntities, comparer).ToArray();
+                    // ReSharper disable once InvertIf
                     if (toDelete.Any())
                     {
                         context.Set<TEntity>().RemoveRange(toDelete);
@@ -270,61 +286,35 @@ namespace CommonServices.RepositoryService
         {
             var errors = Array.Empty<string>();
 
-            var enumerableEntities = entities.ToArray();
+            var arrayEntities = entities.ToArray();
 
-            if (handler.TryCheckEntities(enumerableEntities, out TEntity[] checkedEntities))
+            var (trySuccess, checkedEntities) = await handler.TryCheckEntitiesAsync(arrayEntities);
+
+            if (trySuccess)
             {
-                var intersectedEntities = handler.GetIntersectedContextEntities(checkedEntities);
+                var intersectedEntities = handler.GetAlreadyEntitiesQuery(checkedEntities);
 
-                if (intersectedEntities is not null && intersectedEntities.Any())
+                if (intersectedEntities.Any())
                 {
                     var intersected = await intersectedEntities.ToArrayAsync();
 
-                    if (intersected.Length != enumerableEntities.Length)
+                    if (intersected.Length != arrayEntities.Length)
                     {
-                        var notDeleted = enumerableEntities.Except(intersected, comparer);
+                        var notDeleted = arrayEntities.Except(intersected, comparer);
                         SetInfo(ActionType.Delete, NotifyType.Info, info, ref errors, $" not found count: {notDeleted.Count()}");
                     }
 
                     context.Set<TEntity>().RemoveRange(intersected);
                     return await SaveAsync(info, ActionType.Delete);
                 }
-                else
-                    SetInfo(ActionType.Delete, NotifyType.NotFound, info, ref errors, $" count: {enumerableEntities.Length}");
+
+                SetInfo(ActionType.Delete, NotifyType.NotFound, info, ref errors, $" count: {arrayEntities.Length}");
             }
             else
                 SetInfo(ActionType.Delete, NotifyType.CheckFailed, info, ref errors);
 
             return errors;
         }
-
-        public DbSet<QEntity> GetDbSetBy<QEntity>() where QEntity : class => context.Set<QEntity>();
-        public IQueryable<TEntity> QueryFindResult(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
-
-        public async Task<TEntity[]> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync();
-        public async Task<TEntity>? FindAsync(params object[] key) => await context.Set<TEntity>().FindAsync(key);
-
-        public IQueryable<TEntity> QueryPaginatedResult(PaginationRequestModel pagination) =>
-            context.Set<TEntity>()
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult<TSelector>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
-            context.Set<TEntity>()
-                .OrderBy(orderSelector)
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult<TSelector1, TSelector2>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
-            context.Set<TEntity>()
-                .OrderBy(orderSelector1)
-                .ThenBy(orderSelector2)
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult(IQueryable<TEntity> query, PaginationRequestModel pagination) =>
-           query.Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult<TSelector>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
-            query.OrderBy(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult<TSelector1, TSelector2>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
-            query.OrderBy(orderSelector1).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
 
         private async Task<string[]> SaveAsync(string info, ActionType actionType)
         {
@@ -394,6 +384,36 @@ namespace CommonServices.RepositoryService
             Console.WriteLine(message);
             Console.ForegroundColor = ConsoleColor.Gray;
         }
+
+
+
+        public DbSet<QEntity> GetDbSetBy<QEntity>() where QEntity : class => context.Set<QEntity>();
+        public IQueryable<TEntity> QueryFindResult(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
+
+        public async Task<TEntity[]> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync();
+        public async Task<TEntity>? FindAsync(params object[] key) => await context.Set<TEntity>().FindAsync(key);
+
+        public IQueryable<TEntity> QueryPaginatedResult(PaginationRequestModel pagination) =>
+            context.Set<TEntity>()
+                .Skip((pagination.Page - 1) * pagination.Limit)
+                .Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult<TSelector>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+            context.Set<TEntity>()
+                .OrderBy(orderSelector)
+                .Skip((pagination.Page - 1) * pagination.Limit)
+                .Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult<TSelector1, TSelector2>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+            context.Set<TEntity>()
+                .OrderBy(orderSelector1)
+                .ThenBy(orderSelector2)
+                .Skip((pagination.Page - 1) * pagination.Limit)
+                .Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult(IQueryable<TEntity> query, PaginationRequestModel pagination) =>
+           query.Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult<TSelector>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+            query.OrderBy(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
+        public IQueryable<TEntity> QueryPaginatedResult<TSelector1, TSelector2>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+            query.OrderBy(orderSelector1).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
     }
 
     internal enum ActionType

@@ -4,50 +4,43 @@ using IM.Gateway.Companies.DataAccess.Entities;
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace IM.Gateway.Companies.DataAccess.Repository
 {
-    public class CompanyRepository : IRepository<Entities.Company>
+    public class CompanyRepository : IRepository<Company>
     {
         private readonly DatabaseContext context;
         public CompanyRepository(DatabaseContext context) => this.context = context;
 
-        public bool TryCheckEntity(Entities.Company entity, out Entities.Company? result)
+        public async Task<(bool trySuccess, Company? checkedEntity)> TryCheckEntityAsync(Company entity)
         {
-            if (entity?.Ticker is null)
-            {
-                result = null;
-                return false;
-            }
-
             entity.Ticker = entity.Ticker.ToUpperInvariant().Trim();
-            result = entity;
-            return true;
+            return await Task.FromResult((true, entity));
         }
-        public bool TryCheckEntities(IEnumerable<Entities.Company> entities, out Entities.Company[] result)
+        public async Task<(bool isSuccess, Company[] checkedEntities)> TryCheckEntitiesAsync(IEnumerable<Company> entities)
         {
-            var checkedEntities = entities.Where(x => x?.Ticker is not null).ToArray();
+            var arrayEntities = entities.ToArray();
 
-            foreach (var company in checkedEntities)
-                company.Ticker = company.Ticker.ToUpperInvariant().Trim();
+            foreach (var entity in arrayEntities)
+                entity.Ticker = entity.Ticker.ToUpperInvariant().Trim();
 
-            result = checkedEntities;
-            return true;
+            return await Task.FromResult((true, arrayEntities));
         }
-        public Entities.Company? GetIntersectedContextEntity(Entities.Company entity) => context.Companies.Find(entity.Ticker);
-        public IQueryable<Entities.Company>? GetIntersectedContextEntities(IEnumerable<Entities.Company> entities)
+        public async Task<Company?> GetAlreadyEntityAsync(Company entity) => await context.Companies.FindAsync(entity.Ticker);
+        public IQueryable<Company> GetAlreadyEntitiesQuery(IEnumerable<Company> entities)
         {
             var names = entities.Select(y => y.Ticker).ToArray();
             return context.Companies.Where(x => names.Contains(x.Ticker));
         }
-        public bool UpdateEntity(Entities.Company oldResult, Entities.Company newResult)
+        public bool IsUpdate(Company contextEntity, Company newEntity)
         {
-            var isCompare = oldResult.Ticker == newResult.Ticker;
+            var isCompare = contextEntity.Ticker == newEntity.Ticker;
 
             if (isCompare)
             {
-                oldResult.Name = newResult.Name;
-                oldResult.Description = newResult.Description;
+                contextEntity.Name = newEntity.Name;
+                contextEntity.Description = newEntity.Description;
             }
 
             return isCompare;

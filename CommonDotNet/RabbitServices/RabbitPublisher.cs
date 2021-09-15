@@ -73,12 +73,12 @@ namespace CommonServices.RabbitServices
             var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
 
             if (currentQueue is null)
-                throw new NullReferenceException($"{nameof(queue)} not found");
+                throw new NullReferenceException($"{nameof(queue)} is null");
 
             var queueParams = currentQueue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
 
             if (queueParams is null)
-                throw new NullReferenceException($"{nameof(queueParams)} not found");
+                throw new NullReferenceException($"{nameof(queueParams)} is null");
 
             channel.BasicPublish(
             exchange.NameString
@@ -86,17 +86,17 @@ namespace CommonServices.RabbitServices
             , null
             , Encoding.UTF8.GetBytes(data));
         }
-        public void PublishTask(QueueNames queue, QueueEntities entity, QueueActions action, string[] data)
+        public void PublishTask(QueueNames queue, QueueEntities entity, QueueActions action, IEnumerable<string> data)
         {
             var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
 
             if (currentQueue is null)
-                throw new NullReferenceException($"{nameof(queue)} not found");
+                throw new NullReferenceException($"{nameof(queue)} is null");
 
             var queueParams = currentQueue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
 
             if (queueParams is null)
-                throw new NullReferenceException($"{nameof(queueParams)} not found");
+                throw new NullReferenceException($"{nameof(queueParams)} is null");
 
             foreach (var item in data)
                 channel.BasicPublish(

@@ -3,22 +3,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace IM.Service.Company.Prices.Services.HealthCheck
+namespace IM.Gateway.Companies.Services.HealthCheck
 {
     public class ExternalEndpointHealthCheck : IHealthCheck
     {
         private readonly string host;
-        public ExternalEndpointHealthCheck(string host) => this.host = host;
+        protected ExternalEndpointHealthCheck(string host) => this.host = host;
 
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
         {
             Ping ping = new();
             var reply = await ping.SendPingAsync(host);
 
-            if (reply.Status != IPStatus.Success)
-                return HealthCheckResult.Unhealthy();
-
-            return HealthCheckResult.Healthy();
+            return reply.Status != IPStatus.Success ? HealthCheckResult.Unhealthy() : HealthCheckResult.Healthy();
         }
     }
 }

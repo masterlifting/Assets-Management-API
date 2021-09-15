@@ -1,6 +1,6 @@
 ﻿namespace CommonServices.Models
 {
-    public class ConnectionStrings
+    public abstract class ConnectionStrings
     {
         public string Mq { get; set; } = null!;
     }

@@ -19,7 +19,7 @@ namespace IM.Gateway.Companies.Clients
         public ReportsClient(HttpClient httpClient, IOptions<ServiceSettings> options)
         {
             this.httpClient = httpClient;
-            settings = options.Value.ClientSettings.ClientCompaniesReports;
+            settings = options.Value.ClientSettings.CompanyReports;
         }
 
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(FilterRequestModel filter, PaginationRequestModel pagination) =>

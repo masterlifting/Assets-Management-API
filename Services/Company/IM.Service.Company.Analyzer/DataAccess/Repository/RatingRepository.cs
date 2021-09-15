@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Repository
 {
@@ -11,37 +13,35 @@ namespace IM.Service.Company.Analyzer.DataAccess.Repository
         private readonly DatabaseContext context;
         public RatingRepository(DatabaseContext context) => this.context = context;
 
-        public bool TryCheckEntity(Rating entity, out Rating? result)
+        public async Task<(bool trySuccess, Rating? checkedEntity)> TryCheckEntityAsync(Rating entity) =>
+            (await context.Tickers.AnyAsync(x => x.Name.Equals(entity.TickerName)), entity);
+        public async Task<(bool isSuccess, Rating[] checkedEntities)> TryCheckEntitiesAsync(IEnumerable<Rating> entities)
         {
-            result = entity;
-            return context.Tickers.Any(x => x.Name.Equals(entity.TickerName));
-        }
-        public bool TryCheckEntities(IEnumerable<Rating> entities, out Rating[] result)
-        {
-            result = entities.ToArray();
+            var arrayEntities = entities.ToArray();
 
-            var tickers = result.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
-            var count = context.Tickers.Count(x => tickers.Contains(x.Name));
+            var tickers = arrayEntities.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
+            var count = await context.Tickers.CountAsync(x => tickers.Contains(x.Name));
 
-            return tickers.Length == count;
+            return (tickers.Length == count, arrayEntities);
         }
-        public Rating GetIntersectedContextEntity(Rating entity) => context.Ratings.Find(entity.Place);
-        public IQueryable<Rating> GetIntersectedContextEntities(IEnumerable<Rating> entities)
+        public async Task<Rating?> GetAlreadyEntityAsync(Rating entity) => await context.Ratings.FindAsync(entity.Place);
+
+        public IQueryable<Rating> GetAlreadyEntitiesQuery(IEnumerable<Rating> entities)
         {
             var places = entities.Select(y => y.Place).ToArray();
             return context.Ratings.Where(x => places.Contains(x.Place));
         }
-        public bool UpdateEntity(Rating oldResult, Rating newResult)
+        public bool IsUpdate(Rating contextEntity, Rating newEntity)
         {
-            var isCompare = oldResult.Place == newResult.Place;
-            
+            var isCompare = contextEntity.Place == newEntity.Place;
+
             if (isCompare)
             {
-                oldResult.Place = newResult.Place;
-                oldResult.Result = newResult.Result;
-                oldResult.PriceComparison = newResult.PriceComparison;
-                oldResult.ReportComparison = newResult.ReportComparison;
-                oldResult.UpdateTime = DateTime.UtcNow;
+                contextEntity.Place = newEntity.Place;
+                contextEntity.Result = newEntity.Result;
+                contextEntity.PriceComparison = newEntity.PriceComparison;
+                contextEntity.ReportComparison = newEntity.ReportComparison;
+                contextEntity.UpdateTime = DateTime.UtcNow;
             }
 
             return isCompare;

@@ -343,3 +343,17 @@ healthchecksdb
 
 .vs/
 **/obj/
+
+Gateways/IM.Gateway.Companies/appsettings.Development.json
+Gateways/IM.Gateway.Brokers/appsettings.Development.json
+Gateways/IM.Gateway.Recommendations/appsettings.Development.json
+Gateways/IM.Gateway.Users/appsettings.Development.json
+
+Services/IM.Service.Identity/appsettings.Development.json
+
+Services/Company/IM.Service.Company.Analyzer/appsettings.Development.json
+Services/Company/IM.Service.Company.Prices/appsettings.Development.json
+Services/Company/IM.Service.Company.Reports/appsettings.Development.json
+
+Services/Broker/IM.Service.Broker.Reports/appsettings.Development.json
+Services/Broker/IM.Service.Broker.Aggregator/appsettings.Development.json

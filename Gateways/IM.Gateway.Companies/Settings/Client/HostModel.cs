@@ -1,6 +1,6 @@
 ﻿namespace IM.Gateway.Companies.Settings.Client
 {
-    public class HostModel
+    public abstract class HostModel
     {
         public string Schema { get; set; } = null!;
         public string Host { get; set; } = null!;

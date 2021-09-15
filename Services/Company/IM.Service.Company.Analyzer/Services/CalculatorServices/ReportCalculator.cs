@@ -14,10 +14,10 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
     public class ReportCalculator : IAnalyzerCalculator<Report>
     {
         private readonly RepositorySet<Report> repository;
-        private readonly ReportsClient reportsClient;
-        private readonly PricesClient pricesClient;
+        private readonly CompanyReportsClient reportsClient;
+        private readonly CompanyPricesClient pricesClient;
 
-        public ReportCalculator(RepositorySet<Report> repository, ReportsClient reportsClient, PricesClient pricesClient)
+        public ReportCalculator(RepositorySet<Report> repository, CompanyReportsClient reportsClient, CompanyPricesClient pricesClient)
         {
             this.repository = repository;
             this.reportsClient = reportsClient;
@@ -27,7 +27,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         public async Task<bool> IsSetCalculatingStatusAsync(Report[] reports)
         {
             foreach (var t in reports)
-                t.StatusId = (byte)Enums.StatusType.Calculating;
+                t.StatusId = (byte)StatusType.Calculating;
 
             var (errors, _) = await repository.UpdateAsync(reports, $"reports set calculating status count: {reports.Length}");
 
@@ -36,9 +36,9 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         public async Task<bool> CalculateAsync()
         {
             var reports = await repository.FindAsync(x =>
-                    x.StatusId == (byte)Enums.StatusType.ToCalculate
-                    || x.StatusId == (byte)Enums.StatusType.CalculatedPartial
-                    || x.StatusId == (byte)Enums.StatusType.Error);
+                    x.StatusId == (byte)StatusType.ToCalculate
+                    || x.StatusId == (byte)StatusType.CalculatedPartial
+                    || x.StatusId == (byte)StatusType.Error);
 
             if (!reports.Any())
                 return false;
@@ -68,7 +68,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     catch (Exception ex)
                     {
                         foreach (var report in result)
-                            report.StatusId = (byte)Enums.StatusType.Error;
+                            report.StatusId = (byte)StatusType.Error;
 
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine($"calculating reports for {reportGroup.Key} failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");

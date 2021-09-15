@@ -11,19 +11,19 @@ using IM.Service.Company.Analyzer.Settings.Client;
 
 namespace IM.Service.Company.Analyzer.Clients
 {
-    public class ReportsClient : IDisposable
+    public class CompanyPricesClient : IDisposable
     {
         private readonly HttpClient httpClient;
         private readonly HostModel settings;
 
-        public ReportsClient(HttpClient httpClient, IOptions<ServiceSettings> options)
+        public CompanyPricesClient(HttpClient httpClient, IOptions<ServiceSettings> options)
         {
             this.httpClient = httpClient;
-            settings = options.Value.ClientSettings.ClientCompaniesReports;
+            settings = options.Value.ClientSettings.CompanyPrices;
         }
 
-        public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination) =>
-            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<ReportDto>>>
+        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination) =>
+            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<PriceDto>>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{settings.Controller}/{ticker}?{filter.QueryParams}&{pagination.QueryParams}") ?? new();
 
         public void Dispose()

@@ -6,6 +6,6 @@ namespace IM.Service.Company.Analyzer.Models.Calculator
     {
         public uint Index { get; set; }
         public decimal Value { get; set; }
-        public Enums.CompareType CompareType { get; set; }
+        public CompareType CompareType { get; set; }
     }
 }

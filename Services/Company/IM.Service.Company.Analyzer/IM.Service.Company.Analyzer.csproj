@@ -3,13 +3,13 @@
 	<PropertyGroup>
 		<TargetFramework>net5.0</TargetFramework>
 		<Nullable>enable</Nullable>
-	  <UserSecretsId>f84af758-58ac-4aed-b74e-f17abb55ae43</UserSecretsId>
   </PropertyGroup>
 
 
 	<ItemGroup>
 	  <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.9" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="5.0.9" />
+	  <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="5.0.1" />
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.7" />
 	  <PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
 	</ItemGroup>

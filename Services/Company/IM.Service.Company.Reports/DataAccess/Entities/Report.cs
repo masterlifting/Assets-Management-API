@@ -4,10 +4,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IM.Service.Company.Reports.DataAccess.Entities
 {
+    // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
     public class Report : ReportIdentity
     {
-        public virtual Ticker Ticker { get; set; }
+        public virtual Ticker Ticker { get; set; } = null!;
 
+        // ReSharper disable once PropertyCanBeMadeInitOnly.Global
         public long StockVolume { get; set; }
         [Column(TypeName = "Decimal(18,4)")]
         public decimal? Revenue { get; set; }

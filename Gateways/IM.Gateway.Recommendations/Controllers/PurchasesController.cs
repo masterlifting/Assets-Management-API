@@ -7,11 +7,12 @@ using System.Threading.Tasks;
 
 namespace IM.Gateway.Recommendations.Controllers
 {
+    [ApiController, Route("api/[controller]")]
     public class PurchasesController : Controller
     {
         public IActionResult Index()
         {
-            return View();
+            return Ok();
         }
     }
 }

@@ -15,9 +15,9 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
     public class PriceCalculator : IAnalyzerCalculator<Price>
     {
         private readonly RepositorySet<Price> repository;
-        private readonly PricesClient pricesClient;
+        private readonly CompanyPricesClient pricesClient;
 
-        public PriceCalculator(RepositorySet<Price> repository, PricesClient pricesClient)
+        public PriceCalculator(RepositorySet<Price> repository, CompanyPricesClient pricesClient)
         {
             this.repository = repository;
             this.pricesClient = pricesClient;
@@ -26,7 +26,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         public async Task<bool> IsSetCalculatingStatusAsync(Price[] prices)
         {
             foreach (var t in prices)
-                t.StatusId = (byte)Enums.StatusType.Calculating;
+                t.StatusId = (byte)StatusType.Calculating;
 
             var (errors, _) = await repository.UpdateAsync(prices, $"prices set calculating status count: {prices.Length}");
 
@@ -35,9 +35,9 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         public async Task<bool> CalculateAsync()
         {
             var prices = await repository.FindAsync(x =>
-                    x.StatusId == (byte)Enums.StatusType.ToCalculate
-                    || x.StatusId == (byte)Enums.StatusType.CalculatedPartial
-                    || x.StatusId == (byte)Enums.StatusType.Error);
+                    x.StatusId == (byte)StatusType.ToCalculate
+                    || x.StatusId == (byte)StatusType.CalculatedPartial
+                    || x.StatusId == (byte)StatusType.Error);
 
             if (!prices.Any())
                 return false;
@@ -63,7 +63,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     catch (Exception ex)
                     {
                         foreach (var price in result)
-                            price.StatusId = (byte)Enums.StatusType.Error;
+                            price.StatusId = (byte)StatusType.Error;
 
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine($"calculating prices for {priceGroup.Key} failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");

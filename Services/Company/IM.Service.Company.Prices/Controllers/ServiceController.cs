@@ -14,8 +14,8 @@ namespace IM.Service.Company.Prices.Controllers
         [HttpPost("update/")]
         public async Task<string> UpdatePrices()
         {
-            int updatedCount = await priceLoader.LoadPricesAsync();
-            return  $"updated prices count: {updatedCount}";
+            var loadedCount = await priceLoader.LoadPricesAsync();
+            return  $"loaded prices count: {loadedCount}";
         }
     }
 }

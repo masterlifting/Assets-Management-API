@@ -1,4 +1,15 @@
 using CommonServices.RepositoryService;
+
+using IM.Service.Company.Prices.Clients;
+using IM.Service.Company.Prices.DataAccess;
+using IM.Service.Company.Prices.DataAccess.Entities;
+using IM.Service.Company.Prices.DataAccess.Repository;
+using IM.Service.Company.Prices.Services.BackgroundServices;
+using IM.Service.Company.Prices.Services.DtoServices;
+using IM.Service.Company.Prices.Services.PriceServices;
+using IM.Service.Company.Prices.Services.RabbitServices;
+using IM.Service.Company.Prices.Settings;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -9,22 +20,12 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
-using IM.Service.Company.Prices.DataAccess;
-using IM.Service.Company.Prices.DataAccess.Entities;
-using IM.Service.Company.Prices.DataAccess.Repository;
-using IM.Service.Company.Prices.Services.BackgroundServices;
-using IM.Service.Company.Prices.Services.DtoServices;
-using IM.Service.Company.Prices.Services.HealthCheck;
-using IM.Service.Company.Prices.Services.MapServices;
-using IM.Service.Company.Prices.Services.PriceServices;
-using IM.Service.Company.Prices.Services.RabbitServices;
-using IM.Service.Company.Prices.Settings;
 
 namespace IM.Service.Company.Prices
 {
     public class Startup
     {
-        public IConfiguration Configuration { get; }
+        private IConfiguration Configuration { get; }
         public Startup(IConfiguration configuration) => Configuration = configuration;
 
         public void ConfigureServices(IServiceCollection services)
@@ -40,17 +41,12 @@ namespace IM.Service.Company.Prices
             services.AddControllers();
 
             services.AddHttpClient<TdAmeritradeClient>()
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(10, retryAttemp => TimeSpan.FromSeconds(Math.Pow(2, retryAttemp))))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(10)));
+                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
+                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
             services.AddHttpClient<MoexClient>()
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(10, retryAttemp => TimeSpan.FromSeconds(Math.Pow(2, retryAttemp))))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(10)));
+                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
+                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
-            services.AddHealthChecks()
-                .AddCheck<TdAmeritradeHealthCheck>("TdAmeritrade")
-                .AddCheck<MoexHealthCheck>("Moex");
-
-            services.AddTransient<PriceMapper>();
             services.AddScoped<PriceParser>();
             services.AddScoped<PriceLoader>();
             services.AddScoped<PriceDtoAggregator>();

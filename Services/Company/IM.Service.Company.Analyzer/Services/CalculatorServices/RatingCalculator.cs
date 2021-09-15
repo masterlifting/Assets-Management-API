@@ -28,12 +28,12 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             for (var i = 0; i < tickers.Length; i++)
             {
                 var priceResults = await context.Prices
-                    .Where(x => x.TickerName == tickers[i] && x.StatusId == (byte)Enums.StatusType.Calculated)
+                    .Where(x => x.TickerName == tickers[i] && x.StatusId == (byte)StatusType.Calculated)
                     .Select(x => x.Result)
                     .ToArrayAsync();
 
                 var reportResults = await context.Reports
-                    .Where(x => x.TickerName == tickers[i] && x.StatusId == (byte)Enums.StatusType.Calculated)
+                    .Where(x => x.TickerName == tickers[i] && x.StatusId == (byte)StatusType.Calculated)
                     .Select(x => x.Result)
                     .ToArrayAsync();
 

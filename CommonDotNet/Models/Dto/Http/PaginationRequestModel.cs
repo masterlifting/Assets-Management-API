@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace CommonServices.Models.Dto.Http
@@ -15,6 +16,6 @@ namespace CommonServices.Models.Dto.Http
         public int Limit { get; }
         public string QueryParams => $"page={Page}&limit={Limit}";
 
-        public T[] GetPaginatedResult<T>(T[]? data) where T : class => data is not null ? data.Skip((Page - 1) * Limit).Take(Limit).ToArray() : Array.Empty<T>();
+        public T[] GetPaginatedResult<T>(IEnumerable<T>? collection) where T : class => collection is not null ? collection.Skip((Page - 1) * Limit).Take(Limit).ToArray() : Array.Empty<T>();
     }
 }

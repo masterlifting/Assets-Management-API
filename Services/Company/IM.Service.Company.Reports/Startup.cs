@@ -1,4 +1,5 @@
 
+using System;
 using CommonServices.RepositoryService;
 using IM.Service.Company.Reports.Clients;
 using IM.Service.Company.Reports.DataAccess;
@@ -15,6 +16,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Polly;
 
 namespace IM.Service.Company.Reports
 {
@@ -35,7 +38,9 @@ namespace IM.Service.Company.Reports
 
             services.AddControllers();
 
-            services.AddHttpClient<InvestingClient>();
+            services.AddHttpClient<InvestingClient>()
+                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
+                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
             services.AddScoped<ReportParser>();
             services.AddScoped<ReportLoader>();

@@ -8,13 +8,9 @@ namespace IM.Service.Company.Prices.Models.Dto
         {
             SourceTypeId = sourceTypeId;
             SourceType = sourceType;
-
-            if (price is not null)
-            {
-                TickerName = price.TickerName;
-                Date = price.Date;
-                Value = price.Value;
-            }
+            TickerName = price.TickerName;
+            Date = price.Date;
+            Value = price.Value;
         }
     }
 }

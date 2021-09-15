@@ -8,14 +8,10 @@ namespace IM.Gateway.Recommendations.Services.RabbitServices
 {
     public class RabbitActionService : RabbitService
     {
-        public RabbitActionService(
-            RepositorySet<Ticker> tickerRepository,
-            RepositorySet<Report> reportRepository,
-            RepositorySet<Price> priceRepository) : base(
+        public RabbitActionService( RepositorySet<Ticker> tickerRepository) : base(
             new Dictionary<QueueExchanges, IRabbitActionService>
             {
                 { QueueExchanges.Crud, new RabbitCrudService(tickerRepository) },
-                { QueueExchanges.Calculator, new RabbitCalculatorService(reportRepository, priceRepository) }
             })
         { }
     }

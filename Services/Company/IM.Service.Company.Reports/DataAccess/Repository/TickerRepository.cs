@@ -1,6 +1,7 @@
 ﻿using CommonServices.RepositoryService;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using IM.Service.Company.Reports.DataAccess.Entities;
 using static IM.Service.Company.Reports.Enums;
 
@@ -11,49 +12,48 @@ namespace IM.Service.Company.Reports.DataAccess.Repository
         private readonly DatabaseContext context;
         public TickerRepository(DatabaseContext context) => this.context = context;
 
-        public bool TryCheckEntity(Ticker entity, out Ticker result)
+        public async Task<(bool trySuccess, Ticker? checkedEntity)> TryCheckEntityAsync(Ticker entity)
         {
-            result = entity;
+            if (await context.SourceTypes.FindAsync(entity.SourceTypeId) is null)
+                entity.SourceTypeId = (byte)ReportSourceTypes.Default;
 
-            if (context.SourceTypes.Find(entity.SourceTypeId) is null)
-                entity.SourceTypeId = (byte)Enums.ReportSourceTypes.Default;
-
-            return true;
+            return (true, entity);
         }
-        public bool TryCheckEntities(IEnumerable<Ticker> entities, out Ticker[] result)
+        public async Task<(bool isSuccess, Ticker[] checkedEntities)> TryCheckEntitiesAsync(IEnumerable<Ticker> entities)
         {
-            result = entities.ToArray();
+            var result = entities.ToArray();
 
             var correctNames = result.Join(context.SourceTypes, x => x.SourceTypeId, y => y.Id, (x, _) => x.Name).ToArray();
             var resultNames = result.Select(x => x.Name).ToArray();
 
             if (correctNames.Length == resultNames.Length)
-                return true;
+                return (true, result);
 
             var uncorrectedNames = resultNames.Except(correctNames);
             var uncorrectedEntities = result.Join(uncorrectedNames, x => x.Name, y => y, (x, _) => x).ToArray();
 
             foreach (var entity in uncorrectedEntities)
-                entity.SourceTypeId = (byte)Enums.ReportSourceTypes.Default;
+                entity.SourceTypeId = (byte)ReportSourceTypes.Default;
 
             result = result.Join(correctNames, x => x.Name, y => y, (x, _) => x).Union(uncorrectedEntities).ToArray();
 
-            return true;
+            return await Task.FromResult((true, result));
         }
-        public Ticker GetIntersectedContextEntity(Ticker entity) => context.Tickers.Find(entity.Name);
-        public IQueryable<Ticker> GetIntersectedContextEntities(IEnumerable<Ticker> entities)
+        public async Task<Ticker?> GetAlreadyEntityAsync(Ticker entity) => await context.Tickers.FindAsync(entity.Name);
+        public IQueryable<Ticker> GetAlreadyEntitiesQuery(IEnumerable<Ticker> entities)
         {
             var names = entities.Select(y => y.Name).ToArray();
             return context.Tickers.Where(x => names.Contains(x.Name));
         }
-        public bool UpdateEntity(Ticker oldResult, Ticker newResult)
+        public bool IsUpdate(Ticker contextEntity, Ticker newEntity)
         {
-            var isCompare = (oldResult.Name == newResult.Name);
+            var isCompare = (contextEntity.Name == newEntity.Name);
 
+            // ReSharper disable once InvertIf
             if (isCompare)
             {
-                oldResult.SourceTypeId = newResult.SourceTypeId;
-                oldResult.SourceValue = newResult.SourceValue;
+                contextEntity.SourceTypeId = newEntity.SourceTypeId;
+                contextEntity.SourceValue = newEntity.SourceValue;
             }
 
             return isCompare;

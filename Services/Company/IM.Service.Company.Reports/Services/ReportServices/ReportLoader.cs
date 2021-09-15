@@ -55,6 +55,7 @@ namespace IM.Service.Company.Reports.Services.ReportServices
             {
                 var lastReport = await GetLastReportAsync(ticker);
 
+                // ReSharper disable once InvertIf
                 if (IsMissingLastQuarter(lastReport.Year, lastReport.Quarter))
                 {
                     var loadedReports = await parser.GetReportsAsync(ticker);

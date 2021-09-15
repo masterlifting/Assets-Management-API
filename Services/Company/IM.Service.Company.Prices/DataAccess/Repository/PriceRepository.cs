@@ -1,7 +1,9 @@
 ﻿using CommonServices.RepositoryService;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using IM.Service.Company.Prices.DataAccess.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Company.Prices.DataAccess.Repository
 {
@@ -10,35 +12,34 @@ namespace IM.Service.Company.Prices.DataAccess.Repository
         private readonly DatabaseContext context;
         public PriceRepository(DatabaseContext context) => this.context = context;
 
-        public bool TryCheckEntity(Price entity, out Price result)
+        public async Task<(bool trySuccess, Price? checkedEntity)>TryCheckEntityAsync(Price entity) =>
+            (await context.Tickers.AnyAsync(x => x.Name.Equals(entity.TickerName)), entity);
+        public async Task<(bool isSuccess, Price[] checkedEntities)>TryCheckEntitiesAsync(IEnumerable<Price> entities)
         {
-            result = entity;
-            return entity is not null && context.Tickers.Any(x => x.Name.Equals(entity.TickerName));
-        }
-        public bool TryCheckEntities(IEnumerable<Price> entities, out Price[] result)
-        {
-            result = entities
+            var result = entities.ToArray();
+
+            result = result
                 .GroupBy(y => (y.TickerName, y.Date))
                 .Select(x => x.First())
                 .ToArray();
 
             var tickers = result.Select(y => y.TickerName).Distinct().ToArray();
-            var count = context.Tickers.Count(x => tickers.Contains(x.Name));
+            var count = await context.Tickers.CountAsync(x => tickers.Contains(x.Name));
 
-            return tickers.Length == count;
+            return (tickers.Length == count, result);
         }
-        public Price GetIntersectedContextEntity(Price entity) => context.Prices.Find(entity.TickerName, entity.Date);
-        public IQueryable<Price> GetIntersectedContextEntities(IEnumerable<Price> entities)
+        public async Task<Price?>GetAlreadyEntityAsync(Price entity) => await context.Prices.FindAsync(entity.TickerName, entity.Date);
+        public IQueryable<Price> GetAlreadyEntitiesQuery(IEnumerable<Price> entities)
         {
             var tickers = entities.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
             return context.Prices.Where(x => tickers.Contains(x.TickerName));
         }
-        public bool UpdateEntity(Price oldResult, Price newResult)
+        public bool IsUpdate(Price contextEntity, Price newEntity)
         {
-            var isCompare = (oldResult.TickerName, oldResult.Date) == (newResult.TickerName, newResult.Date);
+            var isCompare = (contextEntity.TickerName, contextEntity.Date) == (newEntity.TickerName, newEntity.Date);
 
             if (isCompare)
-                oldResult.Value = newResult.Value;
+                contextEntity.Value = newEntity.Value;
 
             return isCompare;
         }

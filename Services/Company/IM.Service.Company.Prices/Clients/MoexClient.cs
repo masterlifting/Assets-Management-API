@@ -8,7 +8,7 @@ using IM.Service.Company.Prices.Models.Client.MoexModels;
 using IM.Service.Company.Prices.Settings;
 using IM.Service.Company.Prices.Settings.Client;
 
-namespace IM.Service.Company.Prices
+namespace IM.Service.Company.Prices.Clients
 {
     public class MoexClient : IDisposable
     {

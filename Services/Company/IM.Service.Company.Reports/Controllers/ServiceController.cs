@@ -15,7 +15,7 @@ namespace IM.Service.Company.Reports.Controllers
         public async Task<string> UpdateReports()
         {
             var loadedReports = await reportUpdater.LoadReportsAsync();
-            return $"updated reports count: {loadedReports.Length}";
+            return $"loaded reports count: {loadedReports.Length}";
         }
     }
 }

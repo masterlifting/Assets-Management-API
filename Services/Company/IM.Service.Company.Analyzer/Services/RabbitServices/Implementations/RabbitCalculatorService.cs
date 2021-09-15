@@ -1,4 +1,4 @@
-﻿using CommonServices.Models.Dto.AnalyzerService;
+﻿using CommonServices.Models.Dto.CompanyAnalyzer;
 using CommonServices.RabbitServices;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +19,7 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
             this.priceRepository = priceRepository;
         }
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data) =>
-            action == QueueActions.Calculate && entity switch
+            action == QueueActions.GetLogic && entity switch
             {
                 QueueEntities.Report => await SetReportToCalculateAsync(data),
                 QueueEntities.Price => await SetPriceToCalculateAsync(data),
@@ -34,7 +34,7 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
                 Year = report.Year,
                 Quarter = report.Quarter,
                 SourceType = report.SourceType,
-                StatusId = (byte)Enums.StatusType.ToCalculate
+                StatusId = (byte)StatusType.ToCalculate
             }, report.TickerName)).Any();
 
         private async Task<bool> SetPriceToCalculateAsync(string data) => 
@@ -44,7 +44,7 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
                 TickerName = price!.TickerName,
                 Date = price.Date,
                 SourceType = price.SourceType,
-                StatusId = (byte)Enums.StatusType.ToCalculate
+                StatusId = (byte)StatusType.ToCalculate
             }, price.TickerName)).Any();
     }
 }

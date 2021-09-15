@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace CommonServices.Models.Dto.AnalyzerService
+namespace CommonServices.Models.Dto.CompanyAnalyzer
 {
-    public class AnalyzerCoefficientDto
+    public abstract class AnalyzerCoefficientDto
     {
         public string Ticker { get; set; } = null!;
         public string ReportSourceType { get; set; } = null!;

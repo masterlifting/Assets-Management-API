@@ -1,4 +1,4 @@
-﻿using CommonServices.Models.Dto.AnalyzerService;
+﻿using CommonServices.Models.Dto.CompanyAnalyzer;
 using CommonServices.RabbitServices;
 using System;
 using System.Text.Json;
@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using IM.Service.Company.Reports.DataAccess.Entities;
 using IM.Service.Company.Reports.Services.ReportServices;
 using static IM.Service.Company.Reports.Enums;
+// ReSharper disable InvertIf
 
 namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
 {
@@ -22,19 +23,21 @@ namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
 
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data)
         {
-            if (entity == QueueEntities.Report && action == QueueActions.Download && RabbitHelper.TrySerialize(data, out Ticker ticker) && ticker is not null)
+            if (entity == QueueEntities.Report
+                && action == QueueActions.GetData
+                && RabbitHelper.TrySerialize(data, out Ticker? ticker))
             {
-                var reports = await reportLoader.LoadReportsAsync(ticker);
+                var reports = await reportLoader.LoadReportsAsync(ticker!);
                 if (reports.Length > 0)
                 {
-                    var sourceType = Enum.Parse<Enums.ReportSourceTypes>(ticker.SourceTypeId.ToString(), true).ToString();
-                    var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Calculator);
+                    var sourceType = Enum.Parse<ReportSourceTypes>(ticker!.SourceTypeId.ToString(), true).ToString();
+                    var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
 
                     foreach (var report in reports)
                         publisher.PublishTask(
-                            QueueNames.CompaniesAnalyzer
+                            QueueNames.CompanyAnalyzer
                             , QueueEntities.Report
-                            , QueueActions.Calculate
+                            , QueueActions.GetLogic
                             , JsonSerializer.Serialize(new AnalyzerReportDto
                             {
                                 TickerName = ticker.Name,
@@ -44,8 +47,6 @@ namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
                             }));
                 }
             }
-            else
-                Console.WriteLine(nameof(RabbitReportService) + " error!");
 
             return true;
         }

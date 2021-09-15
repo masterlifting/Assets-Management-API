@@ -34,7 +34,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                             Date = prices[i].Date,
                             SourceType = prices[i].SourceType,
                             Result = comparedSample[j].Value,
-                            StatusId = (byte)Enums.StatusType.Calculated
+                            StatusId = (byte)StatusType.Calculated
                         };
 
                         break;
@@ -45,7 +45,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         private void SetData()
         {
             for (uint i = 0; i < prices.Length; i++)
-                valueCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = prices[i].Value };
+                valueCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = prices[i].Value };
         }
     }
 }

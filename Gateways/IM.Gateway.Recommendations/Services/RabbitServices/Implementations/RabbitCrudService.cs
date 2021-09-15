@@ -1,4 +1,4 @@
-﻿using CommonServices.Models.Dto.AnalyzerService;
+﻿using CommonServices.Models.Dto.CompanyAnalyzer;
 using CommonServices.RabbitServices;
 using System.Linq;
 using System.Threading.Tasks;

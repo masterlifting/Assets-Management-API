@@ -11,6 +11,6 @@ namespace CommonServices.RabbitServices.Configuration
         }
         public string EntityNameString { get; }
         public QueueEntities EntityNameEnum { get; }
-        public QueueActions[] Actions { get; set; } = Array.Empty<QueueActions>();
+        public QueueActions[] Actions { get; init; } = Array.Empty<QueueActions>();
     }
 }

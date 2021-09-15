@@ -15,7 +15,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "IM.Gateways.Brokers": {
+    "IM.Gateway.Brokers": {
       "commandName": "Project",
       "dotnetRunMessages": "true",
       // "applicationUrl": "https://localhost:10021;http://localhost:1002",

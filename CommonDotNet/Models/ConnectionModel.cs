@@ -1,6 +1,6 @@
 ﻿namespace CommonServices.Models
 {
-    public class ConnectionModel
+    public abstract class ConnectionModel
     {
         public string Server { get; set; } = null!;
         public string UserId { get; set; } = null!;

@@ -21,9 +21,9 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
         {
             Report[] result = Array.Empty<Report>();
 
-            if (ticker?.SourceValue is null)
+            if (ticker.SourceValue is null)
             {
-                Console.WriteLine($"Отсутствует источник для поиска отчетов по тикеру: '{ticker?.Name}'");
+                Console.WriteLine($"report source for '{ticker.Name}' not found!");
                 return result;
             }
 
@@ -41,14 +41,13 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
             return result;
         }
 
-        private async Task<HtmlDocument[]> LoadSiteAsync(string sourceValue) => await Task.WhenAll(new Task<HtmlDocument>[]
-            {
-                client.GetMainPageAsync(sourceValue),
-                client.GetFinancialPageAsync(sourceValue),
-                client.GetBalancePageAsync(sourceValue),
-                client.GetDividendPageAsync(sourceValue)
-            });
-        private static Report[] GetReports(HtmlDocument[] site, string tickerName)
+        private async Task<HtmlDocument[]> LoadSiteAsync(string sourceValue) =>
+            await Task.WhenAll(
+            client.GetMainPageAsync(sourceValue),
+            client.GetFinancialPageAsync(sourceValue),
+            client.GetBalancePageAsync(sourceValue),
+            client.GetDividendPageAsync(sourceValue));
+        private static Report[] GetReports(IReadOnlyList<HtmlDocument> site, string tickerName)
         {
             var result = new Report[4];
             var culture = CultureInfo.CreateSpecificCulture("ru-RU");
@@ -58,7 +57,7 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
             var balancePage = new BalancePage(site[2]);
             var dividendPage = new DividendPage(site[3], financialPage.Dates.ToArray());
 
-            for (int i = 0; i < 4; i++)
+            for (var i = 0; i < 4; i++)
                 result[i] = new()
                 {
                     TickerName = tickerName,
@@ -81,39 +80,40 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
         }
     }
 
-    class MainPage
+    internal class MainPage
     {
         private readonly HtmlDocument page;
-        public MainPage(HtmlDocument page)
+        public MainPage(HtmlDocument? page)
         {
-            this.page = page;
+            this.page = page ?? throw new NullReferenceException("loaded page is null");
             StockVolume = GetStockVolume();
         }
 
         public long StockVolume { get; }
 
-        long GetStockVolume()
+        private long GetStockVolume()
         {
             var stockVolumeData = page.DocumentNode.SelectNodes("//dt").FirstOrDefault(x => x.InnerText == "Акции в обращении")?.NextSibling?.InnerText;
-            return stockVolumeData is not null && long.TryParse(stockVolumeData.Replace(".", ""), out long result)
+            return stockVolumeData is not null && long.TryParse(stockVolumeData.Replace(".", ""), out var result)
                 ? result
-                : throw new NotSupportedException("stock volume failed parsing");
+                : throw new NotSupportedException("parsing is stock volume failed");
         }
     }
-    class FinancialPage
+    internal class FinancialPage
     {
         private readonly HtmlDocument page;
-        public FinancialPage(HtmlDocument page, CultureInfo culture)
+        public FinancialPage(HtmlDocument? page, IFormatProvider culture)
         {
-            this.page = page;
+            this.page = page ?? throw new NullReferenceException("loaded page is null");
+
             Dates = GetDates(culture);
-            Revenues = GetFinantialData(0, "Общий доход");
-            ProfitsGross = GetFinantialData(0, "Валовая прибыль");
-            ProfitsNet = GetFinantialData(0, "Чистая прибыль");
-            Assets = GetFinantialData(1, "Итого активы");
-            Obligations = GetFinantialData(1, "Итого обязательства");
-            ShareCapitals = GetFinantialData(1, "Итого акционерный капитал");
-            CashFlows = GetFinantialData(2, "Чистое изменение денежных средств");
+            Revenues = GetFinancialData(0, "Общий доход");
+            ProfitsGross = GetFinancialData(0, "Валовая прибыль");
+            ProfitsNet = GetFinancialData(0, "Чистая прибыль");
+            Assets = GetFinancialData(1, "Итого активы");
+            Obligations = GetFinancialData(1, "Итого обязательства");
+            ShareCapitals = GetFinancialData(1, "Итого акционерный капитал");
+            CashFlows = GetFinancialData(2, "Чистое изменение денежных средств");
         }
 
         public List<DateTime> Dates { get; }
@@ -125,45 +125,66 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
         public decimal?[] ShareCapitals { get; }
         public decimal?[] CashFlows { get; }
 
-        decimal?[] GetFinantialData(int tableIndex, string pattern)
+        private decimal?[] GetFinancialData(int tableIndex, string pattern)
         {
+            var error = $"financial data for '{pattern}' is null!";
+
             var result = new decimal?[] { null, null, null, null };
+            var prepareData = page
+                .DocumentNode
+                .SelectNodes("//table[@class='genTbl openTbl companyFinancialSummaryTbl']/tbody")[tableIndex]
+                ?.ChildNodes;
 
-            var finantialData = page.DocumentNode.SelectNodes("//table[@class='genTbl openTbl companyFinancialSummaryTbl']/tbody")[tableIndex]
-            .ChildNodes.Where(x => x.Name == "tr" && x.InnerText.IndexOf(pattern, StringComparison.CurrentCultureIgnoreCase) > 0).FirstOrDefault();
+            if (prepareData is null)
+                throw new NotSupportedException(error);
 
-            if (finantialData is not null)
-            {
-                var finantialValueData = finantialData.ChildNodes.Where(x => x.Name == "td").Skip(1).Select(x => x.InnerText).ToArray();
-                for (int i = 0; i < finantialValueData.Length; i++)
-                    if (decimal.TryParse(finantialValueData[i], out decimal value))
-                        result[i] = value;
-            }
+            var financialData = prepareData.FirstOrDefault(x => x.Name == "tr" && x.InnerText.IndexOf(pattern, StringComparison.CurrentCultureIgnoreCase) > 0);
+
+            if (financialData is null)
+                throw new NotSupportedException(error);
+
+            var values = financialData
+                .ChildNodes
+                .Where(x => x.Name == "td")
+                .Skip(1)
+                .Select(x => x.InnerText)
+                .ToArray();
+
+            if (values is null)
+                throw new NotSupportedException(error);
+
+            for (var i = 0; i < values.Length; i++)
+                if (decimal.TryParse(values[i], out var value))
+                    result[i] = value;
 
             return result;
         }
-        List<DateTime> GetDates(CultureInfo culture)
+        private List<DateTime> GetDates(IFormatProvider culture)
         {
             var result = new List<DateTime>(4);
+            var error = "financial page date parsing failed!";
 
             var dateNode = page.DocumentNode.SelectNodes("//th[@class='arial_11 noBold title right period']").FirstOrDefault();
-            if (dateNode is not null)
-            {
-                var dates = dateNode.ParentNode.InnerText.Split("\n");
-                for (int i = 0; i < dates.Length; i++)
-                    if (DateTime.TryParse(dates[i], culture, DateTimeStyles.AssumeLocal, out DateTime date))
-                        result.Add(date);
-            }
 
-            return result.Count < 4 ? throw new NotSupportedException("dates failed parsing") : result;
+            if (dateNode is null)
+                throw new NotSupportedException(error);
+
+            var dates = dateNode.ParentNode.InnerText.Split("\n");
+
+            foreach (var d in dates)
+                if (DateTime.TryParse(d, culture, DateTimeStyles.AssumeLocal, out var date))
+                    result.Add(date);
+
+            return result.Count < 4 ? throw new NotSupportedException(error) : result;
         }
     }
-    class BalancePage
+    internal class BalancePage
     {
         private readonly HtmlDocument page;
-        public BalancePage(HtmlDocument page)
+        public BalancePage(HtmlDocument? page)
         {
-            this.page = page;
+            this.page = page ?? throw new NullReferenceException("loaded page is null");
+
             Turnovers = GetBalanceData("Итого оборотные активы");
             LongDebts = GetBalanceData("Общая долгосрочная задолженность по кредитам и займам");
         }
@@ -171,105 +192,126 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
         public decimal?[] Turnovers { get; }
         public decimal?[] LongDebts { get; }
 
-        decimal?[] GetBalanceData(string pattern)
+        private decimal?[] GetBalanceData(string pattern)
         {
+            var error = $"financial data for '{pattern}' is null!";
             var result = new decimal?[] { null, null, null, null };
 
-            var balanceData = page.DocumentNode
+            var prepareData = page.DocumentNode
                 .SelectNodes("//span[@class]")
-                .Where(x => x.InnerText == pattern)
-                .FirstOrDefault()
+                .FirstOrDefault(x => x.InnerText == pattern);
+
+            if (prepareData is null)
+                throw new NotSupportedException(error);
+
+            var balanceData = prepareData
                 .ParentNode?.ParentNode?.ChildNodes
                 .Where(x => x.Name == "td")
                 .Skip(1)
                 .Select(x => x.InnerText)
                 .ToArray();
 
-            if (balanceData is not null)
-                for (int i = 0; i < balanceData.Length; i++)
-                    if (decimal.TryParse(balanceData[i], out decimal value))
-                        result[i] = value;
+            if (balanceData is null)
+                throw new NotSupportedException(error);
+
+            for (var i = 0; i < balanceData.Length; i++)
+                if (decimal.TryParse(balanceData[i], out var value))
+                    result[i] = value;
 
             return result;
         }
     }
-    class DividendPage
+    internal class DividendPage
     {
         private readonly HtmlDocument page;
-        public DividendPage(HtmlDocument page, DateTime[] dates)
+        public DividendPage(HtmlDocument? page, IReadOnlyList<DateTime> dates)
         {
-            this.page = page;
+            this.page = page ?? throw new NullReferenceException("loaded page is null");
+
             Dividends = GetDividends(dates);
         }
         public decimal?[] Dividends { get; }
-        decimal?[] GetDividends(DateTime[] dates)
+
+        private decimal?[] GetDividends(IReadOnlyList<DateTime> dates)
         {
             var result = new decimal?[] { null, null, null, null };
 
-            var dividendData = page.DocumentNode.SelectNodes("//th[@class]").Where(x => x.InnerText == "Экс-дивиденд").FirstOrDefault();
+            var dividendData = page
+                .DocumentNode
+                .SelectNodes("//th[@class]")
+                .FirstOrDefault(x => x.InnerText == "Экс-дивиденд");
 
-            if (dividendData is not null)
+            if (dividendData is null)
+                return result;
+
+            var dividendDatesData = dividendData
+                .ParentNode
+                .ParentNode
+                .NextSibling
+                .NextSibling
+                .ChildNodes
+                .Where(x => x.Name == "tr")
+                .Select(x => x.ChildNodes.Where(y => y.Name == "td")
+                .Select(z => z.InnerText))
+                .Select(x => x.FirstOrDefault())
+                .ToArray();
+
+            var dividendDates = new List<DateTime>(dividendDatesData.Length);
+
+            foreach (var item in dividendDatesData)
+                if (DateTime.TryParse(item, out var date))
+                    dividendDates.Add(date);
+
+            if (!dividendDates.Any())
+                return result;
+
+            var dividendValueData = dividendData
+                .ParentNode?
+                .ParentNode?
+                .NextSibling?
+                .NextSibling?
+                .ChildNodes
+                .Where(x => x.Name == "tr")
+                .Select(x => x.ChildNodes.Where(y => y.Name == "td")
+                .Select(z => z.InnerText))
+                .Select(x => x.Skip(1)
+                .FirstOrDefault())
+                .ToArray();
+
+            if (dividendValueData is null) 
+                return result;
+
+            for (var i = 0; i < dates.Count; i++)
             {
-                var dividendDatesData = dividendData.ParentNode.ParentNode.NextSibling.NextSibling.ChildNodes.Where(x => x.Name == "tr")
-                    .Select(x => x.ChildNodes.Where(y => y.Name == "td")
-                    .Select(z => z.InnerText))
-                    .Select(x => x.FirstOrDefault());
+                var reportYear = dates[i].Year;
+                var reportQuarter = CommonHelper.GetQuarter(dates[i].Month);
 
-                if (dividendDatesData is not null)
+                for (var j = 0; j < dividendDates.Count; j++)
                 {
-                    var dividendDates = new List<DateTime>(dividendDatesData.Count());
+                    var dividendYear = dividendDates[j].Year;
+                    var dividendQuarter = CommonHelper.GetQuarter(dividendDates[j].Month);
 
-                    foreach (var item in dividendDatesData)
-                        if (DateTime.TryParse(item, out DateTime date))
-                            dividendDates.Add(date);
+                    if (reportYear != dividendYear || reportQuarter != dividendQuarter) 
+                        continue;
+                    
+                    var dividendValue = dividendValueData[j]?.Replace(".", "", StringComparison.CurrentCultureIgnoreCase);
 
-                    if (dividendDates.Any())
+                    if (!decimal.TryParse(dividendValue, out var data)) 
+                        continue;
+                    
+                    if (j > 0)
                     {
-                        var dividendValueData = dividendData.ParentNode?.ParentNode?.NextSibling?.NextSibling?.ChildNodes.Where(x => x.Name == "tr")
-                            .Select(x => x.ChildNodes.Where(y => y.Name == "td")
-                            .Select(z => z.InnerText))
-                            .Select(x => x.Skip(1)
-                            .FirstOrDefault());
-
-                        if (dividendValueData is not null)
+                        var previousDividendYear = dividendDates[j - 1].Year;
+                        var previousDividendQuarter = CommonHelper.GetQuarter(dividendDates[j - 1].Month);
+                        if (dividendYear == previousDividendYear && dividendQuarter == previousDividendQuarter)
                         {
-                            var dividendValues = dividendValueData.ToArray();
-
-                            for (int i = 0; i < dates.Length; i++)
-                            {
-                                var reportYear = dates[i].Year;
-                                var reportQuarter = CommonHelper.GetQuarter(dates[i].Month);
-
-                                for (int j = 0; j < dividendDates.Count; j++)
-                                {
-                                    var dividendYear = dividendDates[j].Year;
-                                    var dividendQuarter = CommonHelper.GetQuarter(dividendDates[j].Month);
-
-                                    if (reportYear == dividendYear && reportQuarter == dividendQuarter)
-                                    {
-                                        var dividendValue = dividendValues[j].Replace(".", "", StringComparison.CurrentCultureIgnoreCase);
-
-                                        if (decimal.TryParse(dividendValue, out decimal data))
-                                        {
-                                            if (j > 0)
-                                            {
-                                                var previousDividendYear = dividendDates[j - 1].Year;
-                                                var previousDividendQuarter = CommonHelper.GetQuarter(dividendDates[j - 1].Month);
-                                                if (dividendYear == previousDividendYear && dividendQuarter == previousDividendQuarter)
-                                                {
-                                                    var dividendPreviousValue = dividendValues[j - 1].Replace(".", "", StringComparison.CurrentCultureIgnoreCase);
-                                                    if (decimal.TryParse(dividendPreviousValue, out decimal previousData))
-                                                        data += previousData;
-                                                }
-                                            }
-
-                                            result[i] = data;
-                                        }
-                                    }
-                                }
-                            }
+                            var dividendPreviousValue = dividendValueData[j - 1]?.Replace(".", "", StringComparison.CurrentCultureIgnoreCase);
+                            if (decimal.TryParse(dividendPreviousValue, out var previousData))
+                                data += previousData;
                         }
                     }
+
+                    result[i] = data;
                 }
             }
 

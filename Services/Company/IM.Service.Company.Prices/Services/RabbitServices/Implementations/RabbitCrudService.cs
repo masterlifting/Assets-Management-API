@@ -1,10 +1,11 @@
-﻿using CommonServices.Models.Dto.CompaniesPricesService;
+﻿using CommonServices.Models.Dto.CompanyPrices;
 using CommonServices.RabbitServices;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using IM.Service.Company.Prices.DataAccess.Entities;
 using IM.Service.Company.Prices.DataAccess.Repository;
+// ReSharper disable InvertIf
 
 namespace IM.Service.Company.Prices.Services.RabbitServices.Implementations
 {
@@ -27,19 +28,16 @@ namespace IM.Service.Company.Prices.Services.RabbitServices.Implementations
 
         private async Task<bool> GetTickerResultAsync(QueueActions action, string data)
         {
-            if (repository is null)
-                return false;
-
             if (action == QueueActions.Delete)
                 return !(await repository.DeleteAsync(data, data)).Any();
 
-            if (!RabbitHelper.TrySerialize(data, out CompaniesPricesTickerDto ticker) && ticker is null)
+            if (!RabbitHelper.TrySerialize(data, out CompaniesPricesTickerDto? ticker))
                 return false;
 
-            if (await GetActionAsync(repository, action, new Ticker(ticker), ticker.Name))
+            if (await GetActionAsync(repository, action, new Ticker(ticker!), ticker!.Name))
             {
-                var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Loader);
-                publisher.PublishTask(QueueNames.CompaniesPrices, QueueEntities.Price, QueueActions.Download, JsonSerializer.Serialize(ticker));
+                var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Data);
+                publisher.PublishTask(QueueNames.CompanyPrices, QueueEntities.Price, QueueActions.GetData, JsonSerializer.Serialize(ticker));
 
                 return true;
             }
@@ -47,6 +45,7 @@ namespace IM.Service.Company.Prices.Services.RabbitServices.Implementations
             return false;
         }
 
+        // ReSharper disable once SuggestBaseTypeForParameter
         private static async Task<bool> GetActionAsync<T>(RepositorySet<T> repository, QueueActions action, T data, string value) where T : class => action switch
         {
             QueueActions.Create => !(await repository.CreateAsync(data, value)).errors.Any(),

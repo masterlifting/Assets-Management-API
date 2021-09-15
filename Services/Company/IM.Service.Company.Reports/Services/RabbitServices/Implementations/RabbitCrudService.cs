@@ -1,10 +1,11 @@
-﻿using CommonServices.Models.Dto.CompaniesReportsService;
+﻿using CommonServices.Models.Dto.CompanyReports;
 using CommonServices.RabbitServices;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using IM.Service.Company.Reports.DataAccess.Entities;
 using IM.Service.Company.Reports.DataAccess.Repository;
+// ReSharper disable InvertIf
 
 namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
 {
@@ -30,19 +31,20 @@ namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
             if (action == QueueActions.Delete)
                 return !(await repository.DeleteAsync(data, data)).Any();
 
-            if (!RabbitHelper.TrySerialize(data, out CompaniesReportsTickerDto ticker) && ticker is null)
+            if (!RabbitHelper.TrySerialize(data, out CompaniesReportsTickerDto? ticker))
                 return false;
 
 
-            if (await GetActionAsync(repository, action, new Ticker(ticker), ticker.Name))
+            if (await GetActionAsync(repository, action, new Ticker(ticker!), ticker!.Name))
             {
-                var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Loader);
-                publisher.PublishTask(QueueNames.CompaniesReports, QueueEntities.Report, QueueActions.Download, JsonSerializer.Serialize(ticker));
+                var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Data);
+                publisher.PublishTask(QueueNames.CompanyReports, QueueEntities.Report, QueueActions.GetData, JsonSerializer.Serialize(ticker));
                 return true;
             }
 
             return false;
         }
+        // ReSharper disable once SuggestBaseTypeForParameter
         private static async Task<bool> GetActionAsync<T>(RepositorySet<T> repository, QueueActions action, T data, string value) where T : class => action switch
         {
             QueueActions.Create => !(await repository.CreateAsync(data, value)).errors.Any(),

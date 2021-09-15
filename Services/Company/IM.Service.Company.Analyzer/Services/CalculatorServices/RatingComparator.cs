@@ -48,7 +48,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 
             return results;
         }
-        private static decimal ComputeDeviationPercent(decimal previousValue, decimal nextValue, Enums.CompareType compareType) =>
+        private static decimal ComputeDeviationPercent(decimal previousValue, decimal nextValue, CompareType compareType) =>
             (nextValue - previousValue) / Math.Abs(previousValue) * (short)compareType;
     }
 }

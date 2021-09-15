@@ -1,8 +1,8 @@
 ﻿namespace IM.Service.Company.Prices.Settings.Client
 {
-    public class ClientSettings
+    public abstract class ClientSettings
     {
-        public HostModel Moex { get; set; }
-        public HostModel TdAmeritrade { get; set; }
+        public HostModel Moex { get; set; } = null!;
+        public HostModel TdAmeritrade { get; set; } = null!;
     }
 }

@@ -15,7 +15,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "IM.Gateways.Companies": {
+    "IM.Gateway.Companies": {
       "commandName": "Project",
       "dotnetRunMessages": "true",
       // "applicationUrl": "https://localhost:10011;http://localhost:1001",

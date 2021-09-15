@@ -15,7 +15,7 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices
             new Dictionary<QueueExchanges, IRabbitActionService>
             {
                 { QueueExchanges.Crud, new RabbitCrudService(tickerRepository) },
-                { QueueExchanges.Calculator, new RabbitCalculatorService(reportRepository, priceRepository) }
+                { QueueExchanges.Logic, new RabbitCalculatorService(reportRepository, priceRepository) }
             })
         { }
     }

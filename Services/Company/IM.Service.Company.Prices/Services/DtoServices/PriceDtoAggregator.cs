@@ -1,27 +1,29 @@
 ﻿using CommonServices.Models.Dto;
 using CommonServices.Models.Dto.Http;
-using Microsoft.EntityFrameworkCore;
-
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Company.Prices.DataAccess;
+using System.Linq;
+using IM.Service.Company.Prices.DataAccess.Entities;
+using IM.Service.Company.Prices.DataAccess.Repository;
+using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Company.Prices.Services.DtoServices
 {
     public class PriceDtoAggregator
     {
-        private readonly DatabaseContext context;
-        public PriceDtoAggregator(DatabaseContext context) => this.context = context;
+        private readonly RepositorySet<Price> repository;
+        public PriceDtoAggregator(RepositorySet<Price> repository) => this.repository = repository;
 
         public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(FilterRequestModel filter, PaginationRequestModel pagination)
         {
-            var prices = context.Prices.Where(x => x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month));
-            
+            var prices = repository.QueryFindResult(x => x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month));
+            var tickers = repository.GetDbSetBy<Ticker>();
+            var sourceTypes = repository.GetDbSetBy<SourceType>();
+
             var queryResult = await prices
                 .OrderBy(x => x.Date)
-                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
-                .Join(context.SourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) =>
+                .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
+                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) =>
                     new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
                 .ToArrayAsync();
 
@@ -30,17 +32,12 @@ namespace IM.Service.Company.Prices.Services.DtoServices
                 .Select(x => x.Last())
                 .ToArray();
 
-            var result = groupedResult
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit)
-                .ToArray();
-
             return new()
             {
                 Errors = Array.Empty<string>(),
                 Data = new()
                 {
-                    Items = result,
+                    Items = pagination.GetPaginatedResult(groupedResult),
                     Count = groupedResult.Length
                 }
             };
@@ -49,7 +46,7 @@ namespace IM.Service.Company.Prices.Services.DtoServices
         {
             var errors = Array.Empty<string>();
             var tickerName = ticker.ToUpperInvariant();
-            var ctxTicker = await context.Tickers.FindAsync(tickerName);
+            var ctxTicker = await repository.GetDbSetBy<Ticker>().FindAsync(tickerName);
 
             if (ctxTicker is null)
                 return new()
@@ -57,16 +54,16 @@ namespace IM.Service.Company.Prices.Services.DtoServices
                     Errors = new[] { "Ticker not found" }
                 };
 
-            var prices = context.Prices.Where(x => x.TickerName == ctxTicker.Name && (x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month)));
-            
-            var count = await prices.CountAsync();
+            var filteredPrices = repository.QueryFindResult(x => x.TickerName == ctxTicker.Name && (x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month)));
+            var count = await filteredPrices.CountAsync();
 
-            var result = await prices
-                .OrderBy(x => x.Date)
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit)
-                .Join(context.Tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
-                .Join(context.SourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => 
+            var tickers = repository.GetDbSetBy<Ticker>();
+            var sourceTypes = repository.GetDbSetBy<SourceType>();
+            var paginatedReports = repository.QueryPaginatedResult(filteredPrices, pagination, x => x.Date);
+
+            var result = await paginatedReports
+                .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
+                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) =>
                     new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
                 .ToArrayAsync();
 

@@ -11,7 +11,7 @@ namespace CommonServices.RabbitServices
             {
                 Queues = new[]
                 {
-                    new Queue(QueueNames.CompaniesReports)
+                    new Queue(QueueNames.CompanyReports)
                     {
                         Params = new[]
                         {
@@ -26,7 +26,7 @@ namespace CommonServices.RabbitServices
                             }
                         }
                     },
-                    new Queue(QueueNames.CompaniesPrices)
+                    new Queue(QueueNames.CompanyPrices)
                     {
                         Params = new[]
                         {
@@ -41,7 +41,7 @@ namespace CommonServices.RabbitServices
                             }
                         }
                     },
-                    new Queue(QueueNames.CompaniesAnalyzer)
+                    new Queue(QueueNames.CompanyAnalyzer)
                     {
                         Params = new[]
                         {
@@ -58,11 +58,11 @@ namespace CommonServices.RabbitServices
                     }
                 }
             },
-            new QueueExchange (QueueExchanges.Loader)
+            new QueueExchange (QueueExchanges.Data)
             {
                 Queues = new[]
                 {
-                    new Queue(QueueNames.CompaniesReports)
+                    new Queue(QueueNames.CompanyReports)
                     {
                         Params = new[]
                         {
@@ -70,12 +70,12 @@ namespace CommonServices.RabbitServices
                             {
                                 Actions = new[]
                                 {
-                                    QueueActions.Download
+                                    QueueActions.GetData
                                 }
                             }
                         }
                     },
-                    new Queue(QueueNames.CompaniesPrices)
+                    new Queue(QueueNames.CompanyPrices)
                     {
                         Params = new[]
                         {
@@ -83,18 +83,18 @@ namespace CommonServices.RabbitServices
                             {
                                 Actions = new[]
                                 {
-                                    QueueActions.Download
+                                    QueueActions.GetData
                                 }
                             }
                         }
                     }
                 }
             },
-            new QueueExchange (QueueExchanges.Calculator)
+            new QueueExchange (QueueExchanges.Logic)
             {
                 Queues = new[]
                 {
-                    new Queue(QueueNames.CompaniesAnalyzer)
+                    new Queue(QueueNames.CompanyAnalyzer)
                     {
                          Params = new[]
                         {
@@ -102,14 +102,14 @@ namespace CommonServices.RabbitServices
                             {
                                 Actions = new[]
                                 {
-                                    QueueActions.Calculate
+                                    QueueActions.GetLogic
                                 }
                             },
                             new QueueParam(QueueEntities.Report)
                             {
                                 Actions = new[]
                                 {
-                                    QueueActions.Calculate
+                                    QueueActions.GetLogic
                                 }
                             }
                         }
@@ -121,15 +121,17 @@ namespace CommonServices.RabbitServices
 
     public enum QueueNames
     {
-        CompaniesReports,
-        CompaniesPrices,
-        CompaniesAnalyzer,
+        CompanyReports,
+        CompanyPrices,
+        CompanyAnalyzer,
+        BrokerReports,
+        BrokerAggregator
     }
     public enum QueueExchanges
     {
         Crud,
-        Loader,
-        Calculator
+        Data,
+        Logic
     }
     public enum QueueEntities
     {
@@ -142,7 +144,7 @@ namespace CommonServices.RabbitServices
         Create,
         Update,
         Delete,
-        Download,
-        Calculate
+        GetData,
+        GetLogic
     }
 }

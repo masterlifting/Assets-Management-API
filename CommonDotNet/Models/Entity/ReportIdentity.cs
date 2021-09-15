@@ -2,8 +2,8 @@
 {
     public class ReportIdentity
     {
-        public string TickerName { get; set; } = null!;
-        public int Year { get; set; }
-        public byte Quarter { get; set; }
+        public string TickerName { get; init; } = null!;
+        public int Year { get; init; }
+        public byte Quarter { get; init; }
     }
 }

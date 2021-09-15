@@ -5,7 +5,7 @@ namespace IM.Service.Company.Prices.Settings
 {
     public class ServiceSettings
     {
-        public ClientSettings ClientSettings { get; set; }
-        public ConnectionStrings ConnectionStrings { get; set; }
+        public ClientSettings ClientSettings { get; set; } = null!;
+        public ConnectionStrings ConnectionStrings { get; set; } = null!;
     }
 }

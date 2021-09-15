@@ -1,8 +1,11 @@
 ﻿using CommonServices.RepositoryService;
-using System;
+
+using IM.Service.Company.Analyzer.DataAccess.Entities;
+
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
-using IM.Service.Company.Analyzer.DataAccess.Entities;
+using System.Threading.Tasks;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Repository
 {
@@ -11,34 +14,32 @@ namespace IM.Service.Company.Analyzer.DataAccess.Repository
         private readonly DatabaseContext context;
         public ReportRepository(DatabaseContext context) => this.context = context;
 
-        public bool TryCheckEntity(Report entity, out Report? result)
+        public async Task<(bool trySuccess, Report? checkedEntity)> TryCheckEntityAsync(Report entity) =>
+            (await context.Tickers.AnyAsync(x => x.Name.Equals(entity.TickerName)), entity);
+
+        public async Task<(bool isSuccess, Report[] checkedEntities)> TryCheckEntitiesAsync(IEnumerable<Report> entities)
         {
-            result = entity;
-            return context.Tickers.Any(x => x.Name.Equals(entity.TickerName));
-        }
-        public bool TryCheckEntities(IEnumerable<Report> entities, out Report[] result)
-        {
-            result = entities.ToArray();
+            var result = entities.ToArray();
 
             var tickers = result.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
-            var count = context.Tickers.Count(x => tickers.Contains(x.Name));
+            var count = await context.Tickers.CountAsync(x => tickers.Contains(x.Name));
 
-            return tickers.Length == count;
+            return (tickers.Length == count, result);
         }
-        public Report GetIntersectedContextEntity(Report entity) => context.Reports.Find(entity.TickerName, entity.Year, entity.Quarter);
-        public IQueryable<Report> GetIntersectedContextEntities(IEnumerable<Report> entities)
+        public async Task<Report?> GetAlreadyEntityAsync(Report entity) => await context.Reports.FindAsync(entity.TickerName, entity.Year, entity.Quarter);
+        public IQueryable<Report> GetAlreadyEntitiesQuery(IEnumerable<Report> entities)
         {
             var tickers = entities.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
             return context.Reports.Where(x => tickers.Contains(x.TickerName));
         }
-        public bool UpdateEntity(Report oldResult, Report newResult)
+        public bool IsUpdate(Report contextEntity, Report newEntity)
         {
-            var isCompare = (oldResult.TickerName, oldResult.Year, oldResult.Quarter) == (newResult.TickerName, newResult.Year, newResult.Quarter);
+            var isCompare = (contextEntity.TickerName, contextEntity.Year, contextEntity.Quarter) == (newEntity.TickerName, newEntity.Year, newEntity.Quarter);
 
             if (isCompare)
             {
-                oldResult.Result = newResult.Result;
-                oldResult.StatusId = newResult.StatusId;
+                contextEntity.Result = newEntity.Result;
+                contextEntity.StatusId = newEntity.StatusId;
             }
 
             return isCompare;

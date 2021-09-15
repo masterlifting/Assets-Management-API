@@ -1,13 +1,14 @@
 using CommonServices.RepositoryService;
+
 using IM.Gateway.Recommendations.Clients;
 using IM.Gateway.Recommendations.DataAccess;
 using IM.Gateway.Recommendations.DataAccess.Entities;
 using IM.Gateway.Recommendations.DataAccess.Repository;
 using IM.Gateway.Recommendations.Services.BackgroundServices;
-using IM.Gateway.Recommendations.Services.CalculatorServices;
 using IM.Gateway.Recommendations.Services.DtoServices;
 using IM.Gateway.Recommendations.Services.RabbitServices;
 using IM.Gateway.Recommendations.Settings;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -38,23 +39,14 @@ namespace IM.Gateway.Recommendations
             services.AddHttpClient<PricesClient>();
             services.AddHttpClient<ReportsClient>();
 
-            services.AddScoped<CoefficientDtoAggregator>();
-            services.AddScoped<RatingDtoAggregator>();
+            services.AddScoped<PurchaseDtoAggregator>();
             services.AddScoped<SaleDtoAggregator>();
 
             services.AddScoped<IRepository<Ticker>, TickerRepository>();
-            services.AddScoped<IRepository<Price>, PriceRepository>();
-            services.AddScoped<IRepository<Report>, ReportRepository>();
-            services.AddScoped<IRepository<Rating>, RatingRepository>();
             services.AddScoped(typeof(RepositorySet<>));
-
-            services.AddScoped<ReportCalculator>();
-            services.AddScoped<PriceCalculator>();
-            services.AddScoped<RatingCalculator>();
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();
-            services.AddHostedService<CalculatorBackgroundService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

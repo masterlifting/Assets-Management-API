@@ -11,10 +11,10 @@ namespace IM.Gateway.Companies.Services.CompanyServices
 {
     public class CompanyManager
     {
-        private readonly RepositorySet<DataAccess.Entities.Company> repository;
+        private readonly RepositorySet<Company> repository;
         private readonly RabbitCrudService rabbitCrudService;
 
-        public CompanyManager(RepositorySet<DataAccess.Entities.Company> repository, RabbitCrudService rabbitCrudService)
+        public CompanyManager(RepositorySet<Company> repository, RabbitCrudService rabbitCrudService)
         {
             this.repository = repository;
             this.rabbitCrudService = rabbitCrudService;
@@ -22,7 +22,7 @@ namespace IM.Gateway.Companies.Services.CompanyServices
 
         public async Task<ResponseModel<string>> CreateCompanyAsync(CompanyPostDto company)
         {
-            var ctxCompany = new DataAccess.Entities.Company()
+            var ctxCompany = new Company()
             {
                 Ticker = company.Ticker!,
                 Name = company.Name,
@@ -48,7 +48,7 @@ namespace IM.Gateway.Companies.Services.CompanyServices
         }
         public async Task<ResponseModel<string>> UpdateCompanyAsync(string ticker, CompanyPostDto company)
         {
-            var ctxCompany = new DataAccess.Entities.Company()
+            var ctxCompany = new Company()
             {
                 Ticker = ticker,
                 Name = company.Name,

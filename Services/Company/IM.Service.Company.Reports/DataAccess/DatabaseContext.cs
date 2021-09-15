@@ -7,9 +7,9 @@ namespace IM.Service.Company.Reports.DataAccess
 {
     public class DatabaseContext : DbContext
     {
-        public DbSet<Ticker> Tickers { get; set; }
-        public DbSet<Report> Reports { get; set; }
-        public DbSet<SourceType> SourceTypes { get; set; }
+        public DbSet<Ticker> Tickers { get; set; } = null!;
+        public DbSet<Report> Reports { get; set; } = null!;
+        public DbSet<SourceType> SourceTypes { get; set; } = null!;
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
         {
@@ -21,8 +21,8 @@ namespace IM.Service.Company.Reports.DataAccess
             modelBuilder.Entity<Report>().HasKey(x => new { x.TickerName, x.Year, x.Quarter });
             modelBuilder.Entity<SourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<SourceType>().HasData(
-                new() { Id = (byte)Enums.ReportSourceTypes.Default, Name = "Select report source!" },
-                new() { Id = (byte)Enums.ReportSourceTypes.Investing, Name = nameof(Enums.ReportSourceTypes.Investing) }
+                new() { Id = (byte)ReportSourceTypes.Default, Name = "Select report source!" },
+                new() { Id = (byte)ReportSourceTypes.Investing, Name = nameof(ReportSourceTypes.Investing) }
             );
         }
     }

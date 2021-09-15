@@ -16,6 +16,6 @@ namespace CommonServices.RabbitServices.Configuration
         public QueueExchanges NameEnum { get; }
         public string Type { get; }
 
-        public Queue[] Queues { get; set; } = Array.Empty<Queue>();
+        public Queue[] Queues { get; init; } = Array.Empty<Queue>();
     }
 }

@@ -100,7 +100,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         {
             var result = new Report[reports.Length];
             var comparedSample = new Sample[samples.Length][];
-            var statusId = samples.Length == 17 ? (byte)Enums.StatusType.Calculated : (byte)Enums.StatusType.CalculatedPartial;
+            var statusId = samples.Length == 17 ? (byte)StatusType.Calculated : (byte)StatusType.CalculatedPartial;
 
             for (uint i = 0; i < samples.Length; i++)
                 comparedSample[i] = RatingComparator.CompareSample(samples[i]);
@@ -134,16 +134,16 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         {
             for (uint i = 0; i < reports.Length; i++)
             {
-                revenueCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].Revenue.HasValue ? reports[i].Revenue!.Value : 0 };
-                profitNetCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].ProfitNet.HasValue ? reports[i].ProfitNet!.Value : 0 };
-                profitGrossCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].ProfitGross.HasValue ? reports[i].ProfitGross!.Value : 0 };
-                assetCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].Asset.HasValue ? reports[i].Asset!.Value : 0 };
-                turnoverCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].Turnover.HasValue ? reports[i].Turnover!.Value : 0 };
-                shareCapitalCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].ShareCapital.HasValue ? reports[i].ShareCapital!.Value : 0 };
-                dividendCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].Dividend.HasValue ? reports[i].Dividend!.Value : 0 };
-                cashFlowCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = reports[i].CashFlow.HasValue ? reports[i].CashFlow!.Value : 0 };
-                obligationCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = reports[i].Obligation.HasValue ? reports[i].Obligation!.Value : 0 };
-                longTermDebtCollection[i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = reports[i].LongTermDebt.HasValue ? reports[i].LongTermDebt!.Value : 0 };
+                revenueCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].Revenue.HasValue ? reports[i].Revenue!.Value : 0 };
+                profitNetCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].ProfitNet.HasValue ? reports[i].ProfitNet!.Value : 0 };
+                profitGrossCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].ProfitGross.HasValue ? reports[i].ProfitGross!.Value : 0 };
+                assetCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].Asset.HasValue ? reports[i].Asset!.Value : 0 };
+                turnoverCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].Turnover.HasValue ? reports[i].Turnover!.Value : 0 };
+                shareCapitalCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].ShareCapital.HasValue ? reports[i].ShareCapital!.Value : 0 };
+                dividendCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].Dividend.HasValue ? reports[i].Dividend!.Value : 0 };
+                cashFlowCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].CashFlow.HasValue ? reports[i].CashFlow!.Value : 0 };
+                obligationCollection[i] = new Sample { Index = i, CompareType = CompareType.Desc, Value = reports[i].Obligation.HasValue ? reports[i].Obligation!.Value : 0 };
+                longTermDebtCollection[i] = new Sample { Index = i, CompareType = CompareType.Desc, Value = reports[i].LongTermDebt.HasValue ? reports[i].LongTermDebt!.Value : 0 };
             }
 
             if (prices is null || !prices.Any())
@@ -153,13 +153,13 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             {
                 var coefficients = coefficientCalculator!.Calculate(reports[i], prices.Max(x => x.Value));
 
-                pe![i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = coefficients.Pe };
-                pb![i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = coefficients.Pb };
-                debtLoad![i] = new Sample { Index = i, CompareType = Enums.CompareType.Desc, Value = coefficients.DebtLoad };
-                profitability![i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = coefficients.Profitability };
-                roa![i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = coefficients.Roa };
-                roe![i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = coefficients.Roe };
-                eps![i] = new Sample { Index = i, CompareType = Enums.CompareType.Asc, Value = coefficients.Eps };
+                pe![i] = new Sample { Index = i, CompareType = CompareType.Desc, Value = coefficients.Pe };
+                pb![i] = new Sample { Index = i, CompareType = CompareType.Desc, Value = coefficients.Pb };
+                debtLoad![i] = new Sample { Index = i, CompareType = CompareType.Desc, Value = coefficients.DebtLoad };
+                profitability![i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = coefficients.Profitability };
+                roa![i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = coefficients.Roa };
+                roe![i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = coefficients.Roe };
+                eps![i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = coefficients.Eps };
             }
         }
     }

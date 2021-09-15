@@ -14,6 +14,6 @@ namespace CommonServices.RabbitServices.Configuration
         public string NameString { get; }
         public QueueNames NameEnum { get; }
         public bool WithConfirm { get; }
-        public QueueParam[] Params { get; set; } = Array.Empty<QueueParam>();
+        public QueueParam[] Params { get; init; } = Array.Empty<QueueParam>();
     }
 }

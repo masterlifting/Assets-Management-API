@@ -1,4 +1,6 @@
 namespace IM.Service.Company.Prices.Models.Client.TdAmeritradeModels
 {
-    public record TdAmeritradeHistoryPriceData(Candles[] candles);
+    // ReSharper disable once ClassNeverInstantiated.Global
+    // ReSharper disable once SuggestBaseTypeForParameterInConstructor
+    public record TdAmeritradeHistoryPriceData(Candles[]? candles);
 }

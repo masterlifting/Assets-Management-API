@@ -1,7 +1,7 @@
 ﻿namespace IM.Service.Company.Reports.Settings.Client
 {
-    public class ClientSettings
+    public abstract class ClientSettings
     {
-        public InvestingModel Investing { get; set; }
+        public InvestingModel Investing { get; set; } = null!;
     }
 }
