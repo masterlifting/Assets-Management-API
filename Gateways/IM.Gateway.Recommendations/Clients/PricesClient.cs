@@ -19,7 +19,7 @@ namespace IM.Gateway.Recommendations.Clients
         public PricesClient(HttpClient httpClient, IOptions<ServiceSettings> options)
         {
             this.httpClient = httpClient;
-            settings = options.Value.ClientSettings.ClientCompaniesPrices;
+            settings = options.Value.ClientSettings.CompanyPrices;
         }
 
         public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination) =>
