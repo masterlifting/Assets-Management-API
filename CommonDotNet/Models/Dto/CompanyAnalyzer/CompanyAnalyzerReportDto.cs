@@ -2,7 +2,7 @@
 
 namespace CommonServices.Models.Dto.CompanyAnalyzer
 {
-    public class AnalyzerReportDto : ReportIdentity
+    public class CompanyAnalyzerReportDto : ReportIdentity
     {
         public string SourceType { get; init; } = null!;
     }

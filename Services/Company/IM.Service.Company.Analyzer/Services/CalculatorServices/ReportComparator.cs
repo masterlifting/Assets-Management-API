@@ -7,7 +7,7 @@ using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 {
-    public class ReportComporator : IAnalyzerComparator<Report>
+    public class ReportComparator : IAnalyzerComparator<Report>
     {
         private readonly ReportDto[] reports;
         private readonly Sample[][] samples;
@@ -31,7 +31,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         private readonly Sample[]? roa;
         private readonly Sample[]? roe;
         private readonly Sample[]? eps;
-        public ReportComporator(ReportDto[] reports, PriceDto[]? prices)
+        public ReportComparator(ReportDto[] reports, PriceDto[]? prices)
         {
             this.reports = reports;
 

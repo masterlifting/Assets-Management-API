@@ -27,7 +27,7 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
             };
 
         private async Task<bool> SetReportToCalculateAsync(string data) =>
-            (RabbitHelper.TrySerialize(data, out AnalyzerReportDto? report) || report is not null)
+            (RabbitHelper.TrySerialize(data, out CompanyAnalyzerReportDto? report) || report is not null)
             && !(await reportRepository.CreateUpdateAsync(new Report
             {
                 TickerName = report!.TickerName,
@@ -35,16 +35,16 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
                 Quarter = report.Quarter,
                 SourceType = report.SourceType,
                 StatusId = (byte)StatusType.ToCalculate
-            }, report.TickerName)).Any();
+            }, $"report to calculate for '{report.TickerName}'")).Any();
 
         private async Task<bool> SetPriceToCalculateAsync(string data) => 
-            (RabbitHelper.TrySerialize(data, out AnalyzerPriceDto? price) || price is not null)
+            (RabbitHelper.TrySerialize(data, out CompanyAnalyzerPriceDto? price) || price is not null)
             && !(await priceRepository.CreateUpdateAsync(new Price
             {
                 TickerName = price!.TickerName,
                 Date = price.Date,
                 SourceType = price.SourceType,
                 StatusId = (byte)StatusType.ToCalculate
-            }, price.TickerName)).Any();
+            }, $"price to calculate for '{price.TickerName}'")).Any();
     }
 }

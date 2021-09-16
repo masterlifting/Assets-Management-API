@@ -10,11 +10,11 @@ namespace IM.Service.Company.Analyzer.Controllers
     [ApiController, Route("[controller]")]
     public class CoefficientsController : Controller
     {
-        private readonly CoefficientDtoAggregator agregator;
-        public CoefficientsController(CoefficientDtoAggregator agregator) => this.agregator = agregator;
+        private readonly CoefficientDtoAggregator aggregator;
+        public CoefficientsController(CoefficientDtoAggregator aggregator) => this.aggregator = aggregator;
 
         [HttpGet("{ticker}")]
         public async Task<ResponseModel<PaginationResponseModel<CoefficientDto>>> Get(string ticker, int page = 1, int limit = 10) =>
-            await agregator.GetCoefficientsAsync(ticker, new(page, limit));
+            await aggregator.GetCoefficientsAsync(ticker, new(page, limit));
     }
 }

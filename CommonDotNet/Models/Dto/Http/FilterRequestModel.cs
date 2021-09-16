@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 
 namespace CommonServices.Models.Dto.Http
 {
@@ -34,11 +35,23 @@ namespace CommonServices.Models.Dto.Http
         /// <summary>
         /// Year, Quarter
         /// </summary>
-        public Func<int, byte, bool> FilterQuarter => (year, quarter) => year > Year || year == Year && quarter >= Quarter;
-
+        public Expression<Func<T, bool>> FilterQuarterExpression<T>() where T : class, IFilterQuarter => x =>
+            x.Year > Year || x.Year == Year && x.Quarter >= Quarter;
         /// <summary>
         /// Year, Month, Day
         /// </summary>
-        public Func<DateTime, bool> FilterDate => x => x.Year > Year || x.Year == Year && (x.Month == Month && x.Day >= Day || x.Month > Month);
+        public Expression<Func<T, bool>> FilterDateExpression<T>() where T : class, IFilterDate => x =>
+             x.Date.Year > Year || x.Date.Year == Year && (x.Date.Month == Month && x.Date.Day >= Day || x.Date.Month > Month);
+    }
+
+    public interface IFilterDate
+    {
+        DateTime Date { get; set; }
+    }
+
+    public interface IFilterQuarter
+    {
+        int Year { get; set; }
+        byte Quarter { get; set; }
     }
 }

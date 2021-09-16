@@ -17,11 +17,11 @@ namespace IM.Service.Company.Reports.Services.DtoServices
 
         public async Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(FilterRequestModel filter, PaginationRequestModel pagination)
         {
-            var reports = repository.QueryFilter(x => x.Year > filter.Year || x.Year == filter.Year && x.Quarter >= filter.Quarter);
+            var quarterFilteredQuery = repository.QueryFilter(filter.FilterQuarterExpression<Report>());
             var tickers = repository.GetDbSetBy<Ticker>();
             var sourceTypes = repository.GetDbSetBy<SourceType>();
 
-            var queryResult = await reports
+            var queryResult = await quarterFilteredQuery
                 .OrderBy(x => x.Year)
                 .ThenBy(x => x.Quarter)
                 .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Report = x, y.SourceTypeId, })
@@ -55,14 +55,16 @@ namespace IM.Service.Company.Reports.Services.DtoServices
                     Errors = new[] { "Ticker not found" }
                 };
 
-            var filteredReports = repository.QueryFilter(x => x.TickerName == ctxTicker.Name && (x.Year > filter.Year || x.Year == filter.Year && x.Quarter >= filter.Quarter));
-            var count = await filteredReports.CountAsync();
+            var count = await repository.GetCountAsync(x => x.TickerName == ctxTicker.Name);
+
+            var dateFilteredQuery = repository.QueryFilter(filter.FilterQuarterExpression<Report>());
+            var resultFilteredQuery = repository.QueryFilter(dateFilteredQuery, x => x.TickerName == ctxTicker.Name);
+            var paginatedQuery = repository.QueryPaginator(resultFilteredQuery, pagination, x => x.Year, x => x.Quarter);
 
             var tickers = repository.GetDbSetBy<Ticker>();
             var sourceTypes = repository.GetDbSetBy<SourceType>();
-            var paginatedReports= repository.QueryPaginatedResult(filteredReports, pagination, x => x.Year, x => x.Quarter);
 
-            var result = await paginatedReports
+            var result = await paginatedQuery 
                 .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Report = x, y.SourceTypeId, })
                 .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.ReportDto(x.Report, x.SourceTypeId, y.Name))
                 .ToArrayAsync();

@@ -26,16 +26,16 @@ namespace IM.Gateway.Companies.Clients
         }
 
 
-        public async Task<ResponseModel<PaginationResponseModel<AnalyzerRatingDto>>> GetRatingsAsync(PaginationRequestModel pagination) =>
-            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<AnalyzerRatingDto>>>
+        public async Task<ResponseModel<PaginationResponseModel<CompanyAnalyzerRatingDto>>> GetRatingsAsync(PaginationRequestModel pagination) =>
+            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<CompanyAnalyzerRatingDto>>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{ratings}?{pagination.QueryParams}") ?? new();
-        public async Task<ResponseModel<AnalyzerRatingDto>> GetRatingAsync(string ticker) =>
-            await httpClient.GetFromJsonAsync<ResponseModel<AnalyzerRatingDto>>
+        public async Task<ResponseModel<CompanyAnalyzerRatingDto>> GetRatingAsync(string ticker) =>
+            await httpClient.GetFromJsonAsync<ResponseModel<CompanyAnalyzerRatingDto>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{ratings}/{ticker}") ?? new();
 
 
-        public async Task<ResponseModel<PaginationResponseModel<AnalyzerCoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination) =>
-            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<AnalyzerCoefficientDto>>>
+        public async Task<ResponseModel<PaginationResponseModel<CompanyAnalyzerCoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination) =>
+            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<CompanyAnalyzerCoefficientDto>>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{coefficients}/{ticker}?{pagination.QueryParams}") ?? new();
 
         public void Dispose()

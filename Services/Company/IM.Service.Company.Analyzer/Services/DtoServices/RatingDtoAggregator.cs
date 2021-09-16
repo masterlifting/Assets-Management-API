@@ -1,31 +1,35 @@
 ﻿using CommonServices.Models.Dto.Http;
+
+using IM.Service.Company.Analyzer.DataAccess.Entities;
+using IM.Service.Company.Analyzer.DataAccess.Repository;
+using IM.Service.Company.Analyzer.Models.Dto;
+
 using Microsoft.EntityFrameworkCore;
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Company.Analyzer.DataAccess;
-using IM.Service.Company.Analyzer.Models.Dto;
 
 namespace IM.Service.Company.Analyzer.Services.DtoServices
 {
     public class RatingDtoAggregator
     {
-        private readonly DatabaseContext context;
-        public RatingDtoAggregator(DatabaseContext context) => this.context = context;
+        private readonly RepositorySet<Rating> repository;
+        public RatingDtoAggregator(RepositorySet<Rating> repository) => this.repository = repository;
 
-        public async Task<ResponseModel<RatingDto>> GetRatingAsync(string ticker)
+        public async Task<ResponseModel<RatingDto>> GetAsync(string ticker)
         {
-            var errors = Array.Empty<string>();
 
             string tickerName = ticker.ToUpperInvariant();
-            var ctxTicker = await context.Tickers.FindAsync(tickerName);
+            var ctxTicker = await repository.GetDbSetBy<Ticker>().FindAsync(tickerName);
 
             if (ctxTicker is null)
                 return new()
                 {
                     Errors = new[] { "Ticker not found" }
                 };
+
+            var errors = Array.Empty<string>();
 
             var rating = ctxTicker.Rating;
 
@@ -39,16 +43,13 @@ namespace IM.Service.Company.Analyzer.Services.DtoServices
         {
             var errors = Array.Empty<string>();
 
-            var count = await context.Ratings.CountAsync();
-            var ratings = Array.Empty<RatingDto>();
+            var count = await repository.GetCountAsync();
 
-            if (count > 0)
-                ratings = await context.Ratings
-                .OrderBy(x => x.Place)
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit)
-                .Select(x => new RatingDto(x))
-                .ToArrayAsync();
+            var paginatedResult = repository.QueryPaginator(pagination);
+
+            var ratings = count > 0 
+                ? await paginatedResult.Select(x => new RatingDto(x)).ToArrayAsync() 
+                : Array.Empty<RatingDto>();
 
             return new()
             {

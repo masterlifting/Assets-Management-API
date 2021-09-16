@@ -2,8 +2,7 @@
 
 namespace CommonServices.Models.Dto.CompanyAnalyzer
 {
-    public class AnalyzerPriceDto : PriceIdentity
+    public class CompanyAnalyzerTickerDto : TickerIdentity
     {
-        public string SourceType { get; set; } = null!;
     }
 }

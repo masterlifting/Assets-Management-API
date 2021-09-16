@@ -38,7 +38,7 @@ namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
                             QueueNames.CompanyAnalyzer
                             , QueueEntities.Report
                             , QueueActions.GetLogic
-                            , JsonSerializer.Serialize(new AnalyzerReportDto
+                            , JsonSerializer.Serialize(new CompanyAnalyzerReportDto
                             {
                                 TickerName = ticker.Name,
                                 Year = report.Year,

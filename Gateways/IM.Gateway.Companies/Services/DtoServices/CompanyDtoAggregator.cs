@@ -45,7 +45,7 @@ namespace IM.Gateway.Companies.Services.DtoServices
 
             var count = await repository.GetDbSetBy<Company>().CountAsync();
 
-            var paginatedResult = repository.QueryPaginatedResult(pagination, x => x.Name);
+            var paginatedResult = repository.QueryPaginator(pagination, x => x.Name);
 
             var companies = await paginatedResult
                 .Select(x => new CompanyGetDto()

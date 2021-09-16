@@ -31,7 +31,7 @@ namespace IM.Service.Company.Reports.Services.ReportServices
         }
         public static bool IsMissingLastQuarter(int lastYear, byte lastQuarter)
         {
-            var (controlYear, controlQuarter) = CommonHelper.SubstractQuarter(DateTime.UtcNow);
+            var (controlYear, controlQuarter) = CommonHelper.SubtractQuarter(DateTime.UtcNow);
             return IsNewQuarter((controlYear, controlQuarter), (lastYear, lastQuarter));
         }
         private static bool IsNewQuarter((int year, byte quarter) current, (int year, byte qarter) last) =>

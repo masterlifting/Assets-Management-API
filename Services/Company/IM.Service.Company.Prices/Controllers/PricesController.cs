@@ -21,14 +21,14 @@ namespace IM.Service.Company.Prices.Controllers
         }
 
         public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> Get(int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
-            await aggregator.GetPricesAsync(new(year, month, day), new(page, limit));
+            await aggregator.GetAsync(new(year, month, day), new(page, limit));
 
         [HttpGet("{ticker}")]
         public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> Get(string ticker, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
-            await aggregator.GetPricesAsync(ticker, new(year, month, day), new(page, limit));
+            await aggregator.GetAsync(ticker, new(year, month, day), new(page, limit));
         
         [HttpPost("update/")]
-        public async Task<string> UpdatePrices()
+        public async Task<string> Update()
         {
             var loadedCount = await priceLoader.LoadPricesAsync();
             return $"loaded prices count: {loadedCount}";

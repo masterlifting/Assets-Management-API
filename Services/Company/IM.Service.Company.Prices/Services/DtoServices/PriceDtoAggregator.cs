@@ -14,13 +14,14 @@ namespace IM.Service.Company.Prices.Services.DtoServices
         private readonly RepositorySet<Price> repository;
         public PriceDtoAggregator(RepositorySet<Price> repository) => this.repository = repository;
 
-        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(FilterRequestModel filter, PaginationRequestModel pagination)
+        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetAsync(FilterRequestModel filter, PaginationRequestModel pagination)
         {
-            var pricesQuery = repository.QueryFilter(x => x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month));
+            var dateFilteredQuery = repository.QueryFilter(filter.FilterDateExpression<Price>());
+
             var tickers = repository.GetDbSetBy<Ticker>();
             var sourceTypes = repository.GetDbSetBy<SourceType>();
 
-            var queryResult = await pricesQuery
+            var queryResult = await dateFilteredQuery
                 .OrderBy(x => x.Date)
                 .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
                 .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
@@ -41,9 +42,8 @@ namespace IM.Service.Company.Prices.Services.DtoServices
                 }
             };
         }
-        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination)
+        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination)
         {
-            var errors = Array.Empty<string>();
             var tickerName = ticker.ToUpperInvariant();
             var ctxTicker = await repository.GetDbSetBy<Ticker>().FindAsync(tickerName);
 
@@ -53,17 +53,20 @@ namespace IM.Service.Company.Prices.Services.DtoServices
                     Errors = new[] { "Ticker not found" }
                 };
 
-            var filteredPrices = repository.QueryFilter(x => x.TickerName == ctxTicker.Name && (x.Date.Year > filter.Year || x.Date.Year == filter.Year && (x.Date.Month == filter.Month && x.Date.Day >= filter.Day || x.Date.Month > filter.Month)));
-            var count = await filteredPrices.CountAsync();
+            var errors = Array.Empty<string>();
+
+            var count = await repository.GetCountAsync(x => x.TickerName == ctxTicker.Name);
+
+            var dateFilteredQuery = repository.QueryFilter(filter.FilterDateExpression<Price>());
+            var resultFilteredQuery = repository.QueryFilter(dateFilteredQuery, x => x.TickerName == ctxTicker.Name);
+            var paginatedQuery = repository.QueryPaginator(resultFilteredQuery, pagination, x => x.Date);
 
             var tickers = repository.GetDbSetBy<Ticker>();
             var sourceTypes = repository.GetDbSetBy<SourceType>();
-            var paginatedReports = repository.QueryPaginatedResult(filteredPrices, pagination, x => x.Date);
 
-            var result = await paginatedReports
+            var result = await paginatedQuery
                 .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
-                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) =>
-                    new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
+                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new Models.Dto.PriceDto(x.Price, x.SourceTypeId, y.Name))
                 .ToArrayAsync();
 
             return new()

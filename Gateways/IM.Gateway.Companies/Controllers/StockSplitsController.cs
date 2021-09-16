@@ -15,12 +15,12 @@ namespace IM.Gateway.Companies.Controllers
         private readonly StockSplitDtoAggregator aggregator;
         public StockSplitsController(StockSplitDtoAggregator aggregator) => this.aggregator = aggregator;
 
-        public async Task<ResponseModel<PaginationResponseModel<StockSplitGetDto>>> Get(int page = 0, int limit = 0) =>
-            await aggregator.GetAsync(new(page, limit));
+        public async Task<ResponseModel<PaginationResponseModel<StockSplitGetDto>>> Get(int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
+            await aggregator.GetAsync(new(year, month, day), new(page, limit));
 
         [HttpGet("{ticker}")]
-        public async Task<ResponseModel<PaginationResponseModel<StockSplitGetDto>>> Get(string ticker, int page = 0, int limit = 0) =>
-            await aggregator.GetAsync(ticker, new(page, limit));
+        public async Task<ResponseModel<PaginationResponseModel<StockSplitGetDto>>> Get(string ticker, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
+            await aggregator.GetAsync(ticker, new(year, month, day), new(page, limit));
         [HttpPost]
         public async Task<ResponseModel<string>> Post(StockSplitPostDto model) => 
             await aggregator.CreateAsync(model);

@@ -62,7 +62,7 @@ namespace CommonServices
             _ => throw new NotSupportedException()
         };
         public static (int year, int month, int day) GetQuarterFirstDate(int year, byte quarter) => (year, GetFirstMonth(quarter), 1);
-        public static (int year, byte quarter) SubstractQuarter(DateTime date)
+        public static (int year, byte quarter) SubtractQuarter(DateTime date)
         {
             var (year, quarter) = GetYearAndQuarter(date);
 
@@ -76,7 +76,7 @@ namespace CommonServices
 
             return (year, quarter);
         }
-        public static (int year, byte quarter) SubstractQuarter(int year, byte quarter)
+        public static (int year, byte quarter) SubtractQuarter(int year, byte quarter)
         {
             if (quarter == 1)
             {

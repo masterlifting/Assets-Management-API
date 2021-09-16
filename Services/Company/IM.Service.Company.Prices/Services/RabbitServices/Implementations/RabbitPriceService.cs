@@ -38,7 +38,7 @@ namespace IM.Service.Company.Prices.Services.RabbitServices.Implementations
                             QueueNames.CompanyAnalyzer
                             , QueueEntities.Price
                             , QueueActions.GetLogic
-                            , JsonSerializer.Serialize(new AnalyzerPriceDto
+                            , JsonSerializer.Serialize(new CompanyAnalyzerPriceDto
                             {
                                 TickerName = ticker.Name,
                                 Date = price.Date,

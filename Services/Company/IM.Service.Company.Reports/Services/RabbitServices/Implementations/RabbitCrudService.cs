@@ -31,7 +31,7 @@ namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
             if (action == QueueActions.Delete)
                 return !(await repository.DeleteAsync(data, data)).Any();
 
-            if (!RabbitHelper.TrySerialize(data, out CompaniesReportsTickerDto? ticker))
+            if (!RabbitHelper.TrySerialize(data, out CompanyReportsTickerDto? ticker))
                 return false;
 
 

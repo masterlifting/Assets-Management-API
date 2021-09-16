@@ -24,7 +24,6 @@ namespace IM.Gateway.Companies.Controllers
         public async Task<ResponseModel<CompanyGetDto>> Get(string ticker) => await aggregator.GetAsync(ticker);
         [HttpPost]
         public async Task<ResponseModel<string>> Post(CompanyPostDto company) => await aggregator.CreateAsync(company);
-
         [HttpPut("{ticker}")]
         public async Task<ResponseModel<string>> Put(string ticker, CompanyPostDto company) => await aggregator.UpdateAsync(ticker, company);
         [HttpDelete("{ticker}")]
@@ -48,13 +47,13 @@ namespace IM.Gateway.Companies.Controllers
 
 
         [HttpGet("ratings/")]
-        public async Task<ResponseModel<PaginationResponseModel<AnalyzerRatingDto>>> GetRatings(int page = 1, int limit = 10) => await aggregator.AnalyzerDtoAggregator.GetRatingsAsync(new(page, limit));
+        public async Task<ResponseModel<PaginationResponseModel<CompanyAnalyzerRatingDto>>> GetRatings(int page = 1, int limit = 10) => await aggregator.AnalyzerDtoAggregator.GetRatingsAsync(new(page, limit));
         [HttpGet("{ticker}/ratings/")]
-        public async Task<ResponseModel<AnalyzerRatingDto>> GetRating(string ticker) => await aggregator.AnalyzerDtoAggregator.GetRatingAsync(ticker);
+        public async Task<ResponseModel<CompanyAnalyzerRatingDto>> GetRating(string ticker) => await aggregator.AnalyzerDtoAggregator.GetRatingAsync(ticker);
 
 
         [HttpGet("{ticker}/coefficients/")]
-        public async Task<ResponseModel<PaginationResponseModel<AnalyzerCoefficientDto>>> GetCoefficients(string ticker, int page = 1, int limit = 10) =>
+        public async Task<ResponseModel<PaginationResponseModel<CompanyAnalyzerCoefficientDto>>> GetCoefficients(string ticker, int page = 1, int limit = 10) =>
             await aggregator.AnalyzerDtoAggregator.GetCoefficientsAsync(ticker, new(page, limit));
     }
 }

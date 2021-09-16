@@ -31,6 +31,10 @@ namespace IM.Service.Company.Analyzer.Services.BackgroundServices
                     if (await priceCalculator.CalculateAsync())
                         if (await reportCalculator.CalculateAsync())
                             await ratingCalculator.CalculateAsync();
+                        else
+                            await ratingCalculator.CalculateAsync();
+                    else if (await reportCalculator.CalculateAsync())
+                        await ratingCalculator.CalculateAsync();
                 }
                 catch (Exception ex)
                 {

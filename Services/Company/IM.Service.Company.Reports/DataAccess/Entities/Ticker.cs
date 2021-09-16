@@ -9,7 +9,7 @@ namespace IM.Service.Company.Reports.DataAccess.Entities
     public class Ticker : TickerIdentity
     {
         public Ticker() { }
-        public Ticker(CompaniesReportsTickerDto ticker)
+        public Ticker(CompanyReportsTickerDto ticker)
         {
             Name = ticker.Name;
             SourceTypeId = ticker.SourceTypeId;

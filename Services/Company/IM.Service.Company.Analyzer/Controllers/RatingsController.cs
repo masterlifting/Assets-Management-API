@@ -17,6 +17,6 @@ namespace IM.Service.Company.Analyzer.Controllers
             await aggregator.GetRatingsAsync(new(page, limit));
 
         [HttpGet("{ticker}")]
-        public async Task<ResponseModel<RatingDto>> Get(string ticker) => await aggregator.GetRatingAsync(ticker);
+        public async Task<ResponseModel<RatingDto>> Get(string ticker) => await aggregator.GetAsync(ticker);
     }
 }

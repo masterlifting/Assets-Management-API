@@ -8,12 +8,12 @@ using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 {
-    public class PriceComporator : IAnalyzerComparator<Price>
+    public class PriceComparator : IAnalyzerComparator<Price>
     {
         private readonly PriceDto[] prices;
         private readonly Sample[] valueCollection;
 
-        public PriceComporator(IReadOnlyCollection<PriceDto> prices)
+        public PriceComparator(IReadOnlyCollection<PriceDto> prices)
         {
             this.prices = prices.OrderBy(x => x.Date).ToArray();
             valueCollection = new Sample[prices.Count];

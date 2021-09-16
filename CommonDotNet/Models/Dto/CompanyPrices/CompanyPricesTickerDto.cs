@@ -2,7 +2,7 @@
 
 namespace CommonServices.Models.Dto.CompanyPrices
 {
-    public class CompaniesPricesTickerDto : TickerIdentity
+    public class CompanyPricesTickerDto : TickerIdentity
     {
         public byte SourceTypeId { get; init; }
     }

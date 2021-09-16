@@ -19,9 +19,9 @@ namespace IM.Gateway.Companies.Services.RabbitServices
 
         public void CreateCompany(CompanyPostDto company)
         {
-            var analyzerTicker = JsonSerializer.Serialize(new AnalyzerTickerDto { Name = company.Ticker! });
-            var companiesPricesTicker = JsonSerializer.Serialize(new CompaniesPricesTickerDto { Name = company.Ticker!, SourceTypeId = company.PriceSourceTypeId });
-            var companiesReportsTicker = JsonSerializer.Serialize(new CompaniesReportsTickerDto { Name = company.Ticker!, SourceTypeId = company.ReportSourceTypeId, SourceValue = company.ReportSourceValue });
+            var analyzerTicker = JsonSerializer.Serialize(new CompanyAnalyzerTickerDto { Name = company.Ticker! });
+            var companiesPricesTicker = JsonSerializer.Serialize(new CompanyPricesTickerDto { Name = company.Ticker!, SourceTypeId = company.PriceSourceTypeId });
+            var companiesReportsTicker = JsonSerializer.Serialize(new CompanyReportsTickerDto { Name = company.Ticker!, SourceTypeId = company.ReportSourceTypeId, SourceValue = company.ReportSourceValue });
 
             var tickerData = new Dictionary<QueueNames, string>()
             {
@@ -35,9 +35,9 @@ namespace IM.Gateway.Companies.Services.RabbitServices
         }
         public void UpdateCompany(CompanyPostDto company)
         {
-            var analyzerTicker = JsonSerializer.Serialize(new AnalyzerTickerDto { Name = company.Ticker! });
-            var companiesPricesTicker = JsonSerializer.Serialize(new CompaniesPricesTickerDto { Name = company.Ticker!, SourceTypeId = company.PriceSourceTypeId });
-            var companiesReportsTicker = JsonSerializer.Serialize(new CompaniesReportsTickerDto { Name = company.Ticker!, SourceTypeId = company.ReportSourceTypeId, SourceValue = company.ReportSourceValue });
+            var analyzerTicker = JsonSerializer.Serialize(new CompanyAnalyzerTickerDto { Name = company.Ticker! });
+            var companiesPricesTicker = JsonSerializer.Serialize(new CompanyPricesTickerDto { Name = company.Ticker!, SourceTypeId = company.PriceSourceTypeId });
+            var companiesReportsTicker = JsonSerializer.Serialize(new CompanyReportsTickerDto { Name = company.Ticker!, SourceTypeId = company.ReportSourceTypeId, SourceValue = company.ReportSourceValue });
 
             publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Ticker, QueueActions.Update, analyzerTicker);
             publisher.PublishTask(QueueNames.CompanyPrices, QueueEntities.Ticker, QueueActions.Update, companiesPricesTicker);

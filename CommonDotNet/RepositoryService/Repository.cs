@@ -394,8 +394,10 @@ namespace CommonServices.RepositoryService
 
         public DbSet<QEntity> GetDbSetBy<QEntity>() where QEntity : class => context.Set<QEntity>();
         public IQueryable<TEntity> QueryFilter(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
+        public IQueryable<TEntity> QueryFilter(IQueryable<TEntity> query,Expression<Func<TEntity, bool>> predicate) => query.Where(predicate);
 
         public async Task<int> GetCountAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().CountAsync(predicate);
+        public async Task<int> GetCountAsync(IQueryable<TEntity> query) => await query.AsNoTracking().CountAsync();
         public async Task<int> GetCountAsync() => await context.Set<TEntity>().AsNoTracking().CountAsync();
 
         public async Task<TEntity[]> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync();
@@ -406,26 +408,26 @@ namespace CommonServices.RepositoryService
         public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector) =>
             await context.Set<TEntity>().Where(predicate).Select(selector).ToArrayAsync();
 
-        public IQueryable<TEntity> QueryPaginatedResult(PaginationRequestModel pagination) =>
+        public IQueryable<TEntity> QueryPaginator(PaginationRequestModel pagination) =>
             context.Set<TEntity>()
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult<TSelector>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+        public IQueryable<TEntity> QueryPaginator<TSelector>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
             context.Set<TEntity>()
                 .OrderBy(orderSelector)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult<TSelector1, TSelector2>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+        public IQueryable<TEntity> QueryPaginator<TSelector1, TSelector2>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
             context.Set<TEntity>()
                 .OrderBy(orderSelector1)
                 .ThenBy(orderSelector2)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult(IQueryable<TEntity> query, PaginationRequestModel pagination) =>
+        public IQueryable<TEntity> QueryPaginator(IQueryable<TEntity> query, PaginationRequestModel pagination) =>
            query.Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult<TSelector>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+        public IQueryable<TEntity> QueryPaginator<TSelector>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
             query.OrderBy(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginatedResult<TSelector1, TSelector2>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+        public IQueryable<TEntity> QueryPaginator<TSelector1, TSelector2>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
             query.OrderBy(orderSelector1).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
     }
 
