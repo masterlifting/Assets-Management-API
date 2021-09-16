@@ -9,13 +9,28 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Company.Analyzer.Services.CalculatorServices;
 
 namespace IM.Service.Company.Analyzer.Services.DtoServices
 {
     public class RatingDtoAggregator
     {
         private readonly RepositorySet<Rating> repository;
-        public RatingDtoAggregator(RepositorySet<Rating> repository) => this.repository = repository;
+        private readonly RatingCalculator ratingCalculator;
+        private readonly ReportCalculator reportCalculator;
+        private readonly PriceCalculator priceCalculator;
+
+        public RatingDtoAggregator(
+            RepositorySet<Rating> repository
+            , RatingCalculator ratingCalculator
+            , ReportCalculator reportCalculator
+            , PriceCalculator priceCalculator)
+        {
+            this.repository = repository;
+            this.ratingCalculator = ratingCalculator;
+            this.reportCalculator = reportCalculator;
+            this.priceCalculator = priceCalculator;
+        }
 
         public async Task<ResponseModel<RatingDto>> GetAsync(string ticker)
         {
@@ -39,7 +54,7 @@ namespace IM.Service.Company.Analyzer.Services.DtoServices
                 Data = new(rating)
             };
         }
-        public async Task<ResponseModel<PaginationResponseModel<RatingDto>>> GetRatingsAsync(PaginationRequestModel pagination)
+        public async Task<ResponseModel<PaginationResponseModel<RatingDto>>> GetAsync(PaginationRequestModel pagination)
         {
             var errors = Array.Empty<string>();
 
@@ -60,6 +75,30 @@ namespace IM.Service.Company.Analyzer.Services.DtoServices
                     Count = count
                 }
             };
+        }
+
+        public async Task<bool> UpdateAsync(DateTime dateStart)
+        {
+            try
+            {
+                if (await priceCalculator.CalculateAsync(dateStart))
+                    if (await reportCalculator.CalculateAsync(dateStart))
+                        await ratingCalculator.CalculateAsync();
+                    else
+                        await ratingCalculator.CalculateAsync();
+                else if (await reportCalculator.CalculateAsync(dateStart))
+                    await ratingCalculator.CalculateAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"Analyzer exception: {ex.InnerException?.Message ?? ex.Message}");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                
+                return false;
+            }
         }
     }
 }

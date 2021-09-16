@@ -1,12 +1,14 @@
+using CommonServices.Models.Http;
+
+using IM.Service.Company.Prices.Models.Client.MoexModels;
+using IM.Service.Company.Prices.Settings;
+
 using Microsoft.Extensions.Options;
 
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using IM.Service.Company.Prices.Models.Client.MoexModels;
-using IM.Service.Company.Prices.Settings;
-using IM.Service.Company.Prices.Settings.Client;
 
 namespace IM.Service.Company.Prices.Clients
 {

@@ -1,39 +1,17 @@
-﻿using CommonServices.Models.Dto;
-using CommonServices.Models.Dto.Http;
+﻿using CommonServices.HttpServices;
+using CommonServices.Models.Dto;
+
+using IM.Gateway.Companies.Settings;
+
 using Microsoft.Extensions.Options;
 
-using System;
 using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
-using IM.Gateway.Companies.Settings;
-using IM.Gateway.Companies.Settings.Client;
 
 namespace IM.Gateway.Companies.Clients
 {
-    public class PricesClient : IDisposable
+    public class PricesClient : PaginationRequestClient<PriceDto>
     {
-        private readonly HttpClient httpClient;
-        private readonly HostModel settings;
-
         public PricesClient(HttpClient httpClient, IOptions<ServiceSettings> options)
-        {
-            this.httpClient = httpClient;
-            settings = options.Value.ClientSettings.CompanyPrices;
-        }
-
-
-        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(FilterRequestModel filter, PaginationRequestModel pagination) =>
-            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<PriceDto>>>
-                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{settings.Controller}?{filter.QueryParams}&{pagination.QueryParams}") ?? new();
-        public async Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination) => 
-            await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<PriceDto>>>
-                ($"{settings.Schema}://{settings.Host}:{settings.Port}/{settings.Controller}/{ticker}?{filter.QueryParams}&{pagination.QueryParams}") ?? new();
-
-        public void Dispose()
-        {
-            httpClient.Dispose();
-            GC.SuppressFinalize(this);
-        }
+            : base(httpClient, options.Value.ClientSettings.CompanyPrices) { }
     }
 }

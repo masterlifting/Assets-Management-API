@@ -1,4 +1,6 @@
-﻿namespace IM.Service.Company.Prices.Settings.Client
+﻿using CommonServices.Models.Http;
+
+namespace IM.Service.Company.Prices.Settings.Client
 {
     public class ClientSettings
     {

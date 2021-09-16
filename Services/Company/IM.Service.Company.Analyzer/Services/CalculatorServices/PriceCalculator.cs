@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.Http;
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
@@ -45,19 +45,19 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         public async Task<bool> CalculateAsync()
         {
             var prices = await repository.FindAsync(x =>
-                    x.StatusId == (byte)StatusType.ToCalculate
-                    || x.StatusId == (byte)StatusType.CalculatedPartial
-                    || x.StatusId == (byte)StatusType.Error);
+                x.StatusId == (byte)StatusType.ToCalculate
+                || x.StatusId == (byte)StatusType.CalculatedPartial
+                || x.StatusId == (byte)StatusType.Error);
 
             if (!prices.Any())
+                return false;
+
+            if (!await IsSetCalculatingStatusAsync(prices))
                 return false;
 
             foreach (var priceGroup in prices.GroupBy(x => x.TickerName))
             {
                 Price[] result = priceGroup.ToArray();
-
-                if (!await IsSetCalculatingStatusAsync(result))
-                    continue;
 
                 var firstElement = priceGroup.OrderBy(x => x.Date).First();
                 var targetDate = CommonHelper.GetExchangeLastWorkday(firstElement.SourceType, firstElement.Date);
@@ -65,6 +65,15 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                 try
                 {
                     var calculatingData = await GetPricesAsync(priceGroup.Key, targetDate);
+
+                    if (!calculatingData.Any())
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"data for calculating prices by '{priceGroup.Key}' not found!");
+                        Console.ForegroundColor = ConsoleColor.Gray;
+
+                        continue;
+                    }
 
                     var calculator = new PriceComparator(calculatingData);
                     result = calculator.GetComparedSample();
@@ -79,28 +88,37 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
 
-                await repository.CreateUpdateAsync(result, new PriceComparer(), "price calculator");
+                await repository.CreateUpdateAsync(result, new PriceComparer(), $"calculate prices for {priceGroup.Key}");
             }
 
             return true;
         }
         public async Task<bool> CalculateAsync(DateTime dateStart)
         {
-            var prices = await repository.FindAsync(x => x.StatusId != (byte)StatusType.Calculating);
+            var prices = await repository.FindAsync(x => true);
 
             if (!prices.Any())
+                return false;
+
+            if (!await IsSetCalculatingStatusAsync(prices))
                 return false;
 
             foreach (var priceGroup in prices.GroupBy(x => x.TickerName))
             {
                 Price[] result = priceGroup.ToArray();
 
-                if (!await IsSetCalculatingStatusAsync(result))
-                    continue;
-
                 try
                 {
                     var calculatingData = await GetPricesAsync(priceGroup.Key, dateStart);
+
+                    if (!calculatingData.Any())
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"data for calculating prices by '{priceGroup.Key}' not found!");
+                        Console.ForegroundColor = ConsoleColor.Gray;
+
+                        continue;
+                    }
 
                     var calculator = new PriceComparator(calculatingData);
                     result = calculator.GetComparedSample();
@@ -115,50 +133,58 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
 
-                await repository.CreateUpdateAsync(result, new PriceComparer(), "price calculator");
+                await repository.CreateUpdateAsync(result, new PriceComparer(), $"calculate prices for {priceGroup.Key}");
             }
 
             return true;
         }
-        
+
         private async Task<IReadOnlyCollection<PriceDto>> GetPricesAsync(string ticker, DateTime date)
         {
-            ResponseModel<PaginationResponseModel<StockSplitDto>>? stockSplitsResponse = null;
-            ResponseModel<PaginationResponseModel<PriceDto>>? pricesResponse = null;
+            ResponseModel<PaginationResponseModel<StockSplitDto>>? stockSplitsResponse;
+            ResponseModel<PaginationResponseModel<PriceDto>>? pricesResponse;
 
             try
             {
                 stockSplitsResponse = await gatewayClient.GetAsync(ticker, new(date.Year, date.Month, date.Day), new(1, int.MaxValue));
+
+                if (stockSplitsResponse is null || stockSplitsResponse.Errors.Any())
+                    throw new BadHttpRequestException($"stock split data for '{ticker}' is null");
+
                 pricesResponse = await pricesClient.GetAsync(ticker, new(date.Year, date.Month, date.Day), new(1, int.MaxValue));
+
+                if (pricesResponse is null || pricesResponse.Errors.Any())
+                    throw new BadHttpRequestException($"price data for '{ticker}' is null");
             }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"requests for price calculating for '{ticker}' failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
                 Console.ForegroundColor = ConsoleColor.Gray;
+
+                throw;
             }
 
-            if (pricesResponse!.Errors.Any() || stockSplitsResponse!.Errors.Any() || pricesResponse.Data!.Count <= 0)
-                return Array.Empty<PriceDto>();
-
             //приводим цену в соответствие для рассчета, если по этому тикеру был сплит
-
-            var pricesResponseItems = pricesResponse.Data.Items;
-            var calculatingData = new List<PriceDto>(pricesResponse.Data.Count);
+            var pricesResponseItems = pricesResponse.Data!.Items;
+            var splittedPriceResult = new List<PriceDto>(pricesResponse.Data.Count);
 
             foreach (var stockSplit in stockSplitsResponse.Data!.Items.OrderByDescending(x => x.Date))
             {
-                var splitPrices = pricesResponseItems!.Where(x => x.Date >= stockSplit.Date).ToArray();
+                var splittedPrices = pricesResponseItems.Where(x => x.Date >= stockSplit.Date).ToArray();
 
-                foreach (var price in splitPrices)
+                foreach (var price in splittedPrices)
                     price.Value *= stockSplit.Divider;
 
-                calculatingData.AddRange(splitPrices);
+                splittedPriceResult.AddRange(splittedPrices);
 
-                pricesResponseItems = pricesResponse.Data.Items.Except(splitPrices, new PriceComparer()).ToArray() as PriceDto[];
+                var exceptedResult = pricesResponseItems.Except(splittedPrices, new PriceComparer()).ToArray();
+
+                pricesResponseItems = pricesResponse.Data.Items.Join(exceptedResult, x => (x.TickerName, x.Date),
+                    y => (y.TickerName, y.Date), (x, _) => x).ToArray();
             }
 
-            return calculatingData.Union(pricesResponseItems!).ToArray();
+            return splittedPriceResult.Union(pricesResponseItems!).ToArray();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using CommonServices.Models.Dto.Http;
+﻿using System;
+using CommonServices.Models.Dto.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using System.Threading.Tasks;
@@ -14,9 +15,17 @@ namespace IM.Service.Company.Analyzer.Controllers
         public RatingsController(RatingDtoAggregator aggregator) => this.aggregator = aggregator;
 
         public async Task<ResponseModel<PaginationResponseModel<RatingDto>>> Get(int page = 1, int limit = 10) => 
-            await aggregator.GetRatingsAsync(new(page, limit));
-
+            await aggregator.GetAsync((PaginationRequestModel) new(page, limit));
         [HttpGet("{ticker}")]
         public async Task<ResponseModel<RatingDto>> Get(string ticker) => await aggregator.GetAsync(ticker);
+        [HttpPost("update")]
+        public async Task<string> Update(DateTime? dateStart = null)
+        {
+            dateStart ??= new DateTime(2019, 01, 01);
+
+            var result = await aggregator.UpdateAsync(dateStart.Value);
+            var messageResult = result ? "success" : "failed";
+            return $"updated ratings {messageResult}";
+        }
     }
 }

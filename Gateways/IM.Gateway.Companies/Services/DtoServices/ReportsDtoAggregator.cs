@@ -11,10 +11,10 @@ namespace IM.Gateway.Companies.Services.DtoServices
         public ReportsDtoAggregator(ReportsClient httpClient) => this.httpClient = httpClient;
 
         public Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(FilterRequestModel filter, PaginationRequestModel pagination) =>
-            httpClient.GetReportsAsync(filter, pagination);
+            httpClient.GetAsync(filter, pagination);
 
         public Task<ResponseModel<PaginationResponseModel<ReportDto>>> GetReportsAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination) =>
-            httpClient.GetReportsAsync(ticker, filter, pagination);
+            httpClient.GetAsync(ticker, filter, pagination);
 
     }
 }

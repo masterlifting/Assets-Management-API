@@ -59,7 +59,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"ticker\": \"baba\",\r\n    \"name\": \"Alibaba\",\r\n    \"description\": \"Продажи\",\r\n    \"priceSourceTypeId\": 3,\r\n    \"reportSourceTypeId\": 2,\r\n    \"reportSourceValue\":\"\"\r\n}",
+									"raw": "{\r\n    \"ticker\": \"aapl\",\r\n    \"name\": \"Apple inc.\",\r\n    \"description\": \"Коммуникационное оборудование\",\r\n    \"priceSourceTypeId\": 3,\r\n    \"reportSourceTypeId\": 2,\r\n    \"reportSourceValue\":\"apple-computer-inc\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -343,7 +343,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"ticker\": \"baba\",\r\n    \"date\": \"2021-09-15\",\r\n    \"divider\": 4\r\n}",
+									"raw": "{\r\n    \"ticker\": \"baba\",\r\n    \"date\": \"2021-01-15\",\r\n    \"divider\": 2\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1599,6 +1599,26 @@
 											"path": [
 												"ratings",
 												"aapl"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratings/update",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/ratings/update",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"ratings",
+												"update"
 											]
 										}
 									},

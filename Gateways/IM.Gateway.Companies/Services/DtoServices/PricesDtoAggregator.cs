@@ -11,8 +11,8 @@ namespace IM.Gateway.Companies.Services.DtoServices
         public PricesDtoAggregator(PricesClient httpClient) => this.httpClient = httpClient;
 
         public Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(FilterRequestModel filter, PaginationRequestModel pagination) =>
-            httpClient.GetPricesAsync(filter, pagination);
+            httpClient.GetAsync(filter, pagination);
         public Task<ResponseModel<PaginationResponseModel<PriceDto>>> GetPricesAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination) =>
-            httpClient.GetPricesAsync(ticker, filter, pagination);
+            httpClient.GetAsync(ticker, filter, pagination);
     }
 }

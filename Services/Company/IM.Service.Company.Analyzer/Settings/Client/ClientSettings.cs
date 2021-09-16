@@ -1,4 +1,6 @@
-﻿namespace IM.Service.Company.Analyzer.Settings.Client
+﻿using CommonServices.Models.Http;
+
+namespace IM.Service.Company.Analyzer.Settings.Client
 {
     public class ClientSettings
     {

@@ -1,4 +1,6 @@
-﻿namespace IM.Gateway.Companies.Settings.Client
+﻿using CommonServices.Models.Http;
+
+namespace IM.Gateway.Companies.Settings.Client
 {
     public class ClientSettings
     {

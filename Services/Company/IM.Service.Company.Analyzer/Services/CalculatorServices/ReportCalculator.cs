@@ -1,12 +1,13 @@
 ﻿using CommonServices;
 using CommonServices.Models.Dto;
-using CommonServices.Models.Dto.Http;
 using CommonServices.Models.Entity;
 
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
+
+using Microsoft.AspNetCore.Http;
 
 using System;
 using System.Linq;
@@ -51,12 +52,12 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             if (!reports.Any())
                 return false;
 
+            if (!await IsSetCalculatingStatusAsync(reports))
+                return false;
+
             foreach (var reportGroup in reports.GroupBy(x => x.TickerName))
             {
                 Report[] result = reportGroup.ToArray();
-
-                if (!await IsSetCalculatingStatusAsync(result))
-                    continue;
 
                 var firstElement = reportGroup.OrderBy(x => x.Year).ThenBy(x => x.Quarter).First();
 
@@ -67,6 +68,15 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                 {
                     var (dtoReports, dtoPrices) = await GeReportsAsync(reportGroup.Key, new DateTime(priceYear, priceMonth, priceDay), reportYear, reportQuarter);
 
+                    if (!dtoReports.Any())
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"data for calculating reports by '{reportGroup.Key}' not found!");
+                        Console.ForegroundColor = ConsoleColor.Gray;
+
+                        continue;
+                    }
+
                     var calculator = new ReportComparator(dtoReports, dtoPrices);
                     result = calculator.GetComparedSample();
                 }
@@ -80,32 +90,40 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
 
-                await repository.CreateUpdateAsync(result, new ReportComparer(), "report calculator");
+                await repository.CreateUpdateAsync(result, new ReportComparer(), $"calculate reports for {reportGroup.Key}");
             }
 
             return true;
         }
         public async Task<bool> CalculateAsync(DateTime dateStart)
         {
-            var reports = await repository.FindAsync(x => x.StatusId != (byte)StatusType.Calculating);
+            var reports = await repository.FindAsync(x => true);
 
             if (!reports.Any())
+                return false;
+
+            if (!await IsSetCalculatingStatusAsync(reports))
                 return false;
 
             foreach (var reportGroup in reports.GroupBy(x => x.TickerName))
             {
                 Report[] result = reportGroup.ToArray();
 
-                if (!await IsSetCalculatingStatusAsync(result))
-                    continue;
-
                 var (targetYear, targetQuarter) = CommonHelper.SubtractQuarter(dateStart);
                 var (year, month, day) = CommonHelper.GetQuarterFirstDate(targetYear, targetQuarter);
-
 
                 try
                 {
                     var (dtoReports, dtoPrices) = await GeReportsAsync(reportGroup.Key, new DateTime(year, month, day), targetYear, targetQuarter);
+
+                    if (!dtoReports.Any())
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"data for calculating reports by '{reportGroup.Key}' not found!");
+                        Console.ForegroundColor = ConsoleColor.Gray;
+
+                        continue;
+                    }
 
                     var calculator = new ReportComparator(dtoReports, dtoPrices);
                     result = calculator.GetComparedSample();
@@ -120,31 +138,35 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     Console.ForegroundColor = ConsoleColor.Gray;
                 }
 
-                await repository.CreateUpdateAsync(result, new ReportComparer(), "report calculator");
+                await repository.CreateUpdateAsync(result, new ReportComparer(), $"calculate reports for {reportGroup.Key}");
             }
 
             return true;
         }
+
         private async Task<(ReportDto[] dtoReports, PriceDto[]? dtoPrices)> GeReportsAsync(string ticker, DateTime date, int year, byte quarter)
         {
-            ResponseModel<PaginationResponseModel<ReportDto>>? reportResponse = null;
-            ResponseModel<PaginationResponseModel<PriceDto>>? pricesResponse = null;
-
             try
             {
-                reportResponse = await reportsClient.GetAsync(ticker, new(year, quarter), new(1, int.MaxValue));
-                pricesResponse = await pricesClient.GetAsync(ticker, new(date.Year, date.Month, date.Day), new(1, int.MaxValue));
+                var reportResponse = await reportsClient.GetAsync(ticker, new(year, quarter), new(1, int.MaxValue));
+
+                if (reportResponse is null || reportResponse.Errors.Any())
+                    throw new BadHttpRequestException($"report data for '{ticker}' is null");
+
+                var pricesResponse = await pricesClient.GetAsync(ticker, new(date.Year, date.Month, date.Day), new(1, int.MaxValue));
+
+                return pricesResponse is null
+                    ? throw new BadHttpRequestException($"price data for '{ticker}' is null")
+                    : (reportResponse.Data!.Items, pricesResponse.Data?.Items);
             }
             catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"requests for reports calculating for '{ticker}' failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
                 Console.ForegroundColor = ConsoleColor.Gray;
-            }
 
-            return reportResponse!.Errors.Any()
-                ? (Array.Empty<ReportDto>(), null)
-                : (reportResponse.Data!.Items, pricesResponse!.Data?.Items);
+                throw;
+            }
         }
     }
 }

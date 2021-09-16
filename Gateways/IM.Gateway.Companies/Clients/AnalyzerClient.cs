@@ -1,13 +1,15 @@
 ﻿using CommonServices.Models.Dto.CompanyAnalyzer;
 using CommonServices.Models.Dto.Http;
+
+using IM.Gateway.Companies.Settings;
+
 using Microsoft.Extensions.Options;
 
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using IM.Gateway.Companies.Settings;
-using IM.Gateway.Companies.Settings.Client;
+using CommonServices.Models.Http;
 
 namespace IM.Gateway.Companies.Clients
 {
@@ -32,8 +34,6 @@ namespace IM.Gateway.Companies.Clients
         public async Task<ResponseModel<CompanyAnalyzerRatingDto>> GetRatingAsync(string ticker) =>
             await httpClient.GetFromJsonAsync<ResponseModel<CompanyAnalyzerRatingDto>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{ratings}/{ticker}") ?? new();
-
-
         public async Task<ResponseModel<PaginationResponseModel<CompanyAnalyzerCoefficientDto>>> GetCoefficientsAsync(string ticker, PaginationRequestModel pagination) =>
             await httpClient.GetFromJsonAsync<ResponseModel<PaginationResponseModel<CompanyAnalyzerCoefficientDto>>>
                 ($"{settings.Schema}://{settings.Host}:{settings.Port}/{coefficients}/{ticker}?{pagination.QueryParams}") ?? new();

@@ -1,4 +1,6 @@
-﻿namespace IM.Service.Company.Reports.Settings.Client
+﻿using CommonServices.Models.Http;
+
+namespace IM.Service.Company.Reports.Settings.Client
 {
     public class InvestingModel : HostModel
     {

@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using CommonServices.Models.Dto;
 
 namespace IM.Gateway.Companies.Services.DtoServices
 {
@@ -17,7 +18,7 @@ namespace IM.Gateway.Companies.Services.DtoServices
         private readonly RepositorySet<StockSplit> repository;
         public StockSplitDtoAggregator(RepositorySet<StockSplit> repository) => this.repository = repository;
 
-        public async Task<ResponseModel<PaginationResponseModel<StockSplitGetDto>>> GetAsync(FilterRequestModel filter, PaginationRequestModel pagination)
+        public async Task<ResponseModel<PaginationResponseModel<StockSplitDto>>> GetAsync(FilterRequestModel filter, PaginationRequestModel pagination)
         {
             var errors = Array.Empty<string>();
 
@@ -28,8 +29,9 @@ namespace IM.Gateway.Companies.Services.DtoServices
 
             var companies = repository.GetDbSetBy<Company>();
 
-            var result = await paginatedQuery.Join(companies, x => x.CompanyTicker, y => y.Ticker, (x, y) => new StockSplitGetDto
+            var result = await paginatedQuery.Join(companies, x => x.CompanyTicker, y => y.Ticker, (x, y) => new StockSplitDto
             {
+                Id = x.Id,
                 Company = y.Name,
                 Ticker = x.CompanyTicker,
                 Divider = x.Divider,
@@ -47,7 +49,7 @@ namespace IM.Gateway.Companies.Services.DtoServices
                 }
             };
         }
-        public async Task<ResponseModel<PaginationResponseModel<StockSplitGetDto>>> GetAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination)
+        public async Task<ResponseModel<PaginationResponseModel<StockSplitDto>>> GetAsync(string ticker, FilterRequestModel filter, PaginationRequestModel pagination)
         {
             var companies = repository.GetDbSetBy<Company>();
             var company = await companies.FindAsync(ticker.ToUpperInvariant());
@@ -64,8 +66,9 @@ namespace IM.Gateway.Companies.Services.DtoServices
             
             var paginatedResult = repository.QueryPaginator(resultFilteredQuery, pagination, x => x.Date);
 
-            var result = await paginatedResult.Join(companies, x => x.CompanyTicker, y => y.Ticker, (x, y) => new StockSplitGetDto
+            var result = await paginatedResult.Join(companies, x => x.CompanyTicker, y => y.Ticker, (x, y) => new StockSplitDto
             {
+                Id = x.Id,
                 Company = y.Name,
                 Ticker = x.CompanyTicker,
                 Divider = x.Divider,
