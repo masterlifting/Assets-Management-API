@@ -8,10 +8,7 @@ namespace IM.Gateway.Companies.Models.Dto
 {
     public class StockSplitPostDto : PriceIdentity
     {
-        [Required, StringLength(10)]
-        public string Ticker { get; set; } = null!;
-
         [Zero, Range(1, 100)]
-        public int Divider { get; set; }
+        public int Divider { get; init; }
     }
 }

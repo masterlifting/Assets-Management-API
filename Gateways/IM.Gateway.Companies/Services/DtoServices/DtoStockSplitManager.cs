@@ -110,7 +110,7 @@ namespace IM.Gateway.Companies.Services.DtoServices
         {
             var ctxEntity = new StockSplit()
             {
-                CompanyTicker = model.Ticker,
+                CompanyTicker = model.TickerName,
                 Date = model.Date,
                 Divider = model.Divider
             };
@@ -125,7 +125,7 @@ namespace IM.Gateway.Companies.Services.DtoServices
         {
             var ctxEntity = new StockSplit
             {
-                CompanyTicker = model.Ticker,
+                CompanyTicker = model.TickerName,
                 Date = model.Date,
                 Divider = model.Divider
             };

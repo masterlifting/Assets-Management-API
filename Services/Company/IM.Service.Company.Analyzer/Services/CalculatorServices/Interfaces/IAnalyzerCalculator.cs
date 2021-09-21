@@ -7,6 +7,6 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces
     {
         Task<bool> CalculateAsync();
         Task<bool> CalculateAsync(DateTime dateStart);
-        Task<bool> IsSetCalculatingStatusAsync(T[] collection);
+        Task<bool> IsSetCalculatingStatusAsync(T[] collection, string info);
     }
 }

@@ -2,7 +2,6 @@
 using CommonServices.Models.Dto.CompanyPrices;
 using CommonServices.Models.Dto.GatewayCompanies;
 using CommonServices.Models.Entity;
-using CommonServices.Models.Http;
 
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
@@ -13,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -38,15 +38,16 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             this.gatewayClient = gatewayClient;
         }
 
-        public async Task<bool> IsSetCalculatingStatusAsync(Price[] prices)
+        public async Task<bool> IsSetCalculatingStatusAsync(Price[] prices, string info)
         {
             foreach (var price in prices)
                 price.StatusId = (byte)StatusType.Calculating;
 
-            var (errors, _) = await repository.UpdateAsync(prices, $"prices calculating status count: {prices.Length}");
+            var (errors, _) = await repository.UpdateAsync(prices, $"price calculating status for '{info}'");
 
             return !errors.Any();
         }
+
         public async Task<bool> CalculateAsync()
         {
             var prices = await repository.GetSampleAsync(x =>
@@ -57,43 +58,12 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             if (!prices.Any())
                 return false;
 
-            if (!await IsSetCalculatingStatusAsync(prices))
-                return false;
-
-            foreach (var priceGroup in prices.GroupBy(x => x.TickerName))
+            foreach (var group in prices.GroupBy(x => x.TickerName))
             {
-                Price[] result = priceGroup.ToArray();
+                var firstElement = group.OrderBy(x => x.Date).First();
+                var dateStart = CommonHelper.GetExchangeLastWorkday(firstElement.SourceType, firstElement.Date);
 
-                var firstElement = priceGroup.OrderBy(x => x.Date).First();
-                var targetDate = CommonHelper.GetExchangeLastWorkday(firstElement.SourceType, firstElement.Date);
-
-                try
-                {
-                    var calculatingData = await GetPricesAsync(priceGroup.Key, targetDate);
-
-                    if (!calculatingData.Any())
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"data for calculating prices by '{priceGroup.Key}' not found!");
-                        Console.ForegroundColor = ConsoleColor.Gray;
-
-                        continue;
-                    }
-
-                    var calculator = new PriceComparator(calculatingData);
-                    result = calculator.GetComparedSample();
-                }
-                catch (Exception ex)
-                {
-                    foreach (var price in result)
-                        price.StatusId = (byte)StatusType.Error;
-
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"calculating prices for {priceGroup.Key} failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                }
-
-                await repository.CreateUpdateAsync(result, new PriceComparer(), $"calculate prices for {priceGroup.Key}");
+                await BaseCalculateAsync(group, dateStart);
             }
 
             return true;
@@ -105,76 +75,61 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             if (!prices.Any())
                 return false;
 
-            if (!await IsSetCalculatingStatusAsync(prices))
-                return false;
-
-            foreach (var priceGroup in prices.GroupBy(x => x.TickerName))
+            foreach (var group in prices.GroupBy(x => x.TickerName))
             {
-                Price[] result = priceGroup.ToArray();
-
-                try
-                {
-                    var calculatingData = await GetPricesAsync(priceGroup.Key, dateStart);
-
-                    if (!calculatingData.Any())
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine($"data for calculating prices by '{priceGroup.Key}' not found!");
-                        Console.ForegroundColor = ConsoleColor.Gray;
-
-                        continue;
-                    }
-
-                    var calculator = new PriceComparator(calculatingData);
-                    result = calculator.GetComparedSample();
-                }
-                catch (Exception ex)
-                {
-                    foreach (var price in result)
-                        price.StatusId = (byte)StatusType.Error;
-
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"calculating prices for '{priceGroup.Key}' failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                }
-
-                await repository.CreateUpdateAsync(result, new PriceComparer(), $"calculate prices for {priceGroup.Key}");
+                await BaseCalculateAsync(group, dateStart);
             }
 
             return true;
         }
 
-        private async Task<IReadOnlyCollection<PriceGetDto>> GetPricesAsync(string ticker, DateTime date)
+        private async Task BaseCalculateAsync(IGrouping<string, Price> group, DateTime dateStart)
         {
-            ResponseModel<PaginatedModel<StockSplitGetDto>> stockSplitsResponse;
-            ResponseModel<PaginatedModel<PriceGetDto>> pricesResponse;
+            var priceGroup = group.ToArray();
+
+            if (!await IsSetCalculatingStatusAsync(priceGroup, group.Key))
+                throw new DataException($"set price calculating status for '{group.Key}' failed");
 
             try
             {
-                stockSplitsResponse = await gatewayClient.Get<StockSplitGetDto>(
-                    "api/stocksplits",
-                    GetQueryString(HttpRequestFilterType.More, ticker, date.Year, date.Month, date.Day),
-                    new(1, int.MaxValue));
+                var calculatingData = await GetCalculatingDataAsync(group.Key, dateStart);
 
-                if (stockSplitsResponse.Errors.Any())
-                    throw new BadHttpRequestException(string.Join(';', stockSplitsResponse.Errors));
+                if (!calculatingData.Any())
+                    throw new DataException($"prices for '{group.Key}' not found!");
 
-                pricesResponse = await pricesClient.Get<PriceGetDto>(
-                    "prices",
-                    GetQueryString(HttpRequestFilterType.More, ticker, date.Year, date.Month, date.Day),
-                    new(1, int.MaxValue));
-
-                if (pricesResponse.Errors.Any())
-                    throw new BadHttpRequestException(string.Join(';', pricesResponse.Errors));
+                var calculator = new PriceComparator(calculatingData);
+                await repository.CreateUpdateAsync(
+                    calculator.GetComparedSample(),
+                    new PriceComparer(),
+                    $"price calculated result for {group.Key}");
             }
             catch (Exception ex)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"requests for price calculating for '{ticker}' failed! \nError message: {ex.InnerException?.Message ?? ex.Message}");
-                Console.ForegroundColor = ConsoleColor.Gray;
+                foreach (var price in group)
+                    price.StatusId = (byte)StatusType.Error;
 
-                throw;
+                await repository.CreateUpdateAsync(priceGroup, new PriceComparer(), $"calculate prices for {group.Key}");
+
+                throw new ArithmeticException($"price calculated for '{group.Key}' failed! \nError: {ex.Message}");
             }
+        }
+        private async Task<IReadOnlyCollection<PriceGetDto>> GetCalculatingDataAsync(string ticker, DateTime date)
+        {
+            var stockSplitsResponse = await gatewayClient.Get<StockSplitGetDto>(
+                "api/stocksplits",
+                GetQueryString(HttpRequestFilterType.More, ticker, date.Year, date.Month, date.Day),
+                new(1, int.MaxValue));
+
+            if (stockSplitsResponse.Errors.Any())
+                throw new BadHttpRequestException(string.Join('\n', stockSplitsResponse.Errors));
+
+            var pricesResponse = await pricesClient.Get<PriceGetDto>(
+                "prices",
+                GetQueryString(HttpRequestFilterType.More, ticker, date.Year, date.Month, date.Day),
+                new(1, int.MaxValue));
+
+            if (pricesResponse.Errors.Any())
+                throw new BadHttpRequestException(string.Join('\n', pricesResponse.Errors));
 
             //приводим цену в соответствие для рассчета, если по этому тикеру был сплит
             var pricesResponseItems = pricesResponse.Data!.Items;

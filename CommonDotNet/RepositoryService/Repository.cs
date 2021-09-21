@@ -350,10 +350,16 @@ namespace CommonServices.RepositoryService
             }
             catch (Exception ex)
             {
+                errors = errors.Append(ex.Message).ToArray();
+                
+                var innerException = ex.InnerException?.Message;
+                if (innerException is not null)
+                    errors = errors.Append(innerException).ToArray();
+
                 SetInfo(actionType, NotifyType.SavingFailed, info, ref errors);
 
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
+                Console.WriteLine(innerException ?? ex.Message);
                 Console.ForegroundColor = ConsoleColor.Gray;
             }
 
@@ -363,11 +369,11 @@ namespace CommonServices.RepositoryService
         {
             string action = actionType switch
             {
-                ActionType.Create => string.Intern("creating"),
-                ActionType.Update => string.Intern("updating"),
-                ActionType.CreateUpdate => string.Intern("creating/updating"),
-                ActionType.CreateUpdateDelete => string.Intern("creating/updating/deleting"),
-                _ => string.Intern("deleting")
+                ActionType.Create => string.Intern("Creating"),
+                ActionType.Update => string.Intern("Updating"),
+                ActionType.CreateUpdate => string.Intern("Creating/updating"),
+                ActionType.CreateUpdateDelete => string.Intern("Creating/updating/deleting"),
+                _ => string.Intern("Deleting")
             };
             string notify = notifyType switch
             {
