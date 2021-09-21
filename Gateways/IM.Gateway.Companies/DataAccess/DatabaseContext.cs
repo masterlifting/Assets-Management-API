@@ -12,5 +12,10 @@ namespace IM.Gateway.Companies.DataAccess
         public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
         {
         }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            modelBuilder.Entity<StockSplit>().HasKey(x => new { x.CompanyTicker, x.Date });
+        }
     }
 }

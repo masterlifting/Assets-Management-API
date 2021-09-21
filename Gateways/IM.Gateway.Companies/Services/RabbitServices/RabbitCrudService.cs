@@ -1,13 +1,12 @@
-﻿using CommonServices.Models.Dto.CompanyAnalyzer;
-using CommonServices.Models.Dto.CompanyPrices;
-using CommonServices.Models.Dto.CompanyReports;
-using CommonServices.RabbitServices;
+﻿using CommonServices.RabbitServices;
+
+using IM.Gateway.Companies.Models.Dto;
+using IM.Gateway.Companies.Settings;
+
 using Microsoft.Extensions.Options;
 
 using System.Collections.Generic;
 using System.Text.Json;
-using IM.Gateway.Companies.Models.Dto;
-using IM.Gateway.Companies.Settings;
 
 namespace IM.Gateway.Companies.Services.RabbitServices
 {
@@ -19,14 +18,29 @@ namespace IM.Gateway.Companies.Services.RabbitServices
 
         public void CreateCompany(CompanyPostDto company)
         {
-            var analyzerTicker = JsonSerializer.Serialize(new CompanyAnalyzerTickerDto { Name = company.Ticker! });
-            var companiesPricesTicker = JsonSerializer.Serialize(new CompanyPricesTickerDto { Name = company.Ticker!, SourceTypeId = company.PriceSourceTypeId });
-            var companiesReportsTicker = JsonSerializer.Serialize(new CompanyReportsTickerDto { Name = company.Ticker!, SourceTypeId = company.ReportSourceTypeId, SourceValue = company.ReportSourceValue });
+            if (company.Ticker is null)
+                return;
+
+            var analyzerTicker = JsonSerializer.Serialize(new CommonServices.Models.Dto.CompanyAnalyzer.TickerPostDto
+            {
+                Name = company.Ticker
+            });
+            var priceTicker = JsonSerializer.Serialize(new CommonServices.Models.Dto.CompanyPrices.TickerPostDto
+            {
+                Name = company.Ticker,
+                SourceTypeId = company.PriceSourceTypeId
+            });
+            var reportTicker = JsonSerializer.Serialize(new CommonServices.Models.Dto.CompanyReports.TickerPostDto
+            {
+                Name = company.Ticker,
+                SourceTypeId = company.ReportSourceTypeId,
+                SourceValue = company.ReportSourceValue
+            });
 
             var tickerData = new Dictionary<QueueNames, string>()
             {
-                {QueueNames.CompanyReports,companiesReportsTicker },
-                {QueueNames.CompanyPrices,companiesPricesTicker },
+                {QueueNames.CompanyReports,reportTicker },
+                {QueueNames.CompanyPrices,priceTicker },
                 {QueueNames.CompanyAnalyzer,analyzerTicker }
             };
 
@@ -35,15 +49,30 @@ namespace IM.Gateway.Companies.Services.RabbitServices
         }
         public void UpdateCompany(CompanyPostDto company)
         {
-            var analyzerTicker = JsonSerializer.Serialize(new CompanyAnalyzerTickerDto { Name = company.Ticker! });
-            var companiesPricesTicker = JsonSerializer.Serialize(new CompanyPricesTickerDto { Name = company.Ticker!, SourceTypeId = company.PriceSourceTypeId });
-            var companiesReportsTicker = JsonSerializer.Serialize(new CompanyReportsTickerDto { Name = company.Ticker!, SourceTypeId = company.ReportSourceTypeId, SourceValue = company.ReportSourceValue });
+            if (company.Ticker is null)
+                return;
+
+            var analyzerTicker = JsonSerializer.Serialize(new CommonServices.Models.Dto.CompanyAnalyzer.TickerPostDto
+            {
+                Name = company.Ticker
+            });
+            var priceTicker = JsonSerializer.Serialize(new CommonServices.Models.Dto.CompanyPrices.TickerPostDto
+            {
+                Name = company.Ticker,
+                SourceTypeId = company.PriceSourceTypeId
+            });
+            var reportTicker = JsonSerializer.Serialize(new CommonServices.Models.Dto.CompanyReports.TickerPostDto
+            {
+                Name = company.Ticker,
+                SourceTypeId = company.ReportSourceTypeId,
+                SourceValue = company.ReportSourceValue
+            });
 
             publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Ticker, QueueActions.Update, analyzerTicker);
-            publisher.PublishTask(QueueNames.CompanyPrices, QueueEntities.Ticker, QueueActions.Update, companiesPricesTicker);
-            publisher.PublishTask(QueueNames.CompanyReports, QueueEntities.Ticker, QueueActions.Update, companiesReportsTicker);
+            publisher.PublishTask(QueueNames.CompanyPrices, QueueEntities.Ticker, QueueActions.Update, priceTicker);
+            publisher.PublishTask(QueueNames.CompanyReports, QueueEntities.Ticker, QueueActions.Update, reportTicker);
         }
-        public void DeleteCompany(string ticker) => publisher.PublishTask(new QueueNames[]
+        public void DeleteCompany(string ticker) => publisher.PublishTask(new[]
         {
             QueueNames.CompanyReports,
             QueueNames.CompanyPrices,

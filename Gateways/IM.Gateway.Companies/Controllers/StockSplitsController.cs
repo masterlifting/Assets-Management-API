@@ -1,35 +1,76 @@
-﻿using CommonServices.Models.Dto.Http;
+﻿using CommonServices.Models.Dto.GatewayCompanies;
+using CommonServices.Models.Entity;
+using CommonServices.Models.Http;
 
 using IM.Gateway.Companies.Models.Dto;
 using IM.Gateway.Companies.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
 
+using System;
 using System.Threading.Tasks;
-using CommonServices.Models.Dto;
+
+using static CommonServices.CommonEnums;
 
 namespace IM.Gateway.Companies.Controllers
 {
     [ApiController, Route("api/[controller]")]
-    public class StockSplitsController : Controller
+    public class StockSplitsController : ControllerBase
     {
-        private readonly StockSplitDtoAggregator aggregator;
-        public StockSplitsController(StockSplitDtoAggregator aggregator) => this.aggregator = aggregator;
+        private readonly DtoStockSplitManager manager;
+        public StockSplitsController(DtoStockSplitManager manager) => this.manager = manager;
 
-        public async Task<ResponseModel<PaginationResponseModel<StockSplitDto>>> Get(int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
-            await aggregator.GetAsync(new(year, month, day), new(page, limit));
+        public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> Get(int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
+            await manager.GetAsync(new(HttpRequestFilterType.More, year, month, day), new(page, limit));
+
+        [HttpGet("last/")]
+        public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetLast(int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
+            await manager.GetLastAsync(new(HttpRequestFilterType.More, year, month, day), new(page, limit));
 
         [HttpGet("{ticker}")]
-        public async Task<ResponseModel<PaginationResponseModel<StockSplitDto>>> Get(string ticker, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
-            await aggregator.GetAsync(ticker, new(year, month, day), new(page, limit));
-        [HttpPost]
-        public async Task<ResponseModel<string>> Post(StockSplitPostDto model) => 
-            await aggregator.CreateAsync(model);
-        [HttpPut("{id:int}")]
-        public async Task<ResponseModel<string>> Put(int id, StockSplitPostDto model) => 
-            await aggregator.UpdateAsync(id, model);
-        [HttpDelete("{id:int}")]
-        public async Task<ResponseModel<string>> Delete(int id) => await aggregator.DeleteAsync(id);
+        public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> Get(string ticker, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
+            await manager.GetAsync(new(HttpRequestFilterType.More, ticker, year, month, day), new(page, limit));
+        
+        [HttpGet("{ticker}/{year:int}")]
+        public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(string ticker, int year, int page = 0, int limit = 0) =>
+            await manager.GetAsync(new(ticker, year), new(page, limit));
+        
+        [HttpGet("{ticker}/{year:int}/{month:int}")]
+        public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(string ticker, int year, int month, int page = 0, int limit = 0) =>
+            await manager.GetAsync(new(ticker, year, month), new(page, limit));
+        
+        [HttpGet("{ticker}/{year:int}/{month:int}/{day:int}")]
+        public async Task<ResponseModel<StockSplitGetDto>> Get(string ticker, int year, int month, int day) =>
+            await manager.GetAsync(new PriceIdentity() { TickerName = ticker, Date = new DateTime(year, month, day) });
 
+
+        [HttpGet("{year:int}")]
+        public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(int year, int page = 0, int limit = 0) =>
+            await manager.GetAsync(new(year), new(page, limit));
+        
+        [HttpGet("{year:int}/{month:int}")]
+        public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(int year, int month, int page = 0, int limit = 0) =>
+            await manager.GetAsync(new(year, month), new(page, limit));
+        
+        [HttpGet("{year:int}/{month:int}/{day:int}")]
+        public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(int year, int month, int day, int page = 0, int limit = 0) =>
+            await manager.GetAsync(new(HttpRequestFilterType.Equal, year, month, day), new(page, limit));
+
+
+        [HttpPost]
+        public async Task<ResponseModel<string>> Post(StockSplitPostDto model) => await manager.CreateAsync(model);
+        
+        [HttpPut("{ticker}/{year:int}/{month:int}/{day:int}")]
+        public async Task<ResponseModel<string>> Put(string ticker, int year, int month, int day, StockSplitPostDto model) =>
+            await manager.UpdateAsync(new StockSplitPostDto
+            {
+                TickerName = ticker,
+                Date = new DateTime(year, month, day),
+                Divider = model.Divider
+            });
+        
+        [HttpDelete("{ticker}/{year:int}/{month:int}/{day:int}")]
+        public async Task<ResponseModel<string>> Delete(string ticker, int year, int month, int day) =>
+            await manager.DeleteAsync(new PriceIdentity { TickerName = ticker, Date = new DateTime(year, month, day) });
     }
 }

@@ -59,8 +59,8 @@ namespace IM.Gateway.Companies
             services.AddScoped<IRepository<StockSplit>, StockSplitRepository>();
             services.AddScoped(typeof(RepositorySet<>));
 
-            services.AddScoped<CompanyDtoAggregator>();
-            services.AddScoped<StockSplitDtoAggregator>();
+            services.AddScoped<DtoCompanyManager>();
+            services.AddScoped<DtoStockSplitManager>();
             services.AddScoped<RabbitCrudService>();
         }
 

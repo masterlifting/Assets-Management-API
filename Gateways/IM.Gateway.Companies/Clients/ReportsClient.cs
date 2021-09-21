@@ -1,5 +1,4 @@
 ﻿using CommonServices.HttpServices;
-using CommonServices.Models.Dto;
 
 using IM.Gateway.Companies.Settings;
 
@@ -9,9 +8,9 @@ using System.Net.Http;
 
 namespace IM.Gateway.Companies.Clients
 {
-    public class ReportsClient : PaginationRequestClient<ReportDto>
+    public class ReportsClient : RestClient
     {
-        public ReportsClient(HttpClient httpClient, IOptions<ServiceSettings> options)
-            : base(httpClient, options.Value.ClientSettings.CompanyReports) { }
+        public ReportsClient(HttpClient httpClient, IOptions<ServiceSettings> settings)
+            : base(httpClient, settings.Value.ClientSettings.Reports) { }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using CommonServices.HttpServices;
-using CommonServices.Models.Dto;
 
 using IM.Service.Company.Analyzer.Settings;
 
@@ -9,7 +8,7 @@ using System.Net.Http;
 
 namespace IM.Service.Company.Analyzer.Clients
 {
-    public class CompanyReportsClient : PaginationRequestClient<ReportDto>
+    public class CompanyReportsClient : RestClient
     {
         public CompanyReportsClient(HttpClient httpClient, IOptions<ServiceSettings> options)
             : base(httpClient, options.Value.ClientSettings.CompanyReports) { }

@@ -1,15 +1,10 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-
-using CommonServices.Models.Dto.Http;
+﻿
+using System;
 
 namespace IM.Gateway.Companies.DataAccess.Entities
 {
-    public class StockSplit : IFilterDate
+    public class StockSplit
     {
-        [Key]
-        public int Id { get; init; }
-
         public Company Company { get; set; } = null!;
         public string CompanyTicker { get; set; } = null!;
 

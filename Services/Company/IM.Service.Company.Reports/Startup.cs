@@ -7,7 +7,6 @@ using IM.Service.Company.Reports.DataAccess.Entities;
 using IM.Service.Company.Reports.DataAccess.Repository;
 using IM.Service.Company.Reports.Services.BackgroundServices;
 using IM.Service.Company.Reports.Services.DtoServices;
-using IM.Service.Company.Reports.Services.HealthCheck;
 using IM.Service.Company.Reports.Services.RabbitServices;
 using IM.Service.Company.Reports.Services.ReportServices;
 using IM.Service.Company.Reports.Settings;
@@ -41,8 +40,6 @@ namespace IM.Service.Company.Reports
            });
 
             services.AddControllers();
-            services.AddHealthChecks()
-                .AddCheck<InvestingHealthCheck>("Investing health check");
 
             services.AddHttpClient<InvestingClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
@@ -50,7 +47,7 @@ namespace IM.Service.Company.Reports
 
             services.AddScoped<ReportParser>();
             services.AddScoped<ReportLoader>();
-            services.AddScoped<ReportsDtoAggregator>();
+            services.AddScoped<DtoManager>();
 
             services.AddScoped<IRepository<Ticker>, TickerRepository>();
             services.AddScoped<IRepository<Report>, ReportRepository>();
@@ -71,7 +68,6 @@ namespace IM.Service.Company.Reports
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHealthChecks("/health");
             });
         }
     }

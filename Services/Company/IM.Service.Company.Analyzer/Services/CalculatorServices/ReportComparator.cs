@@ -1,15 +1,19 @@
-﻿using CommonServices.Models.Dto;
-using System.Linq;
+﻿using CommonServices.Models.Dto.CompanyPrices;
+using CommonServices.Models.Dto.CompanyReports;
+
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.Models.Calculator;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
+
+using System.Linq;
+
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 {
     public class ReportComparator : IAnalyzerComparator<Report>
     {
-        private readonly ReportDto[] reports;
+        private readonly ReportGetDto[] reports;
         private readonly Sample[][] samples;
 
         private readonly Sample[] revenueCollection;
@@ -31,7 +35,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         private readonly Sample[]? roa;
         private readonly Sample[]? roe;
         private readonly Sample[]? eps;
-        public ReportComparator(ReportDto[] reports, PriceDto[]? prices)
+        public ReportComparator(ReportGetDto[] reports, PriceGetDto[]? prices)
         {
             this.reports = reports;
 
@@ -130,7 +134,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             return result;
         }
 
-        private void SetData(PriceDto[]? prices)
+        private void SetData(PriceGetDto[]? prices)
         {
             for (uint i = 0; i < reports.Length; i++)
             {

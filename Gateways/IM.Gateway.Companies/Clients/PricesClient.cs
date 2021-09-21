@@ -1,5 +1,4 @@
 ﻿using CommonServices.HttpServices;
-using CommonServices.Models.Dto;
 
 using IM.Gateway.Companies.Settings;
 
@@ -9,9 +8,9 @@ using System.Net.Http;
 
 namespace IM.Gateway.Companies.Clients
 {
-    public class PricesClient : PaginationRequestClient<PriceDto>
+    public class PricesClient : RestClient
     {
-        public PricesClient(HttpClient httpClient, IOptions<ServiceSettings> options)
-            : base(httpClient, options.Value.ClientSettings.CompanyPrices) { }
+        public PricesClient(HttpClient httpClient, IOptions<ServiceSettings> settings)
+            : base(httpClient, settings.Value.ClientSettings.Prices) { }
     }
 }

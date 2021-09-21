@@ -26,7 +26,7 @@ namespace IM.Service.Company.Prices.Services.PriceServices
             this.parser = parser;
         }
 
-        public async Task<int> LoadPricesAsync()
+        public async Task<int> LoadAsync()
         {
             if (IsExchangeWeekend(DateTime.UtcNow))
                 return 0;
@@ -41,7 +41,7 @@ namespace IM.Service.Company.Prices.Services.PriceServices
 
             return moexSavedResult.Length + tdameritradeSavedResult.Length;
         }
-        public async Task<Price[]> LoadPricesAsync(Ticker ticker)
+        public async Task<Price[]> LoadAsync(Ticker ticker)
         {
             var result = Array.Empty<Price>();
 

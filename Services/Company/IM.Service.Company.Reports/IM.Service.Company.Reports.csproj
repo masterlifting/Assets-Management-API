@@ -32,4 +32,8 @@
     <ProjectReference Include="..\..\..\CommonDotNet\CommonServices.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\" />
+  </ItemGroup>
+
 </Project>

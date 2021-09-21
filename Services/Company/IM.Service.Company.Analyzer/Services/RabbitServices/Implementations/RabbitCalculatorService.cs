@@ -1,9 +1,13 @@
-﻿using CommonServices.Models.Dto.CompanyAnalyzer;
+﻿using CommonServices.Models.Dto.CompanyPrices;
+using CommonServices.Models.Dto.CompanyReports;
 using CommonServices.RabbitServices;
-using System.Linq;
-using System.Threading.Tasks;
+
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
+
+using System.Linq;
+using System.Threading.Tasks;
+
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
@@ -27,7 +31,7 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
             };
 
         private async Task<bool> SetReportToCalculateAsync(string data) =>
-            (RabbitHelper.TrySerialize(data, out CompanyAnalyzerReportDto? report) || report is not null)
+            (RabbitHelper.TrySerialize(data, out ReportGetDto? report) || report is not null)
             && !(await reportRepository.CreateUpdateAsync(new Report
             {
                 TickerName = report!.TickerName,
@@ -38,7 +42,7 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
             }, $"report to calculate for '{report.TickerName}'")).Any();
 
         private async Task<bool> SetPriceToCalculateAsync(string data) => 
-            (RabbitHelper.TrySerialize(data, out CompanyAnalyzerPriceDto? price) || price is not null)
+            (RabbitHelper.TrySerialize(data, out PriceGetDto? price) || price is not null)
             && !(await priceRepository.CreateUpdateAsync(new Price
             {
                 TickerName = price!.TickerName,

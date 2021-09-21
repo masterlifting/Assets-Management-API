@@ -1,4 +1,3 @@
-using CommonServices.Models.Http;
 
 using IM.Service.Company.Prices.Models.Client.TdAmeritradeModels;
 using IM.Service.Company.Prices.Settings;
@@ -12,6 +11,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading.Tasks;
+using CommonServices.Models.Http;
 
 namespace IM.Service.Company.Prices.Clients
 {

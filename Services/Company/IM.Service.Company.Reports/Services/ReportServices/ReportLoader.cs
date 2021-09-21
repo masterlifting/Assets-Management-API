@@ -24,7 +24,7 @@ namespace IM.Service.Company.Reports.Services.ReportServices
             this.parser = parser;
         }
 
-        public async Task<Report[]> LoadReportsAsync(Ticker ticker)
+        public async Task<Report[]> LoadAsync(Ticker ticker)
         {
             var result = Array.Empty<Report>();
 
@@ -46,7 +46,7 @@ namespace IM.Service.Company.Reports.Services.ReportServices
 
             return result;
         }
-        public async Task<Report[]> LoadReportsAsync()
+        public async Task<Report[]> LoadAsync()
         {
             var tickers = await context.Tickers.ToArrayAsync();
             var result = new List<Report>(tickers.Length);

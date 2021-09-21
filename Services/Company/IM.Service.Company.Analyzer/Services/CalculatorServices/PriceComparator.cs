@@ -1,19 +1,22 @@
-﻿using System.Collections.Generic;
-using CommonServices.Models.Dto;
-using System.Linq;
+﻿using CommonServices.Models.Dto.CompanyPrices;
+
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.Models.Calculator;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
+
+using System.Collections.Generic;
+using System.Linq;
+
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 {
     public class PriceComparator : IAnalyzerComparator<Price>
     {
-        private readonly PriceDto[] prices;
+        private readonly PriceGetDto[] prices;
         private readonly Sample[] valueCollection;
 
-        public PriceComparator(IReadOnlyCollection<PriceDto> prices)
+        public PriceComparator(IReadOnlyCollection<PriceGetDto> prices)
         {
             this.prices = prices.OrderBy(x => x.Date).ToArray();
             valueCollection = new Sample[prices.Count];

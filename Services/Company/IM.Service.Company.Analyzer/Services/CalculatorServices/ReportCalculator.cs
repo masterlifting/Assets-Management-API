@@ -1,5 +1,6 @@
 ﻿using CommonServices;
-using CommonServices.Models.Dto;
+using CommonServices.Models.Dto.CompanyPrices;
+using CommonServices.Models.Dto.CompanyReports;
 using CommonServices.Models.Entity;
 
 using IM.Service.Company.Analyzer.Clients;
@@ -13,6 +14,8 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
+using static CommonServices.CommonEnums;
+using static CommonServices.HttpServices.QueryStringBuilder;
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
@@ -44,7 +47,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         }
         public async Task<bool> CalculateAsync()
         {
-            var reports = await repository.FindAsync(x =>
+            var reports = await repository.GetSampleAsync(x =>
                     x.StatusId == (byte)StatusType.ToCalculate
                     || x.StatusId == (byte)StatusType.CalculatedPartial
                     || x.StatusId == (byte)StatusType.Error);
@@ -97,7 +100,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         }
         public async Task<bool> CalculateAsync(DateTime dateStart)
         {
-            var reports = await repository.FindAsync(x => true);
+            var reports = await repository.GetSampleAsync(x => true);
 
             if (!reports.Any())
                 return false;
@@ -144,19 +147,25 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             return true;
         }
 
-        private async Task<(ReportDto[] dtoReports, PriceDto[]? dtoPrices)> GeReportsAsync(string ticker, DateTime date, int year, byte quarter)
+        private async Task<(ReportGetDto[] dtoReports, PriceGetDto[]? dtoPrices)> GeReportsAsync(string ticker, DateTime date, int year, byte quarter)
         {
             try
             {
-                var reportResponse = await reportsClient.GetAsync(ticker, new(year, quarter), new(1, int.MaxValue));
+                var reportResponse = await reportsClient.Get<ReportGetDto>(
+                    "reports",
+                    GetQueryString(ticker, year, quarter),
+                    new(1, int.MaxValue));
 
-                if (reportResponse is null || reportResponse.Errors.Any())
-                    throw new BadHttpRequestException($"report data for '{ticker}' is null");
+                if (reportResponse.Errors.Any())
+                    throw new BadHttpRequestException(string.Join(';', reportResponse.Errors));
 
-                var pricesResponse = await pricesClient.GetAsync(ticker, new(date.Year, date.Month, date.Day), new(1, int.MaxValue));
+                var pricesResponse = await pricesClient.Get<PriceGetDto>(
+                    "prices",
+                    GetQueryString(HttpRequestFilterType.More, ticker, date.Year, date.Month, date.Day),
+                    new(1, int.MaxValue));
 
-                return pricesResponse is null
-                    ? throw new BadHttpRequestException($"price data for '{ticker}' is null")
+                return pricesResponse.Errors.Any()
+                    ? throw new BadHttpRequestException(string.Join(';', reportResponse.Errors))
                     : (reportResponse.Data!.Items, pricesResponse.Data?.Items);
             }
             catch (Exception ex)

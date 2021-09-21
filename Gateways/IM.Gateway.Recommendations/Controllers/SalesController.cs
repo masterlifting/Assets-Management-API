@@ -1,9 +1,4 @@
-﻿using CommonServices.Models.Dto.Http;
-using Microsoft.AspNetCore.Mvc;
-
-using System.Threading.Tasks;
-using IM.Gateway.Recommendations.Models.Dto;
-using IM.Gateway.Recommendations.Services.DtoServices;
+﻿using Microsoft.AspNetCore.Mvc;
 
 namespace IM.Gateway.Recommendations.Controllers
 {

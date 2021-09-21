@@ -8,7 +8,7 @@ namespace IM.Gateway.Recommendations.DataAccess.Entities
     public class Ticker : TickerIdentity
     {
         public Ticker() { }
-        public Ticker(CompanyAnalyzerTickerDto ticker)
+        public Ticker(TickerPostDto ticker)
         {
             Name = ticker.Name;
         }

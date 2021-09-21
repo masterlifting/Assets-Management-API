@@ -30,7 +30,7 @@ namespace IM.Gateway.Companies.DataAccess.Repository
 
             return await Task.FromResult((true, arrayEntities));
         }
-        public async Task<StockSplit?> GetAlreadyEntityAsync(StockSplit entity) => await context.StockSplits.FindAsync(entity.Id);
+        public async Task<StockSplit?> GetAlreadyEntityAsync(StockSplit entity) => await context.StockSplits.FindAsync(entity.CompanyTicker, entity.Date);
         public IQueryable<StockSplit> GetAlreadyEntitiesQuery(IEnumerable<StockSplit> entities)
         {
             var names = entities.Select(y => y.CompanyTicker).ToArray();
@@ -38,7 +38,7 @@ namespace IM.Gateway.Companies.DataAccess.Repository
         }
         public bool IsUpdate(StockSplit contextEntity, StockSplit newEntity)
         {
-            var isCompare = contextEntity.Id == newEntity.Id;
+            var isCompare = (contextEntity.CompanyTicker, contextEntity.Date) == (newEntity.CompanyTicker, newEntity.Date);
 
             if (isCompare)
             {

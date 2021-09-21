@@ -1,10 +1,12 @@
-﻿using CommonServices.Models.Dto.CompanyAnalyzer;
-using CommonServices.RabbitServices;
+﻿using CommonServices.RabbitServices;
+
+using IM.Service.Company.Reports.DataAccess.Entities;
+using IM.Service.Company.Reports.Services.ReportServices;
+
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
-using IM.Service.Company.Reports.DataAccess.Entities;
-using IM.Service.Company.Reports.Services.ReportServices;
+using CommonServices.Models.Dto.CompanyReports;
 using static IM.Service.Company.Reports.Enums;
 // ReSharper disable InvertIf
 
@@ -27,7 +29,7 @@ namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
                 && action == QueueActions.GetData
                 && RabbitHelper.TrySerialize(data, out Ticker? ticker))
             {
-                var reports = await reportLoader.LoadReportsAsync(ticker!);
+                var reports = await reportLoader.LoadAsync(ticker!);
                 if (reports.Length > 0)
                 {
                     var sourceType = Enum.Parse<ReportSourceTypes>(ticker!.SourceTypeId.ToString(), true).ToString();
@@ -38,7 +40,7 @@ namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
                             QueueNames.CompanyAnalyzer
                             , QueueEntities.Report
                             , QueueActions.GetLogic
-                            , JsonSerializer.Serialize(new CompanyAnalyzerReportDto
+                            , JsonSerializer.Serialize(new ReportGetDto
                             {
                                 TickerName = ticker.Name,
                                 Year = report.Year,

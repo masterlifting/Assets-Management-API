@@ -22,7 +22,7 @@ namespace IM.Gateway.Recommendations.Services.RabbitServices.Implementations
         {
             return action == QueueActions.Delete
                     ? !(await repository.DeleteAsync(data, data)).Any()
-                    : RabbitHelper.TrySerialize(data, out CompanyAnalyzerTickerDto? ticker) && await GetActionAsync(repository!, action, new Ticker(ticker!), ticker!.Name);
+                    : RabbitHelper.TrySerialize(data, out TickerPostDto? ticker) && await GetActionAsync(repository!, action, new Ticker(ticker!), ticker!.Name);
         }
 
         private static async Task<bool> GetActionAsync<T>(RepositorySet<T> repository, QueueActions action, T data, string value) where T : class => action switch

@@ -1,7 +1,9 @@
-﻿using CommonServices.Models.Dto;
+﻿using CommonServices.Models.Dto.CompanyReports;
+
+using IM.Service.Company.Analyzer.Models.Calculator;
+
 using System;
 using System.Collections.Generic;
-using IM.Service.Company.Analyzer.Models.Calculator;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 {
@@ -16,7 +18,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             };
         }
 
-        public Coefficient Calculate(ReportDto report, decimal lastPrice)
+        public Coefficient Calculate(ReportGetDto report, decimal lastPrice)
         {
             if (report is null || lastPrice <= 0)
                 throw new ArgumentException($"{nameof(Calculate)} parameters is incorrect");

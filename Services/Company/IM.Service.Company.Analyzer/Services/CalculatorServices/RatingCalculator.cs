@@ -44,7 +44,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     x => x.TickerName == tickers[index] && x.StatusId == (byte)StatusType.Calculated,
                     x => x.Result);
 
-                var priceResult = RatingComparator.ComputeSampleResult(priceResults);
+                var priceResult = RatingComparator.ComputeSampleResult(priceResults) * 100;
                 var reportResult = RatingComparator.ComputeSampleResult(reportResults);
 
                 ratings.Add(new()

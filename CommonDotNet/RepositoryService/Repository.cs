@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CommonServices.HttpServices;
+
+using Microsoft.EntityFrameworkCore;
 
 using System;
 using System.Collections.Generic;
@@ -6,7 +8,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
-using CommonServices.Models.Dto.Http;
 
 namespace CommonServices.RepositoryService
 {
@@ -282,6 +283,22 @@ namespace CommonServices.RepositoryService
 
             return await SaveAsync(info, ActionType.Delete);
         }
+        public async Task<string[]> DeleteAsync(string info, params object[] id)
+        {
+            var errors = Array.Empty<string>();
+
+            var ctxEntity = await context.Set<TEntity>().FindAsync(id);
+
+            if (ctxEntity is null)
+            {
+                SetInfo(ActionType.Delete, NotifyType.NotFound, info, ref errors);
+                return errors;
+            }
+
+            context.Set<TEntity>().Remove(ctxEntity);
+
+            return await SaveAsync(info, ActionType.Delete);
+        }
         public async Task<string[]> DeleteAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
         {
             var errors = Array.Empty<string>();
@@ -393,42 +410,48 @@ namespace CommonServices.RepositoryService
         }
 
         public DbSet<QEntity> GetDbSetBy<QEntity>() where QEntity : class => context.Set<QEntity>();
-        public IQueryable<TEntity> QueryFilter(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
-        public IQueryable<TEntity> QueryFilter(IQueryable<TEntity> query,Expression<Func<TEntity, bool>> predicate) => query.Where(predicate);
 
-        public async Task<int> GetCountAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().CountAsync(predicate);
-        public async Task<int> GetCountAsync(IQueryable<TEntity> query) => await query.AsNoTracking().CountAsync();
-        public async Task<int> GetCountAsync() => await context.Set<TEntity>().AsNoTracking().CountAsync();
+        public async Task<TEntity?> FindAsync(params object[] parameters) => await context.Set<TEntity>().FindAsync(parameters);
+        public async Task<TEntity?> FindAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector) =>
+            await context.Set<TEntity>().OrderBy(orderSelector).LastOrDefaultAsync(predicate);
+        public async Task<TEntity?> FindAsync<TSelector1, TSelector2>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+            await context.Set<TEntity>().OrderBy(orderSelector1).ThenBy(orderSelector2).LastOrDefaultAsync(predicate);
 
-        public async Task<TEntity[]> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync();
-        public async Task<TEntity?> FindAsync(params object[] key) => await context.Set<TEntity>().FindAsync(key);
+        public IQueryable<TEntity> GetFilterQuery(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
+        public IQueryable<TEntity> GetFilterQuery(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate) => query.Where(predicate);
 
-        public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, TResult>> selector) =>
-            await context.Set<TEntity>().Select(selector).ToArrayAsync();
-        public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector) =>
-            await context.Set<TEntity>().Where(predicate).Select(selector).ToArrayAsync();
-
-        public IQueryable<TEntity> QueryPaginator(PaginationRequestModel pagination) =>
+        public IQueryable<TEntity> GetPaginationQuery(HttpPagination pagination) =>
             context.Set<TEntity>()
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginator<TSelector>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+        public IQueryable<TEntity> GetPaginationQuery<TSelector>(HttpPagination pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
             context.Set<TEntity>()
                 .OrderBy(orderSelector)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginator<TSelector1, TSelector2>(PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+        public IQueryable<TEntity> GetPaginationQuery<TSelector1, TSelector2>(HttpPagination pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
             context.Set<TEntity>()
                 .OrderBy(orderSelector1)
                 .ThenBy(orderSelector2)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginator(IQueryable<TEntity> query, PaginationRequestModel pagination) =>
+        public IQueryable<TEntity> GetPaginationQuery(IQueryable<TEntity> query, HttpPagination pagination) =>
            query.Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginator<TSelector>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+        public IQueryable<TEntity> GetPaginationQuery<TSelector>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
             query.OrderBy(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
-        public IQueryable<TEntity> QueryPaginator<TSelector1, TSelector2>(IQueryable<TEntity> query, PaginationRequestModel pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+        public IQueryable<TEntity> GetPaginationQuery<TSelector1, TSelector2>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
             query.OrderBy(orderSelector1).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
+
+        public async Task<TEntity[]> GetSampleAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync();
+        public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, TResult>> selector) =>
+            await context.Set<TEntity>().Select(selector).ToArrayAsync();
+        public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector) =>
+            await context.Set<TEntity>().Where(predicate).Select(selector).ToArrayAsync();
+
+        public async Task<int> GetCountAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().CountAsync(predicate);
+        public async Task<int> GetCountAsync(IQueryable<TEntity> query) => await query.AsNoTracking().CountAsync();
+        public async Task<int> GetCountAsync() => await context.Set<TEntity>().AsNoTracking().CountAsync();
+
     }
 
     internal enum ActionType

@@ -7,7 +7,6 @@ using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.BackgroundServices;
 using IM.Service.Company.Analyzer.Services.CalculatorServices;
 using IM.Service.Company.Analyzer.Services.DtoServices;
-using IM.Service.Company.Analyzer.Services.HealthCheck;
 using IM.Service.Company.Analyzer.Services.RabbitServices;
 using IM.Service.Company.Analyzer.Settings;
 
@@ -42,10 +41,6 @@ namespace IM.Service.Company.Analyzer
 
             services.AddControllers();
 
-            services.AddHealthChecks()
-                .AddCheck<CompanyReportsHealthCheck>("Company reports service health check")
-                .AddCheck<CompanyPricesHealthCheck>("Company prices service health check");
-
             services.AddHttpClient<CompanyPricesClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
@@ -60,8 +55,7 @@ namespace IM.Service.Company.Analyzer
             services.AddScoped<PriceCalculator>();
             services.AddScoped<RatingCalculator>();
 
-            services.AddScoped<CoefficientDtoAggregator>();
-            services.AddScoped<RatingDtoAggregator>();
+            services.AddScoped<DtoRatingManager>();
 
             services.AddScoped<IRepository<Ticker>, TickerRepository>();
             services.AddScoped<IRepository<Price>, PriceRepository>();
@@ -87,7 +81,6 @@ namespace IM.Service.Company.Analyzer
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
-                endpoints.MapHealthChecks("/health");
             });
         }
     }

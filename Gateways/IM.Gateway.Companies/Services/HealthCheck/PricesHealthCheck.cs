@@ -7,6 +7,6 @@ namespace IM.Gateway.Companies.Services.HealthCheck
 {
     public class PricesHealthCheck : ExternalEndpointHealthCheck
     {
-        protected PricesHealthCheck(IOptions<ServiceSettings> options) : base(options.Value.ClientSettings.CompanyPrices.Host) { }
+        protected PricesHealthCheck(IOptions<ServiceSettings> options) : base(options.Value.ClientSettings.Prices.Host) { }
     }
 }

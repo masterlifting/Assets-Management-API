@@ -36,8 +36,7 @@ namespace IM.Gateway.Recommendations
 
             services.AddControllers();
 
-            services.AddHttpClient<PricesClient>();
-            services.AddHttpClient<ReportsClient>();
+            services.AddHttpClient<CompanyAnalyzerClient>();
 
             services.AddScoped<PurchaseDtoAggregator>();
             services.AddScoped<SaleDtoAggregator>();

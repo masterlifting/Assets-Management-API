@@ -7,6 +7,6 @@ namespace IM.Gateway.Companies.Services.HealthCheck
 {
     public class ReportsHealthCheck : ExternalEndpointHealthCheck
     {
-        protected ReportsHealthCheck(IOptions<ServiceSettings> options) : base(options.Value.ClientSettings.CompanyReports.Host){}
+        protected ReportsHealthCheck(IOptions<ServiceSettings> options) : base(options.Value.ClientSettings.Reports.Host){}
     }
 }
