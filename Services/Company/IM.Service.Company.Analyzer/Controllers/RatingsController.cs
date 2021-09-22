@@ -29,7 +29,7 @@ namespace IM.Service.Company.Analyzer.Controllers
         [HttpPost("recalculate/")]
         public async Task<string> Recalculate(DateTime? dateStart = null)
         {
-            dateStart ??= new DateTime(2019, 01, 01);
+            dateStart ??= new DateTime(2010, 01, 01);
 
             var result = await manager.UpdateAsync(dateStart.Value);
             var messageResult = result ? "success" : "failed";

@@ -1,4 +1,5 @@
 using IM.Service.Company.Reports.DataAccess.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 using static IM.Service.Company.Reports.Enums;

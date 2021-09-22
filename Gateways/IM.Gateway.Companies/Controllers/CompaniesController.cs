@@ -1,7 +1,7 @@
 ﻿using CommonServices.HttpServices;
 using CommonServices.Models.Http;
 
-using IM.Gateway.Companies.Models.Dto;
+using CommonServices.Models.Dto.GatewayCompanies;
 using IM.Gateway.Companies.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;

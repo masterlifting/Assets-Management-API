@@ -1,6 +1,6 @@
 ﻿using CommonServices.RabbitServices;
 
-using IM.Gateway.Companies.Models.Dto;
+using CommonServices.Models.Dto.GatewayCompanies;
 using IM.Gateway.Companies.Settings;
 
 using Microsoft.Extensions.Options;

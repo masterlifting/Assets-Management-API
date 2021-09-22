@@ -2,6 +2,7 @@ using CommonServices.Models.Dto.CompanyPrices;
 using CommonServices.Models.Entity;
 
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace IM.Service.Company.Prices.DataAccess.Entities
 {
@@ -15,6 +16,7 @@ namespace IM.Service.Company.Prices.DataAccess.Entities
             SourceTypeId = ticker.SourceTypeId;
         }
         public virtual SourceType SourceType { get; set; } = null!;
+        [Range(1, byte.MaxValue)]
         public byte SourceTypeId { get; set; }
 
         // ReSharper disable once UnusedAutoPropertyAccessor.Global

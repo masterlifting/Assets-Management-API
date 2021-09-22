@@ -67,7 +67,6 @@ namespace IM.Gateway.Companies.Controllers
             {
                 TickerName = ticker,
                 Date = new DateTime(year, month, day),
-                SourceTypeId = model.SourceTypeId,
                 Value = model.Value
             });
         

@@ -3,10 +3,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Entities
 {
+    // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
     public class Report : ReportIdentity
     {
         public virtual Ticker Ticker { get; set; } = null!;
-        public string SourceType { get; set; } = null!;
+        public string SourceType { get; init; } = null!;
 
 
         [Column(TypeName = "Decimal(18,4)")]

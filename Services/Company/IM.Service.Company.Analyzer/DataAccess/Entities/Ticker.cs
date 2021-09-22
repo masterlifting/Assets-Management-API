@@ -5,6 +5,7 @@ using System.Collections.Generic;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Entities
 {
+    // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
     public class Ticker : TickerIdentity
     {
         public Ticker() { }

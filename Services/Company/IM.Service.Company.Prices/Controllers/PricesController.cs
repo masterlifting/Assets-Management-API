@@ -70,7 +70,6 @@ namespace IM.Service.Company.Prices.Controllers
             {
                 TickerName = ticker.ToUpperInvariant(),
                 Date = new DateTime(year, month, day),
-                SourceTypeId = model.SourceTypeId,
                 Value = model.Value
             });
         [HttpDelete("{Ticker}/{Year:int}/{Month:int}/{Day:int}")]

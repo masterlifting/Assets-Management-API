@@ -1,4 +1,5 @@
-﻿using CommonServices.Models.Entity;
+﻿
+using CommonServices.Models.Entity;
 
 namespace CommonServices.Models.Dto.CompanyPrices
 {

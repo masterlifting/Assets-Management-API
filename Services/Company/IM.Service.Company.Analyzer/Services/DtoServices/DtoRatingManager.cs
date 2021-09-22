@@ -95,7 +95,7 @@ namespace IM.Service.Company.Analyzer.Services.DtoServices
 
             var count = await repository.GetCountAsync();
 
-            var paginatedResult = repository.GetPaginationQuery(pagination);
+            var paginatedResult = repository.GetPaginationQuery(pagination, x => x.Place);
 
             var ratings = count > 0
                 ? await paginatedResult.Select(x => new RatingGetDto

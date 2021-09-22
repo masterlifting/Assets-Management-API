@@ -36,6 +36,8 @@ namespace IM.Service.Company.Reports.DataAccess.Repository
             // ReSharper disable once InvertIf
             if (isCompare)
             {
+                contextEntity.Multiplier = newEntity.Multiplier;
+                contextEntity.StockVolume = newEntity.StockVolume;
                 contextEntity.Turnover = newEntity.Turnover;
                 contextEntity.LongTermDebt = newEntity.LongTermDebt;
                 contextEntity.Asset = newEntity.Asset;

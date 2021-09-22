@@ -426,10 +426,6 @@ namespace CommonServices.RepositoryService
         public IQueryable<TEntity> GetFilterQuery(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
         public IQueryable<TEntity> GetFilterQuery(IQueryable<TEntity> query, Expression<Func<TEntity, bool>> predicate) => query.Where(predicate);
 
-        public IQueryable<TEntity> GetPaginationQuery(HttpPagination pagination) =>
-            context.Set<TEntity>()
-                .Skip((pagination.Page - 1) * pagination.Limit)
-                .Take(pagination.Limit);
         public IQueryable<TEntity> GetPaginationQuery<TSelector>(HttpPagination pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
             context.Set<TEntity>()
                 .OrderBy(orderSelector)
@@ -441,8 +437,6 @@ namespace CommonServices.RepositoryService
                 .ThenBy(orderSelector2)
                 .Skip((pagination.Page - 1) * pagination.Limit)
                 .Take(pagination.Limit);
-        public IQueryable<TEntity> GetPaginationQuery(IQueryable<TEntity> query, HttpPagination pagination) =>
-           query.Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
         public IQueryable<TEntity> GetPaginationQuery<TSelector>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
             query.OrderBy(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
         public IQueryable<TEntity> GetPaginationQuery<TSelector1, TSelector2>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>

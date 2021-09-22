@@ -15,7 +15,7 @@ namespace IM.Service.Company.Analyzer.Services.BackgroundServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var delay = new TimeSpan(0, 30, 0);
+            var delay = new TimeSpan(0, 1, 0);
 
             while (true)
             {

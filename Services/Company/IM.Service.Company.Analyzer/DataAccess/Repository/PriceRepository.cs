@@ -42,6 +42,7 @@ namespace IM.Service.Company.Analyzer.DataAccess.Repository
             {
                 contextEntity.Result = newEntity.Result;
                 contextEntity.StatusId = newEntity.StatusId;
+                contextEntity.SourceType = newEntity.SourceType;
             }
 
             return isCompare;

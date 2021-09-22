@@ -2,6 +2,7 @@ using CommonServices.Models.Dto.CompanyReports;
 using CommonServices.Models.Entity;
 
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace IM.Service.Company.Reports.DataAccess.Entities
 {
@@ -17,6 +18,7 @@ namespace IM.Service.Company.Reports.DataAccess.Entities
         }
 
         public virtual SourceType SourceType { get; set; } = null!;
+        [Range(1, byte.MaxValue)]
         public byte SourceTypeId { get; set; }
 
         public string? SourceValue { get; set; }

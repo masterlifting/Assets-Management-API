@@ -5,6 +5,7 @@ using IM.Gateway.Companies.DataAccess.Entities;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace IM.Gateway.Companies.DataAccess.Repository
 {
@@ -16,19 +17,26 @@ namespace IM.Gateway.Companies.DataAccess.Repository
         public async Task<(bool trySuccess, StockSplit? checkedEntity)> TryCheckEntityAsync(StockSplit entity)
         {
             entity.CompanyTicker = entity.CompanyTicker.ToUpperInvariant().Trim();
-            return entity.Divider <= 0 ? (false, entity) : await Task.FromResult((true, entity));
+            var isCompanyContains = await context.Companies.AnyAsync(x => x.Ticker.Equals(entity.CompanyTicker));
+
+            return (isCompanyContains && entity.Divider > 0, entity);
         }
         public async Task<(bool isSuccess, StockSplit[] checkedEntities)> TryCheckEntitiesAsync(IEnumerable<StockSplit> entities)
         {
-            var arrayEntities = entities.Where(x => x.Divider >= 0).ToArray();
+            var arrayEntities = entities.ToArray();
 
-            if (arrayEntities.Any(x => x.Divider <= 0))
+            var result = arrayEntities.Where(x => x.Divider >= 0).ToArray();
+
+            if (result.Any(x => x.Divider <= 0))
                 return (false, arrayEntities);
 
-            foreach (var entity in arrayEntities)
+            foreach (var entity in result)
                 entity.CompanyTicker = entity.CompanyTicker.ToUpperInvariant().Trim();
 
-            return await Task.FromResult((true, arrayEntities));
+            var tickers = result.GroupBy(y => y.CompanyTicker).Select(y => y.Key).ToArray();
+            var count = await context.Companies.CountAsync(x => tickers.Contains(x.Ticker));
+
+            return (tickers.Length == count, result);
         }
         public async Task<StockSplit?> GetAlreadyEntityAsync(StockSplit entity) => await context.StockSplits.FindAsync(entity.CompanyTicker, entity.Date);
         public IQueryable<StockSplit> GetAlreadyEntitiesQuery(IEnumerable<StockSplit> entities)
@@ -41,10 +49,7 @@ namespace IM.Gateway.Companies.DataAccess.Repository
             var isCompare = (contextEntity.CompanyTicker, contextEntity.Date) == (newEntity.CompanyTicker, newEntity.Date);
 
             if (isCompare)
-            {
-                contextEntity.Date = newEntity.Date;
                 contextEntity.Divider = newEntity.Divider;
-            }
 
             return isCompare;
         }

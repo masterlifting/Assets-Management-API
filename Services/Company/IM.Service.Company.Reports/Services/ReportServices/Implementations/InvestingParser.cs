@@ -63,6 +63,7 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
                     TickerName = tickerName,
                     Year = financialPage.Dates[i].Year,
                     Quarter = CommonHelper.GetQuarter(financialPage.Dates[i].Month),
+                    Multiplier = 1_000_000,
                     StockVolume = mainPage.StockVolume,
                     Turnover = balancePage.Turnovers[i],
                     LongTermDebt = balancePage.LongDebts[i],
@@ -278,7 +279,7 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
                 .FirstOrDefault())
                 .ToArray();
 
-            if (dividendValueData is null) 
+            if (dividendValueData is null)
                 return result;
 
             for (var i = 0; i < dates.Count; i++)
@@ -291,14 +292,14 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
                     var dividendYear = dividendDates[j].Year;
                     var dividendQuarter = CommonHelper.GetQuarter(dividendDates[j].Month);
 
-                    if (reportYear != dividendYear || reportQuarter != dividendQuarter) 
+                    if (reportYear != dividendYear || reportQuarter != dividendQuarter)
                         continue;
-                    
+
                     var dividendValue = dividendValueData[j]?.Replace(".", "", StringComparison.CurrentCultureIgnoreCase);
 
-                    if (!decimal.TryParse(dividendValue, out var data)) 
+                    if (!decimal.TryParse(dividendValue, out var data))
                         continue;
-                    
+
                     if (j > 0)
                     {
                         var previousDividendYear = dividendDates[j - 1].Year;

@@ -12,400 +12,440 @@
 					"name": "Companies",
 					"item": [
 						{
-							"name": "companies",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/{ticker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"ticker\": \"aapl\",\r\n    \"name\": \"Apple inc.\",\r\n    \"description\": \"Коммуникационное оборудование\",\r\n    \"priceSourceTypeId\": 3,\r\n    \"reportSourceTypeId\": 2,\r\n    \"reportSourceValue\":\"apple-computer-inc\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
+							"name": "Companies",
+							"item": [
+								{
+									"name": "companies",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/companies",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"companies"
+											]
 										}
-									}
+									},
+									"response": []
 								},
-								"url": {
-									"raw": "http://localhost:1001/api/companies",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/{ticker}",
-							"request": {
-								"method": "PUT",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"name\": \"ВТБ\",\r\n    \"description\": \"Банки\",\r\n    \"priceSourceTypeId\": 2,\r\n    \"reportSourceTypeId\": 2,\r\n    \"reportSourceValue\":\"vtb-rts\"\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
+								{
+									"name": "companies",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"ticker\": \"mmm\",\r\n    \"name\": \"3M Company\",\r\n    \"description\": \"Строительство и снабжение\",\r\n    \"priceSourceTypeId\": 3,\r\n    \"reportSourceTypeId\": 2,\r\n    \"reportSourceValue\":\"3m-co\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:1001/api/companies",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"companies"
+											]
 										}
-									}
+									},
+									"response": []
 								},
-								"url": {
-									"raw": "http://localhost:1001/api/companies/vtbr",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"vtbr"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/{ticker}",
-							"request": {
-								"method": "DELETE",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/{ticker}/prices",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies/baba/prices",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"baba",
-										"prices"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/{ticker}/reports",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies/baba/reports",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"baba",
-										"reports"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/{ticker}/ratings",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies/baba/ratings",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"baba",
-										"ratings"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/{ticker}/coefficients",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies/baba/coefficients",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"baba",
-										"coefficients"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/prices",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies/prices",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"prices"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/reports",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies/reports",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"reports"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "companies/ratings",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/companies/ratings",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"companies",
-										"ratings"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocksplits/{ticker}",
-							"protocolProfileBehavior": {
-								"disableBodyPruning": true
-							},
-							"request": {
-								"method": "GET",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "",
-									"options": {
-										"raw": {
-											"language": "json"
+								{
+									"name": "companies",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"name\": \"Alibaba\",\r\n    \"description\": \"Розничная торговля\",\r\n    \"priceSourceTypeId\": 3,\r\n    \"reportSourceTypeId\": 2,\r\n    \"reportSourceValue\":\"3m-co\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:1001/api/companies/baba",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"companies",
+												"baba"
+											]
 										}
-									}
+									},
+									"response": []
 								},
-								"url": {
-									"raw": "http://localhost:1001/api/stocksplits/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"stocksplits",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocksplits",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/stocksplits",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"stocksplits"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocksplits",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"body": {
-									"mode": "raw",
-									"raw": "{\r\n    \"ticker\": \"baba\",\r\n    \"date\": \"2021-01-15\",\r\n    \"divider\": 2\r\n}",
-									"options": {
-										"raw": {
-											"language": "json"
+								{
+									"name": "companies",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/companies",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"companies"
+											]
 										}
-									}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Reports",
+							"item": [
+								{
+									"name": "reports",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/reports/last",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"reports",
+												"last"
+											]
+										}
+									},
+									"response": []
 								},
-								"url": {
-									"raw": "http://localhost:1001/api/stocksplits",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"stocksplits"
-									]
+								{
+									"name": "reports",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"reports"
+											]
+										}
+									},
+									"response": []
 								}
-							},
-							"response": []
+							]
 						},
 						{
-							"name": "stocksplits/{id}",
-							"request": {
-								"method": "PUT",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/stocksplits/1",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"stocksplits",
-										"1"
-									]
+							"name": "Prices",
+							"item": [
+								{
+									"name": "prices",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/prices/baba/2020/12",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"prices",
+												"baba",
+												"2020",
+												"12"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"prices"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"prices"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"prices"
+											]
+										}
+									},
+									"response": []
 								}
-							},
-							"response": []
+							]
 						},
 						{
-							"name": "stocksplits/{id}",
-							"request": {
-								"method": "DELETE",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1001/api/stocksplits/1",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1001",
-									"path": [
-										"api",
-										"stocksplits",
-										"1"
-									]
+							"name": "Analyzer",
+							"item": [
+								{
+									"name": "ratings",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/ratings",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"ratings"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratings/recalculate",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/ratings/recalculate",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"ratings",
+												"recalculate"
+											]
+										}
+									},
+									"response": []
 								}
-							},
-							"response": []
+							]
+						},
+						{
+							"name": "StockSplits",
+							"item": [
+								{
+									"name": "stocksplits",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/stocksplits/2020",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"stocksplits",
+												"2020"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocksplits",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"tickername\":\"baba\",\r\n    \"date\": \"2020-12-01\",\r\n    \"divider\":4\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:1001/api/stocksplits",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"stocksplits"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocksplits",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"divider\":4\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:1001/api/stocksplits/baba/2020/12/1",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"stocksplits",
+												"baba",
+												"2020",
+												"12",
+												"1"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocksplits",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/api/stocksplits/baba/2020/12/1",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"api",
+												"stocksplits",
+												"baba",
+												"2020",
+												"12",
+												"1"
+											]
+										}
+									},
+									"response": []
+								}
+							]
 						}
 					]
 				},
@@ -1433,26 +1473,7 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2203/reports",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2203",
-											"path": [
-												"reports"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "reports/{ticker}",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:2203/reports/baba",
+											"raw": "http://localhost:2203/reports/last",
 											"protocol": "http",
 											"host": [
 												"localhost"
@@ -1460,19 +1481,19 @@
 											"port": "2203",
 											"path": [
 												"reports",
-												"baba"
+												"last"
 											]
 										}
 									},
 									"response": []
 								},
 								{
-									"name": "reports/update",
+									"name": "reports/load",
 									"request": {
 										"method": "POST",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2203/reports/update",
+											"raw": "http://localhost:2203/reports/load",
 											"protocol": "http",
 											"host": [
 												"localhost"
@@ -1480,7 +1501,7 @@
 											"port": "2203",
 											"path": [
 												"reports",
-												"update"
+												"load"
 											]
 										}
 									},
@@ -1497,26 +1518,7 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2202/prices",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2202",
-											"path": [
-												"prices"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "prices/{ticker}",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:2202/prices/baba",
+											"raw": "http://localhost:2202/prices/aapl/2021/9/21",
 											"protocol": "http",
 											"host": [
 												"localhost"
@@ -1524,7 +1526,10 @@
 											"port": "2202",
 											"path": [
 												"prices",
-												"baba"
+												"aapl",
+												"2021",
+												"9",
+												"21"
 											]
 										}
 									},
@@ -1585,32 +1590,12 @@
 									"response": []
 								},
 								{
-									"name": "retings/{ticker}",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:2201/ratings/aapl",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2201",
-											"path": [
-												"ratings",
-												"aapl"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "ratings/update",
+									"name": "ratings/recalculate",
 									"request": {
 										"method": "POST",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2201/ratings/update",
+											"raw": "http://localhost:2201/ratings/recalculate",
 											"protocol": "http",
 											"host": [
 												"localhost"
@@ -1618,27 +1603,7 @@
 											"port": "2201",
 											"path": [
 												"ratings",
-												"update"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "coefficients/{ticker}",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:2201/coefficients/aapl",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2201",
-											"path": [
-												"coefficients",
-												"aapl"
+												"recalculate"
 											]
 										}
 									},

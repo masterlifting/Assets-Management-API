@@ -3,7 +3,7 @@ using CommonServices.Models.Http;
 
 using IM.Gateway.Companies.DataAccess.Entities;
 using IM.Gateway.Companies.DataAccess.Repository;
-using IM.Gateway.Companies.Models.Dto;
+using CommonServices.Models.Dto.GatewayCompanies;
 using IM.Gateway.Companies.Services.RabbitServices;
 
 using Microsoft.EntityFrameworkCore;
@@ -77,7 +77,7 @@ namespace IM.Gateway.Companies.Services.DtoServices
                 Description = model.Description
             };
 
-            var (errors, createdCompany) = await repository.CreateAsync(ctxCompany, model.Name);
+            var (errors, createdCompany) = await repository.CreateAsync(ctxCompany, model.Ticker.ToUpperInvariant());
 
             if (errors.Any())
                 return new ResponseModel<string> { Errors = errors };
@@ -92,7 +92,7 @@ namespace IM.Gateway.Companies.Services.DtoServices
                 ReportSourceValue = model.ReportSourceValue
             });
 
-            return new ResponseModel<string> { Data = $"'{model.Name}' created" };
+            return new ResponseModel<string> { Data = $"'{createdCompany.Name}' created" };
         }
         public async Task<ResponseModel<string>> UpdateAsync(string ticker, CompanyPostDto model)
         {
@@ -103,7 +103,7 @@ namespace IM.Gateway.Companies.Services.DtoServices
                 Description = model.Description
             };
 
-            var (errors, updatedCompany) = await repository.UpdateAsync(ctxCompany, ticker);
+            var (errors, updatedCompany) = await repository.UpdateAsync(ctxCompany, ticker.ToUpperInvariant());
 
             if (errors.Any())
                 return new ResponseModel<string> { Errors = errors };
@@ -118,7 +118,7 @@ namespace IM.Gateway.Companies.Services.DtoServices
                 ReportSourceValue = model.ReportSourceValue
             });
 
-            return new ResponseModel<string> { Data = $"'{model.Name}' updated" };
+            return new ResponseModel<string> { Data = $"'{updatedCompany.Name}' updated" };
         }
         public async Task<ResponseModel<string>> DeleteAsync(string ticker)
         {

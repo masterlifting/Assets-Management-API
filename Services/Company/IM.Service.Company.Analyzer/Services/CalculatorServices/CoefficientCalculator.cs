@@ -3,24 +3,14 @@
 using IM.Service.Company.Analyzer.Models.Calculator;
 
 using System;
-using System.Collections.Generic;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 {
     public class CoefficientCalculator
     {
-        private readonly Dictionary<string, int> multiplicity;
-        public CoefficientCalculator()
-        {
-            multiplicity = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase)
-            {
-                { "investing", 1_000_000 }
-            };
-        }
-
         public Coefficient Calculate(ReportGetDto report, decimal lastPrice)
         {
-            if (report is null || lastPrice <= 0)
+            if (report is null || report.Multiplier <= 0 || lastPrice <= 0)
                 throw new ArgumentException($"{nameof(Calculate)} parameters is incorrect");
 
             decimal stockVolume = report.StockVolume == 0 ? throw new ArgumentNullException($"{nameof(report.StockVolume)} is 0!") : report.StockVolume;
@@ -30,11 +20,9 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             var shareCapital = report.ShareCapital ?? throw new ArgumentNullException($"{nameof(report.ShareCapital)} is null!");
             var obligation = report.Obligation ?? throw new ArgumentNullException($"{nameof(report.Obligation)} is null!");
 
-            var multi = multiplicity.ContainsKey(report.SourceType) ? multiplicity[report.SourceType] : 1_000_000;
-
             try
             {
-                var eps = profitNet * multi / stockVolume;
+                var eps = profitNet * report.Multiplier / stockVolume;
 
                 return new Coefficient
                 {
@@ -44,7 +32,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     Roe = profitNet / shareCapital * 100,
                     DebtLoad = obligation / asset,
                     Pe = lastPrice / eps,
-                    Pb = lastPrice * stockVolume / ((asset - obligation) * multi),
+                    Pb = lastPrice * stockVolume / ((asset - obligation) * report.Multiplier),
                 };
             }
             catch

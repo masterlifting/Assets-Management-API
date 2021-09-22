@@ -70,7 +70,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         }
         public async Task<bool> CalculateAsync(DateTime dateStart)
         {
-            var prices = await repository.GetSampleAsync(x => true);
+            var prices = await repository.GetSampleAsync(x => x.Date >= dateStart);
 
             if (!prices.Any())
                 return false;
@@ -128,29 +128,32 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                 GetQueryString(HttpRequestFilterType.More, ticker, date.Year, date.Month, date.Day),
                 new(1, int.MaxValue));
 
-            if (pricesResponse.Errors.Any())
-                throw new BadHttpRequestException(string.Join('\n', pricesResponse.Errors));
+            return pricesResponse.Errors.Any()
+                ? throw new BadHttpRequestException(string.Join('\n', pricesResponse.Errors))
+                : SeparateSplittedPrices(pricesResponse.Data!.Items, stockSplitsResponse.Data!.Items);
+        }
+        //приводим цены в соответствие для рассчета, если по этому тикеру был сплит
+        private static PriceGetDto[] SeparateSplittedPrices(PriceGetDto[] priceData, IEnumerable<StockSplitGetDto> stockSplitData)
+        {
+            var pricesResponseItems = priceData;
+            var splittedPriceResult = new List<PriceGetDto>(priceData.Length);
 
-            //приводим цену в соответствие для рассчета, если по этому тикеру был сплит
-            var pricesResponseItems = pricesResponse.Data!.Items;
-            var splittedPriceResult = new List<PriceGetDto>(pricesResponse.Data.Count);
-
-            foreach (var stockSplit in stockSplitsResponse.Data!.Items.OrderByDescending(x => x.Date))
+            foreach (var stockSplit in stockSplitData.OrderByDescending(x => x.Date))
             {
                 var splittedPrices = pricesResponseItems.Where(x => x.Date >= stockSplit.Date).ToArray();
 
                 foreach (var price in splittedPrices)
-                    price.Value *= stockSplit.Divider;
+                    price.Value /= stockSplit.Divider;
 
                 splittedPriceResult.AddRange(splittedPrices);
 
                 var exceptedResult = pricesResponseItems.Except(splittedPrices, new PriceComparer()).ToArray();
 
-                pricesResponseItems = pricesResponse.Data.Items.Join(exceptedResult, x => (x.TickerName, x.Date),
+                pricesResponseItems = priceData.Join(exceptedResult, x => (x.TickerName, x.Date),
                     y => (y.TickerName, y.Date), (x, _) => x).ToArray();
             }
 
-            return splittedPriceResult.Union(pricesResponseItems!).ToArray();
+            return splittedPriceResult.Union(pricesResponseItems).ToArray();
         }
     }
 }

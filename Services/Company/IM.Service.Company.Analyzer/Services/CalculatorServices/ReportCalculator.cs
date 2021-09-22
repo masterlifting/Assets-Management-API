@@ -46,7 +46,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 
             return !errors.Any();
         }
-        
+
         public async Task<bool> CalculateAsync()
         {
             var reports = await repository.GetSampleAsync(x =>
@@ -71,7 +71,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         }
         public async Task<bool> CalculateAsync(DateTime dateStart)
         {
-            var reports = await repository.GetSampleAsync(x => true);
+            var reports = await repository.GetSampleAsync(x => x.Year >= dateStart.Year);
 
             if (!reports.Any())
                 return false;

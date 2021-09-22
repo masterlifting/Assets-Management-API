@@ -1,5 +1,7 @@
+using CommonServices.Attributes;
 using CommonServices.Models.Entity;
 
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IM.Service.Company.Reports.DataAccess.Entities
@@ -9,7 +11,9 @@ namespace IM.Service.Company.Reports.DataAccess.Entities
     {
         public virtual Ticker Ticker { get; set; } = null!;
 
-        // ReSharper disable once PropertyCanBeMadeInitOnly.Global
+        [Range(1, int.MaxValue)]
+        public int Multiplier { get; set; }
+        [NotZero]
         public long StockVolume { get; set; }
         [Column(TypeName = "Decimal(18,4)")]
         public decimal? Revenue { get; set; }
@@ -18,7 +22,7 @@ namespace IM.Service.Company.Reports.DataAccess.Entities
         [Column(TypeName = "Decimal(18,4)")]
         public decimal? ProfitGross { get; set; }
         [Column(TypeName = "Decimal(18,4)")]
-        public decimal?CashFlow { get; set; }
+        public decimal? CashFlow { get; set; }
         [Column(TypeName = "Decimal(18,4)")]
         public decimal? Asset { get; set; }
         [Column(TypeName = "Decimal(18,4)")]

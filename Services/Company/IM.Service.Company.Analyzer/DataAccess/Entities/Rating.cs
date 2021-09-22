@@ -4,12 +4,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Entities
 {
+    // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
     public class Rating
     {
         [Key]
         public int Place { get; set; }
 
-        public string TickerName { get; set; } = null!;
+        public string TickerName { get; init; } = null!;
         public virtual Ticker Ticker { get; set; } = null!;
 
         public DateTime UpdateTime { get; set; } = DateTime.UtcNow;

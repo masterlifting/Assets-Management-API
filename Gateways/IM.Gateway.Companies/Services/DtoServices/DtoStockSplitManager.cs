@@ -1,25 +1,40 @@
 ﻿
 using CommonServices.HttpServices;
+using CommonServices.Models.Dto.CompanyPrices;
 using CommonServices.Models.Dto.GatewayCompanies;
+using CommonServices.Models.Entity;
 using CommonServices.Models.Http;
+using CommonServices.RabbitServices;
 
+using IM.Gateway.Companies.Clients;
 using IM.Gateway.Companies.DataAccess.Entities;
 using IM.Gateway.Companies.DataAccess.Repository;
-using IM.Gateway.Companies.Models.Dto;
+using IM.Gateway.Companies.Settings;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using CommonServices.Models.Entity;
 
 namespace IM.Gateway.Companies.Services.DtoServices
 {
     public class DtoStockSplitManager
     {
         private readonly RepositorySet<StockSplit> repository;
-        public DtoStockSplitManager(RepositorySet<StockSplit> repository) => this.repository = repository;
+        private readonly PricesClient pricesClient;
+        private readonly string rabbitConnectionString;
+        public DtoStockSplitManager(
+            RepositorySet<StockSplit> repository
+            , IOptions<ServiceSettings> options
+            , PricesClient pricesClient)
+        {
+            this.repository = repository;
+            this.pricesClient = pricesClient;
+            rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        }
 
         public async Task<ResponseModel<StockSplitGetDto>> GetAsync(PriceIdentity identity)
         {
@@ -108,34 +123,86 @@ namespace IM.Gateway.Companies.Services.DtoServices
 
         public async Task<ResponseModel<string>> CreateAsync(StockSplitPostDto model)
         {
+            var ticker = model.TickerName.ToUpperInvariant().Trim();
+            var multiplier = 1;
+
+            var previous = await repository.GetSampleAsync(x => x.CompanyTicker == ticker);
+            if (previous.Length > 1)
+                multiplier = previous.Last().Divider;
+
             var ctxEntity = new StockSplit()
             {
-                CompanyTicker = model.TickerName,
+                CompanyTicker = ticker,
                 Date = model.Date,
-                Divider = model.Divider
+                Divider = model.Divider * multiplier
             };
-            var message = $"stock split for: '{model.TickerName}' of date: {model.Date:yyyy MMMM dd}";
-            var (errors, _) = await repository.CreateAsync(ctxEntity, message);
+            var message = $"stock split for: '{ticker}' of date: {model.Date:yyyy MMMM dd}";
+            var (errors, stockSplit) = await repository.CreateAsync(ctxEntity, message);
 
-            return errors.Any()
-                ? new ResponseModel<string> { Errors = errors }
-                : new ResponseModel<string> { Data = message + "created" };
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            var priceGetResponse = await pricesClient.Get<PriceGetDto>("prices", stockSplit!.CompanyTicker, stockSplit.Date.Year, stockSplit.Date.Month, stockSplit.Date.Day);
+
+            if (priceGetResponse.Errors.Any())
+                return new() { Data = message + " created. But not set in analyzer!" };
+
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
+
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Price
+                , QueueActions.GetLogic
+                , JsonSerializer.Serialize(new PriceGetDto
+                {
+                    TickerName = priceGetResponse.Data!.TickerName,
+                    Date = priceGetResponse.Data.Date,
+                    SourceType = priceGetResponse.Data.SourceType
+                }));
+
+            return new() { Data = message + " created" };
         }
         public async Task<ResponseModel<string>> UpdateAsync(StockSplitPostDto model)
         {
+            var ticker = model.TickerName.ToUpperInvariant().Trim();
+            var multiplier = 1;
+
+            var previous = await repository.GetSampleAsync(x => x.CompanyTicker == ticker);
+            if (previous.Length > 1)
+                multiplier = previous.Last().Divider;
+
             var ctxEntity = new StockSplit
             {
-                CompanyTicker = model.TickerName,
+                CompanyTicker = ticker,
                 Date = model.Date,
-                Divider = model.Divider
+                Divider = model.Divider * multiplier
             };
 
-            var message = $"stock split for: '{model.TickerName}' of date: {model.Date:yyyy MMMM dd}";
-            var (errors, _) = await repository.UpdateAsync(ctxEntity, message);
+            var message = $"stock split for: '{ticker}' of date: {model.Date:yyyy MMMM dd}";
+            var (errors, stockSplit) = await repository.UpdateAsync(ctxEntity, message);
 
-            return errors.Any()
-                ? new ResponseModel<string> { Errors = errors }
-                : new ResponseModel<string> { Data = message + "updated" };
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            var priceGetResponse = await pricesClient.Get<PriceGetDto>("prices", stockSplit!.CompanyTicker, stockSplit.Date.Year, stockSplit.Date.Month, stockSplit.Date.Day);
+
+            if (priceGetResponse.Errors.Any())
+                return new() { Data = message + " updated. But not set in analyzer!" };
+
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
+
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Price
+                , QueueActions.GetLogic
+                , JsonSerializer.Serialize(new PriceGetDto
+                {
+                    TickerName = priceGetResponse.Data!.TickerName,
+                    Date = priceGetResponse.Data.Date,
+                    SourceType = priceGetResponse.Data.SourceType
+                }));
+
+            return new() { Data = message + " updated" };
         }
         public async Task<ResponseModel<string>> DeleteAsync(PriceIdentity identity)
         {
@@ -143,9 +210,28 @@ namespace IM.Gateway.Companies.Services.DtoServices
             var message = $"stock split for: '{ticker}' of date: {identity.Date:yyyy MMMM dd}";
             var errors = await repository.DeleteAsync(message, ticker, identity.Date);
 
-            return errors.Any()
-                ? new ResponseModel<string> { Errors = errors }
-                : new ResponseModel<string> { Data = message + "deleted" };
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            var priceGetResponse = await pricesClient.Get<PriceGetDto>("prices", identity.TickerName, identity.Date.Year, identity.Date.Month, identity.Date.Day);
+
+            if (priceGetResponse.Errors.Any())
+                return new() { Data = message + " deleted. But not set in analyzer!" };
+
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
+
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Price
+                , QueueActions.GetLogic
+                , JsonSerializer.Serialize(new PriceGetDto
+                {
+                    TickerName = priceGetResponse.Data!.TickerName,
+                    Date = priceGetResponse.Data.Date,
+                    SourceType = priceGetResponse.Data.SourceType
+                }));
+
+            return new() { Data = message + " deleted" };
         }
     }
 }
