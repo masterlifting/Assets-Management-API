@@ -59,12 +59,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                 return false;
 
             foreach (var group in prices.GroupBy(x => x.TickerName))
-            {
-                var firstElement = group.OrderBy(x => x.Date).First();
-                var dateStart = CommonHelper.GetExchangeLastWorkday(firstElement.SourceType, firstElement.Date);
-
-                await BaseCalculateAsync(group, dateStart);
-            }
+                await BaseCalculateAsync(group);
 
             return true;
         }
@@ -76,41 +71,42 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                 return false;
 
             foreach (var group in prices.GroupBy(x => x.TickerName))
-            {
-                await BaseCalculateAsync(group, dateStart);
-            }
+                await BaseCalculateAsync(group);
 
             return true;
         }
 
-        private async Task BaseCalculateAsync(IGrouping<string, Price> group, DateTime dateStart)
+        private async Task BaseCalculateAsync(IGrouping<string, Price> group)
         {
-            var priceGroup = group.ToArray();
+            var orderedPrices = group.OrderBy(x => x.Date).ToArray();
 
-            if (!await IsSetCalculatingStatusAsync(priceGroup, group.Key))
-                throw new DataException($"set price calculating status for '{group.Key}' failed");
+            var dateTarget = orderedPrices[0].Date.AddDays(-10);
+            var dateStart = CommonHelper.GetExchangeLastWorkday(orderedPrices[0].SourceType, dateTarget);
+            var ticker = group.Key;
+
+            if (!await IsSetCalculatingStatusAsync(orderedPrices, ticker))
+                throw new DataException($"set price calculating status for '{ticker}' failed");
 
             try
             {
-                var calculatingData = await GetCalculatingDataAsync(group.Key, dateStart);
+                var calculatingData = await GetCalculatingDataAsync(ticker, dateStart);
 
                 if (!calculatingData.Any())
-                    throw new DataException($"prices for '{group.Key}' not found!");
+                    throw new DataException($"prices for '{ticker}' not found!");
 
                 var calculator = new PriceComparator(calculatingData);
-                await repository.CreateUpdateAsync(
-                    calculator.GetComparedSample(),
-                    new PriceComparer(),
-                    $"price calculated result for {group.Key}");
+                var calculateResult = calculator.GetComparedSample();
+
+                await repository.CreateUpdateAsync(calculateResult, new PriceComparer(), $"price calculated result for {ticker}");
             }
             catch (Exception ex)
             {
-                foreach (var price in group)
+                foreach (var price in orderedPrices)
                     price.StatusId = (byte)StatusType.Error;
 
-                await repository.CreateUpdateAsync(priceGroup, new PriceComparer(), $"calculate prices for {group.Key}");
+                await repository.CreateUpdateAsync(orderedPrices, new PriceComparer(), $"calculate prices for {ticker}");
 
-                throw new ArithmeticException($"price calculated for '{group.Key}' failed! \nError: {ex.Message}");
+                throw new ArithmeticException($"price calculated for '{ticker}' failed! \nError: {ex.Message}");
             }
         }
         private async Task<IReadOnlyCollection<PriceGetDto>> GetCalculatingDataAsync(string ticker, DateTime date)

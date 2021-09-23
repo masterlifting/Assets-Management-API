@@ -34,6 +34,7 @@ namespace IM.Gateway.Companies
 
             services.AddDbContext<DatabaseContext>(provider =>
             {
+                provider.UseLazyLoadingProxies();
                 provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
             });
 

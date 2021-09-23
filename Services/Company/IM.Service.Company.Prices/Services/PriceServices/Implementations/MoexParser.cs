@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using static IM.Service.Company.Prices.Enums;
+
 namespace IM.Service.Company.Prices.Services.PriceServices.Implementations
 {
     public class MoexParser : IPriceParser
@@ -26,8 +28,8 @@ namespace IM.Service.Company.Prices.Services.PriceServices.Implementations
             foreach (var price in priceArray)
             {
                 var priceData = await client.GetHistoryPricesAsync(price.TickerName, price.Date.AddDays(1));
-                var mappedPrices = PriceMapper.MapToPrices(priceData);
-                
+                var mappedPrices = PriceMapper.MapToPrices(nameof(PriceSourceTypes.MOEX).ToLowerInvariant(), priceData);
+
                 // ReSharper disable once InvertIf
                 if (mappedPrices.Any())
                 {
@@ -50,7 +52,7 @@ namespace IM.Service.Company.Prices.Services.PriceServices.Implementations
             var result = new List<Price>(priceArray.Length);
 
             var priceData = await client.GetLastPricesAsync();
-            var mappedPrices = PriceMapper.MapToPrices(priceData, priceArray.Select(x => x.TickerName));
+            var mappedPrices = PriceMapper.MapToPrices(nameof(PriceSourceTypes.MOEX).ToLowerInvariant(), priceData, priceArray.Select(x => x.TickerName));
 
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var item in mappedPrices.Join(priceArray, x => x.TickerName, y => y.TickerName, (x, y) => new { Price = x, y.Date.Date }))

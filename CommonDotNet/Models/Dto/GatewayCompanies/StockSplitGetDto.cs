@@ -6,5 +6,6 @@ namespace CommonServices.Models.Dto.GatewayCompanies
     {
         public string Company { get; init; } = null!;
         public int Divider { get; init; }
+        public int Value { get; init; }
     }
 }

@@ -20,7 +20,6 @@ namespace IM.Service.Company.Prices.DataAccess.Repository
             if (await context.SourceTypes.FindAsync(entity.SourceTypeId) is null)
                 entity.SourceTypeId = (byte)PriceSourceTypes.Default;
 
-
             return (true, entity);
         }
         public async Task<(bool isSuccess, Ticker[] checkedEntities)> TryCheckEntitiesAsync(IEnumerable<Ticker> entities)

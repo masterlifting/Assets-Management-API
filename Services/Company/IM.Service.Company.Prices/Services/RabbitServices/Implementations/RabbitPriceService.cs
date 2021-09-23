@@ -40,7 +40,7 @@ namespace IM.Service.Company.Prices.Services.RabbitServices.Implementations
                         publisher.PublishTask(
                             QueueNames.CompanyAnalyzer
                             , QueueEntities.Price
-                            , QueueActions.GetLogic
+                            , QueueActions.SetLogic
                             , JsonSerializer.Serialize(new PriceGetDto
                             {
                                 TickerName = ticker.Name,

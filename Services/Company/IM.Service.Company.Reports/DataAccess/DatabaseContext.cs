@@ -23,7 +23,7 @@ namespace IM.Service.Company.Reports.DataAccess
             modelBuilder.Entity<SourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<SourceType>().HasData(
                 new() { Id = (byte)ReportSourceTypes.Default, Name = "Select report source!" },
-                new() { Id = (byte)ReportSourceTypes.Investing, Name = nameof(ReportSourceTypes.Investing) }
+                new() { Id = (byte)ReportSourceTypes.Investing, Name = nameof(ReportSourceTypes.Investing).ToLowerInvariant() }
             );
         }
     }

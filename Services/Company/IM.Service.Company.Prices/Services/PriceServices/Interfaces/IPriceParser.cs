@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using IM.Service.Company.Prices.DataAccess.Entities;
 
+
 namespace IM.Service.Company.Prices.Services.PriceServices.Interfaces
 {
     public interface IPriceParser

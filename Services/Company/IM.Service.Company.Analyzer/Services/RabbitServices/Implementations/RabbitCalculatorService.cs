@@ -23,7 +23,7 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
             this.priceRepository = priceRepository;
         }
         public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data) =>
-            action == QueueActions.GetLogic && entity switch
+            action == QueueActions.SetLogic && entity switch
             {
                 QueueEntities.Report => await SetReportToCalculateAsync(data),
                 QueueEntities.Price => await SetPriceToCalculateAsync(data),

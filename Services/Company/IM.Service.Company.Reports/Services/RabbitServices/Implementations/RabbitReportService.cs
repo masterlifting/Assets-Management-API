@@ -39,7 +39,7 @@ namespace IM.Service.Company.Reports.Services.RabbitServices.Implementations
                         publisher.PublishTask(
                             QueueNames.CompanyAnalyzer
                             , QueueEntities.Report
-                            , QueueActions.GetLogic
+                            , QueueActions.SetLogic
                             , JsonSerializer.Serialize(new ReportGetDto
                             {
                                 TickerName = ticker.Name,

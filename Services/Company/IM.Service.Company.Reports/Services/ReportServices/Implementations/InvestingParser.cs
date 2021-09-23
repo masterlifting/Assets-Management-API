@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using IM.Service.Company.Reports.Clients;
 using IM.Service.Company.Reports.DataAccess.Entities;
 using IM.Service.Company.Reports.Services.ReportServices.Interfaces;
+using static IM.Service.Company.Reports.Enums;
 
 namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
 {
@@ -57,12 +58,14 @@ namespace IM.Service.Company.Reports.Services.ReportServices.Implementations
             var balancePage = new BalancePage(site[2]);
             var dividendPage = new DividendPage(site[3], financialPage.Dates.ToArray());
 
+            var sourceType = nameof(ReportSourceTypes.Investing).ToLowerInvariant();
             for (var i = 0; i < 4; i++)
                 result[i] = new()
                 {
                     TickerName = tickerName,
                     Year = financialPage.Dates[i].Year,
                     Quarter = CommonHelper.GetQuarter(financialPage.Dates[i].Month),
+                    SourceType = sourceType,
                     Multiplier = 1_000_000,
                     StockVolume = mainPage.StockVolume,
                     Turnover = balancePage.Turnovers[i],

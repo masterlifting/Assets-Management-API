@@ -1,23 +1,33 @@
-﻿using CommonServices.HttpServices;
+﻿using CommonServices;
+using CommonServices.HttpServices;
 using CommonServices.Models.Dto.CompanyReports;
+using CommonServices.Models.Entity;
 using CommonServices.Models.Http;
+using CommonServices.RabbitServices;
 
 using IM.Service.Company.Reports.DataAccess.Entities;
 using IM.Service.Company.Reports.DataAccess.Repository;
+using IM.Service.Company.Reports.Settings;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using CommonServices.Models.Entity;
 
 namespace IM.Service.Company.Reports.Services.DtoServices
 {
     public class DtoManager
     {
         private readonly RepositorySet<Report> repository;
-        public DtoManager(RepositorySet<Report> repository) => this.repository = repository;
+        private readonly string rabbitConnectionString;
+        public DtoManager(RepositorySet<Report> repository, IOptions<ServiceSettings> options)
+        {
+            this.repository = repository;
+            rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        }
 
         public async Task<ResponseModel<ReportGetDto>> GetAsync(ReportIdentity identity)
         {
@@ -27,10 +37,6 @@ namespace IM.Service.Company.Reports.Services.DtoServices
             if (result is null)
                 return new() { Errors = new[] { "report not found" } };
 
-            var ticker = await repository.GetDbSetBy<Ticker>().FindAsync(tickerName);
-
-            var sourceType = await repository.GetDbSetBy<SourceType>().FindAsync(ticker.SourceTypeId);
-
             return new()
             {
                 Errors = Array.Empty<string>(),
@@ -39,7 +45,7 @@ namespace IM.Service.Company.Reports.Services.DtoServices
                     TickerName = result.TickerName,
                     Year = result.Year,
                     Quarter = result.Quarter,
-                    SourceType = sourceType.Name,
+                    SourceType = result.SourceType,
                     Multiplier = result.Multiplier,
                     StockVolume = result.StockVolume,
                     Asset = result.Asset,
@@ -63,30 +69,25 @@ namespace IM.Service.Company.Reports.Services.DtoServices
             var count = await repository.GetCountAsync(filteredQuery);
             var paginatedQuery = repository.GetPaginationQuery(filteredQuery, pagination, x => x.Year, x => x.Quarter);
 
-            var tickers = repository.GetDbSetBy<Ticker>();
-            var sourceTypes = repository.GetDbSetBy<SourceType>();
-
-            var result = await paginatedQuery
-                .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Report = x, y.SourceTypeId })
-                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new ReportGetDto
-                {
-                    TickerName = x.Report.TickerName,
-                    Year = x.Report.Year,
-                    Quarter = x.Report.Quarter,
-                    SourceType = y.Name,
-                    Multiplier = x.Report.Multiplier,
-                    StockVolume = x.Report.StockVolume,
-                    Asset = x.Report.Asset,
-                    CashFlow = x.Report.CashFlow,
-                    Dividend = x.Report.Dividend,
-                    LongTermDebt = x.Report.LongTermDebt,
-                    Obligation = x.Report.Obligation,
-                    ProfitGross = x.Report.ProfitGross,
-                    ProfitNet = x.Report.ProfitNet,
-                    Revenue = x.Report.Revenue,
-                    ShareCapital = x.Report.ShareCapital,
-                    Turnover = x.Report.Turnover
-                })
+            var result = await paginatedQuery.Select(x => new ReportGetDto
+            {
+                TickerName = x.TickerName,
+                Year = x.Year,
+                Quarter = x.Quarter,
+                SourceType = x.SourceType,
+                Multiplier = x.Multiplier,
+                StockVolume = x.StockVolume,
+                Asset = x.Asset,
+                CashFlow = x.CashFlow,
+                Dividend = x.Dividend,
+                LongTermDebt = x.LongTermDebt,
+                Obligation = x.Obligation,
+                ProfitGross = x.ProfitGross,
+                ProfitNet = x.ProfitNet,
+                Revenue = x.Revenue,
+                ShareCapital = x.ShareCapital,
+                Turnover = x.Turnover
+            })
                 .ToArrayAsync();
 
             return new()
@@ -102,31 +103,28 @@ namespace IM.Service.Company.Reports.Services.DtoServices
         public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> GetLastAsync(HttpFilter filter, HttpPagination pagination)
         {
             var filteredQuery = repository.GetFilterQuery(filter.FilterExpression);
-            var tickers = repository.GetDbSetBy<Ticker>();
-            var sourceTypes = repository.GetDbSetBy<SourceType>();
 
             var queryResult = await filteredQuery
                 .OrderBy(x => x.Year)
                 .ThenBy(x => x.Quarter)
-                .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Report = x, y.SourceTypeId })
-                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new ReportGetDto()
+                .Select(x => new ReportGetDto
                 {
-                    TickerName = x.Report.TickerName,
-                    Year = x.Report.Year,
-                    Quarter = x.Report.Quarter,
-                    SourceType = y.Name,
-                    Multiplier = x.Report.Multiplier,
-                    StockVolume = x.Report.StockVolume,
-                    Asset = x.Report.Asset,
-                    CashFlow = x.Report.CashFlow,
-                    Dividend = x.Report.Dividend,
-                    LongTermDebt = x.Report.LongTermDebt,
-                    Obligation = x.Report.Obligation,
-                    ProfitGross = x.Report.ProfitGross,
-                    ProfitNet = x.Report.ProfitNet,
-                    Revenue = x.Report.Revenue,
-                    ShareCapital = x.Report.ShareCapital,
-                    Turnover = x.Report.Turnover
+                    TickerName = x.TickerName,
+                    Year = x.Year,
+                    Quarter = x.Quarter,
+                    SourceType = x.SourceType,
+                    Multiplier = x.Multiplier,
+                    StockVolume = x.StockVolume,
+                    Asset = x.Asset,
+                    CashFlow = x.CashFlow,
+                    Dividend = x.Dividend,
+                    LongTermDebt = x.LongTermDebt,
+                    Obligation = x.Obligation,
+                    ProfitGross = x.ProfitGross,
+                    ProfitNet = x.ProfitNet,
+                    Revenue = x.Revenue,
+                    ShareCapital = x.ShareCapital,
+                    Turnover = x.Turnover
                 })
                 .ToArrayAsync();
 
@@ -153,6 +151,7 @@ namespace IM.Service.Company.Reports.Services.DtoServices
                 Year = model.Year,
                 Quarter = model.Quarter,
                 StockVolume = model.StockVolume,
+                SourceType = model.SourceType,
                 Multiplier = model.Multiplier,
                 Asset = model.Asset,
                 CashFlow = model.CashFlow,
@@ -167,11 +166,26 @@ namespace IM.Service.Company.Reports.Services.DtoServices
             };
 
             var message = $"report for: '{model.TickerName}' of year: {model.Year} quarter: {model.Quarter}";
-            var (errors, _) = await repository.CreateAsync(ctxEntity, message);
+            var (errors, report) = await repository.CreateAsync(ctxEntity, message);
 
-            return errors.Any()
-                ? new ResponseModel<string> { Errors = errors }
-                : new ResponseModel<string> { Data = message + "created" };
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            //set to queue
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Report
+                , QueueActions.SetLogic
+                , JsonSerializer.Serialize(new ReportGetDto
+                {
+                    TickerName = report!.TickerName,
+                    Year = report.Year,
+                    Quarter = report.Quarter,
+                    SourceType = report.SourceType
+                }));
+
+            return new() { Data = message + " created" };
         }
         public async Task<ResponseModel<string>> UpdateAsync(ReportPostDto model)
         {
@@ -180,6 +194,7 @@ namespace IM.Service.Company.Reports.Services.DtoServices
                 TickerName = model.TickerName,
                 Year = model.Year,
                 Quarter = model.Quarter,
+                SourceType = model.SourceType,
                 Multiplier = model.Multiplier,
                 StockVolume = model.StockVolume,
                 Asset = model.Asset,
@@ -196,11 +211,26 @@ namespace IM.Service.Company.Reports.Services.DtoServices
 
             var message = $"report for: '{model.TickerName}' of year: {model.Year} quarter: {model.Quarter}";
 
-            var (errors, _) = await repository.UpdateAsync(ctxEntity, message);
+            var (errors, report) = await repository.UpdateAsync(ctxEntity, message);
 
-            return errors.Any()
-                ? new ResponseModel<string> { Errors = errors }
-                : new ResponseModel<string> { Data = message + "updated" };
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            //set to queue
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Report
+                , QueueActions.SetLogic
+                , JsonSerializer.Serialize(new ReportGetDto
+                {
+                    TickerName = report!.TickerName,
+                    Year = report.Year,
+                    Quarter = report.Quarter,
+                    SourceType = report.SourceType
+                }));
+
+            return new() { Data = message + " updated" };
         }
         public async Task<ResponseModel<string>> DeleteAsync(ReportIdentity identity)
         {
@@ -209,9 +239,39 @@ namespace IM.Service.Company.Reports.Services.DtoServices
 
             var errors = await repository.DeleteAsync(message, ticker, identity.Year, identity.Quarter);
 
-            return errors.Any()
-                ? new ResponseModel<string> { Errors = errors }
-                : new ResponseModel<string> { Data = message + "deleted" };
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            //set to queue
+            var previousReports = await repository.GetAnyAsync(x => x.TickerName == identity.TickerName);
+
+            if (!previousReports)
+                return new() { Data = message + " deleted. But not set in analyzer!" };
+
+            Report? previousReport = null;
+            var previousYear = identity.Year;
+            var previousQuarter = identity.Quarter;
+
+            while (previousReport is null)
+            {
+                (previousYear, previousQuarter) = CommonHelper.SubtractQuarter(previousYear, previousQuarter);
+                previousReport = await repository.FindAsync(identity.TickerName, previousYear, previousQuarter);
+            }
+
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Report
+                , QueueActions.SetLogic
+                , JsonSerializer.Serialize(new ReportGetDto
+                {
+                    TickerName = previousReport!.TickerName,
+                    Year = previousReport.Year,
+                    Quarter = previousReport.Quarter,
+                    SourceType = previousReport.SourceType
+                }));
+
+            return new() { Data = message + " deleted" };
         }
     }
 }

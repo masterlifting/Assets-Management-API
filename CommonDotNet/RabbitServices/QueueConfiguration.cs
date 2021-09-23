@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using CommonServices.RabbitServices.Configuration;
 
 namespace CommonServices.RabbitServices
@@ -11,7 +12,7 @@ namespace CommonServices.RabbitServices
             {
                 Queues = new[]
                 {
-                    new Queue(QueueNames.CompanyReports)
+                    new Queue(QueueNames.CompanyReports,true)
                     {
                         Params = new[]
                         {
@@ -26,7 +27,7 @@ namespace CommonServices.RabbitServices
                             }
                         }
                     },
-                    new Queue(QueueNames.CompanyPrices)
+                    new Queue(QueueNames.CompanyPrices,true)
                     {
                         Params = new[]
                         {
@@ -41,7 +42,7 @@ namespace CommonServices.RabbitServices
                             }
                         }
                     },
-                    new Queue(QueueNames.CompanyAnalyzer)
+                    new Queue(QueueNames.CompanyAnalyzer,true)
                     {
                         Params = new[]
                         {
@@ -94,7 +95,7 @@ namespace CommonServices.RabbitServices
             {
                 Queues = new[]
                 {
-                    new Queue(QueueNames.CompanyAnalyzer)
+                    new Queue(QueueNames.CompanyAnalyzer,true)
                     {
                          Params = new[]
                         {
@@ -102,14 +103,14 @@ namespace CommonServices.RabbitServices
                             {
                                 Actions = new[]
                                 {
-                                    QueueActions.GetLogic
+                                    QueueActions.SetLogic
                                 }
                             },
                             new QueueParam(QueueEntities.Report)
                             {
                                 Actions = new[]
                                 {
-                                    QueueActions.GetLogic
+                                    QueueActions.SetLogic
                                 }
                             }
                         }
@@ -145,6 +146,6 @@ namespace CommonServices.RabbitServices
         Update,
         Delete,
         GetData,
-        GetLogic
+        SetLogic
     }
 }

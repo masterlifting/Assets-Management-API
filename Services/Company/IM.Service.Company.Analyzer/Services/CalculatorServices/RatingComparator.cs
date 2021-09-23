@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using IM.Service.Company.Analyzer.Models.Calculator;
+
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
@@ -30,16 +32,9 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 
         private static Sample[] ComputeValues(IReadOnlyList<Sample> sample)
         {
-            var results = new Sample[sample.Count];
-            results[0] = new Sample
-            {
-                Value = 0,
-                Index = sample[0].Index,
-                CompareType = sample[0].CompareType
-            };
-
+            var results = new Sample[sample.Count - 1];
             for (var i = 1; i < sample.Count; i++)
-                results[i] = new Sample
+                results[i - 1] = new Sample
                 {
                     Value = ComputeDeviationPercent(sample[i - 1].Value, sample[i].Value, sample[i].CompareType),
                     Index = sample[i].Index,

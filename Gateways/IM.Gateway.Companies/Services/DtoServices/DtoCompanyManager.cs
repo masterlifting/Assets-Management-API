@@ -29,18 +29,18 @@ namespace IM.Gateway.Companies.Services.DtoServices
         {
             var errors = Array.Empty<string>();
 
-            var count = await repository.GetDbSetBy<Company>().CountAsync();
-
+            var count = await repository.GetCountAsync();
             var paginatedResult = repository.GetPaginationQuery(pagination, x => x.Name);
 
-            var companies = await paginatedResult
-                .Select(x => new CompanyGetDto()
-                {
-                    Name = x.Name,
-                    Ticker = x.Ticker,
-                    Description = x.Description
-                })
-                .ToArrayAsync();
+            var companies = await paginatedResult.Select(x => new CompanyGetDto
+            {
+                Name = x.Name,
+                Ticker = x.Ticker,
+                Sector = x.Sector.Name,
+                Industry = x.Industry.Name,
+                Description = x.Description
+            })
+            .ToArrayAsync();
 
             return new()
             {
@@ -56,37 +56,43 @@ namespace IM.Gateway.Companies.Services.DtoServices
         {
             var company = await repository.FindAsync(ticker.ToUpperInvariant().Trim());
 
-            return company is null
-                ? new() { Errors = new[] { "model not found" } }
-                : new()
+            if (company is null)
+                return new() { Errors = new[] { "company not found" } };
+
+            var sector = await repository.GetDbSetBy<Sector>().FindAsync(company.IndustryId);
+            var industry = await repository.GetDbSetBy<Industry>().FindAsync(company.IndustryId);
+
+            return new()
+            {
+                Data = new()
                 {
-                    Data = new()
-                    {
-                        Ticker = company.Ticker,
-                        Name = company.Name,
-                        Description = company.Description
-                    }
-                };
+                    Ticker = company.Ticker,
+                    Name = company.Name,
+                    Description = company.Description,
+                    Sector = sector.Name,
+                    Industry = industry.Name
+                }
+            };
         }
         public async Task<ResponseModel<string>> CreateAsync(CompanyPostDto model)
         {
             var ctxCompany = new Company()
             {
-                Ticker = model.Ticker!,
+                Ticker = model.Ticker,
                 Name = model.Name,
+                SectorId = model.SectorId,
+                IndustryId = model.IndustryId,
                 Description = model.Description
             };
 
-            var (errors, createdCompany) = await repository.CreateAsync(ctxCompany, model.Ticker.ToUpperInvariant());
+            var (errors, createdCompany) = await repository.CreateAsync(ctxCompany, model.Ticker);
 
             if (errors.Any())
                 return new ResponseModel<string> { Errors = errors };
 
             rabbitCrudService.CreateCompany(new()
             {
-                Name = createdCompany!.Name,
-                Ticker = createdCompany.Ticker,
-                Description = createdCompany.Description,
+                Ticker = createdCompany!.Ticker,
                 PriceSourceTypeId = model.PriceSourceTypeId,
                 ReportSourceTypeId = model.ReportSourceTypeId,
                 ReportSourceValue = model.ReportSourceValue
@@ -94,25 +100,25 @@ namespace IM.Gateway.Companies.Services.DtoServices
 
             return new ResponseModel<string> { Data = $"'{createdCompany.Name}' created" };
         }
-        public async Task<ResponseModel<string>> UpdateAsync(string ticker, CompanyPostDto model)
+        public async Task<ResponseModel<string>> UpdateAsync(string ticker, CompanyPutDto model)
         {
             var ctxCompany = new Company()
             {
                 Ticker = ticker,
                 Name = model.Name,
+                SectorId = model.SectorId,
+                IndustryId = model.IndustryId,
                 Description = model.Description
             };
 
-            var (errors, updatedCompany) = await repository.UpdateAsync(ctxCompany, ticker.ToUpperInvariant());
+            var (errors, updatedCompany) = await repository.UpdateAsync(ctxCompany, ticker);
 
             if (errors.Any())
                 return new ResponseModel<string> { Errors = errors };
 
             rabbitCrudService.UpdateCompany(new()
             {
-                Name = updatedCompany!.Name,
-                Ticker = updatedCompany.Ticker,
-                Description = updatedCompany.Description,
+                Ticker = updatedCompany!.Ticker,
                 PriceSourceTypeId = model.PriceSourceTypeId,
                 ReportSourceTypeId = model.ReportSourceTypeId,
                 ReportSourceValue = model.ReportSourceValue
@@ -122,14 +128,16 @@ namespace IM.Gateway.Companies.Services.DtoServices
         }
         public async Task<ResponseModel<string>> DeleteAsync(string ticker)
         {
-            var errors = await repository.DeleteAsync(ticker.ToUpperInvariant().Trim(), ticker);
+            var checkedTicker = ticker.ToUpperInvariant().Trim();
+
+            var errors = await repository.DeleteAsync(checkedTicker, checkedTicker);
 
             if (errors.Any())
                 return new ResponseModel<string> { Errors = errors };
 
-            rabbitCrudService.DeleteCompany(ticker);
+            rabbitCrudService.DeleteCompany(checkedTicker);
 
-            return new ResponseModel<string> { Data = $"'{ticker}' deleted" };
+            return new ResponseModel<string> { Data = $"'{checkedTicker}' deleted" };
         }
     }
 }

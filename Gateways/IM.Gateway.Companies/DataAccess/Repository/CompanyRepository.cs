@@ -40,6 +40,8 @@ namespace IM.Gateway.Companies.DataAccess.Repository
             if (isCompare)
             {
                 contextEntity.Name = newEntity.Name;
+                contextEntity.SectorId = newEntity.SectorId;
+                contextEntity.IndustryId = newEntity.IndustryId;
                 contextEntity.Description = newEntity.Description;
             }
 

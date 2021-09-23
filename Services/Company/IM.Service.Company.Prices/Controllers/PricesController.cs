@@ -65,11 +65,12 @@ namespace IM.Service.Company.Prices.Controllers
         [HttpPost]
         public async Task<ResponseModel<string>> Post(PricePostDto model) => await manager.CreateAsync(model);
         [HttpPut("{Ticker}/{Year:int}/{Month:int}/{Day:int}")]
-        public async Task<ResponseModel<string>> Put(string ticker, int year, int month, int day, PricePostDto model) =>
+        public async Task<ResponseModel<string>> Put(string ticker, int year, int month, int day, PricePutDto model) =>
             await manager.UpdateAsync(new PricePostDto
             {
                 TickerName = ticker.ToUpperInvariant(),
                 Date = new DateTime(year, month, day),
+                SourceType = model.SourceType,
                 Value = model.Value
             });
         [HttpDelete("{Ticker}/{Year:int}/{Month:int}/{Day:int}")]

@@ -447,10 +447,14 @@ namespace CommonServices.RepositoryService
             await context.Set<TEntity>().Select(selector).ToArrayAsync();
         public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector) =>
             await context.Set<TEntity>().Where(predicate).Select(selector).ToArrayAsync();
+        public async Task<TEntity[]> GetSampleOrderedAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector) => 
+            await context.Set<TEntity>().AsNoTracking().Where(predicate).OrderBy(orderSelector).ToArrayAsync();
 
         public async Task<int> GetCountAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().CountAsync(predicate);
         public async Task<int> GetCountAsync(IQueryable<TEntity> query) => await query.AsNoTracking().CountAsync();
         public async Task<int> GetCountAsync() => await context.Set<TEntity>().AsNoTracking().CountAsync();
+
+        public async Task<bool> GetAnyAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().AnyAsync(predicate);
 
     }
 

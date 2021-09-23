@@ -2,14 +2,18 @@
 using CommonServices.Models.Dto.CompanyPrices;
 using CommonServices.Models.Entity;
 using CommonServices.Models.Http;
+using CommonServices.RabbitServices;
 
 using IM.Service.Company.Prices.DataAccess.Entities;
 using IM.Service.Company.Prices.DataAccess.Repository;
+using IM.Service.Company.Prices.Settings;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace IM.Service.Company.Prices.Services.DtoServices
@@ -17,7 +21,12 @@ namespace IM.Service.Company.Prices.Services.DtoServices
     public class DtoManager
     {
         private readonly RepositorySet<Price> repository;
-        public DtoManager(RepositorySet<Price> repository) => this.repository = repository;
+        private readonly string rabbitConnectionString;
+        public DtoManager(RepositorySet<Price> repository, IOptions<ServiceSettings> options)
+        {
+            this.repository = repository;
+            rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        }
 
         public async Task<ResponseModel<PriceGetDto>> GetAsync(PriceIdentity identity)
         {
@@ -28,10 +37,6 @@ namespace IM.Service.Company.Prices.Services.DtoServices
             if (result is null)
                 return new() { Errors = new[] { "price not found" } };
 
-            var ticker = await repository.GetDbSetBy<Ticker>().FindAsync(tickerName);
-
-            var sourceType = await repository.GetDbSetBy<SourceType>().FindAsync(ticker.SourceTypeId);
-
             return new()
             {
                 Errors = Array.Empty<string>(),
@@ -40,7 +45,7 @@ namespace IM.Service.Company.Prices.Services.DtoServices
                     TickerName = result.TickerName,
                     Date = result.Date,
                     Value = result.Value,
-                    SourceType = sourceType.Name
+                    SourceType = result.SourceType
                 }
             };
         }
@@ -52,17 +57,12 @@ namespace IM.Service.Company.Prices.Services.DtoServices
             var count = await repository.GetCountAsync(filteredQuery);
             var paginatedQuery = repository.GetPaginationQuery(filteredQuery, pagination, x => x.Date);
 
-            var tickers = repository.GetDbSetBy<Ticker>();
-            var sourceTypes = repository.GetDbSetBy<SourceType>();
-
-            var result = await paginatedQuery
-                .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
-                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new PriceGetDto
+            var result = await paginatedQuery.Select(x => new PriceGetDto
                 {
-                    TickerName = x.Price.TickerName,
-                    Date = x.Price.Date,
-                    Value = x.Price.Value,
-                    SourceType = y.Name
+                    TickerName = x.TickerName,
+                    Date = x.Date,
+                    Value = x.Value,
+                    SourceType = x.SourceType
                 })
                 .ToArrayAsync();
 
@@ -80,18 +80,14 @@ namespace IM.Service.Company.Prices.Services.DtoServices
         {
             var filteredQuery = repository.GetFilterQuery(filter.FilterExpression);
 
-            var tickers = repository.GetDbSetBy<Ticker>();
-            var sourceTypes = repository.GetDbSetBy<SourceType>();
-
             var queryResult = await filteredQuery
                 .OrderBy(x => x.Date)
-                .Join(tickers, x => x.TickerName, y => y.Name, (x, y) => new { Price = x, y.SourceTypeId })
-                .Join(sourceTypes, x => x.SourceTypeId, y => y.Id, (x, y) => new PriceGetDto
+                .Select(x => new PriceGetDto
                 {
-                    TickerName = x.Price.TickerName,
-                    Date = x.Price.Date,
-                    Value = x.Price.Value,
-                    SourceType = y.Name
+                    TickerName = x.TickerName,
+                    Date = x.Date,
+                    Value = x.Value,
+                    SourceType = x.SourceType
                 })
                 .ToArrayAsync();
 
@@ -119,11 +115,25 @@ namespace IM.Service.Company.Prices.Services.DtoServices
                 Value = model.Value
             };
             var message = $"price for: '{model.TickerName}' of date: {model.Date:yyyy MMMM dd}";
-            var (errors, _) = await repository.CreateAsync(ctxEntity, message);
+            var (errors, price) = await repository.CreateAsync(ctxEntity, message);
 
-            return errors.Any()
-                ? new ResponseModel<string> { Errors = errors }
-                : new ResponseModel<string> { Data = message + "created" };
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            //set to queue
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Price
+                , QueueActions.SetLogic
+                , JsonSerializer.Serialize(new PriceGetDto
+                {
+                    TickerName = price!.TickerName,
+                    Date = price.Date,
+                    SourceType = price.SourceType
+                }));
+
+            return new() { Data = message + " created" };
         }
         public async Task<ResponseModel<string>> UpdateAsync(PricePostDto model)
         {
@@ -135,11 +145,25 @@ namespace IM.Service.Company.Prices.Services.DtoServices
             };
 
             var message = $"price for: '{model.TickerName}' of date: {model.Date:yyyy MMMM dd}";
-            var (errors, _) = await repository.UpdateAsync(ctxEntity, message);
+            var (errors, price) = await repository.UpdateAsync(ctxEntity, message);
 
-            return errors.Any()
-                ? new ResponseModel<string> { Errors = errors }
-                : new ResponseModel<string> { Data = message + "updated" };
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            //set to queue
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Price
+                , QueueActions.SetLogic
+                , JsonSerializer.Serialize(new PriceGetDto
+                {
+                    TickerName = price!.TickerName,
+                    Date = price.Date,
+                    SourceType = price.SourceType
+                }));
+
+            return new() { Data = message + " updated" };
         }
         public async Task<ResponseModel<string>> DeleteAsync(PriceIdentity identity)
         {
@@ -147,9 +171,37 @@ namespace IM.Service.Company.Prices.Services.DtoServices
             var message = $"price for: '{ticker}' of date: {identity.Date:yyyy MMMM dd}";
             var errors = await repository.DeleteAsync(message, ticker, identity.Date);
 
-            return errors.Any()
-                ? new ResponseModel<string> { Errors = errors }
-                : new ResponseModel<string> { Data = message + "deleted" };
+            if (errors.Any())
+                return new() { Errors = errors };
+
+            //set to queue
+            var previousPrices = await repository.GetAnyAsync(x => x.TickerName == identity.TickerName);
+
+            if (!previousPrices)
+                return new() { Data = message + " deleted. But not set in analyzer!" };
+
+            Price? previousPrice = null;
+            var previousDate = identity.Date;
+
+            while (previousPrice is null)
+            {
+                previousDate = previousDate.AddDays(-1);
+                previousPrice = await repository.FindAsync(identity.TickerName, previousDate);
+            }
+
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Logic);
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Price
+                , QueueActions.SetLogic
+                , JsonSerializer.Serialize(new PriceGetDto
+                {
+                    TickerName = previousPrice.TickerName,
+                    Date = previousPrice.Date,
+                    SourceType = previousPrice.SourceType
+                }));
+
+            return new() { Data = message + " deleted" };
         }
     }
 }

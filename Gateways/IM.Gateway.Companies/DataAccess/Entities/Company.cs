@@ -12,8 +12,17 @@ namespace IM.Gateway.Companies.DataAccess.Entities
 
         [Required, StringLength(300)]
         public string Name { get; set; } = null!;
-        public string? Description { get; set; }
+
+        [Range(1, byte.MaxValue)]
+        public byte IndustryId { get; set; }
+        public virtual Industry Industry { get; set; } = null!;
+
+        [Range(1, byte.MaxValue)]
+        public byte SectorId { get; set; }
+        public virtual Sector Sector { get; set; } = null!;
         
-        public IEnumerable<StockSplit>? StockSplits { get; set; }
+        public string? Description { get; set; }
+
+        public virtual IEnumerable<StockSplit>? StockSplits { get; set; }
     }
 }

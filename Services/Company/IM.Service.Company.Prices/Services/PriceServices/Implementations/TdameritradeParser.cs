@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using static IM.Service.Company.Prices.Enums;
+
 namespace IM.Service.Company.Prices.Services.PriceServices.Implementations
 {
     public class TdameritradeParser : IPriceParser
@@ -25,7 +27,7 @@ namespace IM.Service.Company.Prices.Services.PriceServices.Implementations
             foreach (var price in priceArray)
             {
                 var priceData = await client.GetLastYearPricesAsync(price.TickerName);
-                var mappedPrices = PriceMapper.MapToPrices(priceData);
+                var mappedPrices = PriceMapper.MapToPrices(nameof(PriceSourceTypes.Tdameritrade).ToLowerInvariant(), priceData);
                 var priceResult = mappedPrices.Where(x => x.Date.Date > price.Date.Date).ToArray();
                 if (priceResult.Any())
                     result.AddRange(priceResult);
@@ -45,7 +47,7 @@ namespace IM.Service.Company.Prices.Services.PriceServices.Implementations
             var result = new List<Price>(priceArray.Length);
 
             var priceData = await client.GetLastPricesAsync(priceArray.Select(x => x.TickerName));
-            var mappedPrices = PriceMapper.MapToPrices(priceData);
+            var mappedPrices = PriceMapper.MapToPrices(nameof(PriceSourceTypes.Tdameritrade).ToLowerInvariant(), priceData);
 
             // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var item in mappedPrices.Join(priceArray, x => x.TickerName, y => y.TickerName, (x, y) => new { Price = x, y.Date.Date }))

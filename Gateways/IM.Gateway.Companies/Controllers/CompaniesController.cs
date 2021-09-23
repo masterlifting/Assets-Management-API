@@ -27,7 +27,7 @@ namespace IM.Gateway.Companies.Controllers
         public async Task<ResponseModel<string>> Post(CompanyPostDto company) => await manager.CreateAsync(company);
         
         [HttpPut("{ticker}")]
-        public async Task<ResponseModel<string>> Put(string ticker, CompanyPostDto company) => await manager.UpdateAsync(ticker, company);
+        public async Task<ResponseModel<string>> Put(string ticker, CompanyPutDto company) => await manager.UpdateAsync(ticker, company);
         
         [HttpDelete("{ticker}")]
         public async Task<ResponseModel<string>> Delete(string ticker) => await manager.DeleteAsync(ticker);

@@ -19,7 +19,7 @@ namespace IM.Gateway.Companies.DataAccess.Repository
             entity.CompanyTicker = entity.CompanyTicker.ToUpperInvariant().Trim();
             var isCompanyContains = await context.Companies.AnyAsync(x => x.Ticker.Equals(entity.CompanyTicker));
 
-            return (isCompanyContains && entity.Divider > 0, entity);
+            return (isCompanyContains && entity.Value > 0, entity);
         }
         public async Task<(bool isSuccess, StockSplit[] checkedEntities)> TryCheckEntitiesAsync(IEnumerable<StockSplit> entities)
         {
@@ -27,7 +27,7 @@ namespace IM.Gateway.Companies.DataAccess.Repository
 
             var result = arrayEntities.Where(x => x.Divider >= 0).ToArray();
 
-            if (result.Any(x => x.Divider <= 0))
+            if (result.Any(x => x.Value <= 0))
                 return (false, arrayEntities);
 
             foreach (var entity in result)
@@ -49,7 +49,10 @@ namespace IM.Gateway.Companies.DataAccess.Repository
             var isCompare = (contextEntity.CompanyTicker, contextEntity.Date) == (newEntity.CompanyTicker, newEntity.Date);
 
             if (isCompare)
+            {
                 contextEntity.Divider = newEntity.Divider;
+                contextEntity.Value = newEntity.Value;
+            }
 
             return isCompare;
         }

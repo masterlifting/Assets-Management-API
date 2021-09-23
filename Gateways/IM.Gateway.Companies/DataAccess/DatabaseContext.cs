@@ -11,6 +11,7 @@ namespace IM.Gateway.Companies.DataAccess
 
         public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
         {
+            
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

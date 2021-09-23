@@ -18,9 +18,6 @@ namespace IM.Gateway.Companies.Services.RabbitServices
 
         public void CreateCompany(CompanyPostDto company)
         {
-            if (company.Ticker is null)
-                return;
-
             var analyzerTicker = JsonSerializer.Serialize(new CommonServices.Models.Dto.CompanyAnalyzer.TickerPostDto
             {
                 Name = company.Ticker
@@ -49,9 +46,6 @@ namespace IM.Gateway.Companies.Services.RabbitServices
         }
         public void UpdateCompany(CompanyPostDto company)
         {
-            if (company.Ticker is null)
-                return;
-
             var analyzerTicker = JsonSerializer.Serialize(new CommonServices.Models.Dto.CompanyAnalyzer.TickerPostDto
             {
                 Name = company.Ticker
@@ -78,6 +72,8 @@ namespace IM.Gateway.Companies.Services.RabbitServices
             QueueNames.CompanyPrices,
             QueueNames.CompanyAnalyzer
         }
-        , QueueEntities.Ticker, QueueActions.Delete, ticker);
+        , QueueEntities.Ticker
+        , QueueActions.Delete
+        , ticker);
     }
 }

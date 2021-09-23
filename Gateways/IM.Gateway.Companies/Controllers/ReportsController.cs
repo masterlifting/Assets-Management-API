@@ -53,12 +53,14 @@ namespace IM.Gateway.Companies.Controllers
         public async Task<ResponseModel<string>> Post(ReportPostDto model) => await client.Post(controller, model);
         
         [HttpPut("{ticker}/{year:int}/{quarter:int}")]
-        public async Task<ResponseModel<string>> Put(string ticker, int year, int quarter, ReportPostDto model) =>
+        public async Task<ResponseModel<string>> Put(string ticker, int year, int quarter, ReportPutDto model) =>
             await client.Put(controller, new ReportPostDto
             {
                 TickerName = ticker,
                 Year = year,
                 Quarter = (byte)quarter,
+                SourceType = model.SourceType,
+                StockVolume = model.StockVolume,
                 Turnover = model.Turnover,
                 LongTermDebt = model.LongTermDebt,
                 Asset = model.Asset,

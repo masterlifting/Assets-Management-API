@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace CommonServices.Models.Entity
 {
+    public class SourceTypeComparer : IEqualityComparer<CommonEntityType>
+    {
+        public bool Equals(CommonEntityType? x, CommonEntityType? y) => x!.Name.Equals(y!.Name, StringComparison.InvariantCultureIgnoreCase);
+        public int GetHashCode(CommonEntityType obj) => obj.Name.ToLowerInvariant().GetHashCode();
+    }
     public class TickerComparer : IEqualityComparer<TickerIdentity>
     {
         public bool Equals(TickerIdentity? x, TickerIdentity? y) => x!.Name.Equals(y!.Name, StringComparison.InvariantCultureIgnoreCase);

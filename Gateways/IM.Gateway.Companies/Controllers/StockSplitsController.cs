@@ -59,12 +59,12 @@ namespace IM.Gateway.Companies.Controllers
         public async Task<ResponseModel<string>> Post(StockSplitPostDto model) => await manager.CreateAsync(model);
         
         [HttpPut("{ticker}/{year:int}/{month:int}/{day:int}")]
-        public async Task<ResponseModel<string>> Put(string ticker, int year, int month, int day, StockSplitPostDto model) =>
+        public async Task<ResponseModel<string>> Put(string ticker, int year, int month, int day, StockSplitPutDto model) =>
             await manager.UpdateAsync(new StockSplitPostDto
             {
                 TickerName = ticker,
                 Date = new DateTime(year, month, day),
-                Divider = model.Divider
+                Value = model.Value
             });
         
         [HttpDelete("{ticker}/{year:int}/{month:int}/{day:int}")]

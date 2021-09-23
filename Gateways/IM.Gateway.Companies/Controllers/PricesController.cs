@@ -62,11 +62,12 @@ namespace IM.Gateway.Companies.Controllers
         public async Task<ResponseModel<string>> Post(PricePostDto model) => await client.Post(controller, model);
         
         [HttpPut("{ticker}/{year:int}/{month:int}/{day:int}")]
-        public async Task<ResponseModel<string>> Put(string ticker, int year, int month, int day, PricePostDto model) =>
+        public async Task<ResponseModel<string>> Put(string ticker, int year, int month, int day, PricePutDto model) =>
             await client.Put(controller, new PricePostDto
             {
                 TickerName = ticker,
                 Date = new DateTime(year, month, day),
+                SourceType = model.SourceType,
                 Value = model.Value
             });
         

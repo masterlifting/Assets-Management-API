@@ -1,10 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
-using CommonServices.Attributes;
-using CommonServices.Models.Entity;
+﻿using CommonServices.Attributes;
+
+using System.ComponentModel.DataAnnotations;
 
 namespace CommonServices.Models.Dto.CompanyReports
 {
-    public class ReportPostDto : ReportIdentity
+    public class ReportPutDto
     {
         [Required, StringLength(50, MinimumLength = 3)]
         public string SourceType { get; init; } = null!;

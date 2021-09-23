@@ -12,25 +12,27 @@ namespace IM.Service.Company.Prices.Services.MapServices
 {
     public static class PriceMapper
     {
-        public static Price[] MapToPrices(TdAmeritradeLastPriceResultModel clientResult) =>
+        public static Price[] MapToPrices(string lowerSourceType, TdAmeritradeLastPriceResultModel clientResult) =>
             clientResult.Data is null
                 ? Array.Empty<Price>()
-                : clientResult.Data.Select(x => new Price()
+                : clientResult.Data.Select(x => new Price
                 {
                     Date = DateTimeOffset.FromUnixTimeMilliseconds(x.Value.regularMarketTradeTimeInLong).DateTime.Date,
                     Value = x.Value.lastPrice,
-                    TickerName = x.Key.ToUpperInvariant()
+                    TickerName = x.Key.ToUpperInvariant(),
+                    SourceType = lowerSourceType
                 }).ToArray();
-        public static Price[] MapToPrices(TdAmeritradeHistoryPriceResultModel clientResult) =>
+        public static Price[] MapToPrices(string lowerSourceType, TdAmeritradeHistoryPriceResultModel clientResult) =>
             clientResult.Data?.candles is null
             ? Array.Empty<Price>()
-            : clientResult.Data.candles.Select(x => new Price()
+            : clientResult.Data.candles.Select(x => new Price
             {
                 Date = DateTimeOffset.FromUnixTimeMilliseconds(x.datetime).DateTime.Date,
                 Value = x.high,
-                TickerName = clientResult.Ticker.ToUpperInvariant()
+                TickerName = clientResult.Ticker.ToUpperInvariant(),
+                SourceType = lowerSourceType
             }).ToArray();
-        public static Price[] MapToPrices(MoexLastPriceResultModel clientResult, IEnumerable<string> tickers)
+        public static Price[] MapToPrices(string lowerSourceType, MoexLastPriceResultModel clientResult, IEnumerable<string> tickers)
         {
             var clientData = clientResult.Data?.Marketdata?.Data;
 
@@ -61,12 +63,13 @@ namespace IM.Service.Company.Prices.Services.MapServices
                     {
                         Date = date.Date,
                         Value = price,
-                        TickerName = tickersData[i].Ticker
+                        TickerName = tickersData[i].Ticker,
+                        SourceType = lowerSourceType
                     };
 
             return result;
         }
-        public static Price[] MapToPrices(MoexHistoryPriceResultModel clientResult)
+        public static Price[] MapToPrices(string lowerSourceType, MoexHistoryPriceResultModel clientResult)
         {
             var clientData = clientResult.Data?.History?.Data;
 
@@ -86,7 +89,8 @@ namespace IM.Service.Company.Prices.Services.MapServices
                     {
                         TickerName = clientResult.Ticker.ToUpperInvariant(),
                         Date = date.Date,
-                        Value = price
+                        Value = price,
+                        SourceType = lowerSourceType
                     });
             }
 

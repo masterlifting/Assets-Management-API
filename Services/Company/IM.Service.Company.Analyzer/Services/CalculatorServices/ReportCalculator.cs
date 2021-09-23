@@ -58,63 +58,57 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                 return false;
 
             foreach (var group in reports.GroupBy(x => x.TickerName))
-            {
-                var firstElement = group.OrderBy(x => x.Year).ThenBy(x => x.Quarter).First();
-
-                var (targetYear, targetQuarter) = CommonHelper.SubtractQuarter(firstElement.Year, firstElement.Quarter);
-                var (year, month, day) = CommonHelper.GetQuarterFirstDate(targetYear, targetQuarter);
-
-                await BaseCalculateAsync(group, new DateTime(year, month, day), targetYear, targetQuarter);
-            }
+                await BaseCalculateAsync(group);
 
             return true;
         }
         public async Task<bool> CalculateAsync(DateTime dateStart)
         {
-            var reports = await repository.GetSampleAsync(x => x.Year >= dateStart.Year);
+            var quarter = CommonHelper.GetQuarter(dateStart.Month);
+            var reports = await repository.GetSampleAsync(x => x.Year > dateStart.Year || x.Year == dateStart.Year && x.Quarter >= quarter);
 
             if (!reports.Any())
                 return false;
 
             foreach (var group in reports.GroupBy(x => x.TickerName))
-            {
-                var (targetYear, targetQuarter) = CommonHelper.SubtractQuarter(dateStart);
-                var (year, month, day) = CommonHelper.GetQuarterFirstDate(targetYear, targetQuarter);
-
-                await BaseCalculateAsync(group, new DateTime(year, month, day), targetYear, targetQuarter);
-            }
+                await BaseCalculateAsync(group);
 
             return true;
         }
 
-        private async Task BaseCalculateAsync(IGrouping<string, Report> group, DateTime dateStart, int year, byte quarter)
+        private async Task BaseCalculateAsync(IGrouping<string, Report> group)
         {
-            var reportGroup = group.ToArray();
+            var orderedReports = group.OrderBy(x => x.Year).ThenBy(x => x.Quarter).ToArray();
 
-            if (!await IsSetCalculatingStatusAsync(reportGroup, group.Key))
-                throw new DataException($"set report calculating status for '{group.Key}' failed");
+            var (targetYear, targetQuarter) = CommonHelper.SubtractQuarter(orderedReports[0].Year, orderedReports[0].Quarter);
+            (targetYear, targetQuarter) = CommonHelper.SubtractQuarter(targetYear, targetQuarter);
+
+            var (year, month, day) = CommonHelper.GetQuarterFirstDate(targetYear, targetQuarter);
+            var ticker = group.Key;
+
+            if (!await IsSetCalculatingStatusAsync(orderedReports, ticker))
+                throw new DataException($"set report calculating status for '{ticker}' failed");
 
             try
             {
-                var (dtoReports, dtoPrices) = await GetCalculatingDataAsync(group.Key, dateStart, year, quarter);
+                var (dtoReports, dtoPrices) = await GetCalculatingDataAsync(ticker, new DateTime(year, month, day), targetYear, targetQuarter);
 
                 if (!dtoReports.Any())
-                    throw new DataException($"reports for '{group.Key}' not found!");
+                    throw new DataException($"reports for '{ticker}' not found!");
 
                 var calculator = new ReportComparator(dtoReports, dtoPrices);
-                await repository.CreateUpdateAsync(
-                    calculator.GetComparedSample(),
-                    new ReportComparer(),
-                    $"report calculated result for {group.Key}");
+                var calculateResult = calculator.GetComparedSample();
+
+                await repository.CreateUpdateAsync(calculateResult, new ReportComparer(), $"report calculated result for {ticker}");
             }
             catch (Exception ex)
             {
-                foreach (var price in group)
+                foreach (var price in orderedReports)
                     price.StatusId = (byte)StatusType.Error;
 
-                await repository.CreateUpdateAsync(reportGroup, new ReportComparer(), $"calculate reports for {group.Key}");
+                await repository.CreateUpdateAsync(orderedReports, new ReportComparer(), $"calculate reports for {ticker}");
 
-                throw new ArithmeticException($"report calculated for '{group.Key}' failed! \nError: {ex.Message}");
+                throw new ArithmeticException($"report calculated for '{ticker}' failed! \nError: {ex.Message}");
             }
         }
         private async Task<(ReportGetDto[] dtoReports, PriceGetDto[]? dtoPrices)> GetCalculatingDataAsync(string ticker, DateTime date, int year, byte quarter)
