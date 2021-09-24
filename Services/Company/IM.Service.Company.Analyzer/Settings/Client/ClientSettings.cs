@@ -6,6 +6,6 @@ namespace IM.Service.Company.Analyzer.Settings.Client
     {
         public HostModel CompanyPrices { get; set; } = null!;
         public HostModel CompanyReports { get; set; } = null!;
-        public HostModel GatewayCompanies { get; set; } = null!;
+        public HostModel Companies { get; set; } = null!;
     }
 }

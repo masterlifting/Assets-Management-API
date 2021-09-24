@@ -26,12 +26,12 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
     {
         private readonly RepositorySet<Price> repository;
         private readonly CompanyPricesClient pricesClient;
-        private readonly GatewayCompaniesClient gatewayClient;
+        private readonly CompaniesClient gatewayClient;
 
         public PriceCalculator(
             RepositorySet<Price> repository,
             CompanyPricesClient pricesClient,
-            GatewayCompaniesClient gatewayClient)
+            CompaniesClient gatewayClient)
         {
             this.repository = repository;
             this.pricesClient = pricesClient;
@@ -112,7 +112,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         private async Task<IReadOnlyCollection<PriceGetDto>> GetCalculatingDataAsync(string ticker, DateTime date)
         {
             var stockSplitsResponse = await gatewayClient.Get<StockSplitGetDto>(
-                "api/stocksplits",
+                "stocksplits",
                 GetQueryString(HttpRequestFilterType.More, ticker, date.Year, date.Month, date.Day),
                 new(1, int.MaxValue));
 

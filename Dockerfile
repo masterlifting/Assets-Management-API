@@ -1,5 +1,6 @@
-FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 #image: im:latest
+
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 COPY . ./
 RUN for file in $(ls *.csproj); do mkdir -p ${file%.*}/ && mv $file ${file%.*}/; done
 COPY *.sln ./

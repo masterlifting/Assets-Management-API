@@ -13,7 +13,7 @@ namespace CommonServices.Attributes
 
             var isParse = decimal.TryParse(stringValue, out var result);
 
-            ErrorMessage = $"The value for '{property}' must be greater than 0";
+            ErrorMessage = $"The '{property}' must be greater than 0";
 
             return isParse && result > 0;
         }
