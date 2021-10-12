@@ -5,12 +5,9 @@ using IM.Service.Company.Prices.DataAccess.Entities;
 using IM.Service.Company.Prices.Services.MapServices;
 using IM.Service.Company.Prices.Services.PriceServices.Interfaces;
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-using static IM.Service.Company.Prices.Enums;
 
 namespace IM.Service.Company.Prices.Services.PriceServices.Implementations
 {
@@ -19,47 +16,35 @@ namespace IM.Service.Company.Prices.Services.PriceServices.Implementations
         private readonly MoexClient client;
         public MoexParser(MoexClient client) => this.client = client;
 
-        public async Task<Price[]> GetHistoryPricesAsync(IEnumerable<PriceIdentity> prices)
+        public async Task<Price[]> GetHistoryPricesAsync(string source, PriceIdentity data)
         {
-            var priceArray = prices.ToArray();
+            var prices = await client.GetHistoryPricesAsync(data.TickerName, data.Date);
+            return PriceMapper.Map(source, prices);
+        }
+        public async Task<Price[]> GetHistoryPricesAsync(string source, IEnumerable<PriceIdentity> data)
+        {
+            var dataArray = data.ToArray();
+            var result = new List<Price>(dataArray.Length);
 
-            var result = new List<Price>(priceArray.Length);
-
-            foreach (var price in priceArray)
+            foreach (var item in dataArray)
             {
-                var priceData = await client.GetHistoryPricesAsync(price.TickerName, price.Date.AddDays(1));
-                var mappedPrices = PriceMapper.MapToPrices(nameof(PriceSourceTypes.MOEX).ToLowerInvariant(), priceData);
-
-                // ReSharper disable once InvertIf
-                if (mappedPrices.Any())
-                {
-                    var priceResult = mappedPrices.GroupBy(x => x.Date.Date).Select(x => x.First());
-                    result.AddRange(priceResult);
-                }
+                var prices = await client.GetHistoryPricesAsync(item.TickerName, item.Date);
+                result.AddRange(PriceMapper.Map(source, prices));
+                await Task.Delay(200);
             }
 
             return result.ToArray();
         }
-        public async Task<Price[]> GetLastPricesToAddAsync(IEnumerable<PriceIdentity> prices) =>
-            await GetLastPricesAsync(prices, (newDate, oldDate) => newDate > oldDate);
-        public async Task<Price[]> GetLastPricesToUpdateAsync(IEnumerable<PriceIdentity> prices) =>
-            await GetLastPricesAsync(prices, (newDate, oldDate) => newDate == oldDate);
 
-        private async Task<Price[]> GetLastPricesAsync(IEnumerable<PriceIdentity> prices, Func<DateTime, DateTime, bool> condition)
+        public async Task<Price[]> GetLastPricesAsync(string source, PriceIdentity data)
         {
-            var priceArray = prices.ToArray();
-
-            var result = new List<Price>(priceArray.Length);
-
-            var priceData = await client.GetLastPricesAsync();
-            var mappedPrices = PriceMapper.MapToPrices(nameof(PriceSourceTypes.MOEX).ToLowerInvariant(), priceData, priceArray.Select(x => x.TickerName));
-
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var item in mappedPrices.Join(priceArray, x => x.TickerName, y => y.TickerName, (x, y) => new { Price = x, y.Date.Date }))
-                if (condition.Invoke(item.Price.Date.Date, item.Date))
-                    result.Add(item.Price);
-
-            return result.ToArray();
+            var prices = await client.GetLastPricesAsync();
+            return PriceMapper.Map(source, prices, new[] { data.TickerName });
+        }
+        public async Task<Price[]> GetLastPricesAsync(string source, IEnumerable<PriceIdentity> data)
+        {
+            var prices = await client.GetLastPricesAsync();
+            return PriceMapper.Map(source, prices, data.Select(x => x.TickerName));
         }
     }
 }

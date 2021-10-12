@@ -1,7 +1,7 @@
 ﻿using CommonServices.HttpServices;
 using CommonServices.Models.Http;
 
-using CommonServices.Models.Dto.GatewayCompanies;
+using CommonServices.Models.Dto.Companies;
 using Microsoft.AspNetCore.Mvc;
 
 using System.Threading.Tasks;

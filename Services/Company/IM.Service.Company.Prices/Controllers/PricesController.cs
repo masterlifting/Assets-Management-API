@@ -8,6 +8,7 @@ using IM.Service.Company.Prices.Services.PriceServices;
 using Microsoft.AspNetCore.Mvc;
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 using static CommonServices.CommonEnums;
@@ -64,6 +65,9 @@ namespace IM.Service.Company.Prices.Controllers
 
         [HttpPost]
         public async Task<ResponseModel<string>> Post(PricePostDto model) => await manager.CreateAsync(model);
+        [HttpPost("collection/")]
+        public async Task<ResponseModel<string>> Post(IEnumerable<PricePostDto> models) => await manager.CreateAsync(models);
+        
         [HttpPut("{Ticker}/{Year:int}/{Month:int}/{Day:int}")]
         public async Task<ResponseModel<string>> Put(string ticker, int year, int month, int day, PricePutDto model) =>
             await manager.UpdateAsync(new PricePostDto
@@ -80,8 +84,8 @@ namespace IM.Service.Company.Prices.Controllers
         [HttpPost("load/")]
         public async Task<string> Load()
         {
-            var loadedCount = await loader.LoadAsync();
-            return $"loaded prices count: {loadedCount}";
+            var prices = await loader.LoadAsync();
+            return $"loaded prices count: {prices.Length}";
         }
     }
 }

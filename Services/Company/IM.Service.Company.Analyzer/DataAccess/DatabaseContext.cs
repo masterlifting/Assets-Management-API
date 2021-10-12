@@ -26,7 +26,6 @@ namespace IM.Service.Company.Analyzer.DataAccess
             modelBuilder.Entity<Rating>().Property(x => x.Place).ValueGeneratedNever();
             modelBuilder.Entity<Rating>().HasOne(x => x.Ticker).WithOne(x => x.Rating).OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Status>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<Status>().HasData(
                 new()
                 {

@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Company.Reports.DataAccess.Repository
 {
-    public class ReportRepository : IRepository<Report>
+    public class ReportRepository : IRepositoryHandler<Report>
     {
         private readonly DatabaseContext context;
         public ReportRepository(DatabaseContext context) => this.context = context;
@@ -24,7 +24,7 @@ namespace IM.Service.Company.Reports.DataAccess.Repository
                 return (false, null);
 
             var sourceType = entity.SourceType.ToLowerInvariant().Trim();
-            var isSourceType = await context.SourceTypes.AnyAsync(x => entity.SourceType.ToLowerInvariant().Equals(sourceType));
+            var isSourceType = await context.SourceTypes.AnyAsync(x => x.Name.Equals(sourceType));
 
             if (!isSourceType)
                 entity.SourceType = nameof(Enums.ReportSourceTypes.Default);
@@ -52,8 +52,17 @@ namespace IM.Service.Company.Reports.DataAccess.Repository
         public async Task<Report?> GetAlreadyEntityAsync(Report entity) => await context.Reports.FindAsync(entity.TickerName, entity.Year, entity.Quarter);
         public IQueryable<Report> GetAlreadyEntitiesQuery(IEnumerable<Report> entities)
         {
-            var tickers = entities.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
-            return context.Reports.Where(x => tickers.Contains(x.TickerName));
+            var data = entities.ToArray();
+
+            var yearMin = data.Min(x => x.Year);
+            var yearMax = data.Min(x => x.Year);
+
+            var tickers = data
+                .GroupBy(x => x.TickerName)
+                .Select(x => x.Key)
+                .ToArray();
+
+            return context.Reports.Where(x => tickers.Contains(x.TickerName) && x.Year >= yearMin && x.Year <= yearMax);
         }
         public bool IsUpdate(Report contextEntity, Report newEntity)
         {

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Repository
 {
-    public class ReportRepository : IRepository<Report>
+    public class ReportRepository : IRepositoryHandler<Report>
     {
         private readonly DatabaseContext context;
         public ReportRepository(DatabaseContext context) => this.context = context;

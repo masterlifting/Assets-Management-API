@@ -15,25 +15,30 @@ namespace IM.Service.Company.Prices.Services.PriceServices
 {
     public class PriceParser
     {
-        private readonly Dictionary<PriceSourceTypes, IPriceParser> parser;
+        private readonly Dictionary<string, IPriceParser> parser;
         public PriceParser(MoexClient moexClient, TdAmeritradeClient tdAmeritradeClient) =>
-            parser = new()
+            parser = new(StringComparer.InvariantCultureIgnoreCase)
             {
-                { PriceSourceTypes.MOEX, new MoexParser(moexClient) },
-                { PriceSourceTypes.Tdameritrade, new TdameritradeParser(tdAmeritradeClient) }
+                { nameof(PriceSourceTypes.MOEX), new MoexParser(moexClient) },
+                { nameof(PriceSourceTypes.Tdameritrade), new TdameritradeParser(tdAmeritradeClient) }
             };
 
-        public async Task<Price[]> GetLastPricesToAddAsync(PriceSourceTypes sourceType, IEnumerable<PriceIdentity> prices) =>
-            parser.ContainsKey(sourceType)
-            ? await parser[sourceType].GetLastPricesToAddAsync(prices)
-            : Array.Empty<Price>();
-        public async Task<Price[]> GetLastPricesToUpdateAsync(PriceSourceTypes sourceType, IEnumerable<PriceIdentity> prices) =>
-            parser.ContainsKey(sourceType)
-            ? await parser[sourceType].GetLastPricesToUpdateAsync(prices)
-            : Array.Empty<Price>();
-        public async Task<Price[]> GetHistoryPricesAsync(PriceSourceTypes sourceType, IEnumerable<PriceIdentity> prices) =>
-            parser.ContainsKey(sourceType)
-            ? await parser[sourceType].GetHistoryPricesAsync(prices)
-            : Array.Empty<Price>();
+        public async Task<Price[]> LoadLastPricesAsync(string source, PriceIdentity data) =>
+            parser.ContainsKey(source)
+                ? await parser[source].GetLastPricesAsync(source, data)
+                : Array.Empty<Price>();
+        public async Task<Price[]> LoadLastPricesAsync(string source, IEnumerable<PriceIdentity> data) =>
+            parser.ContainsKey(source)
+                ? await parser[source].GetLastPricesAsync(source, data)
+                : Array.Empty<Price>();
+
+        public async Task<Price[]> LoadHistoryPricesAsync(string source, PriceIdentity data) =>
+            parser.ContainsKey(source)
+                ? await parser[source].GetHistoryPricesAsync(source, data)
+                : Array.Empty<Price>();
+        public async Task<Price[]> LoadHistoryPricesAsync(string source, IEnumerable<PriceIdentity> data) =>
+            parser.ContainsKey(source)
+                ? await parser[source].GetHistoryPricesAsync(source, data)
+                : Array.Empty<Price>();
     }
 }

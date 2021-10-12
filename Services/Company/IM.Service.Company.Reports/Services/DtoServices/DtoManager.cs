@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -186,6 +187,40 @@ namespace IM.Service.Company.Reports.Services.DtoServices
                 }));
 
             return new() { Data = message + " created" };
+        }
+        public async Task<ResponseModel<string>> CreateAsync(IEnumerable<ReportPostDto> models)
+        {
+            var reports = models.ToArray();
+
+            if (!reports.Any())
+                return new() { Errors = new[] { "report data to creating not found" } };
+
+            var ctxEntities = reports.GroupBy(x => (x.Year,x.Quarter)).Select(x => new Report
+            {
+                TickerName = x.Last().TickerName,
+                Year = x.Last().Year,
+                Quarter = x.Last().Quarter,
+                StockVolume = x.Last().StockVolume,
+                SourceType = x.Last().SourceType,
+                Multiplier = x.Last().Multiplier,
+                Asset = x.Last().Asset,
+                CashFlow = x.Last().CashFlow,
+                Dividend = x.Last().Dividend,
+                LongTermDebt = x.Last().LongTermDebt,
+                Obligation = x.Last().Obligation,
+                ProfitGross = x.Last().ProfitGross,
+                ProfitNet = x.Last().ProfitNet,
+                Revenue = x.Last().Revenue,
+                ShareCapital = x.Last().ShareCapital,
+                Turnover = x.Last().Turnover
+            });
+
+            var message = $"reports for: '{reports[0].TickerName}'";
+            var (errors, _) = await repository.CreateAsync(ctxEntities, new ReportComparer(), message);
+
+            return errors.Any()
+                ? new() { Errors = errors }
+                : new() { Data = message + " created" };
         }
         public async Task<ResponseModel<string>> UpdateAsync(ReportPostDto model)
         {

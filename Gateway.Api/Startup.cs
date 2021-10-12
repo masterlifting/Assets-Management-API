@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using System;
+using Gateway.Api.DataAccess;
+using Microsoft.EntityFrameworkCore;
 using Polly;
 
 namespace Gateway.Api
@@ -22,7 +24,13 @@ namespace Gateway.Api
         {
             services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
 
-          services.AddControllers();
+            services.AddDbContext<DatabaseContext>(provider =>
+            {
+                provider.UseLazyLoadingProxies();
+                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
+            });
+
+            services.AddControllers();
 
             services.AddHttpClient<CompaniesClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
@@ -36,7 +44,7 @@ namespace Gateway.Api
             services.AddHttpClient<CompanyAnalyzerClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
-           
+
             services.AddHealthChecks()
                 .AddCheck<CompaniesHealthCheck>("Companies service health check")
                 .AddCheck<CompanyReportsHealthCheck>("Company reports service health check")

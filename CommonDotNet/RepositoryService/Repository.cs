@@ -14,9 +14,9 @@ namespace CommonServices.RepositoryService
     public class Repository<TEntity, TContext> where TEntity : class where TContext : DbContext
     {
         private readonly TContext context;
-        private readonly IRepository<TEntity> handler;
+        private readonly IRepositoryHandler<TEntity> handler;
 
-        protected Repository(TContext context, IRepository<TEntity> handler)
+        protected Repository(TContext context, IRepositoryHandler<TEntity> handler)
         {
             this.context = context;
             this.handler = handler;
@@ -54,25 +54,20 @@ namespace CommonServices.RepositoryService
             {
                 var intersectedEntities = handler.GetAlreadyEntitiesQuery(checkedEntities);
 
-                if (intersectedEntities.Any())
+                if (!intersectedEntities.Any())
                 {
-                    var intersected = await intersectedEntities.ToArrayAsync();
-
-                    var toAdd = checkedEntities.Except(intersected, comparer).ToArray();
-
-                    if (toAdd.Any())
-                    {
-                        await context.Set<TEntity>().AddRangeAsync(toAdd);
-
-                        SetInfo(ActionType.Create, NotifyType.Info, info, ref errors, $" is already count: {intersected.Length}");
-                        errors = await SaveAsync(info, ActionType.Create);
-                        return errors.Any() ? (errors, Array.Empty<TEntity>()) : (errors, toAdd);
-                    }
+                    await context.Set<TEntity>().AddRangeAsync(checkedEntities);
+                    errors = await SaveAsync(info, ActionType.Create);
+                    return (errors, checkedEntities);
                 }
 
-                await context.Set<TEntity>().AddRangeAsync(checkedEntities);
+                var intersected = await intersectedEntities.ToArrayAsync();
+                var toAdd = checkedEntities.Except(intersected, comparer).ToArray();
+                SetInfo(ActionType.Create, NotifyType.Info, info, ref errors, $"count: {toAdd.Length}");
+
+                await context.Set<TEntity>().AddRangeAsync(toAdd);
                 errors = await SaveAsync(info, ActionType.Create);
-                return errors.Any() ? (errors, Array.Empty<TEntity>()) : (errors, checkedEntities);
+                return (errors, toAdd);
             }
 
             SetInfo(ActionType.Create, NotifyType.CheckFailed, info, ref errors);
@@ -88,12 +83,10 @@ namespace CommonServices.RepositoryService
             {
                 var intersectedEntity = await handler.GetAlreadyEntityAsync(checkedEntity!);
 
-                if (intersectedEntity is not null)
+                if (intersectedEntity is not null && handler.IsUpdate(intersectedEntity, checkedEntity!))
                 {
-                    context.Entry(intersectedEntity).State = EntityState.Detached;
-                    context.Set<TEntity>().Update(checkedEntity!);
                     errors = await SaveAsync(info, ActionType.Update);
-                    return errors.Any() ? (errors, null) : (errors, checkedEntity);
+                    return errors.Any() ? (errors, null) : (errors, intersectedEntity);
                 }
 
                 SetInfo(ActionType.Update, NotifyType.NotFound, info, ref errors);
@@ -106,7 +99,6 @@ namespace CommonServices.RepositoryService
         public async Task<(string[] errors, TEntity[] result)> UpdateAsync(IEnumerable<TEntity> entities, string info)
         {
             var errors = Array.Empty<string>();
-
             var (trySuccess, checkedEntities) = await handler.TryCheckEntitiesAsync(entities);
 
             if (trySuccess)
@@ -123,7 +115,7 @@ namespace CommonServices.RepositoryService
                                 break;
 
                     errors = await SaveAsync(info, ActionType.Update);
-                    return errors.Any() ? (errors, Array.Empty<TEntity>()) : (errors, intersected);
+                    return errors.Any() ? (errors, Array.Empty<TEntity>()) : (errors, checkedEntities);
                 }
 
                 SetInfo(ActionType.Update, NotifyType.NotFound, info, ref errors);
@@ -161,31 +153,39 @@ namespace CommonServices.RepositoryService
 
             return errors;
         }
-        public async Task<string[]> CreateUpdateAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+        public async Task<(string[] errors, TEntity[] result)> CreateUpdateAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
         {
             var errors = Array.Empty<string>();
-
             var arrayEntities = entities.ToArray();
-
             var (trySuccess, checkedEntities) = await handler.TryCheckEntitiesAsync(arrayEntities);
 
             if (trySuccess)
             {
                 var intersectedEntities = handler.GetAlreadyEntitiesQuery(checkedEntities);
 
-                if (intersectedEntities.Any())
+                if (!intersectedEntities.Any())
                 {
-                    var intersected = await intersectedEntities.ToArrayAsync();
+                    await context.Set<TEntity>().AddRangeAsync(checkedEntities);
+                    errors = await SaveAsync(info, ActionType.Create);
+                    return (errors, checkedEntities);
+                }
 
-                    var toAdd = arrayEntities.Except(intersected, comparer).ToArray();
+                var intersected = await intersectedEntities.ToArrayAsync();
 
-                    if (toAdd.Any())
-                    {
-                        await context.Set<TEntity>().AddRangeAsync(toAdd);
-                        errors = await SaveAsync(info, ActionType.Create);
-                    }
+                var toAdd = checkedEntities.Except(intersected, comparer).ToArray();
 
-                    var toUpdate = arrayEntities.Except(toAdd, comparer).ToArray();
+                if (toAdd.Any())
+                {
+                    SetInfo(ActionType.Create, NotifyType.Info, info, ref errors, $"count: {toAdd.Length}");
+                    await context.Set<TEntity>().AddRangeAsync(toAdd);
+                    errors = await SaveAsync(info, ActionType.Create);
+                }
+
+                var toUpdate = checkedEntities.Except(toAdd, comparer).ToArray();
+
+                if (toUpdate.Any())
+                {
+                    SetInfo(ActionType.Update, NotifyType.Info, info, ref errors, $"count: {toUpdate.Length}");
 
                     foreach (var contextEntity in intersected)
                         foreach (var newEntity in toUpdate)
@@ -194,16 +194,12 @@ namespace CommonServices.RepositoryService
 
                     errors = errors.Concat(await SaveAsync(info, ActionType.Update)).ToArray();
                 }
-                else
-                {
-                    await context.Set<TEntity>().AddRangeAsync(arrayEntities);
-                    errors = await SaveAsync(info, ActionType.Create);
-                }
-            }
-            else
-                SetInfo(ActionType.CreateUpdate, NotifyType.CheckFailed, info, ref errors);
 
-            return errors;
+                return (errors, toAdd.Concat(toUpdate).ToArray());
+            }
+
+            SetInfo(ActionType.CreateUpdate, NotifyType.CheckFailed, info, ref errors);
+            return (errors, Array.Empty<TEntity>());
         }
         public async Task<string[]> CreateUpdateDeleteAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, Expression<Func<TEntity, bool>> deletePredicate, string info)
         {
@@ -351,7 +347,7 @@ namespace CommonServices.RepositoryService
             catch (Exception ex)
             {
                 errors = errors.Append(ex.Message).ToArray();
-                
+
                 var innerException = ex.InnerException?.Message;
                 if (innerException is not null)
                     errors = errors.Append(innerException).ToArray();
@@ -447,7 +443,7 @@ namespace CommonServices.RepositoryService
             await context.Set<TEntity>().Select(selector).ToArrayAsync();
         public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector) =>
             await context.Set<TEntity>().Where(predicate).Select(selector).ToArrayAsync();
-        public async Task<TEntity[]> GetSampleOrderedAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector) => 
+        public async Task<TEntity[]> GetSampleOrderedAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector) =>
             await context.Set<TEntity>().AsNoTracking().Where(predicate).OrderBy(orderSelector).ToArrayAsync();
 
         public async Task<int> GetCountAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().CountAsync(predicate);

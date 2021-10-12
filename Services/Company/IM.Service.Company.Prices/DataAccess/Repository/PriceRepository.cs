@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace IM.Service.Company.Prices.DataAccess.Repository
 {
-    public class PriceRepository : IRepository<Price>
+    public class PriceRepository : IRepositoryHandler<Price>
     {
         private readonly DatabaseContext context;
         public PriceRepository(DatabaseContext context) => this.context = context;
@@ -24,7 +24,7 @@ namespace IM.Service.Company.Prices.DataAccess.Repository
                 return (false, null);
 
             var sourceType = entity.SourceType.ToLowerInvariant().Trim();
-            var isSourceType = await context.SourceTypes.AnyAsync(x => entity.SourceType.ToLowerInvariant().Equals(sourceType));
+            var isSourceType = await context.SourceTypes.AnyAsync(x => x.Name.Equals(sourceType));
 
             if (!isSourceType)
                 entity.SourceType = nameof(Enums.PriceSourceTypes.Default);
@@ -57,8 +57,17 @@ namespace IM.Service.Company.Prices.DataAccess.Repository
         public async Task<Price?> GetAlreadyEntityAsync(Price entity) => await context.Prices.FindAsync(entity.TickerName, entity.Date);
         public IQueryable<Price> GetAlreadyEntitiesQuery(IEnumerable<Price> entities)
         {
-            var tickers = entities.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
-            return context.Prices.Where(x => tickers.Contains(x.TickerName));
+            var data = entities.ToArray();
+
+            var dateMin = data.Min(x => x.Date);
+            var dateMax = data.Min(x => x.Date);
+
+            var tickers = data
+                .GroupBy(x => x.TickerName)
+                .Select(x => x.Key)
+                .ToArray();
+
+            return context.Prices.Where(x => tickers.Contains(x.TickerName) && x.Date >= dateMin && x.Date <= dateMax);
         }
         public bool IsUpdate(Price contextEntity, Price newEntity)
         {

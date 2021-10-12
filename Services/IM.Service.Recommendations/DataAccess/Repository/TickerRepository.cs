@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace IM.Gateway.Recommendations.DataAccess.Repository
 {
-    public class TickerRepository : IRepository<Ticker>
+    public class TickerRepository : IRepositoryHandler<Ticker>
     {
         private readonly DatabaseContext context;
         public TickerRepository(DatabaseContext context) => this.context = context;

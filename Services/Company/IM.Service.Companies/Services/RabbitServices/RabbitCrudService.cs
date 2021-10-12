@@ -1,6 +1,6 @@
 ﻿using CommonServices.RabbitServices;
 
-using CommonServices.Models.Dto.GatewayCompanies;
+using CommonServices.Models.Dto.Companies;
 using Microsoft.Extensions.Options;
 
 using System.Collections.Generic;

@@ -21,9 +21,8 @@ namespace IM.Service.Company.Prices.DataAccess
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Price>().HasKey(x => new { x.TickerName, x.Date });
             modelBuilder.Entity<Price>().HasOne(x => x.Ticker).WithMany(x => x.Prices).OnDelete(DeleteBehavior.Cascade);
-            modelBuilder.Entity<SourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<SourceType>().HasData(
-                new() { Id = (byte)PriceSourceTypes.Default, Name = "Select price source!" },
+                new() { Id = (byte)PriceSourceTypes.Default, Name = "Select price source" },
                 new() { Id = (byte)PriceSourceTypes.MOEX, Name = nameof(PriceSourceTypes.MOEX).ToLowerInvariant() },
                 new() { Id = (byte)PriceSourceTypes.Tdameritrade, Name = nameof(PriceSourceTypes.Tdameritrade).ToLowerInvariant() }
             );

@@ -6,11 +6,266 @@
 	},
 	"item": [
 		{
-			"name": "Gateways",
+			"name": "Services",
 			"item": [
 				{
-					"name": "Companies",
+					"name": "Company",
 					"item": [
+						{
+							"name": "Reports",
+							"item": [
+								{
+									"name": "reports",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports/load",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports/load",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports",
+												"load"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Prices",
+							"item": [
+								{
+									"name": "prices",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2103/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103",
+											"path": [
+												"prices"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2103/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103",
+											"path": [
+												"prices"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2103i/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103i",
+											"path": [
+												"prices"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2103/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103",
+											"path": [
+												"prices"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices/load",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:2103/prices/load",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103",
+											"path": [
+												"prices",
+												"load"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Analyzer",
+							"item": [
+								{
+									"name": "ratings",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2102/ratings",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2102",
+											"path": [
+												"ratings"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratings/recalculate",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2102/ratings/recalculate",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2102",
+											"path": [
+												"ratings",
+												"recalculate"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
 						{
 							"name": "Companies",
 							"item": [
@@ -20,14 +275,13 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:1001/api/companies",
+											"raw": "http://localhost:2101/companies",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "1001",
+											"port": "2101",
 											"path": [
-												"api",
 												"companies"
 											]
 										}
@@ -49,14 +303,13 @@
 											}
 										},
 										"url": {
-											"raw": "http://localhost:1001/api/companies",
+											"raw": "http://localhost:2101/companies",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "1001",
+											"port": "2101",
 											"path": [
-												"api",
 												"companies"
 											]
 										}
@@ -78,14 +331,13 @@
 											}
 										},
 										"url": {
-											"raw": "http://localhost:1001/api/companies/baba",
+											"raw": "http://localhost:2101/companies/baba",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "1001",
+											"port": "2101",
 											"path": [
-												"api",
 												"companies",
 												"baba"
 											]
@@ -99,259 +351,33 @@
 										"method": "DELETE",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:1001/api/companies",
+											"raw": "http://localhost:2101/companies/mmm",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "1001",
+											"port": "2101",
 											"path": [
-												"api",
-												"companies"
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "Reports",
-							"item": [
-								{
-									"name": "reports",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/reports/last",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"reports",
-												"last"
+												"companies",
+												"mmm"
 											]
 										}
 									},
 									"response": []
 								},
-								{
-									"name": "reports",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/reports",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"reports"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "reports",
-									"request": {
-										"method": "PUT",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/reports",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"reports"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "reports",
-									"request": {
-										"method": "DELETE",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/reports",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"reports"
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "Prices",
-							"item": [
-								{
-									"name": "prices",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/prices/baba/2020/12",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"prices",
-												"baba",
-												"2020",
-												"12"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "prices",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/prices",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"prices"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "prices",
-									"request": {
-										"method": "PUT",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/prices",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"prices"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "prices",
-									"request": {
-										"method": "DELETE",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/prices",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"prices"
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "Analyzer",
-							"item": [
-								{
-									"name": "ratings",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/ratings",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"ratings"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "ratings/recalculate",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:1001/api/ratings/recalculate",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "1001",
-											"path": [
-												"api",
-												"ratings",
-												"recalculate"
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "StockSplits",
-							"item": [
 								{
 									"name": "stocksplits",
 									"request": {
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:1001/api/stocksplits/2020",
+											"raw": "http://localhost:2101/stocksplits/2020",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "1001",
+											"port": "2101",
 											"path": [
-												"api",
 												"stocksplits",
 												"2020"
 											]
@@ -366,7 +392,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"tickername\":\"baba\",\r\n    \"date\": \"2020-12-01\",\r\n    \"divider\":4\r\n}",
+											"raw": "{\r\n    \"tickername\":\"mmm\",\r\n    \"date\": \"2020-12-20\",\r\n    \"value\":2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -374,14 +400,13 @@
 											}
 										},
 										"url": {
-											"raw": "http://localhost:1001/api/stocksplits",
+											"raw": "http://localhost:2101/stocksplits",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "1001",
+											"port": "2101",
 											"path": [
-												"api",
 												"stocksplits"
 											]
 										}
@@ -395,7 +420,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"divider\":4\r\n}",
+											"raw": "{\r\n    \"value\":3\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -403,19 +428,18 @@
 											}
 										},
 										"url": {
-											"raw": "http://localhost:1001/api/stocksplits/baba/2020/12/1",
+											"raw": "http://localhost:2101/stocksplits/mmm/2020/12/05",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "1001",
+											"port": "2101",
 											"path": [
-												"api",
 												"stocksplits",
-												"baba",
+												"mmm",
 												"2020",
 												"12",
-												"1"
+												"05"
 											]
 										}
 									},
@@ -427,1183 +451,18 @@
 										"method": "DELETE",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:1001/api/stocksplits/baba/2020/12/1",
+											"raw": "http://localhost:2101/stocksplits/mmm/2020/12/20",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "1001",
+											"port": "2101",
 											"path": [
-												"api",
 												"stocksplits",
-												"baba",
+												"mmm",
 												"2020",
 												"12",
-												"1"
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						}
-					]
-				},
-				{
-					"name": "Brokers",
-					"item": [
-						{
-							"name": "brokers",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/brokers",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"brokers"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "brokers",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/brokers",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"brokers"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "brokers/{name}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/brokers/bcs",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"brokers",
-										"bcs"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "brokers/{name}",
-							"request": {
-								"method": "PUT",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/brokers",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"brokers"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "brokers/{name}",
-							"request": {
-								"method": "DELETE",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/brokers",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"brokers"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "accounttransactions",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/accounttransactions",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"accounttransactions"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "accounttransactions/{broker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/accounttransactions/bcs",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"accounttransactions",
-										"bcs"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "comissions",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/comissions",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"comissions"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "comissions/{broker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/comissions/bcs",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"comissions",
-										"bcs"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocktransactions",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/stocktransactions",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"stocktransactions"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocktransactions/{broker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/stocktransactions/bcs",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"stocktransactions",
-										"bcs"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocktransactions/{broker}/{ticker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/stocktransactions/bcs/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"stocktransactions",
-										"bcs",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocktransactions/{ticker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/stocktransactions/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"stocktransactions",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "ratetransactions",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/ratetransactions",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"ratetransactions"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "ratetransactions/{broker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/ratetransactions/bcs",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"ratetransactions",
-										"bcs"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "ratetransactions/{broker}/{rate}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/ratetransactions/bcs/usd",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"ratetransactions",
-										"bcs",
-										"usd"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "ratetransactions/{rate}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/ratetransactions/usd",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"ratetransactions",
-										"usd"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "dividends",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/dividends",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"dividends"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "dividends/{broker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/dividends/bcs",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"dividends",
-										"bcs"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "dividends/{broker}/{ticker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/dividends/bcs/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"dividends",
-										"bcs",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "dividends/{ticker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/dividends/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"dividends",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "accounttransactions/aggregated/",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/accounttransactions/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"accounttransactions",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "accounttransactions/{broker}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/accounttransactions/bcs/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"accounttransactions",
-										"bcs",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "comissions/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/comissions/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"comissions",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "comissions/{broker}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/comissions/bcs/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"comissions",
-										"bcs",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocktransactions/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/stocktransactions/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"stocktransactions",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocktransactions/{broker}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/stocktransactions/bcs/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"stocktransactions",
-										"bcs",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocktransactions/{broker}/{ticker}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/stocktransactions/bcs/baba/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"stocktransactions",
-										"bcs",
-										"baba",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "stocktransactions/{ticker}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/stocktransactions/baba/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"stocktransactions",
-										"baba",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "ratetransactions/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/ratetransactions/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"ratetransactions",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "ratetransactions/{broker}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/ratetransactions/bcs/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"ratetransactions",
-										"bcs",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "ratetransactions/{broker}/{rate}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/ratetransactions/bcs/usd/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"ratetransactions",
-										"bcs",
-										"usd",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "ratetransactions/{rate}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/ratetransactions/usd/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"ratetransactions",
-										"usd",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "dividends/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/dividends/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"dividends",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "dividends/{broker}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/dividends/bcs/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"dividends",
-										"bcs",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "dividends/{broker}/{ticker}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/dividends/bcs/baba/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"dividends",
-										"bcs",
-										"baba",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "dividends/{ticker}/aggregated",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1002/api/dividends/baba/aggregated/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1002",
-									"path": [
-										"api",
-										"dividends",
-										"baba",
-										"aggregated",
-										""
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Recommendations",
-					"item": [
-						{
-							"name": "purchases",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1003/api/purchases",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1003",
-									"path": [
-										"api",
-										"purchases"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "purchases/{ticker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1003/api/purchases/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1003",
-									"path": [
-										"api",
-										"purchases",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "sales",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1003/api/sales",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1003",
-									"path": [
-										"api",
-										"sales"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "sales/{broker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1003/api/sales/bcs",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1003",
-									"path": [
-										"api",
-										"sales",
-										"bcs"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "sales/{broker}/{ticker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1003/api/sales/bcs/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1003",
-									"path": [
-										"api",
-										"sales",
-										"bcs",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "sales/{ticker}",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1003/api/sales/baba",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1003",
-									"path": [
-										"api",
-										"sales",
-										"baba"
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				},
-				{
-					"name": "Users",
-					"item": [
-						{
-							"name": "users/login",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1004/api/users/login/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1004",
-									"path": [
-										"api",
-										"users",
-										"login",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "users/register",
-							"request": {
-								"method": "POST",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1004/api/users/register/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1004",
-									"path": [
-										"api",
-										"users",
-										"register",
-										""
-									]
-								}
-							},
-							"response": []
-						},
-						{
-							"name": "users/me",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "http://localhost:1004/api/users/me/",
-									"protocol": "http",
-									"host": [
-										"localhost"
-									],
-									"port": "1004",
-									"path": [
-										"api",
-										"users",
-										"me",
-										""
-									]
-								}
-							},
-							"response": []
-						}
-					]
-				}
-			]
-		},
-		{
-			"name": "Services",
-			"item": [
-				{
-					"name": "Company",
-					"item": [
-						{
-							"name": "Reports",
-							"item": [
-								{
-									"name": "reports",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:2203/reports/last",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2203",
-											"path": [
-												"reports",
-												"last"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "reports/load",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:2203/reports/load",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2203",
-											"path": [
-												"reports",
-												"load"
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "Prices",
-							"item": [
-								{
-									"name": "prices",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:2202/prices/aapl/2021/9/21",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2202",
-											"path": [
-												"prices",
-												"aapl",
-												"2021",
-												"9",
-												"21"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "prices/update",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"body": {
-											"mode": "raw",
-											"raw": "",
-											"options": {
-												"raw": {
-													"language": "json"
-												}
-											}
-										},
-										"url": {
-											"raw": "http://localhost:2202/prices/update/",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2202",
-											"path": [
-												"prices",
-												"update",
-												""
-											]
-										}
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "Analyzer",
-							"item": [
-								{
-									"name": "ratings",
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:2201/ratings",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2201",
-											"path": [
-												"ratings"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "ratings/recalculate",
-									"request": {
-										"method": "POST",
-										"header": [],
-										"url": {
-											"raw": "http://localhost:2201/ratings/recalculate",
-											"protocol": "http",
-											"host": [
-												"localhost"
-											],
-											"port": "2201",
-											"path": [
-												"ratings",
-												"recalculate"
+												"20"
 											]
 										}
 									},
@@ -1625,12 +484,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/accounttransactions",
+											"raw": "http://localhost:2202/accounttransactions",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"accounttransactions"
 											]
@@ -1644,12 +503,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/accounttransactions/bcs",
+											"raw": "http://localhost:2202/accounttransactions/bcs",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"accounttransactions",
 												"bcs"
@@ -1664,12 +523,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/comissions",
+											"raw": "http://localhost:2202/comissions",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"comissions"
 											]
@@ -1683,12 +542,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/comissions/bcs",
+											"raw": "http://localhost:2202/comissions/bcs",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"comissions",
 												"bcs"
@@ -1703,12 +562,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/stocktransactions",
+											"raw": "http://localhost:2202/stocktransactions",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"stocktransactions"
 											]
@@ -1722,12 +581,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/stocktransactions/bcs",
+											"raw": "http://localhost:2202/stocktransactions/bcs",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"stocktransactions",
 												"bcs"
@@ -1742,12 +601,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/stocktransactions/bcs/baba",
+											"raw": "http://localhost:2202/stocktransactions/bcs/baba",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"stocktransactions",
 												"bcs",
@@ -1763,12 +622,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/stocktransactions/baba",
+											"raw": "http://localhost:2202/stocktransactions/baba",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"stocktransactions",
 												"baba"
@@ -1783,12 +642,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/ratetransactions",
+											"raw": "http://localhost:2202/ratetransactions",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"ratetransactions"
 											]
@@ -1802,12 +661,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/ratetransactions/bcs",
+											"raw": "http://localhost:2202/ratetransactions/bcs",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"ratetransactions",
 												"bcs"
@@ -1822,12 +681,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/ratetransactions/bcs/usd",
+											"raw": "http://localhost:2202/ratetransactions/bcs/usd",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"ratetransactions",
 												"bcs",
@@ -1843,12 +702,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/ratetransactions/usd",
+											"raw": "http://localhost:2202/ratetransactions/usd",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"ratetransactions",
 												"usd"
@@ -1863,12 +722,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/dividends",
+											"raw": "http://localhost:2202/dividends",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"dividends"
 											]
@@ -1882,12 +741,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/dividends/bcs",
+											"raw": "http://localhost:2202/dividends/bcs",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"dividends",
 												"bcs"
@@ -1902,12 +761,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/dividends/bcs/baba",
+											"raw": "http://localhost:2202/dividends/bcs/baba",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"dividends",
 												"bcs",
@@ -1923,12 +782,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2102/dividends/baba",
+											"raw": "http://localhost:2202/dividends/baba",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2102",
+											"port": "2202",
 											"path": [
 												"dividends",
 												"baba"
@@ -1948,12 +807,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/accounttransactions/aggregated/",
+											"raw": "http://localhost:2203/accounttransactions/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"accounttransactions",
 												"aggregated",
@@ -1969,12 +828,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/accounttransactions/bcs/aggregated/",
+											"raw": "http://localhost:2203/accounttransactions/bcs/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"accounttransactions",
 												"bcs",
@@ -1991,12 +850,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/comissions/aggregated/",
+											"raw": "http://localhost:2203/comissions/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"comissions",
 												"aggregated",
@@ -2012,12 +871,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/comissions/bcs/aggregated/",
+											"raw": "http://localhost:2203/comissions/bcs/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"comissions",
 												"bcs",
@@ -2034,12 +893,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/stocktransactions/aggregated/",
+											"raw": "http://localhost:2203/stocktransactions/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"stocktransactions",
 												"aggregated",
@@ -2055,12 +914,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/stocktransactions/bcs/aggregated/",
+											"raw": "http://localhost:2203/stocktransactions/bcs/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"stocktransactions",
 												"bcs",
@@ -2077,12 +936,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/stocktransactions/bcs/baba/aggregated/",
+											"raw": "http://localhost:2203/stocktransactions/bcs/baba/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"stocktransactions",
 												"bcs",
@@ -2100,12 +959,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/stocktransactions/baba/aggregated/",
+											"raw": "http://localhost:2203/stocktransactions/baba/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"stocktransactions",
 												"baba",
@@ -2122,12 +981,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/ratetransactions/aggregated/",
+											"raw": "http://localhost:2203/ratetransactions/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"ratetransactions",
 												"aggregated",
@@ -2143,12 +1002,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/ratetransactions/bcs/aggregated/",
+											"raw": "http://localhost:2203/ratetransactions/bcs/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"ratetransactions",
 												"bcs",
@@ -2165,12 +1024,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/ratetransactions/bcs/usd/aggregated/",
+											"raw": "http://localhost:2203/ratetransactions/bcs/usd/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"ratetransactions",
 												"bcs",
@@ -2188,12 +1047,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/ratetransactions/usd/aggregated/",
+											"raw": "http://localhost:2203/ratetransactions/usd/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"ratetransactions",
 												"usd",
@@ -2210,12 +1069,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/dividends/aggregated/",
+											"raw": "http://localhost:2203/dividends/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"dividends",
 												"aggregated",
@@ -2231,12 +1090,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/dividends/bcs/aggregated/",
+											"raw": "http://localhost:2203/dividends/bcs/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"dividends",
 												"bcs",
@@ -2253,12 +1112,12 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/dividends/bcs/baba/aggregated/",
+											"raw": "http://localhost:2203/dividends/bcs/baba/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"dividends",
 												"bcs",
@@ -2276,17 +1135,123 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "http://localhost:2101/dividends/baba/aggregated/",
+											"raw": "http://localhost:2203/dividends/baba/aggregated/",
 											"protocol": "http",
 											"host": [
 												"localhost"
 											],
-											"port": "2101",
+											"port": "2203",
 											"path": [
 												"dividends",
 												"baba",
 												"aggregated",
 												""
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Brokers",
+							"item": [
+								{
+									"name": "brokers",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "brokers",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "brokers/{name}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers/bcs",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers",
+												"bcs"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "brokers/{name}",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "brokers/{name}",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers"
 											]
 										}
 									},
@@ -2380,8 +1345,339 @@
 							"response": []
 						}
 					]
+				},
+				{
+					"name": "Users",
+					"item": [
+						{
+							"name": "users/login",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2002/users/login/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2002",
+									"path": [
+										"users",
+										"login",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "users/register",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2002/users/register/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2002",
+									"path": [
+										"users",
+										"register",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "users/me",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2002/users/me/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2002",
+									"path": [
+										"users",
+										"me",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Recommendations",
+					"item": [
+						{
+							"name": "purchases",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/purchases",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"purchases"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "purchases/{ticker}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/purchases/baba",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"purchases",
+										"baba"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sales",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/sales",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"sales"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sales/{broker}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/sales/bcs",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"sales",
+										"bcs"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sales/{broker}/{ticker}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/sales/bcs/baba",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"sales",
+										"bcs",
+										"baba"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sales/{ticker}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/sales/baba",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"sales",
+										"baba"
+									]
+								}
+							},
+							"response": []
+						}
+					]
 				}
 			]
+		},
+		{
+			"name": "HEALTH",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LOAD",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RECALCULATE",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }

@@ -17,10 +17,6 @@ namespace IM.Service.Companies.DataAccess.Entities
         public byte IndustryId { get; set; }
         public virtual Industry Industry { get; set; } = null!;
 
-        [Range(1, byte.MaxValue)]
-        public byte SectorId { get; set; }
-        public virtual Sector Sector { get; set; } = null!;
-        
         public string? Description { get; set; }
 
         public virtual IEnumerable<StockSplit>? StockSplits { get; set; }

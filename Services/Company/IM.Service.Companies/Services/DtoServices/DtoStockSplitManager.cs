@@ -1,7 +1,7 @@
 ﻿
 using CommonServices.HttpServices;
 using CommonServices.Models.Dto.CompanyPrices;
-using CommonServices.Models.Dto.GatewayCompanies;
+using CommonServices.Models.Dto.Companies;
 using CommonServices.Models.Entity;
 using CommonServices.Models.Http;
 using CommonServices.RabbitServices;

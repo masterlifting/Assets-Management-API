@@ -6,7 +6,7 @@ using IM.Service.Company.Analyzer.DataAccess.Entities;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Repository
 {
-    public class TickerRepository : IRepository<Ticker>
+    public class TickerRepository : IRepositoryHandler<Ticker>
     {
         private readonly DatabaseContext context;
         public TickerRepository(DatabaseContext context) => this.context = context;

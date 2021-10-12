@@ -41,7 +41,7 @@ namespace IM.Gateway.Recommendations
             services.AddScoped<PurchaseDtoAggregator>();
             services.AddScoped<SaleDtoAggregator>();
 
-            services.AddScoped<IRepository<Ticker>, TickerRepository>();
+            services.AddScoped<IRepositoryHandler<Ticker>, TickerRepository>();
             services.AddScoped(typeof(RepositorySet<>));
 
             services.AddScoped<RabbitActionService>();

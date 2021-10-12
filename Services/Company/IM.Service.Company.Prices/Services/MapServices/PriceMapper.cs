@@ -12,7 +12,7 @@ namespace IM.Service.Company.Prices.Services.MapServices
 {
     public static class PriceMapper
     {
-        public static Price[] MapToPrices(string lowerSourceType, TdAmeritradeLastPriceResultModel clientResult) =>
+        public static Price[] Map(string source, TdAmeritradeLastPriceResultModel clientResult) =>
             clientResult.Data is null
                 ? Array.Empty<Price>()
                 : clientResult.Data.Select(x => new Price
@@ -20,9 +20,9 @@ namespace IM.Service.Company.Prices.Services.MapServices
                     Date = DateTimeOffset.FromUnixTimeMilliseconds(x.Value.regularMarketTradeTimeInLong).DateTime.Date,
                     Value = x.Value.lastPrice,
                     TickerName = x.Key.ToUpperInvariant(),
-                    SourceType = lowerSourceType
+                    SourceType = source
                 }).ToArray();
-        public static Price[] MapToPrices(string lowerSourceType, TdAmeritradeHistoryPriceResultModel clientResult) =>
+        public static Price[] Map(string source, TdAmeritradeHistoryPriceResultModel clientResult) =>
             clientResult.Data?.candles is null
             ? Array.Empty<Price>()
             : clientResult.Data.candles.Select(x => new Price
@@ -30,9 +30,9 @@ namespace IM.Service.Company.Prices.Services.MapServices
                 Date = DateTimeOffset.FromUnixTimeMilliseconds(x.datetime).DateTime.Date,
                 Value = x.high,
                 TickerName = clientResult.Ticker.ToUpperInvariant(),
-                SourceType = lowerSourceType
+                SourceType = source
             }).ToArray();
-        public static Price[] MapToPrices(string lowerSourceType, MoexLastPriceResultModel clientResult, IEnumerable<string> tickers)
+        public static Price[] Map(string source, MoexLastPriceResultModel clientResult, IEnumerable<string> tickers)
         {
             var clientData = clientResult.Data?.Marketdata?.Data;
 
@@ -40,18 +40,18 @@ namespace IM.Service.Company.Prices.Services.MapServices
                 return Array.Empty<Price>();
 
             var prepareData = clientData.Select(x => new
-            {
-                ticker = x[0].ToString(),
-                date = x[48].ToString(),
-                value = x[12].ToString()
-            })
-            .Where(x => x.value != null);
+                {
+                    ticker = x?[0].ToString(),
+                    date = x?[48],
+                    price = x?[12]
+                })
+                .Where(x => x.price != null && x.ticker != null && x.date != null);
 
             var tickersData = prepareData.Join(tickers, x => x.ticker, y => y, (x, y) => new
             {
                 Ticker = y,
-                Date = x.date,
-                Price = x.value
+                Date = x.date!.ToString(),
+                Price = x.price!.ToString()
             }).ToArray();
 
             var result = new Price[tickersData.Length];
@@ -64,12 +64,12 @@ namespace IM.Service.Company.Prices.Services.MapServices
                         Date = date.Date,
                         Value = price,
                         TickerName = tickersData[i].Ticker,
-                        SourceType = lowerSourceType
+                        SourceType = source
                     };
 
             return result;
         }
-        public static Price[] MapToPrices(string lowerSourceType, MoexHistoryPriceResultModel clientResult)
+        public static Price[] Map(string source, MoexHistoryPriceResultModel clientResult)
         {
             var clientData = clientResult.Data?.History?.Data;
 
@@ -80,17 +80,19 @@ namespace IM.Service.Company.Prices.Services.MapServices
 
             foreach (var data in clientData)
             {
-                var data8 = data[8].ToString();
+                var priceObject = data?[8];
+                var dateObject = data?[1];
 
-                if (data8 is not null
-                    && (DateTime.TryParse(data[1].ToString(), out var date)
-                    && decimal.TryParse(data8, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var price)))
+                if (priceObject is not null
+                    && dateObject is not null
+                    && (DateTime.TryParse(dateObject.ToString(), out var date)
+                    && decimal.TryParse(priceObject.ToString(), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var price)))
                     result.Add(new()
                     {
                         TickerName = clientResult.Ticker.ToUpperInvariant(),
                         Date = date.Date,
                         Value = price,
-                        SourceType = lowerSourceType
+                        SourceType = source
                     });
             }
 

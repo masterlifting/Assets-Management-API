@@ -8,8 +8,10 @@ namespace IM.Service.Company.Prices.Services.PriceServices.Interfaces
 {
     public interface IPriceParser
     {
-        Task<Price[]> GetLastPricesToAddAsync(IEnumerable<PriceIdentity> prices);
-        Task<Price[]> GetLastPricesToUpdateAsync(IEnumerable<PriceIdentity> prices);
-        Task<Price[]> GetHistoryPricesAsync(IEnumerable<PriceIdentity> prices);
+        Task<Price[]> GetHistoryPricesAsync(string source, PriceIdentity data);
+        Task<Price[]> GetHistoryPricesAsync(string source, IEnumerable<PriceIdentity> data);
+        
+        Task<Price[]> GetLastPricesAsync(string source, PriceIdentity data);
+        Task<Price[]> GetLastPricesAsync(string source, IEnumerable<PriceIdentity> data);
     }
 }

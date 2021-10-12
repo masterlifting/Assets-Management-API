@@ -1,6 +1,6 @@
 ﻿using CommonServices.Attributes;
 
-namespace CommonServices.Models.Dto.GatewayCompanies
+namespace CommonServices.Models.Dto.Companies
 {
     public class StockSplitPutDto
     {

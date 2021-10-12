@@ -5,7 +5,8 @@
         public enum ReportSourceTypes : byte
         {
             Default = 1,
-            Investing = 2
+            Official = 2,
+            Investing = 3
         }
     }
 }

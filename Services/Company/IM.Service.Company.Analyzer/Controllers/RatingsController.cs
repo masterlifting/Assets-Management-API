@@ -26,7 +26,7 @@ namespace IM.Service.Company.Analyzer.Controllers
         [HttpGet("{place:int}")]
         public async Task<ResponseModel<RatingGetDto>> Get(int place) => await manager.GetAsync(place);
 
-        [HttpPost("recalculate/")]
+        [HttpGet("recalculate/")]
         public async Task<string> Recalculate(DateTime? dateStart = null)
         {
             dateStart ??= new DateTime(2010, 01, 01);

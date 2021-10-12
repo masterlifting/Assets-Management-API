@@ -1,4 +1,4 @@
-﻿using CommonServices.Models.Dto.GatewayCompanies;
+﻿using CommonServices.Models.Dto.Companies;
 using CommonServices.Models.Entity;
 using CommonServices.Models.Http;
 using Microsoft.AspNetCore.Mvc;

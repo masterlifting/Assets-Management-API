@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -58,12 +59,12 @@ namespace IM.Service.Company.Prices.Services.DtoServices
             var paginatedQuery = repository.GetPaginationQuery(filteredQuery, pagination, x => x.Date);
 
             var result = await paginatedQuery.Select(x => new PriceGetDto
-                {
-                    TickerName = x.TickerName,
-                    Date = x.Date,
-                    Value = x.Value,
-                    SourceType = x.SourceType
-                })
+            {
+                TickerName = x.TickerName,
+                Date = x.Date,
+                Value = x.Value,
+                SourceType = x.SourceType
+            })
                 .ToArrayAsync();
 
             return new()
@@ -111,7 +112,8 @@ namespace IM.Service.Company.Prices.Services.DtoServices
             var ctxEntity = new Price
             {
                 TickerName = model.TickerName,
-                Date = model.Date,
+                SourceType = model.SourceType,
+                Date = model.Date.Date,
                 Value = model.Value
             };
             var message = $"price for: '{model.TickerName}' of date: {model.Date:yyyy MMMM dd}";
@@ -135,11 +137,34 @@ namespace IM.Service.Company.Prices.Services.DtoServices
 
             return new() { Data = message + " created" };
         }
+        public async Task<ResponseModel<string>> CreateAsync(IEnumerable<PricePostDto> models)
+        {
+            var prices = models.ToArray();
+
+            if (!prices.Any())
+                return new() { Errors = new[] { "price data to creating not found" } };
+
+            var ctxEntities = prices.GroupBy(x => x.Date.Date).Select(x => new Price
+            {
+                TickerName = x.Last().TickerName,
+                SourceType = x.Last().SourceType,
+                Date = x.Last().Date.Date,
+                Value = x.Last().Value
+            });
+
+            var message = $"prices for: '{prices[0].TickerName}'";
+            var (errors, _) = await repository.CreateAsync(ctxEntities, new PriceComparer(), message);
+
+            return errors.Any()
+                ? new() { Errors = errors }
+                : new() { Data = message + " created" };
+        }
         public async Task<ResponseModel<string>> UpdateAsync(PricePostDto model)
         {
             var ctxEntity = new Price
             {
                 TickerName = model.TickerName,
+                SourceType = model.SourceType,
                 Date = model.Date,
                 Value = model.Value
             };

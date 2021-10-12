@@ -44,7 +44,7 @@ namespace IM.Service.Company.Prices.Clients
 
             return new(data);
         }
-        public async Task<TdAmeritradeHistoryPriceResultModel> GetLastYearPricesAsync(string ticker)
+        public async Task<TdAmeritradeHistoryPriceResultModel> GetHistoryPricesAsync(string ticker)
         {
             ticker = ticker.ToUpperInvariant();
             var url = $"https://{tdAmeritradeSetting.Host}/v1/marketdata/{ticker}/pricehistory?apikey={tdAmeritradeSetting.ApiKey}&periodType=year&period=1&frequencyType=daily&frequency=1&needExtendedHoursData=false";

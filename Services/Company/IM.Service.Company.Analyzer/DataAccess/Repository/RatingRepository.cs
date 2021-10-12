@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Repository
 {
-    public class RatingRepository : IRepository<Rating>
+    public class RatingRepository : IRepositoryHandler<Rating>
     {
         private readonly DatabaseContext context;
         public RatingRepository(DatabaseContext context) => this.context = context;

@@ -33,17 +33,15 @@ namespace CommonServices
                 }
             }
         };
-        
-        public static DateTime GetExchangeLastWorkday(string sourceType, DateTime? date = null)
-        {
-            return  CheckWorkday(sourceType, date ?? DateTime.UtcNow.AddDays(-1));
 
-            static DateTime CheckWorkday(string sourceType, DateTime checkingDate) =>
-                IsExchangeWeekend(checkingDate)
-                ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
-                : IsExchangeWeekend(sourceType, checkingDate)
-                    ? CheckWorkday(sourceType, checkingDate.AddDays(-1))
-                    : checkingDate.Date;
+        public static DateTime GetExchangeWorkDate(string sourceType, DateTime? date = null)
+        {
+            return CheckWorkday(sourceType, date ?? DateTime.UtcNow);
+
+            static DateTime CheckWorkday(string sourceType, DateTime checkDate) =>
+                IsExchangeWeekend(sourceType, checkDate)
+                ? CheckWorkday(sourceType, checkDate.AddDays(-1))
+                : checkDate;
         }
         public static byte GetQuarter(int month) => month switch
         {
@@ -88,7 +86,10 @@ namespace CommonServices
 
             return (year, quarter);
         }
-        public static bool IsExchangeWeekend(DateTime date) => date.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday;
+        public static bool IsExchangeWeekend(string sourceType, DateTime date) =>
+            date.DayOfWeek is DayOfWeek.Sunday or DayOfWeek.Saturday
+            && ExchangeWeekend.ContainsKey(sourceType)
+            && ExchangeWeekend[sourceType].Contains(date.Date);
 
         private static byte GetFirstMonth(byte quarter) => quarter switch
         {
@@ -98,8 +99,6 @@ namespace CommonServices
             4 => 10,
             _ => throw new NotSupportedException()
         };
-        private static bool IsExchangeWeekend(string sourceType, DateTime date) => 
-            ExchangeWeekend.ContainsKey(sourceType) && ExchangeWeekend[sourceType].Contains(date.Date);
         private static (int year, byte quarter) GetYearAndQuarter(DateTime date) => (date.Year, GetQuarter(date.Month));
     }
 }

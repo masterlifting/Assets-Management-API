@@ -6,13 +6,19 @@ using IM.Service.Companies.DataAccess.Entities;
 
 namespace IM.Service.Companies.DataAccess.Repository
 {
-    public class CompanyRepository : IRepository<Company>
+    public class CompanyRepository : IRepositoryHandler<Company>
     {
         private readonly DatabaseContext context;
         public CompanyRepository(DatabaseContext context) => this.context = context;
 
         public async Task<(bool trySuccess, Company? checkedEntity)> TryCheckEntityAsync(Company entity)
         {
+            if (string.IsNullOrWhiteSpace(entity.Name))
+                return (false, null);
+
+            if (entity.IndustryId == default)
+                return (false, null);
+
             entity.Ticker = entity.Ticker.ToUpperInvariant().Trim();
             return await Task.FromResult((true, entity));
         }
@@ -38,7 +44,6 @@ namespace IM.Service.Companies.DataAccess.Repository
             if (isCompare)
             {
                 contextEntity.Name = newEntity.Name;
-                contextEntity.SectorId = newEntity.SectorId;
                 contextEntity.IndustryId = newEntity.IndustryId;
                 contextEntity.Description = newEntity.Description;
             }

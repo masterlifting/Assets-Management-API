@@ -21,6 +21,7 @@ namespace IM.Service.Company.Reports.DataAccess.Entities
         [Range(1, byte.MaxValue)]
         public byte SourceTypeId { get; set; }
 
+        [StringLength(300)]
         public string? SourceValue { get; set; }
 
         public virtual IEnumerable<Report>? Reports { get; set; }

@@ -34,15 +34,15 @@ namespace IM.Service.Companies
                 provider.UseLazyLoadingProxies();
                 provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
             });
-
+            
             services.AddControllers();
 
             services.AddHttpClient<CompanyPricesClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
-            services.AddScoped<IRepository<Company>, CompanyRepository>();
-            services.AddScoped<IRepository<StockSplit>, StockSplitRepository>();
+            services.AddScoped<IRepositoryHandler<Company>, CompanyRepository>();
+            services.AddScoped<IRepositoryHandler<StockSplit>, StockSplitRepository>();
             services.AddScoped(typeof(RepositorySet<>));
 
             services.AddScoped<DtoCompanyManager>();

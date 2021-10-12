@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Companies.DataAccess.Repository
 {
-    public class StockSplitRepository : IRepository<StockSplit>
+    public class StockSplitRepository : IRepositoryHandler<StockSplit>
     {
         private readonly DatabaseContext context;
         public StockSplitRepository(DatabaseContext context) => this.context = context;

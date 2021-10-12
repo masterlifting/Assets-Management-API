@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Repository
 {
-    public class PriceRepository : IRepository<Price>
+    public class PriceRepository : IRepositoryHandler<Price>
     {
         private readonly DatabaseContext context;
         public PriceRepository(DatabaseContext context) => this.context = context;

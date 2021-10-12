@@ -30,25 +30,25 @@ namespace IM.Service.Company.Analyzer.Services.RabbitServices.Implementations
                 _ => true
             };
 
-        private async Task<bool> SetReportToCalculateAsync(string data) =>
-            (RabbitHelper.TrySerialize(data, out ReportGetDto? report) || report is not null)
+        private async Task<bool> SetReportToCalculateAsync(string data) => RabbitHelper.TrySerialize(data, out ReportGetDto? item) && item is not null
             && !(await reportRepository.CreateUpdateAsync(new Report
             {
-                TickerName = report!.TickerName,
-                Year = report.Year,
-                Quarter = report.Quarter,
-                SourceType = report.SourceType,
+                TickerName = item.TickerName,
+                SourceType = item.SourceType,
+                Year = item.Year,
+                Quarter = item.Quarter,
                 StatusId = (byte)StatusType.ToCalculate
-            }, $"report to calculate for '{report.TickerName}'")).Any();
+            }, $"set '{item.TickerName}' for report"))
+            .Any();
 
-        private async Task<bool> SetPriceToCalculateAsync(string data) => 
-            (RabbitHelper.TrySerialize(data, out PriceGetDto? price) || price is not null)
+        private async Task<bool> SetPriceToCalculateAsync(string data) => RabbitHelper.TrySerialize(data, out PriceGetDto? item) && item is not null
             && !(await priceRepository.CreateUpdateAsync(new Price
             {
-                TickerName = price!.TickerName,
-                Date = price.Date,
-                SourceType = price.SourceType,
+                TickerName = item.TickerName,
+                SourceType = item.SourceType,
+                Date = item.Date,
                 StatusId = (byte)StatusType.ToCalculate
-            }, $"price to calculate for '{price.TickerName}'")).Any();
+            }, $"set '{item.TickerName}' for price"))
+            .Any();
     }
 }

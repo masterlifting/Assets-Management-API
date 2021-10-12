@@ -14,12 +14,15 @@ namespace IM.Service.Company.Prices.DataAccess.Entities
         {
             Name = ticker.Name;
             SourceTypeId = ticker.SourceTypeId;
+            SourceValue = ticker.SourceValue;
         }
         public virtual SourceType SourceType { get; set; } = null!;
         [Range(1, byte.MaxValue)]
         public byte SourceTypeId { get; set; }
 
-        // ReSharper disable once UnusedAutoPropertyAccessor.Global
+        [StringLength(10)]
+        public string? SourceValue { get; set; }
+
         public virtual IEnumerable<Price>? Prices { get; set; }
     }
 }

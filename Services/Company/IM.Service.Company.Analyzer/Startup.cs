@@ -57,10 +57,10 @@ namespace IM.Service.Company.Analyzer
 
             services.AddScoped<DtoRatingManager>();
 
-            services.AddScoped<IRepository<Ticker>, TickerRepository>();
-            services.AddScoped<IRepository<Price>, PriceRepository>();
-            services.AddScoped<IRepository<Report>, ReportRepository>();
-            services.AddScoped<IRepository<Rating>, RatingRepository>();
+            services.AddScoped<IRepositoryHandler<Ticker>, TickerRepository>();
+            services.AddScoped<IRepositoryHandler<Price>, PriceRepository>();
+            services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();
+            services.AddScoped<IRepositoryHandler<Rating>, RatingRepository>();
             services.AddScoped(typeof(RepositorySet<>));
 
 

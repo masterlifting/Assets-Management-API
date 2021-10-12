@@ -1,7 +1,7 @@
 ﻿using CommonServices.Attributes;
 using CommonServices.Models.Entity;
 
-namespace CommonServices.Models.Dto.GatewayCompanies
+namespace CommonServices.Models.Dto.Companies
 {
     public class StockSplitPostDto : PriceIdentity
     {

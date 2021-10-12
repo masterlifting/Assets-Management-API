@@ -7,13 +7,16 @@ using static IM.Service.Company.Reports.Enums;
 
 namespace IM.Service.Company.Reports.DataAccess.Repository
 {
-    public class TickerRepository : IRepository<Ticker>
+    public class TickerRepository : IRepositoryHandler<Ticker>
     {
         private readonly DatabaseContext context;
         public TickerRepository(DatabaseContext context) => this.context = context;
 
         public async Task<(bool trySuccess, Ticker? checkedEntity)> TryCheckEntityAsync(Ticker entity)
         {
+            if (!string.IsNullOrWhiteSpace(entity.SourceValue))
+                entity.SourceValue = entity.SourceValue.ToLowerInvariant();
+
             if (await context.SourceTypes.FindAsync(entity.SourceTypeId) is null)
                 entity.SourceTypeId = (byte)ReportSourceTypes.Default;
 
@@ -36,6 +39,10 @@ namespace IM.Service.Company.Reports.DataAccess.Repository
                 entity.SourceTypeId = (byte)ReportSourceTypes.Default;
 
             result = result.Join(correctNames, x => x.Name, y => y, (x, _) => x).Union(uncorrectedEntities).ToArray();
+
+            foreach (var item in result)
+                if (!string.IsNullOrWhiteSpace(item.SourceValue))
+                    item.SourceValue = item.SourceValue.ToLowerInvariant();
 
             return await Task.FromResult((true, result));
         }

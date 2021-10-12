@@ -49,8 +49,8 @@ namespace IM.Service.Company.Reports
             services.AddScoped<ReportLoader>();
             services.AddScoped<DtoManager>();
 
-            services.AddScoped<IRepository<Ticker>, TickerRepository>();
-            services.AddScoped<IRepository<Report>, ReportRepository>();
+            services.AddScoped<IRepositoryHandler<Ticker>, TickerRepository>();
+            services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();
             services.AddScoped(typeof(RepositorySet<>));
 
             services.AddScoped<RabbitActionService>();

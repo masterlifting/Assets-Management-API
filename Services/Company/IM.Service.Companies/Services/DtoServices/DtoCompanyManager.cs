@@ -1,11 +1,12 @@
 ﻿using CommonServices.HttpServices;
 using CommonServices.Models.Http;
-using CommonServices.Models.Dto.GatewayCompanies;
+using CommonServices.Models.Dto.Companies;
 using Microsoft.EntityFrameworkCore;
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Companies.DataAccess;
 using IM.Service.Companies.DataAccess.Entities;
 using IM.Service.Companies.DataAccess.Repository;
 using IM.Service.Companies.Services.RabbitServices;
@@ -14,11 +15,13 @@ namespace IM.Service.Companies.Services.DtoServices
 {
     public class DtoCompanyManager
     {
+        private readonly DatabaseContext context;
         private readonly RepositorySet<Company> repository;
         private readonly RabbitCrudService rabbitCrudService;
 
-        public DtoCompanyManager(RepositorySet<Company> repository, RabbitCrudService rabbitCrudService)
+        public DtoCompanyManager(DatabaseContext context, RepositorySet<Company> repository, RabbitCrudService rabbitCrudService)
         {
+            this.context = context;
             this.repository = repository;
             this.rabbitCrudService = rabbitCrudService;
         }
@@ -34,7 +37,7 @@ namespace IM.Service.Companies.Services.DtoServices
             {
                 Name = x.Name,
                 Ticker = x.Ticker,
-                Sector = x.Sector.Name,
+                Sector = x.Industry.Sector.Name,
                 Industry = x.Industry.Name,
                 Description = x.Description
             })
@@ -57,8 +60,8 @@ namespace IM.Service.Companies.Services.DtoServices
             if (company is null)
                 return new() { Errors = new[] { "company not found" } };
 
-            var sector = await repository.GetDbSetBy<Sector>().FindAsync(company.IndustryId);
             var industry = await repository.GetDbSetBy<Industry>().FindAsync(company.IndustryId);
+            var sector = await repository.GetDbSetBy<Sector>().FindAsync(industry.SectorId);
 
             return new()
             {
@@ -74,12 +77,29 @@ namespace IM.Service.Companies.Services.DtoServices
         }
         public async Task<ResponseModel<string>> CreateAsync(CompanyPostDto model)
         {
-            var ctxCompany = new Company()
+            var sector = context.Sectors.FirstOrDefault(x => x.Name.Equals(model.Sector));
+
+            if (sector is null)
+            {
+                sector = new Sector { Name = model.Sector };
+                await context.Sectors.AddAsync(sector);
+                await context.SaveChangesAsync();
+            }
+
+            var industry = context.Industries.FirstOrDefault(x => x.Name.Equals(model.Industry));
+
+            if (industry is null)
+            {
+                industry = new Industry { SectorId = sector.Id, Name = model.Industry };
+                await context.Industries.AddAsync(industry);
+                await context.SaveChangesAsync();
+            }
+
+            var ctxCompany = new Company
             {
                 Ticker = model.Ticker,
                 Name = model.Name,
-                SectorId = model.SectorId,
-                IndustryId = model.IndustryId,
+                IndustryId = industry.Id,
                 Description = model.Description
             };
 
@@ -100,11 +120,10 @@ namespace IM.Service.Companies.Services.DtoServices
         }
         public async Task<ResponseModel<string>> UpdateAsync(string ticker, CompanyPutDto model)
         {
-            var ctxCompany = new Company()
+            var ctxCompany = new Company
             {
                 Ticker = ticker,
                 Name = model.Name,
-                SectorId = model.SectorId,
                 IndustryId = model.IndustryId,
                 Description = model.Description
             };

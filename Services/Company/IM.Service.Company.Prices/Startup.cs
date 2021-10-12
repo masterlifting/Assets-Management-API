@@ -51,8 +51,8 @@ namespace IM.Service.Company.Prices
             services.AddScoped<PriceLoader>();
             services.AddScoped<DtoManager>();
 
-            services.AddScoped<IRepository<Ticker>, TickerRepository>();
-            services.AddScoped<IRepository<Price>, PriceRepository>();
+            services.AddScoped<IRepositoryHandler<Ticker>, TickerRepository>();
+            services.AddScoped<IRepositoryHandler<Price>, PriceRepository>();
             services.AddScoped(typeof(RepositorySet<>));
 
             services.AddScoped<RabbitActionService>();

@@ -1,4 +1,5 @@
-﻿using CommonServices;
+﻿using System.Collections.Generic;
+using CommonServices;
 using CommonServices.Models.Dto.CompanyReports;
 using CommonServices.Models.Entity;
 using CommonServices.Models.Http;
@@ -54,6 +55,8 @@ namespace IM.Service.Company.Reports.Controllers
 
         [HttpPost]
         public async Task<ResponseModel<string>> Post(ReportPostDto model) => await manager.CreateAsync(model);
+        [HttpPost("collection/")]
+        public async Task<ResponseModel<string>> Post(IEnumerable<ReportPostDto> models) => await manager.CreateAsync(models);
 
         [HttpPut("{ticker}/{year:int}/{quarter:int}")]
         public async Task<ResponseModel<string>> Put(string ticker, int year, int quarter, ReportPutDto model) =>
@@ -83,8 +86,8 @@ namespace IM.Service.Company.Reports.Controllers
         [HttpPost("load/")]
         public async Task<string> Load()
         {
-            var loadedCount = await loader.LoadAsync();
-            return $"loaded reports count: {loadedCount}";
+            var reports = await loader.LoadAsync();
+            return $"loaded reports count: {reports.Length}";
         }
     }
 }

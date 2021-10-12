@@ -20,9 +20,9 @@ namespace IM.Service.Company.Reports.DataAccess
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<Report>().HasKey(x => new { x.TickerName, x.Year, x.Quarter });
-            modelBuilder.Entity<SourceType>().Property(x => x.Id).ValueGeneratedNever();
             modelBuilder.Entity<SourceType>().HasData(
-                new() { Id = (byte)ReportSourceTypes.Default, Name = "Select report source!" },
+                new() { Id = (byte)ReportSourceTypes.Default, Name = "Select report source" },
+                new() { Id = (byte)ReportSourceTypes.Official, Name = nameof(ReportSourceTypes.Official).ToLowerInvariant() },
                 new() { Id = (byte)ReportSourceTypes.Investing, Name = nameof(ReportSourceTypes.Investing).ToLowerInvariant() }
             );
         }

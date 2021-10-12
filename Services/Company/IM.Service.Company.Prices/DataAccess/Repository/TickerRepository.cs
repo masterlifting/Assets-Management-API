@@ -10,13 +10,17 @@ using static IM.Service.Company.Prices.Enums;
 
 namespace IM.Service.Company.Prices.DataAccess.Repository
 {
-    public class TickerRepository : IRepository<Ticker>
+    public class TickerRepository : IRepositoryHandler<Ticker>
     {
         private readonly DatabaseContext context;
         public TickerRepository(DatabaseContext context) => this.context = context;
 
         public async Task<(bool trySuccess, Ticker? checkedEntity)> TryCheckEntityAsync(Ticker entity)
         {
+            entity.SourceValue = string.IsNullOrWhiteSpace(entity.SourceValue) 
+                ? entity.Name.ToLowerInvariant() 
+                : entity.SourceValue.ToLowerInvariant();
+
             if (await context.SourceTypes.FindAsync(entity.SourceTypeId) is null)
                 entity.SourceTypeId = (byte)PriceSourceTypes.Default;
 
@@ -40,6 +44,11 @@ namespace IM.Service.Company.Prices.DataAccess.Repository
 
             result = result.Join(correctNames, x => x.Name, y => y, (x, _) => x).Union(uncorrectedEntities).ToArray();
 
+            foreach (var item in result)
+                item.SourceValue = string.IsNullOrWhiteSpace(item.SourceValue)
+                    ? item.Name.ToLowerInvariant()
+                    : item.SourceValue.ToLowerInvariant();
+
             return await Task.FromResult((true, result));
         }
         public async Task<Ticker?> GetAlreadyEntityAsync(Ticker entity) => await context.Tickers.FindAsync(entity.Name);
@@ -52,8 +61,12 @@ namespace IM.Service.Company.Prices.DataAccess.Repository
         {
             var isCompare = (contextEntity.Name == newEntity.Name);
 
+            // ReSharper disable once InvertIf
             if (isCompare)
+            {
                 contextEntity.SourceTypeId = newEntity.SourceTypeId;
+                contextEntity.SourceValue = newEntity.SourceValue;
+            }
 
             return isCompare;
         }

@@ -1,6 +1,6 @@
 ﻿using CommonServices;
+using CommonServices.Models.Dto.Companies;
 using CommonServices.Models.Dto.CompanyPrices;
-using CommonServices.Models.Dto.GatewayCompanies;
 using CommonServices.Models.Entity;
 
 using IM.Service.Company.Analyzer.Clients;
@@ -9,6 +9,7 @@ using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
 
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 using System;
 using System.Collections.Generic;
@@ -66,11 +67,18 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         public async Task<bool> CalculateAsync(DateTime dateStart)
         {
             var prices = await repository.GetSampleAsync(x => x.Date >= dateStart);
+            var tickers = await repository.GetDbSetBy<Ticker>().Select(x => x.Name).ToArrayAsync();
 
-            if (!prices.Any())
+            if (!prices.Any() && !tickers.Any())
                 return false;
 
-            foreach (var group in prices.GroupBy(x => x.TickerName))
+            var groupedPrices = prices.GroupBy(x => x.TickerName).ToArray();
+            var tickersWithoutPrices = tickers.Except(groupedPrices.Select(x => x.Key)).ToArray();
+
+            foreach (var ticker in tickersWithoutPrices)
+                await BaseCalculateAsync(ticker, dateStart);
+
+            foreach (var group in groupedPrices)
                 await BaseCalculateAsync(group);
 
             return true;
@@ -81,7 +89,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             var orderedPrices = group.OrderBy(x => x.Date).ToArray();
 
             var dateTarget = orderedPrices[0].Date.AddDays(-10);
-            var dateStart = CommonHelper.GetExchangeLastWorkday(orderedPrices[0].SourceType, dateTarget);
+            var dateStart = CommonHelper.GetExchangeWorkDate(orderedPrices[0].SourceType, dateTarget);
             var ticker = group.Key;
 
             if (!await IsSetCalculatingStatusAsync(orderedPrices, ticker))
@@ -89,14 +97,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 
             try
             {
-                var calculatingData = await GetCalculatingDataAsync(ticker, dateStart);
-
-                if (!calculatingData.Any())
-                    throw new DataException($"prices for '{ticker}' not found!");
-
-                var calculator = new PriceComparator(calculatingData);
-                var calculateResult = calculator.GetComparedSample();
-
+                var calculateResult = await GetCalculatedResultAsync(ticker, dateStart);
                 await repository.CreateUpdateAsync(calculateResult, new PriceComparer(), $"price calculated result for {ticker}");
             }
             catch (Exception ex)
@@ -108,6 +109,28 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 
                 throw new ArithmeticException($"price calculated for '{ticker}' failed! \nError: {ex.Message}");
             }
+        }
+        private async Task BaseCalculateAsync(string ticker, DateTime dateStart)
+        {
+            try
+            {
+                var calculateResult = await GetCalculatedResultAsync(ticker, dateStart);
+                await repository.CreateAsync(calculateResult, new PriceComparer(), $"price calculated result for {ticker}");
+            }
+            catch (Exception ex)
+            {
+                throw new ArithmeticException($"price calculated for '{ticker}' failed! \nError: {ex.Message}");
+            }
+        }
+        private async Task<Price[]> GetCalculatedResultAsync(string ticker, DateTime dateStart)
+        {
+            var calculatingData = await GetCalculatingDataAsync(ticker, dateStart);
+
+            if (!calculatingData.Any())
+                throw new DataException($"prices for '{ticker}' not found!");
+
+            var calculator = new PriceComparator(calculatingData);
+            return calculator.GetComparedSample();
         }
         private async Task<IReadOnlyCollection<PriceGetDto>> GetCalculatingDataAsync(string ticker, DateTime date)
         {
