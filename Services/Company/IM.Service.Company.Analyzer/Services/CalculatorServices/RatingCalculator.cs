@@ -10,13 +10,13 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 {
     public class RatingCalculator
     {
-        private readonly RepositorySet<Ticker> tickerRepository;
+        private readonly RepositorySet<DataAccess.Entities.Company> tickerRepository;
         private readonly RepositorySet<Rating> ratingRepository;
         private readonly RepositorySet<Price> priceRepository;
         private readonly RepositorySet<Report> reportsRepository;
 
         public RatingCalculator(
-            RepositorySet<Ticker> tickerRepository,
+            RepositorySet<DataAccess.Entities.Company> tickerRepository,
             RepositorySet<Rating> ratingRepository,
             RepositorySet<Price> priceRepository,
             RepositorySet<Report> reportsRepository)
@@ -37,23 +37,23 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                 var index = i;
 
                 var priceResults = await priceRepository.GetSampleAsync(
-                    x => x.TickerName == tickers[index] && x.StatusId == (byte)StatusType.Calculated,
+                    x => x.CompanyId == tickers[index] && x.StatusId == (byte)StatusType.Calculated,
                     x => x.Result);
 
                 var reportResults = await reportsRepository.GetSampleAsync(
-                    x => x.TickerName == tickers[index] && x.StatusId == (byte)StatusType.Calculated,
+                    x => x.CompanyId == tickers[index] && x.StatusId == (byte)StatusType.Calculated,
                     x => x.Result);
 
-                var priceResult = RatingComparator.ComputeSampleResult(priceResults) * 100;
+                var priceResult = RatingComparator.ComputeSampleResult(priceResults) * 10000;
                 var reportResult = RatingComparator.ComputeSampleResult(reportResults);
 
                 ratings.Add(new()
                 {
                     Place = i + 1,
-                    PriceComparison = priceResult,
-                    ReportComparison = reportResult,
+                    ResultPrice = priceResult,
+                    ResultReport = reportResult,
                     Result = (priceResult + reportResult) * 0.5m,
-                    TickerName = tickers[i]
+                    CompanyId = tickers[i]
                 });
             }
 
@@ -71,7 +71,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 
     public class RatingComparer : IEqualityComparer<Rating>
     {
-        public bool Equals(Rating? x, Rating? y) => x is not null && y is not null && x.TickerName == y.TickerName;
-        public int GetHashCode(Rating obj) => obj.TickerName.GetHashCode();
+        public bool Equals(Rating? x, Rating? y) => x is not null && y is not null && x.CompanyId == y.CompanyId;
+        public int GetHashCode(Rating obj) => obj.CompanyId.GetHashCode();
     }
 }

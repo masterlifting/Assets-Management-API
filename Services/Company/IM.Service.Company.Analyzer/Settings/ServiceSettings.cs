@@ -1,4 +1,5 @@
-﻿using CommonServices.Models;
+﻿using IM.Service.Common.Net.Models.Configuration;
+
 using IM.Service.Company.Analyzer.Settings.Client;
 
 namespace IM.Service.Company.Analyzer.Settings

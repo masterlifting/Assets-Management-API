@@ -11,14 +11,16 @@ namespace IM.Service.Company.Analyzer.Services.BackgroundServices
     public class CalculatorBackgroundService : BackgroundService
     {
         private readonly IServiceProvider services;
+        private bool start = true;
         public CalculatorBackgroundService(IServiceProvider services) => this.services = services;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var delay = new TimeSpan(0, 1, 0);
 
-            while (true)
+            while (start)
             {
+                start = false;
                 await Task.Delay(delay, stoppingToken);
 
                 var scope = services.CreateScope();
@@ -45,6 +47,7 @@ namespace IM.Service.Company.Analyzer.Services.BackgroundServices
                 }
 
                 scope.Dispose();
+                start = true;
             }
             // ReSharper disable once FunctionNeverReturns
         }

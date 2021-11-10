@@ -1,22 +1,24 @@
-﻿using System.ComponentModel.DataAnnotations;
-using CommonServices.Models.Entity;
+﻿using IM.Service.Common.Net.Models.Entity.Companies.Interfaces;
 
+using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Entities
 {
     // ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
-    public class Price : PriceIdentity
+    public class Price : ICompanyDateIdentity
     {
-        public virtual Ticker Ticker { get; set; } = null!;
-        public string SourceType { get; set; } = null!;
-
+        public Company Company { get; init; } = null!;
+        public string CompanyId { get; init; } = null!;
+        public DateTime Date { get; init; }
 
         [Column(TypeName = "Decimal(18,4)")]
         public decimal Result { get; set; }
 
-        public virtual Status Status { get; set; } = null!;
+        public Status Status { get; set; } = null!;
         [Range(1, byte.MaxValue)]
         public byte StatusId { get; set; }
+
     }
 }

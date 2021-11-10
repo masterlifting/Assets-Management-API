@@ -1,4 +1,4 @@
-﻿using CommonServices.RepositoryService;
+﻿using IM.Service.Common.Net.RepositoryService;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,40 +12,61 @@ namespace IM.Service.Company.Analyzer.DataAccess.Repository
         private readonly DatabaseContext context;
         public PriceRepository(DatabaseContext context) => this.context = context;
 
-        public async Task<(bool trySuccess, Price? checkedEntity)>TryCheckEntityAsync(Price entity) =>
-            (await context.Tickers.AnyAsync(x => x.Name.Equals(entity.TickerName)), entity);
-        public async Task<(bool isSuccess, Price[] checkedEntities)>TryCheckEntitiesAsync(IEnumerable<Price> entities)
+        public Task GetCreateHandlerAsync(ref Price entity)
         {
-            var result = entities.ToArray();
+            return Task.CompletedTask;
+        }
+        public Task GetCreateHandlerAsync(ref Price[] entities, IEqualityComparer<Price> comparer)
+        {
+            var exist = GetExist(entities);
 
-            result = result
-                .GroupBy(y => (y.TickerName, y.Date))
-                .Select(x => x.First())
+            if (exist.Any())
+                entities = entities.Except(exist, comparer).ToArray();
+
+            return Task.CompletedTask;
+        }
+        public Task GetUpdateHandlerAsync(ref Price entity)
+        {
+            var dbEntity = context.Prices.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
+
+            dbEntity.Result = entity.Result;
+            dbEntity.StatusId = entity.StatusId;
+
+            entity = dbEntity;
+
+            return Task.CompletedTask;
+        }
+        public Task GetUpdateHandlerAsync(ref Price[] entities)
+        {
+            var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
+
+            var result = exist
+                .Join(entities, x => (x.CompanyId, x.Date), y => (y.CompanyId, y.Date),
+                    (x, y) => (Old: x, New: y))
                 .ToArray();
 
-            var tickers = result.Select(y => y.TickerName).Distinct().ToArray();
-            var count = await context.Tickers.CountAsync(x => tickers.Contains(x.Name));
-
-            return (tickers.Length == count, result);
-        }
-        public async Task<Price?>GetAlreadyEntityAsync(Price entity) => await context.Prices.FindAsync(entity.TickerName, entity.Date);
-        public IQueryable<Price> GetAlreadyEntitiesQuery(IEnumerable<Price> entities)
-        {
-            var tickers = entities.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
-            return context.Prices.Where(x => tickers.Contains(x.TickerName));
-        }
-        public bool IsUpdate(Price contextEntity, Price newEntity)
-        {
-            var isCompare = (contextEntity.TickerName, contextEntity.Date) == (newEntity.TickerName, newEntity.Date);
-
-            if (isCompare)
+            foreach (var (Old, New) in result)
             {
-                contextEntity.Result = newEntity.Result;
-                contextEntity.StatusId = newEntity.StatusId;
-                contextEntity.SourceType = newEntity.SourceType;
+                Old.Result = New.Result;
+                Old.StatusId = New.StatusId;
             }
 
-            return isCompare;
+            entities = result.Select(x => x.Old).ToArray();
+
+            return Task.CompletedTask;
+        }
+
+        private IQueryable<Price> GetExist(Price[] entities)
+        {
+            var dateMin = entities.Min(x => x.Date);
+            var dateMax = entities.Max(x => x.Date);
+
+            var existData = entities
+                .GroupBy(x => x.CompanyId)
+                .Select(x => x.Key)
+                .ToArray();
+
+            return context.Prices.Where(x => existData.Contains(x.CompanyId) && x.Date >= dateMin && x.Date <= dateMax);
         }
     }
 }

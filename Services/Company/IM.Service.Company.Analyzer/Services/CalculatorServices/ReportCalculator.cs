@@ -1,23 +1,19 @@
-﻿using CommonServices.Models.Dto.CompanyPrices;
-using CommonServices.Models.Dto.CompanyReports;
-using CommonServices.Models.Entity;
-
-using IM.Service.Company.Analyzer.Clients;
+﻿using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
 
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 
 using System;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-
-using static CommonServices.CommonEnums;
-using static CommonServices.CommonHelper;
-using static CommonServices.HttpServices.QueryStringBuilder;
+using IM.Service.Common.Net.Models.Dto.Http.Companies;
+using IM.Service.Common.Net.RepositoryService.Comparators;
+using static IM.Service.Common.Net.CommonEnums;
+using static IM.Service.Common.Net.CommonHelper;
+using static IM.Service.Common.Net.HttpServices.QueryStringBuilder;
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
@@ -25,17 +21,14 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
     public class ReportCalculator : IAnalyzerCalculator<Report>
     {
         private readonly RepositorySet<Report> repository;
-        private readonly CompanyReportsClient reportsClient;
-        private readonly CompanyPricesClient pricesClient;
+        private readonly CompanyDataClient dataClient;
 
         public ReportCalculator(
             RepositorySet<Report> repository,
-            CompanyReportsClient reportsClient,
-            CompanyPricesClient pricesClient)
+            CompanyDataClient dataClient)
         {
             this.repository = repository;
-            this.reportsClient = reportsClient;
-            this.pricesClient = pricesClient;
+            this.dataClient = dataClient;
         }
 
         public async Task<bool> IsSetCalculatingStatusAsync(Report[] reports, string info)
@@ -43,11 +36,8 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             foreach (var report in reports)
                 report.StatusId = (byte)StatusType.Calculating;
 
-            var (errors, _) = await repository.UpdateAsync(reports, $"report calculating status for '{info}'");
-
-            return !errors.Any();
+            return (await repository.UpdateAsync(reports, $"report calculating status for '{info}'")).error is not null;
         }
-
         public async Task<bool> CalculateAsync()
         {
             var reports = await repository.GetSampleAsync(x =>
@@ -58,102 +48,68 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             if (!reports.Any())
                 return false;
 
-            foreach (var group in reports.GroupBy(x => x.TickerName))
-                await BaseCalculateAsync(group);
-
-            return true;
-        }
-        public async Task<bool> CalculateAsync(DateTime dateStart)
-        {
-            var quarter = GetQuarter(dateStart.Month);
-
-            var reports = await repository.GetSampleAsync(x =>
-               x.Year > dateStart.Year || x.Year == dateStart.Year && x.Quarter >= quarter);
-            var tickers = await repository.GetDbSetBy<Ticker>().Select(x => x.Name).ToArrayAsync();
-
-            if (!reports.Any() && !tickers.Any())
-                return false;
-
-            var groupedReports = reports.GroupBy(x => x.TickerName).ToArray();
-            var tickersWithoutReports = tickers.Except(groupedReports.Select(x => x.Key)).ToArray();
-
-            foreach (var ticker in tickersWithoutReports)
-                await BaseCalculateAsync(ticker, dateStart);
-
-            foreach (var group in groupedReports)
+            foreach (var group in reports.GroupBy(x => x.CompanyId))
                 await BaseCalculateAsync(group);
 
             return true;
         }
 
-        private async Task BaseCalculateAsync(string ticker, DateTime dateStart)
-        {
-            try
-            {
-                var calculateResult = await GetCalculatedResultAsync(ticker, dateStart, dateStart.Year, GetQuarter(dateStart.Month));
-                await repository.CreateAsync(calculateResult, new ReportComparer(), $"report calculated result for {ticker}");
-            }
-            catch (Exception ex)
-            {
-                throw new ArithmeticException($"report calculated for '{ticker}' failed! \nError: {ex.Message}");
-            }
-        }
         private async Task BaseCalculateAsync(IGrouping<string, Report> group)
         {
+            var companyId = group.Key;
+            
             var orderedReports = group.OrderBy(x => x.Year).ThenBy(x => x.Quarter).ToArray();
-
             var (targetYear, targetQuarter) = SubtractQuarter(orderedReports[0].Year, orderedReports[0].Quarter);
             (targetYear, targetQuarter) = SubtractQuarter(targetYear, targetQuarter);
 
-            var (year, month, day) = GetQuarterFirstDate(targetYear, targetQuarter);
-            var ticker = group.Key;
-
-            if (!await IsSetCalculatingStatusAsync(orderedReports, ticker))
-                throw new DataException($"set report calculating status for '{ticker}' failed");
+            if (!await IsSetCalculatingStatusAsync(orderedReports, companyId))
+                throw new DataException($"set report calculating status for '{companyId}' failed");
 
             try
             {
-                var calculateResult = await GetCalculatedResultAsync(ticker, new DateTime(year, month, day), targetYear, targetQuarter);
-                await repository.CreateUpdateAsync(calculateResult, new ReportComparer(), $"report calculated result for {ticker}");
+                var calculateResult = await GetCalculatedResultAsync(companyId, targetYear, targetQuarter);
+                await repository.CreateUpdateAsync(calculateResult, new CompanyQuarterComparer<Report>(), $"report calculated result for {companyId}");
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
                 foreach (var report in orderedReports)
                     report.StatusId = (byte)StatusType.Error;
 
-                await repository.CreateUpdateAsync(orderedReports, new ReportComparer(), $"calculate reports for {ticker}");
+                await repository.CreateUpdateAsync(orderedReports, new CompanyQuarterComparer<Report>(), $"calculate reports for {companyId}");
 
-                throw new ArithmeticException($"report calculated for '{ticker}' failed! \nError: {ex.Message}");
+                throw new ArithmeticException($"report calculated for '{companyId}' failed! \nError: {exception.Message}");
             }
         }
-        private async Task<Report[]> GetCalculatedResultAsync(string ticker, DateTime dateStart, int targetYear, byte targetQuarter)
+        private async Task<(ReportGetDto[] dtoReports, PriceGetDto[]? dtoPrices)> GetCalculatingDataAsync(string companyId, int year, byte quarter)
         {
-            var (dtoReports, dtoPrices) = await GetCalculatingDataAsync(ticker, dateStart, targetYear, targetQuarter);
-
-            if (!dtoReports.Any())
-                throw new DataException($"reports for '{ticker}' not found!");
-
-            var calculator = new ReportComparator(dtoReports, dtoPrices);
-            return calculator.GetComparedSample();
-        }
-        private async Task<(ReportGetDto[] dtoReports, PriceGetDto[]? dtoPrices)> GetCalculatingDataAsync(string ticker, DateTime date, int year, byte quarter)
-        {
-            var reportResponse = await reportsClient.Get<ReportGetDto>(
+            var reportResponse = await dataClient.Get<ReportGetDto>(
                 "reports",
-                GetQueryString(HttpRequestFilterType.More, ticker, year, quarter),
+                GetQueryString(HttpRequestFilterType.More, companyId, year, quarter),
                 new(1, int.MaxValue));
 
             if (reportResponse.Errors.Any())
                 throw new BadHttpRequestException(string.Join('\n', reportResponse.Errors));
 
-            var pricesResponse = await pricesClient.Get<PriceGetDto>(
+            var priceDate = GetQuarterFirstDate(year, quarter);
+
+            var pricesResponse = await dataClient.Get<PriceGetDto>(
                 "prices",
-                GetQueryString(HttpRequestFilterType.More, ticker, date.Year, date.Month, date.Day),
+                GetQueryString(HttpRequestFilterType.More, companyId, priceDate.year, priceDate.month, priceDate.day),
                 new(1, int.MaxValue));
 
             return pricesResponse.Errors.Any()
                 ? throw new BadHttpRequestException(string.Join('\n', reportResponse.Errors))
                 : (reportResponse.Data!.Items, pricesResponse.Data?.Items);
+        }
+        private async Task<Report[]> GetCalculatedResultAsync(string companyId, int targetYear, byte targetQuarter)
+        {
+            var (dtoReports, dtoPrices) = await GetCalculatingDataAsync(companyId, targetYear, targetQuarter);
+
+            if (!dtoReports.Any())
+                throw new DataException($"reports for '{companyId}' not found!");
+
+            var calculator = new ReportComparator(dtoReports, dtoPrices);
+            return calculator.GetComparedSample();
         }
     }
 }

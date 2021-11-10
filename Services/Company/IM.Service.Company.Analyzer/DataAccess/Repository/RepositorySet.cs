@@ -1,4 +1,4 @@
-﻿using CommonServices.RepositoryService;
+﻿using IM.Service.Common.Net.RepositoryService;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Repository
 {

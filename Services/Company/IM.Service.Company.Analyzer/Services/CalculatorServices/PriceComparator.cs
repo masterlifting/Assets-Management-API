@@ -1,4 +1,4 @@
-﻿using CommonServices.Models.Dto.CompanyPrices;
+﻿using IM.Service.Common.Net.Models.Dto.Http.Companies;
 
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.Models.Calculator;
@@ -33,9 +33,8 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     {
                         result[j] = new Price
                         {
-                            TickerName = prices[i].TickerName,
+                            CompanyId = prices[i].Ticker,
                             Date = prices[i].Date,
-                            SourceType = prices[i].SourceType,
                             Result = comparedSample[j].Value,
                             StatusId = (byte)StatusType.Calculated
                         };
@@ -48,7 +47,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         private void SetData()
         {
             for (uint i = 0; i < prices.Length; i++)
-                valueCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = prices[i].Value };
+                valueCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = prices[i].ValueTrue };
         }
     }
 }

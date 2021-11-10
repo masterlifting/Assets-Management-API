@@ -1,11 +1,9 @@
-﻿using CommonServices.Models.Http;
+﻿using IM.Service.Common.Net.Models.Dto.Http;
 
 namespace IM.Service.Company.Analyzer.Settings.Client
 {
     public class ClientSettings
     {
-        public HostModel CompanyPrices { get; set; } = null!;
-        public HostModel CompanyReports { get; set; } = null!;
-        public HostModel Companies { get; set; } = null!;
+        public HostModel CompanyData { get; set; } = null!;
     }
 }

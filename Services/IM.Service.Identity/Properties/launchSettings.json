@@ -18,7 +18,7 @@
     "IM.Service.Identity": {
       "commandName": "Project",
       "dotnetRunMessages": "true",
-      "applicationUrl": "http://localhost:2001",
+      "applicationUrl": "http://localhost:1000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

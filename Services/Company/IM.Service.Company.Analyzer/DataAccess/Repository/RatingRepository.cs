@@ -1,10 +1,12 @@
-﻿using CommonServices.RepositoryService;
-using System;
+﻿using System;
+using IM.Service.Common.Net.RepositoryService;
+
+using IM.Service.Company.Analyzer.DataAccess.Entities;
+
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Company.Analyzer.DataAccess.Entities;
-using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Repository
 {
@@ -13,38 +15,62 @@ namespace IM.Service.Company.Analyzer.DataAccess.Repository
         private readonly DatabaseContext context;
         public RatingRepository(DatabaseContext context) => this.context = context;
 
-        public async Task<(bool trySuccess, Rating? checkedEntity)> TryCheckEntityAsync(Rating entity) =>
-            (await context.Tickers.AnyAsync(x => x.Name.Equals(entity.TickerName)), entity);
-        public async Task<(bool isSuccess, Rating[] checkedEntities)> TryCheckEntitiesAsync(IEnumerable<Rating> entities)
+        public Task GetCreateHandlerAsync(ref Rating entity)
         {
-            var arrayEntities = entities.ToArray();
-
-            var tickers = arrayEntities.GroupBy(y => y.TickerName).Select(y => y.Key).ToArray();
-            var count = await context.Tickers.CountAsync(x => tickers.Contains(x.Name));
-
-            return (tickers.Length == count, arrayEntities);
+            return Task.CompletedTask;
         }
-        public async Task<Rating?> GetAlreadyEntityAsync(Rating entity) => await context.Ratings.FindAsync(entity.Place);
-
-        public IQueryable<Rating> GetAlreadyEntitiesQuery(IEnumerable<Rating> entities)
+        public Task GetCreateHandlerAsync(ref Rating[] entities, IEqualityComparer<Rating> comparer)
         {
-            var places = entities.Select(y => y.Place).ToArray();
-            return context.Ratings.Where(x => places.Contains(x.Place));
+            var exist = GetExist(entities);
+
+            if (exist.Any())
+                entities = entities.Except(exist, comparer).ToArray();
+
+            return Task.CompletedTask;
         }
-        public bool IsUpdate(Rating contextEntity, Rating newEntity)
+        public Task GetUpdateHandlerAsync(ref Rating entity)
         {
-            var isCompare = contextEntity.Place == newEntity.Place;
+            var dbEntity = context.Ratings.FindAsync(entity.Place).GetAwaiter().GetResult();
 
-            if (isCompare)
+            dbEntity.Result = entity.Result;
+            dbEntity.ResultPrice = entity.ResultPrice;
+            dbEntity.ResultReport = entity.ResultReport;
+            dbEntity.UpdateTime = DateTime.UtcNow;
+
+            entity = dbEntity;
+
+            return Task.CompletedTask;
+        }
+        public Task GetUpdateHandlerAsync(ref Rating[] entities)
+        {
+            var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
+
+            var result = exist
+                .Join(entities, x => x.Place, y => y.Place,
+                    (x, y) => (Old: x, New: y))
+                .ToArray();
+
+            foreach (var (Old, New) in result)
             {
-                contextEntity.Place = newEntity.Place;
-                contextEntity.Result = newEntity.Result;
-                contextEntity.PriceComparison = newEntity.PriceComparison;
-                contextEntity.ReportComparison = newEntity.ReportComparison;
-                contextEntity.UpdateTime = DateTime.UtcNow;
+                Old.Result = New.Result;
+                Old.ResultPrice = New.ResultPrice;
+                Old.ResultReport = New.ResultReport;
+                Old.UpdateTime = DateTime.UtcNow;
             }
 
-            return isCompare;
+            entities = result.Select(x => x.Old).ToArray();
+
+            return Task.CompletedTask;
+        }
+
+        private IQueryable<Rating> GetExist(IEnumerable<Rating> entities)
+        {
+            var existData = entities
+                .GroupBy(x => x.Place)
+                .Select(x => x.Key)
+                .ToArray();
+
+            return context.Ratings.Where(x => existData.Contains(x.Place));
         }
     }
 }

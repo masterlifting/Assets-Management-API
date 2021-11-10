@@ -1,14 +1,14 @@
 ﻿using System;
-using IM.Gateway.Recommendations.DataAccess.Entities;
+using IM.Service.Recommendations.DataAccess.Entities;
 
-namespace IM.Gateway.Recommendations.Models.Dto
+namespace IM.Service.Recommendations.Models.Dto
 {
     public class PurchaseDto
     {
         public PurchaseDto() { }
         public PurchaseDto(Purchase purchase)
         {
-            Ticker = purchase.TickerName;
+            Ticker = purchase.CompanyId;
             Price = purchase.Price;
             Percent = purchase.Percent;
             UpdateTime = DateTime.UtcNow;

@@ -1,4 +1,4 @@
-using CommonServices.RepositoryService;
+using IM.Service.Common.Net.RepositoryService;
 
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess;
@@ -7,7 +7,7 @@ using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.BackgroundServices;
 using IM.Service.Company.Analyzer.Services.CalculatorServices;
 using IM.Service.Company.Analyzer.Services.DtoServices;
-using IM.Service.Company.Analyzer.Services.RabbitServices;
+using IM.Service.Company.Analyzer.Services.MqServices;
 using IM.Service.Company.Analyzer.Settings;
 
 using Microsoft.AspNetCore.Builder;
@@ -34,20 +34,13 @@ namespace IM.Service.Company.Analyzer
 
             services.AddDbContext<DatabaseContext>(provider =>
             {
-                provider.UseLazyLoadingProxies();
                 provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
                 provider.EnableSensitiveDataLogging();
             });
 
             services.AddControllers();
 
-            services.AddHttpClient<CompanyPricesClient>()
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
-            services.AddHttpClient<CompanyReportsClient>()
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
-            services.AddHttpClient<CompaniesClient>()
+            services.AddHttpClient<CompanyDataClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
@@ -55,14 +48,13 @@ namespace IM.Service.Company.Analyzer
             services.AddScoped<PriceCalculator>();
             services.AddScoped<RatingCalculator>();
 
-            services.AddScoped<DtoRatingManager>();
+            services.AddScoped<RatingDtoManager>();
 
-            services.AddScoped<IRepositoryHandler<Ticker>, TickerRepository>();
+            services.AddScoped<IRepositoryHandler<DataAccess.Entities.Company>, CompanyRepository>();
             services.AddScoped<IRepositoryHandler<Price>, PriceRepository>();
             services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();
             services.AddScoped<IRepositoryHandler<Rating>, RatingRepository>();
             services.AddScoped(typeof(RepositorySet<>));
-
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();

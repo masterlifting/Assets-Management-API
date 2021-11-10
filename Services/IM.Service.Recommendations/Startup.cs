@@ -1,13 +1,13 @@
-using CommonServices.RepositoryService;
+using IM.Service.Common.Net.RepositoryService;
 
-using IM.Gateway.Recommendations.Clients;
-using IM.Gateway.Recommendations.DataAccess;
-using IM.Gateway.Recommendations.DataAccess.Entities;
-using IM.Gateway.Recommendations.DataAccess.Repository;
-using IM.Gateway.Recommendations.Services.BackgroundServices;
-using IM.Gateway.Recommendations.Services.DtoServices;
-using IM.Gateway.Recommendations.Services.RabbitServices;
-using IM.Gateway.Recommendations.Settings;
+using IM.Service.Recommendations.Clients;
+using IM.Service.Recommendations.DataAccess;
+using IM.Service.Recommendations.DataAccess.Entities;
+using IM.Service.Recommendations.DataAccess.Repository;
+using IM.Service.Recommendations.Services.BackgroundServices;
+using IM.Service.Recommendations.Services.DtoServices;
+using IM.Service.Recommendations.Services.MqServices;
+using IM.Service.Recommendations.Settings;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -16,7 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace IM.Gateway.Recommendations
+namespace IM.Service.Recommendations
 {
     public class Startup
     {
@@ -41,7 +41,7 @@ namespace IM.Gateway.Recommendations
             services.AddScoped<PurchaseDtoAggregator>();
             services.AddScoped<SaleDtoAggregator>();
 
-            services.AddScoped<IRepositoryHandler<Ticker>, TickerRepository>();
+            services.AddScoped<IRepositoryHandler<Company>, CompanyRepository>();
             services.AddScoped(typeof(RepositorySet<>));
 
             services.AddScoped<RabbitActionService>();

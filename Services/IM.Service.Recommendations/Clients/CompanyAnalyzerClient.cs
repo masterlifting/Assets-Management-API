@@ -1,12 +1,10 @@
-﻿using CommonServices.HttpServices;
-
-using IM.Gateway.Recommendations.Settings;
-
+﻿using IM.Service.Common.Net.HttpServices;
 using Microsoft.Extensions.Options;
 
 using System.Net.Http;
+using IM.Service.Recommendations.Settings;
 
-namespace IM.Gateway.Recommendations.Clients
+namespace IM.Service.Recommendations.Clients
 {
     public class CompanyAnalyzerClient : RestClient
     {

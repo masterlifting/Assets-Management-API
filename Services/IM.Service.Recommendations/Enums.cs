@@ -1,4 +1,4 @@
-﻿namespace IM.Gateway.Recommendations
+﻿namespace IM.Service.Recommendations
 {
     public static class Enums
     {

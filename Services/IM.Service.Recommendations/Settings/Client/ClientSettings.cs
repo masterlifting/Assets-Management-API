@@ -1,6 +1,6 @@
-﻿using CommonServices.Models.Http;
+﻿using IM.Service.Common.Net.Models.Dto.Http;
 
-namespace IM.Gateway.Recommendations.Settings.Client
+namespace IM.Service.Recommendations.Settings.Client
 {
     public class ClientSettings
     {

@@ -1,8 +1,8 @@
-﻿using CommonServices.Models;
+﻿using IM.Service.Common.Net.Models.Configuration;
 
-using IM.Gateway.Recommendations.Settings.Client;
+using IM.Service.Recommendations.Settings.Client;
 
-namespace IM.Gateway.Recommendations.Settings
+namespace IM.Service.Recommendations.Settings
 {
     public class ServiceSettings
     {

@@ -27,7 +27,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 
             var zeroDeviationCount = results.Count(x => x != 0);
             var deviationCoefficient = (decimal)zeroDeviationCount / results.Length;
-            return results.Sum() * deviationCoefficient;
+            return results.Average() * deviationCoefficient;
         }
 
         private static Sample[] ComputeValues(IReadOnlyList<Sample> sample)

@@ -1,4 +1,4 @@
-﻿using CommonServices.RabbitServices;
+﻿using IM.Service.Common.Net.RabbitServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using IM.Service.Company.Analyzer.Services.RabbitServices;
+using IM.Service.Company.Analyzer.Services.MqServices;
 using IM.Service.Company.Analyzer.Settings;
 
 namespace IM.Service.Company.Analyzer.Services.BackgroundServices
@@ -18,8 +18,8 @@ namespace IM.Service.Company.Analyzer.Services.BackgroundServices
 
         public RabbitBackgroundService(IServiceProvider services, IOptions<ServiceSettings> options)
         {
-            var targetExchanges = new[] { QueueExchanges.Crud, QueueExchanges.Logic };
-            var targetQueues = new[] { QueueNames.CompanyAnalyzer };
+            var targetExchanges = new[] { QueueExchanges.Sync, QueueExchanges.Function, QueueExchanges.Transfer };
+            var targetQueues = new[] { QueueNames.CompanyAnalyzer, QueueNames.Recommendation };
             subscriber = new RabbitSubscriber(options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
             scope = services.CreateScope();
         }

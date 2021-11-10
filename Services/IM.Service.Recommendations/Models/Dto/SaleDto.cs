@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using IM.Gateway.Recommendations.DataAccess.Entities;
+﻿using IM.Service.Recommendations.DataAccess.Entities;
 
-namespace IM.Gateway.Recommendations.Models.Dto
+using System;
+
+namespace IM.Service.Recommendations.Models.Dto
 {
     public class SaleDto
     {
         public SaleDto() { }
         public SaleDto(Sale sale)
         {
-            Ticker = sale.TickerName;
+            Ticker = sale.CompanyId;
             Lot = sale.Lot;
             Price = sale.Price;
             Percent = sale.Percent;

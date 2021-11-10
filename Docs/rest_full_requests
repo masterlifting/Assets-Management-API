@@ -1,0 +1,5272 @@
+{
+	"info": {
+		"_postman_id": "2f2e3407-fda0-4088-98cf-d807cb59ee87",
+		"name": "invest-manager-app",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Services",
+			"item": [
+				{
+					"name": "Company",
+					"item": [
+						{
+							"name": "Reports",
+							"item": [
+								{
+									"name": "reports",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "reports/load",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2104/reports/load",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2104",
+											"path": [
+												"reports",
+												"load"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Prices",
+							"item": [
+								{
+									"name": "prices",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2103/prices/tsla/2020/07/28",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103",
+											"path": [
+												"prices",
+												"tsla",
+												"2020",
+												"07",
+												"28"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2103/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103",
+											"path": [
+												"prices"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2103i/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103i",
+											"path": [
+												"prices"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2103/prices",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103",
+											"path": [
+												"prices"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "prices/load",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:2103/prices/load",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2103",
+											"path": [
+												"prices",
+												"load"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Analyzer",
+							"item": [
+								{
+									"name": "ratings",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2102/ratings",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2102",
+											"path": [
+												"ratings"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratings/recalculate",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2102/ratings/recalculate",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2102",
+											"path": [
+												"ratings",
+												"recalculate"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Companies",
+							"item": [
+								{
+									"name": "companies",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2101/companies",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2101",
+											"path": [
+												"companies"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "companies",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"ticker\": \"mmm\",\r\n    \"name\": \"3M Company\",\r\n    \"description\": \"Строительство и снабжение\",\r\n    \"priceSourceTypeId\": 3,\r\n    \"reportSourceTypeId\": 2,\r\n    \"reportSourceValue\":\"3m-co\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:2101/companies",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2101",
+											"path": [
+												"companies"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "companies",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"name\": \"Alibaba\",\r\n    \"description\": \"Розничная торговля\",\r\n    \"priceSourceTypeId\": 3,\r\n    \"reportSourceTypeId\": 2,\r\n    \"reportSourceValue\":\"3m-co\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:2101/companies/baba",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2101",
+											"path": [
+												"companies",
+												"baba"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "companies",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2101/companies/rtn",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2101",
+											"path": [
+												"companies",
+												"rtn"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocksplits",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2101/stocksplits/nvda/2020",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2101",
+											"path": [
+												"stocksplits",
+												"nvda",
+												"2020"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocksplits",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"tickername\":\"nvda\",\r\n    \"date\": \"2020-10-12\",\r\n    \"value\":4\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:2101/stocksplits",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2101",
+											"path": [
+												"stocksplits"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocksplits",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"value\":3\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "http://localhost:2101/stocksplits/mmm/2020/12/05",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2101",
+											"path": [
+												"stocksplits",
+												"mmm",
+												"2020",
+												"12",
+												"05"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocksplits",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2101/stocksplits/nvda/2020/10/12",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2101",
+											"path": [
+												"stocksplits",
+												"nvda",
+												"2020",
+												"10",
+												"12"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Broker",
+					"item": [
+						{
+							"name": "Reports",
+							"item": [
+								{
+									"name": "accounttransactions",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{broker}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/accounttransactions/bcs",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"accounttransactions",
+												"bcs"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/comissions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"comissions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{broker}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/comissions/bcs",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"comissions",
+												"bcs"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocktransactions",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/stocktransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"stocktransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocktransactions/{broker}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/stocktransactions/bcs",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"stocktransactions",
+												"bcs"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocktransactions/{broker}/{ticker}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/stocktransactions/bcs/baba",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"stocktransactions",
+												"bcs",
+												"baba"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocktransactions/{ticker}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/stocktransactions/baba",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"stocktransactions",
+												"baba"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratetransactions",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/ratetransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"ratetransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratetransactions/{broker}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/ratetransactions/bcs",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"ratetransactions",
+												"bcs"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratetransactions/{broker}/{rate}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/ratetransactions/bcs/usd",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"ratetransactions",
+												"bcs",
+												"usd"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratetransactions/{rate}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/ratetransactions/usd",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"ratetransactions",
+												"usd"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/dividends",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"dividends"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{broker}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/dividends/bcs",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"dividends",
+												"bcs"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{broker}/{ticker}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/dividends/bcs/baba",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"dividends",
+												"bcs",
+												"baba"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{ticker}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2202/dividends/baba",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2202",
+											"path": [
+												"dividends",
+												"baba"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Aggregator",
+							"item": [
+								{
+									"name": "accounttransactions/aggregated/",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/accounttransactions/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"accounttransactions",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{broker}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/accounttransactions/bcs/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"accounttransactions",
+												"bcs",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/comissions/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"comissions",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{broker}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/comissions/bcs/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"comissions",
+												"bcs",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocktransactions/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/stocktransactions/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"stocktransactions",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocktransactions/{broker}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/stocktransactions/bcs/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"stocktransactions",
+												"bcs",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocktransactions/{broker}/{ticker}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/stocktransactions/bcs/baba/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"stocktransactions",
+												"bcs",
+												"baba",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "stocktransactions/{ticker}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/stocktransactions/baba/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"stocktransactions",
+												"baba",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratetransactions/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/ratetransactions/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"ratetransactions",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratetransactions/{broker}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/ratetransactions/bcs/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"ratetransactions",
+												"bcs",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratetransactions/{broker}/{rate}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/ratetransactions/bcs/usd/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"ratetransactions",
+												"bcs",
+												"usd",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "ratetransactions/{rate}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/ratetransactions/usd/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"ratetransactions",
+												"usd",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/dividends/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"dividends",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{broker}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/dividends/bcs/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"dividends",
+												"bcs",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{broker}/{ticker}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/dividends/bcs/baba/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"dividends",
+												"bcs",
+												"baba",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{ticker}/aggregated",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2203/dividends/baba/aggregated/",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2203",
+											"path": [
+												"dividends",
+												"baba",
+												"aggregated",
+												""
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Brokers",
+							"item": [
+								{
+									"name": "brokers",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "brokers",
+									"request": {
+										"method": "POST",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "brokers/{name}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers/bcs",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers",
+												"bcs"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "brokers/{name}",
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "brokers/{name}",
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:2201/api/brokers",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "2201",
+											"path": [
+												"api",
+												"brokers"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Identity",
+					"item": [
+						{
+							"name": "users",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2001/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2001",
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "users/me",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2001/users/me/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2001",
+									"path": [
+										"users",
+										"me",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "users/{id}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2001/users/id",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2001",
+									"path": [
+										"users",
+										"id"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "users/{token}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2001/users/token",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2001",
+									"path": [
+										"users",
+										"token"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Users",
+					"item": [
+						{
+							"name": "users/login",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2002/users/login/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2002",
+									"path": [
+										"users",
+										"login",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "users/register",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2002/users/register/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2002",
+									"path": [
+										"users",
+										"register",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "users/me",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2002/users/me/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2002",
+									"path": [
+										"users",
+										"me",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Recommendations",
+					"item": [
+						{
+							"name": "purchases",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/purchases",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"purchases"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "purchases/{ticker}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/purchases/baba",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"purchases",
+										"baba"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sales",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/sales",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"sales"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sales/{broker}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/sales/bcs",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"sales",
+										"bcs"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sales/{broker}/{ticker}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/sales/bcs/baba",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"sales",
+										"bcs",
+										"baba"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "sales/{ticker}",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:2003/sales/baba",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "2003",
+									"path": [
+										"sales",
+										"baba"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Identity Service",
+			"item": [
+				{
+					"name": "user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:1000/api/user",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "1000",
+							"path": [
+								"api",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:1000/api/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "1000",
+							"path": [
+								"api",
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:1000/api/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "1000",
+							"path": [
+								"api",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:1000/api/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "1000",
+							"path": [
+								"api",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "users/{token}",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:1000/users/token",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "1000",
+							"path": [
+								"users",
+								"token"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Broker Service",
+			"item": [
+				{
+					"name": "Broker Data Service",
+					"item": [
+						{
+							"name": "currencytransactions",
+							"item": [
+								{
+									"name": "currencytransactions",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransactions/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "accounttransactions",
+							"item": [
+								{
+									"name": "accounttransactions",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransactions/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "isintransactions",
+							"item": [
+								{
+									"name": "isintransactions",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{isin}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{isin}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{isin}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransactions/{isin}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "comissions",
+							"item": [
+								{
+									"name": "comissions",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comissions/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "dividends",
+							"item": [
+								{
+									"name": "dividends",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{isin}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{isin}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{isin}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividends/{isin}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "Broker Summary Service",
+					"item": [
+						{
+							"name": "currencytransaction",
+							"item": [
+								{
+									"name": "currencytransaction",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "currencytransaction/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "accounttransaction",
+							"item": [
+								{
+									"name": "accounttransaction",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "accounttransaction/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "isintransaction",
+							"item": [
+								{
+									"name": "isintransaction",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{isin}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{isin}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{isin}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "isintransaction/{isin}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "comission",
+							"item": [
+								{
+									"name": "comission",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "comission/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "dividend",
+							"item": [
+								{
+									"name": "dividend",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{accountId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{accountId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{accountId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{accountId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{currencyId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{currencyId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{currencyId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{currencyId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{exchangeId}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{exchangeId}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{exchangeId}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{exchangeId}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{isin}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{isin}/{year}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{isin}/{year}/{month}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "dividend/{isin}/{year}/{month}/{day}",
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "http://localhost:1001/accounttransactions",
+											"protocol": "http",
+											"host": [
+												"localhost"
+											],
+											"port": "1001",
+											"path": [
+												"accounttransactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Company Service",
+			"item": [
+				{
+					"name": "Company Data Service",
+					"item": []
+				},
+				{
+					"name": "Company Analyzer Service",
+					"item": []
+				}
+			]
+		},
+		{
+			"name": "Recomendation Service",
+			"item": []
+		},
+		{
+			"name": "HEALTH",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/health",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"health"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/companies/nvda/prices/2020/10?limit=100",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						"companies",
+						"nvda",
+						"prices",
+						"2020",
+						"10"
+					],
+					"query": [
+						{
+							"key": "limit",
+							"value": "100"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/paviams/tickers",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						"paviams",
+						"tickers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LOAD",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "RECALCULATE",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:1000/api/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "1000",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "moex_histroy",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://iss.moex.com/iss/history/engines/stock/markets/shares/securities/NVTK/candles.json?from=2021-10-01&interval=24&start=0",
+					"protocol": "https",
+					"host": [
+						"iss",
+						"moex",
+						"com"
+					],
+					"path": [
+						"iss",
+						"history",
+						"engines",
+						"stock",
+						"markets",
+						"shares",
+						"securities",
+						"NVTK",
+						"candles.json"
+					],
+					"query": [
+						{
+							"key": "from",
+							"value": "2021-10-01"
+						},
+						{
+							"key": "interval",
+							"value": "24"
+						},
+						{
+							"key": "start",
+							"value": "0"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IM.Gateway.Recommendations.Controllers
+namespace IM.Service.Recommendations.Controllers
 {
     [ApiController, Route("api/[controller]")]
     public class PurchasesController : Controller

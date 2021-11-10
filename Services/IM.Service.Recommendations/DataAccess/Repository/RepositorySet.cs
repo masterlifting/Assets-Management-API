@@ -1,6 +1,6 @@
-﻿using CommonServices.RepositoryService;
+﻿using IM.Service.Common.Net.RepositoryService;
 
-namespace IM.Gateway.Recommendations.DataAccess.Repository
+namespace IM.Service.Recommendations.DataAccess.Repository
 {
     public class RepositorySet<T> : Repository<T, DatabaseContext> where T : class
     {

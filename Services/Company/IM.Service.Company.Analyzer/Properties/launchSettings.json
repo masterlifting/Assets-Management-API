@@ -17,11 +17,11 @@
     },
     "IM.Service.Company.Analyzer": {
       "commandName": "Project",
+      "dotnetRunMessages": "true",
+      "applicationUrl": "http://localhost:3002",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      },
-      "dotnetRunMessages": "true",
-      "applicationUrl": "http://localhost:2102"
+      }
     }
   }
 }

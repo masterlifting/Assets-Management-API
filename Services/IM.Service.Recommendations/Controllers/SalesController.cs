@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace IM.Gateway.Recommendations.Controllers
+namespace IM.Service.Recommendations.Controllers
 {
     [ApiController, Route("api/[controller]")]
     public class SalesController : Controller

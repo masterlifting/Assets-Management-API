@@ -7,7 +7,7 @@ namespace IM.Service.Company.Analyzer.DataAccess
 {
     public sealed class DatabaseContext : DbContext
     {
-        public DbSet<Ticker> Tickers { get; set; } = null!;
+        public DbSet<Entities.Company> Companies { get; set; } = null!;
         public DbSet<Report> Reports { get; set; } = null!;
         public DbSet<Price> Prices { get; set; } = null!;
         public DbSet<Status> Statuses { get; set; } = null!;
@@ -20,11 +20,14 @@ namespace IM.Service.Company.Analyzer.DataAccess
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.Entity<Report>().HasKey(x => new { x.TickerName, x.Year, x.Quarter });
-            modelBuilder.Entity<Price>().HasKey(x => new { x.TickerName, x.Date });
+            modelBuilder.Entity<Price>().HasKey(x => new { x.CompanyId, x.Date });
+            modelBuilder.Entity<Report>().HasKey(x => new { x.CompanyId, x.Year, x.Quarter });
+
+            modelBuilder.Entity<Price>().HasOne(x => x.Company).WithMany(x => x.Prices).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Report>().HasOne(x => x.Company).WithMany(x => x.Reports).OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Rating>().Property(x => x.Place).ValueGeneratedNever();
-            modelBuilder.Entity<Rating>().HasOne(x => x.Ticker).WithOne(x => x.Rating).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<Rating>().HasOne(x => x.Company).WithOne(x => x.Rating).OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Status>().HasData(
                 new()

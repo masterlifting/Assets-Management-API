@@ -1,12 +1,9 @@
-﻿using CommonServices.Models.Dto.CompanyPrices;
-using CommonServices.Models.Dto.CompanyReports;
-
-using IM.Service.Company.Analyzer.DataAccess.Entities;
+﻿using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.Models.Calculator;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
 
 using System.Linq;
-
+using IM.Service.Common.Net.Models.Dto.Http.Companies;
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices
@@ -22,7 +19,6 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         private readonly Sample[] assetCollection;
         private readonly Sample[] turnoverCollection;
         private readonly Sample[] shareCapitalCollection;
-        private readonly Sample[] dividendCollection;
         private readonly Sample[] obligationCollection;
         private readonly Sample[] longTermDebtCollection;
         private readonly Sample[] cashFlowCollection;
@@ -45,7 +41,6 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             assetCollection = new Sample[reports.Length];
             turnoverCollection = new Sample[reports.Length];
             shareCapitalCollection = new Sample[reports.Length];
-            dividendCollection = new Sample[reports.Length];
             obligationCollection = new Sample[reports.Length];
             longTermDebtCollection = new Sample[reports.Length];
             cashFlowCollection = new Sample[reports.Length];
@@ -70,7 +65,6 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     assetCollection,
                     turnoverCollection,
                     shareCapitalCollection,
-                    dividendCollection,
                     obligationCollection,
                     longTermDebtCollection,
                     cashFlowCollection,
@@ -92,7 +86,6 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                     assetCollection,
                     turnoverCollection,
                     shareCapitalCollection,
-                    dividendCollection,
                     obligationCollection,
                     longTermDebtCollection,
                     cashFlowCollection
@@ -104,7 +97,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         {
             var result = new Report[reports.Length];
             var comparedSample = new Sample[samples.Length][];
-            var statusId = samples.Length == 17 ? (byte)StatusType.Calculated : (byte)StatusType.CalculatedPartial;
+            var statusId = samples.Length == 16 ? (byte)StatusType.Calculated : (byte)StatusType.CalculatedPartial;
 
             for (uint i = 0; i < samples.Length; i++)
                 comparedSample[i] = RatingComparator.CompareSample(samples[i]);
@@ -123,10 +116,9 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
 
                 result[i] = new Report
                 {
-                    TickerName = reports[i].TickerName,
+                    CompanyId = reports[i].Ticker,
                     Year = reports[i].Year,
                     Quarter = reports[i].Quarter,
-                    SourceType = reports[i].SourceType,
                     Result = RatingComparator.ComputeSampleResult(results),
                     StatusId = statusId
                 };
@@ -144,7 +136,6 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
                 assetCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].Asset.HasValue ? reports[i].Asset!.Value : 0 };
                 turnoverCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].Turnover.HasValue ? reports[i].Turnover!.Value : 0 };
                 shareCapitalCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].ShareCapital.HasValue ? reports[i].ShareCapital!.Value : 0 };
-                dividendCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].Dividend.HasValue ? reports[i].Dividend!.Value : 0 };
                 cashFlowCollection[i] = new Sample { Index = i, CompareType = CompareType.Asc, Value = reports[i].CashFlow.HasValue ? reports[i].CashFlow!.Value : 0 };
                 obligationCollection[i] = new Sample { Index = i, CompareType = CompareType.Desc, Value = reports[i].Obligation.HasValue ? reports[i].Obligation!.Value : 0 };
                 longTermDebtCollection[i] = new Sample { Index = i, CompareType = CompareType.Desc, Value = reports[i].LongTermDebt.HasValue ? reports[i].LongTermDebt!.Value : 0 };
@@ -153,9 +144,10 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             if (prices is null || !prices.Any())
                 return;
 
+            var price = prices.OrderBy(x => x.ValueTrue).Last();
             for (uint i = 0; i < reports.Length; i++)
             {
-                var coefficients = coefficientCalculator!.Calculate(reports[i], prices.Max(x => x.Value));
+                var coefficients = coefficientCalculator!.Calculate(reports[i], price);
 
                 pe![i] = new Sample { Index = i, CompareType = CompareType.Desc, Value = coefficients.Pe };
                 pb![i] = new Sample { Index = i, CompareType = CompareType.Desc, Value = coefficients.Pb };

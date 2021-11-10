@@ -1,4 +1,4 @@
-﻿namespace IM.Gateway.Recommendations.Services.DtoServices
+﻿namespace IM.Service.Recommendations.Services.DtoServices
 {
     public class PurchaseDtoAggregator
     {

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace IM.Gateway.Recommendations
+namespace IM.Service.Recommendations
 {
     public class Program
     {
