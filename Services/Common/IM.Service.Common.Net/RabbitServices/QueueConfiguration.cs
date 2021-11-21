@@ -11,7 +11,7 @@ namespace IM.Service.Common.Net.RabbitServices
             {
                 Queues = new[]
                 {
-                    new Queue(QueueNames.CompanyData,true)
+                    new Queue(QueueNames.CompanyData)
                     {
                         Params = new[]
                         {
@@ -26,7 +26,7 @@ namespace IM.Service.Common.Net.RabbitServices
                             }
                         }
                     },
-                    new Queue(QueueNames.CompanyAnalyzer,true)
+                    new Queue(QueueNames.CompanyAnalyzer)
                     {
                         Params = new[]
                         {
@@ -86,7 +86,7 @@ namespace IM.Service.Common.Net.RabbitServices
             {
                 Queues = new[]
                 {
-                    new Queue(QueueNames.CompanyData,true)
+                    new Queue(QueueNames.CompanyData)
                     {
                          Params = new[]
                         {

@@ -21,59 +21,58 @@ using Polly;
 
 using System;
 
-namespace IM.Service.Company.Analyzer
+namespace IM.Service.Company.Analyzer;
+
+public class Startup
 {
-    public class Startup
+    public Startup(IConfiguration configuration) => Configuration = configuration;
+    private IConfiguration Configuration { get; }
+
+    public void ConfigureServices(IServiceCollection services)
     {
-        public Startup(IConfiguration configuration) => Configuration = configuration;
-        private IConfiguration Configuration { get; }
+        services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
 
-        public void ConfigureServices(IServiceCollection services)
+        services.AddDbContext<DatabaseContext>(provider =>
         {
-            services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
+            provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
+            provider.EnableSensitiveDataLogging();
+        });
 
-            services.AddDbContext<DatabaseContext>(provider =>
-            {
-                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
-                provider.EnableSensitiveDataLogging();
-            });
+        services.AddControllers();
 
-            services.AddControllers();
+        services.AddHttpClient<CompanyDataClient>()
+            .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
+            .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
-            services.AddHttpClient<CompanyDataClient>()
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
+        services.AddScoped<ReportCalculator>();
+        services.AddScoped<PriceCalculator>();
+        services.AddScoped<RatingCalculator>();
 
-            services.AddScoped<ReportCalculator>();
-            services.AddScoped<PriceCalculator>();
-            services.AddScoped<RatingCalculator>();
+        services.AddScoped<RatingDtoManager>();
 
-            services.AddScoped<RatingDtoManager>();
+        services.AddScoped<IRepositoryHandler<DataAccess.Entities.Company>, CompanyRepository>();
+        services.AddScoped<IRepositoryHandler<Price>, PriceRepository>();
+        services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();
+        services.AddScoped<IRepositoryHandler<Rating>, RatingRepository>();
+        services.AddScoped(typeof(RepositorySet<>));
 
-            services.AddScoped<IRepositoryHandler<DataAccess.Entities.Company>, CompanyRepository>();
-            services.AddScoped<IRepositoryHandler<Price>, PriceRepository>();
-            services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();
-            services.AddScoped<IRepositoryHandler<Rating>, RatingRepository>();
-            services.AddScoped(typeof(RepositorySet<>));
+        services.AddScoped<RabbitActionService>();
+        services.AddHostedService<RabbitBackgroundService>();
+        services.AddHostedService<CalculatorBackgroundService>();
+    }
 
-            services.AddScoped<RabbitActionService>();
-            services.AddHostedService<RabbitBackgroundService>();
-            services.AddHostedService<CalculatorBackgroundService>();
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        app.UseRouting();
+
+        app.UseEndpoints(endpoints =>
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
-        }
+            endpoints.MapControllers();
+        });
     }
 }

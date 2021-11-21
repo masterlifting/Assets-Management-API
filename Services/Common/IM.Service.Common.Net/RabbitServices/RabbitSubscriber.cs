@@ -10,11 +10,13 @@ using System.Threading.Tasks;
 using IM.Service.Common.Net.Models.Configuration;
 using IM.Service.Common.Net.ParserServices;
 using IM.Service.Common.Net.RabbitServices.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace IM.Service.Common.Net.RabbitServices
 {
     public class RabbitSubscriber
     {
+        private readonly ILogger<RabbitSubscriber> logger;
         private readonly SemaphoreSlim semaphore = new(1, 1);
 
         private readonly IModel channel;
@@ -22,11 +24,12 @@ namespace IM.Service.Common.Net.RabbitServices
         private readonly List<Queue> queues;
         private readonly string[] queuesWithConfirm;
 
-        public RabbitSubscriber(string connectionString, IEnumerable<QueueExchanges> exchangeNames, IReadOnlyCollection<QueueNames> queueNames)
+        public RabbitSubscriber(ILogger<RabbitSubscriber> logger, string connectionString, IEnumerable<QueueExchanges> exchangeNames, IReadOnlyCollection<QueueNames> queueNames)
         {
+            this.logger = logger;
             var mqConnection = new SettingsConverter<ConnectionModel>(connectionString).Model;
 
-            var factory = new ConnectionFactory()
+            var factory = new ConnectionFactory
             {
                 HostName = mqConnection.Server,
                 UserName = mqConnection.UserId,
@@ -76,7 +79,7 @@ namespace IM.Service.Common.Net.RabbitServices
             async void OnConsumerOnReceivedAsync(object? _, BasicDeliverEventArgs ea)
             {
                 var data = Encoding.UTF8.GetString(ea.Body.ToArray());
-                string queueName = string.Empty;
+                var queueName = string.Empty;
                 var result = false;
 
                 try
@@ -89,13 +92,10 @@ namespace IM.Service.Common.Net.RabbitServices
 
                     semaphore.Release();
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
                     semaphore.Release();
-
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                    logger.LogError(LogEvents.QueueConfig, "Queue subscribe error: {error}", exception.InnerException?.Message ?? exception.Message);
                 }
 
                 if (queuesWithConfirm.Contains(queueName) && result)

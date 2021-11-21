@@ -56,6 +56,9 @@ namespace IM.Service.Company.Analyzer.DataAccess.Repository
             return Task.CompletedTask;
         }
 
+        public Task SetPostProcessAsync(Price entity) => Task.CompletedTask;
+        public Task SetPostProcessAsync(Price[] entities) => Task.CompletedTask;
+
         private IQueryable<Price> GetExist(Price[] entities)
         {
             var dateMin = entities.Min(x => x.Date);

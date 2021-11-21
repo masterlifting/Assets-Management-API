@@ -10,8 +10,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DataAccess\Entities\Reports\" />
-    <Folder Include="DataAccess\Entities\Prices\" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DataAccess\Entities\" />
   </ItemGroup>
 
 </Project>

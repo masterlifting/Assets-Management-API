@@ -1,4 +1,5 @@
 ﻿using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Recommendations.DataAccess.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -8,16 +9,16 @@ using System.Threading.Tasks;
 
 namespace IM.Service.Recommendations.DataAccess.Repository
 {
-    public class CompanyRepository : IRepositoryHandler<Entities.Company>
+    public class CompanyRepository : IRepositoryHandler<Company>
     {
         private readonly DatabaseContext context;
         public CompanyRepository(DatabaseContext context) => this.context = context;
 
-        public Task GetCreateHandlerAsync(ref Entities.Company entity)
+        public Task GetCreateHandlerAsync(ref Company entity)
         {
             return Task.CompletedTask;
         }
-        public Task GetCreateHandlerAsync(ref Entities.Company[] entities, IEqualityComparer<Entities.Company> comparer)
+        public Task GetCreateHandlerAsync(ref Company[] entities, IEqualityComparer<Company> comparer)
         {
             var exist = GetExist(entities);
 
@@ -26,7 +27,7 @@ namespace IM.Service.Recommendations.DataAccess.Repository
 
             return Task.CompletedTask;
         }
-        public Task GetUpdateHandlerAsync(ref Entities.Company entity)
+        public Task GetUpdateHandlerAsync(ref Company entity)
         {
             var ctxEntity = context.Companies.FindAsync(entity.Id).GetAwaiter().GetResult();
 
@@ -36,7 +37,7 @@ namespace IM.Service.Recommendations.DataAccess.Repository
 
             return Task.CompletedTask;
         }
-        public Task GetUpdateHandlerAsync(ref Entities.Company[] entities)
+        public Task GetUpdateHandlerAsync(ref Company[] entities)
         {
             var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
 
@@ -53,7 +54,10 @@ namespace IM.Service.Recommendations.DataAccess.Repository
             return Task.CompletedTask;
         }
 
-        private IQueryable<Entities.Company> GetExist(IEnumerable<Entities.Company> entities)
+        public Task SetPostProcessAsync(Company entity) => Task.CompletedTask;
+        public Task SetPostProcessAsync(Company[] entities) => Task.CompletedTask;
+
+        private IQueryable<Entities.Company> GetExist(IEnumerable<Company> entities)
         {
             var existData = entities
                 .GroupBy(x => x.Name)

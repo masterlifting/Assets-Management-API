@@ -1,11 +1,11 @@
-﻿{
+{
   "$schema": "http://json.schemastore.org/launchsettings.json",
   "iisSettings": {
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:19972",
-      "sslPort": 0
+      "applicationUrl": "http://localhost:57389/",
+      "sslPort": 44341
     }
   },
   "profiles": {
@@ -20,8 +20,8 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },
-      "dotnetRunMessages": "true",
-      "applicationUrl": "http://localhost:2002"
+      "applicationUrl": "http://localhost:2002",
+      "dotnetRunMessages": "true"
     }
   }
 }

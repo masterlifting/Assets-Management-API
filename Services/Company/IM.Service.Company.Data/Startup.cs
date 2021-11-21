@@ -1,19 +1,16 @@
-using System;
-
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Company.Data.Clients.Price;
 using IM.Service.Company.Data.Clients.Report;
 using IM.Service.Company.Data.DataAccess;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.DataAccess.Repository;
-using IM.Service.Company.Data.Models.Data;
 using IM.Service.Company.Data.Services.BackgroundServices;
-using IM.Service.Company.Data.Services.DataServices;
 using IM.Service.Company.Data.Services.DataServices.Prices;
 using IM.Service.Company.Data.Services.DataServices.Reports;
 using IM.Service.Company.Data.Services.DtoServices;
 using IM.Service.Company.Data.Services.MqServices;
 using IM.Service.Company.Data.Settings;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +19,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 using Polly;
+
+using System;
 
 namespace IM.Service.Company.Data
 {
@@ -55,20 +54,21 @@ namespace IM.Service.Company.Data
             services.AddScoped<PriceParser>();
             services.AddScoped<ReportParser>();
 
-            services.AddScoped<IDataLoad<Price, PriceDataConfigModel>, PriceLoader>();
-            services.AddScoped<IDataLoad<Report, ReportDataConfigModel>, ReportLoader>();
+            services.AddScoped<PriceLoader>();
+            services.AddScoped<ReportLoader>();
 
             services.AddScoped<PricesDtoManager>();
             services.AddScoped<ReportsDtoManager>();
             services.AddScoped<StockSplitsDtoManager>();
             services.AddScoped<StockVolumesDtoManager>();
 
+            services.AddScoped(typeof(RepositorySet<>));
             services.AddScoped<IRepositoryHandler<DataAccess.Entities.Company>, CompanyRepository>();
             services.AddScoped<IRepositoryHandler<Price>, PriceRepository>();
             services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();
             services.AddScoped<IRepositoryHandler<StockSplit>, StockSplitRepository>();
             services.AddScoped<IRepositoryHandler<StockVolume>, StockVolumeRepository>();
-            services.AddScoped(typeof(RepositorySet<>));
+            services.AddScoped<IRepositoryHandler<CompanySourceType>, CompanySourceTypeRepository>();
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();

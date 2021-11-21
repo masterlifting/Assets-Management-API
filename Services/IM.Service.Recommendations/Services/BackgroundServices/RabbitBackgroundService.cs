@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using IM.Service.Recommendations.Services.MqServices;
 using IM.Service.Recommendations.Settings;
+using Microsoft.Extensions.Logging;
 
 namespace IM.Service.Recommendations.Services.BackgroundServices
 {
@@ -16,11 +17,11 @@ namespace IM.Service.Recommendations.Services.BackgroundServices
         private readonly RabbitSubscriber subscriber;
         private readonly IServiceScope scope;
 
-        public RabbitBackgroundService(IServiceProvider services, IOptions<ServiceSettings> options)
+        public RabbitBackgroundService(ILogger<RabbitSubscriber> logger, IServiceProvider services, IOptions<ServiceSettings> options)
         {
             var targetExchanges = new[] { QueueExchanges.Sync, QueueExchanges.Function };
             var targetQueues = new[] { QueueNames.CompanyAnalyzer };
-            subscriber = new RabbitSubscriber(options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
+            subscriber = new RabbitSubscriber(logger, options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
             scope = services.CreateScope();
         }
 

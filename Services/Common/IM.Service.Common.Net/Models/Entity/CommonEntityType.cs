@@ -14,7 +14,7 @@ namespace IM.Service.Common.Net.Models.Entity
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public byte Id { get; init; }
 
-        [Required, StringLength(30, MinimumLength = 3)]
+        [Required, StringLength(100, MinimumLength = 3)]
         public string Name { get; set; } = null!;
 
         [StringLength(200)]

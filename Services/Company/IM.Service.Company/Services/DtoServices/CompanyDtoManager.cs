@@ -1,6 +1,6 @@
 ﻿using IM.Service.Common.Net.HttpServices;
 using IM.Service.Common.Net.Models.Dto.Http;
-
+using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.DataAccess.Entities;
 using IM.Service.Company.DataAccess.Repository;
 using IM.Service.Company.Models.Dto;
@@ -8,8 +8,10 @@ using IM.Service.Company.Services.MqServices;
 
 using Microsoft.EntityFrameworkCore;
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 namespace IM.Service.Company.Services.DtoServices
 {
     public class CompanyDtoManager
@@ -96,15 +98,43 @@ namespace IM.Service.Company.Services.DtoServices
             if (error is not null)
                 return new ResponseModel<string> { Errors = new[] { error } };
 
-            rabbitService.CreateCompany(new()
+            rabbitService.CreateCompany(new CompanyPostDto
             {
                 Id = createdCompany!.Id,
                 Name = createdCompany.Name,
-                DataSources = model.DataSources,
-                Brokers = model.Brokers
+                DataSources = model.DataSources
             });
 
             return new() { Data = $"'{createdCompany.Name}' was created" };
+        }
+        public async Task<ResponseModel<string>> CreateAsync(IEnumerable<CompanyPostDto> models)
+        {
+            var array = models.ToArray();
+
+            if (!array.Any())
+                return new() { Errors = new[] { "company data for creating not found" } };
+
+            var ctxEntities = array.Select(x => new DataAccess.Entities.Company
+            {
+                Id = x.Id.ToUpperInvariant(),
+                Name = x.Name,
+                IndustryId = x.IndustryId,
+                Description = x.Description
+            }).ToArray();
+
+            var (error, result) = await companyRepository.CreateAsync(ctxEntities, new CompanyComparer(), "Companies");
+
+            if (error is not null)
+                return new() { Errors = new[] { error } };
+
+            rabbitService.CreateCompany(result!.Join(array, x => x.Id, y => y.Id, (x, y) => new CompanyPostDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                DataSources = y.DataSources,
+            }));
+
+            return new() { Data = $"Companies count: {result!.Length} was successed" };
         }
         public async Task<ResponseModel<string>> UpdateAsync(string companyId, CompanyPutDto model)
         {
@@ -126,7 +156,6 @@ namespace IM.Service.Company.Services.DtoServices
                 Id = updatedCompany!.Id,
                 Name = updatedCompany.Name,
                 DataSources = model.DataSources,
-                Brokers = model.Brokers
             });
 
             return new ResponseModel<string> { Data = $"'{updatedCompany.Name}' was updated" };

@@ -5,6 +5,7 @@ using IM.Service.Company.Settings;
 using Microsoft.Extensions.Options;
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using IM.Service.Common.Net.Models.Dto.Mq.Companies;
 using IM.Service.Company.Models.Dto;
@@ -31,7 +32,7 @@ namespace IM.Service.Company.Services.MqServices
                 Sources = company.DataSources
             });
 
-            var companyQueues = new Dictionary<QueueNames, string>()
+            var companyQueues = new Dictionary<QueueNames, string>
             {
                 {QueueNames.CompanyData,companyData },
                 {QueueNames.CompanyAnalyzer,companyAnalyzer }
@@ -39,6 +40,33 @@ namespace IM.Service.Company.Services.MqServices
 
             foreach (var (key, value) in companyQueues)
                 publisher.PublishTask(key, QueueEntities.Company, QueueActions.Create, value);
+        }
+        public void CreateCompany(IEnumerable<CompanyPostDto> companies)
+        {
+            var array = companies.ToArray();
+
+            var companyAnalyzer = array.Select(x => JsonSerializer.Serialize(new CompanyDto
+            {
+                Id = x.Id,
+                Name = x.Name
+            }));
+
+            var companyData = array.Select(x => JsonSerializer.Serialize(new CompanyDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Sources = x.DataSources
+            }));
+
+            var companyQueues = new Dictionary<QueueNames, IEnumerable<string>>
+            {
+                {QueueNames.CompanyData,companyData },
+                {QueueNames.CompanyAnalyzer,companyAnalyzer }
+            };
+
+            foreach (var (queue, models) in companyQueues)
+                foreach (var model in models)
+                    publisher.PublishTask(queue, QueueEntities.Company, QueueActions.Create, model);
         }
         public void UpdateCompany(CompanyPostDto company)
         {

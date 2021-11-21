@@ -3,12 +3,13 @@
 using IM.Service.Company.Data.Models.Data;
 
 using System;
+using Microsoft.Extensions.Logging;
 
 namespace IM.Service.Company.Data.Services.DataServices.Reports
 {
     public static class ReportHelper
     {
-        public static bool IsMissingLastQuarter(ReportDataConfigModel lastReport)
+        public static bool IsMissingLastQuarter(ILogger<ReportLoader> logger, ReportDataConfigModel lastReport)
         {
             var (controlYear, controlQuarter) = CommonHelper.SubtractQuarter(DateTime.UtcNow);
 
@@ -17,10 +18,7 @@ namespace IM.Service.Company.Data.Services.DataServices.Reports
             if (isNew)
                 return isNew;
 
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($"Last quarter is actual for '{lastReport.CompanyId}'. Reports will not be loaded.");
-            Console.ForegroundColor = ConsoleColor.Gray;
-
+            logger.LogInformation(LogEvents.Processing, "last quarter is actual for '{companyId}'. Report will not be loaded.", lastReport.CompanyId);
             return isNew;
         }
 

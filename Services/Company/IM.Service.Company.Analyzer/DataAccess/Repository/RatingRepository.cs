@@ -63,6 +63,9 @@ namespace IM.Service.Company.Analyzer.DataAccess.Repository
             return Task.CompletedTask;
         }
 
+        public Task SetPostProcessAsync(Rating entity) => Task.CompletedTask;
+        public Task SetPostProcessAsync(Rating[] entities) => Task.CompletedTask;
+
         private IQueryable<Rating> GetExist(IEnumerable<Rating> entities)
         {
             var existData = entities

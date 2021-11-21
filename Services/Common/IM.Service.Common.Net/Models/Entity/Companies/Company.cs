@@ -8,7 +8,7 @@ namespace IM.Service.Common.Net.Models.Entity.Companies
         [Key, StringLength(10, MinimumLength = 1), Upper]
         public string Id { get; init; } = null!;
 
-        [StringLength(100, MinimumLength = 4)]
+        [StringLength(100, MinimumLength = 2)]
         public string Name { get; set; } = null!;
     }
 }

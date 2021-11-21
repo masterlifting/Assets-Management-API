@@ -4,15 +4,22 @@ using Microsoft.Extensions.Hosting;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using IM.Service.Common.Net;
 using IM.Service.Company.Analyzer.Services.CalculatorServices;
+using Microsoft.Extensions.Logging;
 
 namespace IM.Service.Company.Analyzer.Services.BackgroundServices
 {
     public class CalculatorBackgroundService : BackgroundService
     {
+        private readonly ILogger<CalculatorBackgroundService> logger;
         private readonly IServiceProvider services;
         private bool start = true;
-        public CalculatorBackgroundService(IServiceProvider services) => this.services = services;
+        public CalculatorBackgroundService(ILogger<CalculatorBackgroundService> logger, IServiceProvider services)
+        {
+            this.logger = logger;
+            this.services = services;
+        }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -38,12 +45,9 @@ namespace IM.Service.Company.Analyzer.Services.BackgroundServices
                     else if (await reportCalculator.CalculateAsync())
                         await ratingCalculator.CalculateAsync();
                 }
-                catch (Exception ex)
+                catch (Exception exception)
                 {
-                    scope.Dispose();
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"Analyzer exception: {ex.InnerException?.Message ?? ex.Message}");
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                    logger.LogError(LogEvents.Processing, "Analyzer error: {exception}", exception.InnerException?.Message ?? exception.Message);
                 }
 
                 scope.Dispose();

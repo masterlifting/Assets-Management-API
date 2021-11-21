@@ -10,17 +10,23 @@ using IM.Service.Company.Data.Clients.Report;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.Models.Data;
 using IM.Service.Company.Data.Services.DataServices.Reports.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace IM.Service.Company.Data.Services.DataServices.Reports.Implementations
 {
     public class InvestingParser : IReportParser
     {
+        private readonly ILogger<ReportParser> logger;
         private readonly InvestingParserHandler handler;
-        public InvestingParser(InvestingClient client) => handler = new(client);
+        public InvestingParser(ILogger<ReportParser> logger, InvestingClient client)
+        {
+            this.logger = logger;
+            handler = new(client);
+        }
 
         public async Task<Report[]> GetReportsAsync(string source, ReportDataConfigModel config)
         {
-            Report[] result = Array.Empty<Report>();
+            var result = Array.Empty<Report>();
 
             try
             {
@@ -30,11 +36,9 @@ namespace IM.Service.Company.Data.Services.DataServices.Reports.Implementations
                 var site = await handler.LoadSiteAsync(config.SourceValue);
                 result = InvestingParserHandler.ParseReports(site, config.CompanyId, source);
             }
-            catch (Exception ex)
+            catch (Exception exception)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(ex.InnerException?.Message ?? ex.Message);
-                Console.ForegroundColor = ConsoleColor.Gray;
+                logger.LogError(LogEvents.Processing, "investing parser error: {error}", exception.InnerException?.Message ?? exception.Message);
             }
 
             return result;
@@ -63,8 +67,8 @@ namespace IM.Service.Company.Data.Services.DataServices.Reports.Implementations
             await Task.WhenAll(
                 client.GetFinancialPageAsync(sourceValue),
                 client.GetBalancePageAsync(sourceValue)
-                //client.GetMainPageAsync(sourceValue),
-                //client.GetDividendPageAsync(sourceValue)
+            //client.GetMainPageAsync(sourceValue),
+            //client.GetDividendPageAsync(sourceValue)
             );
 
         internal static Report[] ParseReports(IReadOnlyList<HtmlDocument> site, string companyId, string sourceName)
@@ -85,7 +89,7 @@ namespace IM.Service.Company.Data.Services.DataServices.Reports.Implementations
                     Quarter = CommonHelper.GetQuarter(financialPage.Dates[i].Month),
                     SourceType = sourceName,
                     Multiplier = 1_000_000,
-                    
+
                     Turnover = balancePage.Turnovers[i],
                     LongTermDebt = balancePage.LongDebts[i],
                     Asset = financialPage.Assets[i],

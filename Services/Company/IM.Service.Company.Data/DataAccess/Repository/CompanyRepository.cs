@@ -26,6 +26,7 @@ namespace IM.Service.Company.Data.DataAccess.Repository
 
             return Task.CompletedTask;
         }
+
         public Task GetUpdateHandlerAsync(ref Entities.Company entity)
         {
             var ctxEntity = context.Companies.FindAsync(entity.Id).GetAwaiter().GetResult();
@@ -56,6 +57,9 @@ namespace IM.Service.Company.Data.DataAccess.Repository
 
             return Task.CompletedTask;
         }
+
+        public Task SetPostProcessAsync(Entities.Company entity) => Task.CompletedTask;
+        public Task SetPostProcessAsync(Entities.Company[] entities) => Task.CompletedTask;
 
         private IQueryable<Entities.Company> GetExist(IEnumerable<Entities.Company> entities)
         {

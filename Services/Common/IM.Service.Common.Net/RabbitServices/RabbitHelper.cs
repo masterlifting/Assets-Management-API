@@ -1,7 +1,7 @@
-﻿using System;
+﻿using IM.Service.Common.Net.RabbitServices.Configuration;
+
 using System.Collections.Generic;
 using System.Text.Json;
-using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Common.Net.RabbitServices
 {
@@ -16,9 +16,8 @@ namespace IM.Service.Common.Net.RabbitServices
                 entity = JsonSerializer.Deserialize<T>(data);
                 return true;
             }
-            catch (JsonException ex)
+            catch
             {
-                Console.WriteLine("Serializable exception: " + ex.Message);
                 return false;
             }
         }

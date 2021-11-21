@@ -24,6 +24,11 @@ namespace DataSetter
         {
             services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
 
+            services.AddDbContext<CompaniesDbContext>(provider =>
+            {
+                provider.UseLazyLoadingProxies();
+                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:DbCompanies"]);
+            });
             services.AddDbContext<PricesDbContext>(provider =>
             {
                 provider.UseLazyLoadingProxies();
@@ -38,9 +43,6 @@ namespace DataSetter
             services.AddControllers();
 
             services.AddHttpClient<CompanyClient>()
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
-            services.AddHttpClient<CompanyAnalyzerClient>()
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
             services.AddHttpClient<CompanyDataClient>()

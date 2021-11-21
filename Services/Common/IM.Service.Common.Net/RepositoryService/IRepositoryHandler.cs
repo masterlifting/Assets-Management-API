@@ -10,5 +10,8 @@ namespace IM.Service.Common.Net.RepositoryService
 
         Task GetUpdateHandlerAsync(ref T entity);
         Task GetUpdateHandlerAsync(ref T[] entities);
+
+        Task SetPostProcessAsync(T entity);
+        Task SetPostProcessAsync(T[] entities);
     }
 }

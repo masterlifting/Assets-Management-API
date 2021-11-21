@@ -5,6 +5,6 @@ namespace IM.Service.Common.Net.Models.Entity.Companies
     public abstract class StockVolumeBody : SourceTypeBody
     {
         [NotZero(nameof(Value))]
-        public int Value { get; set; }
+        public long Value { get; set; }
     }
 }

@@ -8,7 +8,7 @@ namespace IM.Service.Company.Models.Dto
 {
     public record CompanyPutDto
     {
-        [StringLength(100, MinimumLength = 4)]
+        [StringLength(100, MinimumLength = 2)]
         public string Name { get; init; } = null!;
 
         [NotZero(nameof(IndustryId))]
@@ -17,6 +17,5 @@ namespace IM.Service.Company.Models.Dto
         public string? Description { get; init; }
 
         public IEnumerable<EntityTypeDto>? DataSources { get; init; }
-        public IEnumerable<EntityTypeDto>? Brokers { get; init; }
     }
 }

@@ -28,6 +28,7 @@ namespace IM.Service.Company.Analyzer.DataAccess.Repository
 
             return Task.CompletedTask;
         }
+
         public Task GetUpdateHandlerAsync(ref Report entity)
         {
             var dbEntity = context.Reports.FindAsync(entity.CompanyId, entity.Year, entity.Quarter).GetAwaiter().GetResult();
@@ -58,6 +59,9 @@ namespace IM.Service.Company.Analyzer.DataAccess.Repository
 
             return Task.CompletedTask;
         }
+
+        public Task SetPostProcessAsync(Report entity) => Task.CompletedTask;
+        public Task SetPostProcessAsync(Report[] entities) => Task.CompletedTask;
 
         private IQueryable<Report> GetExist(Report[] entities)
         {

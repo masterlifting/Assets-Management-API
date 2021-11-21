@@ -1,9 +1,13 @@
-﻿using System;
+﻿using IM.Service.Common.Net.Models.Dto.Http;
+
+using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Encodings.Web;
+using System.Text.Json;
+using System.Text.Unicode;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.Models.Dto.Http;
 
 namespace IM.Service.Common.Net.HttpServices
 {
@@ -126,7 +130,13 @@ namespace IM.Service.Common.Net.HttpServices
                 ? response is not null
                     ? response.IsSuccessStatusCode
                         ? new() { Data = "post response is success" }
-                        : new() { Errors = new[] { $"post response status code: {response.StatusCode}" } }
+                        : new()
+                        {
+                            Errors = new[]
+                            {
+                                response.ToString()
+                            }
+                        }
                     : new() { Errors = new[] { "post response is null" } }
                 : new() { Errors = new[] { "post response failed" } };
 
@@ -162,7 +172,7 @@ namespace IM.Service.Common.Net.HttpServices
                 ? response is not null
                     ? response.IsSuccessStatusCode
                         ? new() { Data = "put response is success" }
-                        : new() { Errors = new[] { $"put response status code: {response.StatusCode}" } }
+                        : new() { Errors = new[] { response.ToString() } }
                     : new() { Errors = new[] { "put response is null" } }
                 : new() { Errors = new[] { "put response failed" } };
 
@@ -198,7 +208,7 @@ namespace IM.Service.Common.Net.HttpServices
                 ? response is not null
                     ? response.IsSuccessStatusCode
                         ? new() { Data = "delete response is success" }
-                        : new() { Errors = new[] { $"delete response status code: {response.StatusCode}" } }
+                        : new() { Errors = new[] { response.ToString() } }
                     : new() { Errors = new[] { "delete response is null" } }
                 : new() { Errors = new[] { "delete response failed" } };
 
