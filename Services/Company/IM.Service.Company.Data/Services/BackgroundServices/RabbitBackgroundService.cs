@@ -1,29 +1,28 @@
 ﻿using IM.Service.Common.Net.RabbitServices;
-
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
-
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using IM.Service.Company.Data.Services.MqServices;
 using IM.Service.Company.Data.Settings;
+
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IM.Service.Company.Data.Services.BackgroundServices
 {
     public class RabbitBackgroundService : BackgroundService
     {
+        private readonly RabbitActionService service;
         private readonly RabbitSubscriber subscriber;
-        private readonly IServiceScope scope;
 
-        public RabbitBackgroundService(ILogger<RabbitSubscriber> logger, IServiceProvider services, IOptions<ServiceSettings> options)
+        public RabbitBackgroundService(ILogger<RabbitSubscriber> logger, IOptions<ServiceSettings> options, RabbitActionService service)
         {
             var targetExchanges = new[] { QueueExchanges.Sync, QueueExchanges.Function, QueueExchanges.Transfer };
             var targetQueues = new[] { QueueNames.CompanyData};
+           
+            this.service = service;
             subscriber = new RabbitSubscriber(logger, options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
-            scope = services.CreateScope();
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -31,12 +30,10 @@ namespace IM.Service.Company.Data.Services.BackgroundServices
             if (stoppingToken.IsCancellationRequested)
             {
                 subscriber.Unsubscribe();
-                scope.Dispose();
                 return Task.CompletedTask;
             }
 
-            var rabbitService = scope.ServiceProvider.GetRequiredService<RabbitActionService>();
-            subscriber.Subscribe(rabbitService.GetActionResultAsync);
+            subscriber.Subscribe(service.GetActionResultAsync);
 
             return Task.CompletedTask;
         }
@@ -44,7 +41,6 @@ namespace IM.Service.Company.Data.Services.BackgroundServices
         {
             base.StopAsync(stoppingToken);
             subscriber.Unsubscribe();
-            scope.Dispose();
             return Task.CompletedTask;
         }
     }

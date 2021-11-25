@@ -9,7 +9,7 @@ namespace IM.Service.Company.Data.Services.DataServices.Reports
 {
     public static class ReportHelper
     {
-        public static bool IsMissingLastQuarter(ILogger<ReportLoader> logger, ReportDataConfigModel lastReport)
+        public static bool IsMissingLastQuarter(ILogger<ReportLoader> logger, QuarterDataConfigModel lastReport)
         {
             var (controlYear, controlQuarter) = CommonHelper.SubtractQuarter(DateTime.UtcNow);
 

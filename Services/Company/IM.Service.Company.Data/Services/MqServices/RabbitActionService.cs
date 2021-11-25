@@ -1,28 +1,18 @@
 ﻿using IM.Service.Common.Net.RabbitServices;
-using IM.Service.Company.Data.DataAccess.Entities;
-using IM.Service.Company.Data.DataAccess.Repository;
-using IM.Service.Company.Data.Services.DataServices.Prices;
-using IM.Service.Company.Data.Services.DataServices.Reports;
 using IM.Service.Company.Data.Services.MqServices.Implementations;
 
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace IM.Service.Company.Data.Services.MqServices
+namespace IM.Service.Company.Data.Services.MqServices;
+
+public class RabbitActionService : RabbitService
 {
-    public class RabbitActionService : RabbitService
-    {
-        public RabbitActionService(
-            ILogger<RabbitActionService> logger,
-            ReportLoader reportLoader,
-            PriceLoader priceLoader,
-            RepositorySet<DataAccess.Entities.Company> companyRepository,
-            RepositorySet<CompanySourceType> cstRepository) : base(
-            new()
-            {
-                { QueueExchanges.Sync, new RabbitSyncService(companyRepository, cstRepository) },
-                { QueueExchanges.Function, new RabbitFunctionService(logger, priceLoader, reportLoader) }
-            })
+    public RabbitActionService(IServiceScopeFactory scopeFactory) : base(
+        new()
         {
-        }
+            { QueueExchanges.Sync, new RabbitSyncService(scopeFactory) },
+            { QueueExchanges.Function, new RabbitFunctionService(scopeFactory) }
+        })
+    {
     }
 }

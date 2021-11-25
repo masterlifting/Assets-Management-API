@@ -81,7 +81,7 @@ public class PricesDtoManager
 
         var result = new List<PriceGetDto>(queryResult.Length);
 
-        if (result.Any())
+        if (queryResult.Any())
         {
             var priceResult = queryResult
                 .OrderBy(x => x.Date)
@@ -156,7 +156,7 @@ public class PricesDtoManager
         {
             Data = new()
             {
-                Items = result.ToArray(),
+                Items = result.OrderBy(x => x.Date).ToArray(),
                 Count = count
             }
         };
@@ -181,13 +181,15 @@ public class PricesDtoManager
             .Select(x => x
                 .OrderBy(y => y.Date)
                 .Last())
+            .OrderByDescending(x => x.Date)
+            .ThenBy(x => x.Company)
             .ToArray();
 
         var paginatedResult = pagination.GetPaginatedResult(groupedResult);
 
         var result = new List<PriceGetDto>(paginatedResult.Length);
 
-        if (result.Any())
+        if (paginatedResult.Any())
         {
             var priceResult = paginatedResult
                 .OrderBy(x => x.Date)
@@ -253,8 +255,8 @@ public class PricesDtoManager
         {
             Data = new()
             {
-                Items = result.ToArray(),
-                Count = result.Count
+                Items = result.OrderByDescending(x => x.Date).ThenBy(x => x.Company).ToArray(),
+                Count = groupedResult.Length
             }
         };
     }
@@ -290,7 +292,7 @@ public class PricesDtoManager
             Value = x.Last().Value
         });
 
-        var (error, result) = await priceRepository.CreateAsync(ctxEntities, new CompanyDateComparer<Price>(), "Prices");
+        var (error, result) = await priceRepository.CreateAsync(ctxEntities, "Prices");
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -319,7 +321,7 @@ public class PricesDtoManager
         companyId = companyId.ToUpperInvariant().Trim();
 
         var message = $"price of '{companyId}' delete at {date:yyyy MMMM dd}";
-        var (error, deletedEntity) = await priceRepository.DeleteAsync(message, companyId, date);
+        var (error, _) = await priceRepository.DeleteAsync(message, companyId, date);
 
         return error is not null
             ? new() { Errors = new[] { error } }

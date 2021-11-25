@@ -1,50 +1,65 @@
-﻿using IM.Service.Common.Net.RabbitServices;
-using System;
-using System.Threading.Tasks;
-using IM.Service.Common.Net;
+﻿using IM.Service.Common.Net;
+using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Company.Data.Services.DataServices.Prices;
 using IM.Service.Company.Data.Services.DataServices.Reports;
+
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace IM.Service.Company.Data.Services.MqServices.Implementations
+using System;
+using System.Threading.Tasks;
+using IM.Service.Company.Data.Services.DataServices.StockSplits;
+using IM.Service.Company.Data.Services.DataServices.StockVolumes;
+
+namespace IM.Service.Company.Data.Services.MqServices.Implementations;
+
+public class RabbitFunctionService : IRabbitActionService
 {
-    public class RabbitFunctionService : IRabbitActionService
+    private readonly IServiceScopeFactory scopeFactory;
+    public RabbitFunctionService(IServiceScopeFactory scopeFactory) => this.scopeFactory = scopeFactory;
+
+    public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string companyId)
     {
-        private readonly ILogger<RabbitActionService> logger;
-        private readonly PriceLoader priceLoader;
-        private readonly ReportLoader reportLoader;
+        if (action != QueueActions.Call)
+            return true;
 
-        public RabbitFunctionService(ILogger<RabbitActionService> logger, PriceLoader priceLoader, ReportLoader reportLoader)
+        try
         {
-            this.logger = logger;
-            this.priceLoader = priceLoader;
-            this.reportLoader = reportLoader;
-        }
-
-        public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string companyId)
-        {
-            if (action != QueueActions.Call) 
-                return true;
-            
-            try
+            switch (entity)
             {
-                switch (entity)
-                {
-                    case QueueEntities.Price:
+                case QueueEntities.Price:
+                    {
+                        var priceLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<PriceLoader>();
                         await priceLoader.DataSetAsync(companyId);
                         break;
-                    case QueueEntities.Report:
+                    }
+                case QueueEntities.CompanyReport:
+                    {
+                        var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ReportLoader>();
                         await reportLoader.DataSetAsync(companyId);
                         break;
+                    }
+                case QueueEntities.StockSplit:
+                {
+                    var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockSplitLoader>();
+                    await reportLoader.DataSetAsync(companyId);
+                    break;
                 }
+                case QueueEntities.StockVolume:
+                {
+                    var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockVolumeLoader>();
+                    await reportLoader.DataSetAsync(companyId);
+                    break;
+                }
+            }
 
-                return true;
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(LogEvents.Call,"{entity} {action} failed! Error: {error}", nameof(entity), nameof(action), exception.Message);
-                return false;
-            }
+            return true;
+        }
+        catch (Exception exception)
+        {
+            var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger< RabbitFunctionService>>();
+            logger.LogError(LogEvents.Call, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), Enum.GetName(action), exception.Message);
+            return false;
         }
     }
 }

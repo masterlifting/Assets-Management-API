@@ -1,14 +1,15 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using System.Collections.Generic;
+using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Company.Data.DataAccess.Entities;
 
 using Microsoft.EntityFrameworkCore;
-
-using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using IM.Service.Common.Net.Models.Dto.Mq.Companies;
 using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.Data.Settings;
 using Microsoft.Extensions.Options;
 
@@ -28,8 +29,11 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
     {
         return Task.CompletedTask;
     }
-    public Task GetCreateHandlerAsync(ref StockSplit[] entities, IEqualityComparer<StockSplit> comparer)
+    public Task GetCreateHandlerAsync(ref StockSplit[] entities)
     {
+        var comparer = new CompanyDateComparer<StockSplit>();
+        entities = entities.Distinct(comparer).ToArray();
+        
         var exist = GetExist(entities);
 
         if (exist.Any())
@@ -37,14 +41,17 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
 
         return Task.CompletedTask;
     }
-   
+
     public Task GetUpdateHandlerAsync(ref StockSplit entity)
     {
-        var dbEntity = context.StockSplits.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
+        var ctxEntity = context.StockSplits.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
 
-        dbEntity.Value = entity.Value;
+        if (ctxEntity is null)
+            throw new DataException($"{nameof(StockSplit)} data not found. ");
 
-        entity = dbEntity;
+        ctxEntity.Value = entity.Value;
+
+        entity = ctxEntity;
 
         return Task.CompletedTask;
     }
@@ -65,6 +72,20 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
         return Task.CompletedTask;
     }
 
+    public async Task<IList<StockSplit>> GetDeleteHandlerAsync(IReadOnlyCollection<StockSplit> entities)
+    {
+        var comparer = new CompanyDateComparer<StockSplit>();
+        var result = new List<StockSplit>();
+
+        foreach (var group in entities.GroupBy(x => x.CompanyId))
+        {
+            var dbEntities = await context.StockSplits.Where(x => x.CompanyId.Equals(group.Key)).ToArrayAsync();
+            result.AddRange(dbEntities.Except(group, comparer));
+        }
+
+        return result;
+    }
+
     public Task SetPostProcessAsync(StockSplit entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
@@ -81,12 +102,13 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
 
         return Task.CompletedTask;
     }
-
-    public Task SetPostProcessAsync(StockSplit[] entities)
+    public Task SetPostProcessAsync(IReadOnlyCollection<StockSplit> entities)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        if (entities.Any())
+        {
+            var split = entities.OrderBy(x => x.Date).First();
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
-        foreach (var split in entities)
             publisher.PublishTask(
                 QueueNames.CompanyAnalyzer
                 , QueueEntities.Price
@@ -96,6 +118,7 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
                     CompanyId = split.CompanyId,
                     Date = split.Date
                 }));
+        }
 
         return Task.CompletedTask;
     }

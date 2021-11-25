@@ -51,7 +51,7 @@ namespace IM.Service.Common.Net.RabbitServices
                     {
                         Params = new[]
                         {
-                            new QueueParam(QueueEntities.Report)
+                            new QueueParam(QueueEntities.CompanyReport)
                             {
                                 Actions = new[]
                                 {
@@ -97,7 +97,21 @@ namespace IM.Service.Common.Net.RabbitServices
                                     QueueActions.Call
                                 }
                             },
-                            new QueueParam(QueueEntities.Report)
+                            new QueueParam(QueueEntities.CompanyReport)
+                            {
+                                Actions = new[]
+                                {
+                                    QueueActions.Call
+                                }
+                            },
+                            new QueueParam(QueueEntities.StockSplit)
+                            {
+                                Actions = new[]
+                                {
+                                    QueueActions.Call
+                                }
+                            },
+                            new QueueParam(QueueEntities.StockVolume)
                             {
                                 Actions = new[]
                                 {
@@ -126,7 +140,9 @@ namespace IM.Service.Common.Net.RabbitServices
     public enum QueueEntities
     {
         Company,
-        Report,
+        CompanyReport,
+        StockSplit,
+        StockVolume,
         Price,
         Rating
     }

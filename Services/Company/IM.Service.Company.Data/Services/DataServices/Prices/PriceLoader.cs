@@ -16,7 +16,7 @@ using static IM.Service.Company.Data.Services.DataServices.Prices.PriceHelper;
 
 namespace IM.Service.Company.Data.Services.DataServices.Prices;
 
-public class PriceLoader : IDataLoad<Price, PriceDataConfigModel>
+public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
 {
     private readonly ILogger<PriceLoader> logger;
     private readonly RepositorySet<Price> priceRepository;
@@ -57,7 +57,7 @@ public class PriceLoader : IDataLoad<Price, PriceDataConfigModel>
 
         if (!sources.Any())
         {
-            logger.LogWarning(LogEvents.Processing, "'{company}' sources was not found", company.Name);
+            logger.LogWarning(LogEvents.Processing, "'Sources for {company}' was not found", company.Name);
             return result;
         }
 
@@ -66,22 +66,14 @@ public class PriceLoader : IDataLoad<Price, PriceDataConfigModel>
             if (!parser.IsSource(source.Name))
                 continue;
 
-            var isWeekend = IsExchangeWeekend(source.Name, DateTime.UtcNow);
+            var last = await GetLastDatabaseDataAsync(company.Id);
 
-            if (isWeekend)
-            {
-                logger.LogWarning(LogEvents.Processing, "'{source}' source has a day off", source.Name);
-                continue;
-            }
-
-            var lastPrice = await GetLastDatabaseDataAsync(company.Id);
-
-            PriceDataConfigModel config = lastPrice is not null
+            DateDataConfigModel config = last is not null
                 ? new()
                 {
                     CompanyId = company.Id,
                     SourceValue = source.Value,
-                    Date = lastPrice.Date
+                    Date = last.Date
                 }
                 : new()
                 {
@@ -90,23 +82,24 @@ public class PriceLoader : IDataLoad<Price, PriceDataConfigModel>
                     Date = DateTime.UtcNow.AddYears(-1)
                 };
 
-            var prices = await DataGetAsync(source.Name, config);
+            var loadedData = await DataGetAsync(source.Name, config);
 
-            result = !result.Any()
-                ? await SaveAsync(prices)
-                : result.Concat(await SaveAsync(prices)).ToArray();
+            if (!loadedData.Any()) 
+                continue;
+            
+            var (error, savedResult) = await priceRepository.CreateUpdateAsync(loadedData,
+                new CompanyDateComparer<Price>(), $"Prices for {company.Name}");
+                
+            if (error is null)
+                result = result.Concat(savedResult!).ToArray();
         }
 
-        if (result.Length <= 0)
-            return result;
-
-        logger.LogInformation(LogEvents.Processing, "prices count: {count} for '{company}' was loaded", result.Length, company.Name);
         return result;
     }
     public async Task<Price[]> DataSetAsync()
     {
-        var lastPrices = await GetLastDatabaseDataAsync();
-        var lastPricesDictionary = lastPrices.ToDictionary(x => x.CompanyId, y => y.Date);
+        var lasts = await GetLastDatabaseDataAsync();
+        var lastsDictionary = lasts.ToDictionary(x => x.CompanyId, y => y.Date);
         var companySourceTypes = await companyRepository.GetDbSet()
             .Join(companySourceTypeRepository.GetDbSet(), x => x.Id, y => y.CompanyId, (x, y) => new
             {
@@ -123,23 +116,15 @@ public class PriceLoader : IDataLoad<Price, PriceDataConfigModel>
             if (!parser.IsSource(source.Key))
                 continue;
 
-            var isWeekend = IsExchangeWeekend(source.Key, DateTime.UtcNow);
-
-            if (isWeekend)
-            {
-                logger.LogWarning(LogEvents.Processing, "'{source}' source has a day off", source.Key);
-                continue;
-            }
-
             var config = source
-                .Select(x => lastPricesDictionary.ContainsKey(x.CompanyId)
-                    ? new PriceDataConfigModel
+                .Select(x => lastsDictionary.ContainsKey(x.CompanyId)
+                    ? new DateDataConfigModel
                     {
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
-                        Date = lastPricesDictionary[x.CompanyId].Date
+                        Date = lastsDictionary[x.CompanyId].Date
                     }
-                    : new PriceDataConfigModel
+                    : new DateDataConfigModel
                     {
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
@@ -147,17 +132,21 @@ public class PriceLoader : IDataLoad<Price, PriceDataConfigModel>
                     })
                 .ToArray();
 
-            var prices = await DataGetAsync(source.Key, config);
+            var loadedData = await DataGetAsync(source.Key, config);
 
-            result = !result.Any()
-                ? await SaveAsync(prices)
-                : result.Concat(await SaveAsync(prices)).ToArray();
+            if (!loadedData.Any())
+                continue;
+
+            var (error, savedResult) = await priceRepository.CreateUpdateAsync(loadedData,new CompanyDateComparer<Price>(), $"Prices for source: {source.Key}");
+
+            if (error is null)
+                result = result.Concat(savedResult!).ToArray();
         }
 
         if (result.Length <= 0)
             return result;
 
-        logger.LogInformation(LogEvents.Processing, "prices count of companies: {count} was processed.", result.GroupBy(x => x.CompanyId).Count());
+        logger.LogInformation(LogEvents.Processing, "Prices count of companies: {count} was processed.", result.GroupBy(x => x.CompanyId).Count());
         return result;
     }
 
@@ -179,7 +168,7 @@ public class PriceLoader : IDataLoad<Price, PriceDataConfigModel>
             .ToArray();
     }
 
-    public async Task<Price[]> DataGetAsync(string source, PriceDataConfigModel config)
+    public async Task<Price[]> DataGetAsync(string source, DateDataConfigModel config)
     {
         var result = await parser.LoadLastPricesAsync(source, config);
 
@@ -188,7 +177,7 @@ public class PriceLoader : IDataLoad<Price, PriceDataConfigModel>
 
         return result;
     }
-    public async Task<Price[]> DataGetAsync(string source, IEnumerable<PriceDataConfigModel> config)
+    public async Task<Price[]> DataGetAsync(string source, IEnumerable<DateDataConfigModel> config)
     {
         var _data = config.ToArray();
 
@@ -205,26 +194,5 @@ public class PriceLoader : IDataLoad<Price, PriceDataConfigModel>
             result = result.Concat(await parser.LoadHistoryPricesAsync(source, dataToHistory)).ToArray();
 
         return result;
-    }
-
-    public async Task<Price[]> SaveAsync(IEnumerable<Price> entities)
-    {
-        var data = entities.ToArray();
-        var result = new List<Price>(data.Length);
-
-        var currentPrices = data.Where(x => x.Date == DateTime.UtcNow.Date);
-        var restPrices = data.Where(x => x.Date != DateTime.UtcNow.Date);
-
-        var (createError, createdResult) = await priceRepository.CreateAsync(restPrices, new CompanyDateComparer<Price>(), "current prices");
-        var (updateError, updatedResult) = await priceRepository.CreateUpdateAsync(currentPrices, new CompanyDateComparer<Price>(), "rest prices");
-
-        if (createError is not null)
-            result.AddRange(createdResult!);
-
-        if (updateError is not null)
-            result.AddRange(updatedResult!);
-
-
-        return result.ToArray();
     }
 }

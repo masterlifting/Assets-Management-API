@@ -1,50 +1,45 @@
 ﻿using IM.Service.Common.Net.RabbitServices;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
-
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using IM.Service.Company.Analyzer.Services.MqServices;
 using IM.Service.Company.Analyzer.Settings;
+
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
-namespace IM.Service.Company.Analyzer.Services.BackgroundServices
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace IM.Service.Company.Analyzer.Services.BackgroundServices;
+
+public class RabbitBackgroundService : BackgroundService
 {
-    public class RabbitBackgroundService : BackgroundService
+    private readonly RabbitActionService service;
+    private readonly RabbitSubscriber subscriber;
+
+    public RabbitBackgroundService(ILogger<RabbitSubscriber> logger, IOptions<ServiceSettings> options, RabbitActionService service)
     {
-        private readonly RabbitSubscriber subscriber;
-        private readonly IServiceScope scope;
+        this.service = service;
+        var targetExchanges = new[] { QueueExchanges.Sync, QueueExchanges.Function, QueueExchanges.Transfer };
+        var targetQueues = new[] { QueueNames.CompanyAnalyzer };
+        subscriber = new RabbitSubscriber(logger, options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
+    }
 
-        public RabbitBackgroundService(ILogger<RabbitSubscriber> logger, IServiceProvider services, IOptions<ServiceSettings> options)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (stoppingToken.IsCancellationRequested)
         {
-            var targetExchanges = new[] { QueueExchanges.Sync, QueueExchanges.Function, QueueExchanges.Transfer };
-            var targetQueues = new[] { QueueNames.CompanyAnalyzer };
-            subscriber = new RabbitSubscriber(logger, options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
-            scope = services.CreateScope();
-        }
-
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            if (stoppingToken.IsCancellationRequested)
-            {
-                subscriber.Unsubscribe();
-                scope.Dispose();
-                return Task.CompletedTask;
-            }
-
-            var rabbitService = scope.ServiceProvider.GetRequiredService<RabbitActionService>();
-            subscriber.Subscribe(rabbitService.GetActionResultAsync);
-
-            return Task.CompletedTask;
-        }
-        public override Task StopAsync(CancellationToken stoppingToken)
-        {
-            base.StopAsync(stoppingToken);
             subscriber.Unsubscribe();
-            scope.Dispose();
             return Task.CompletedTask;
         }
+
+        subscriber.Subscribe(service.GetActionResultAsync);
+
+        return Task.CompletedTask;
+    }
+    public override Task StopAsync(CancellationToken stoppingToken)
+    {
+        base.StopAsync(stoppingToken);
+        subscriber.Unsubscribe();
+        return Task.CompletedTask;
     }
 }

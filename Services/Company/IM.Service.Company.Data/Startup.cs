@@ -7,6 +7,8 @@ using IM.Service.Company.Data.DataAccess.Repository;
 using IM.Service.Company.Data.Services.BackgroundServices;
 using IM.Service.Company.Data.Services.DataServices.Prices;
 using IM.Service.Company.Data.Services.DataServices.Reports;
+using IM.Service.Company.Data.Services.DataServices.StockSplits;
+using IM.Service.Company.Data.Services.DataServices.StockVolumes;
 using IM.Service.Company.Data.Services.DtoServices;
 using IM.Service.Company.Data.Services.MqServices;
 using IM.Service.Company.Data.Settings;
@@ -53,9 +55,13 @@ namespace IM.Service.Company.Data
 
             services.AddScoped<PriceParser>();
             services.AddScoped<ReportParser>();
+            services.AddScoped<StockSplitParser>();
+            services.AddScoped<StockVolumeParser>();
 
             services.AddScoped<PriceLoader>();
             services.AddScoped<ReportLoader>();
+            services.AddScoped<StockSplitLoader>();
+            services.AddScoped<StockVolumeLoader>();
 
             services.AddScoped<PricesDtoManager>();
             services.AddScoped<ReportsDtoManager>();
@@ -70,7 +76,7 @@ namespace IM.Service.Company.Data
             services.AddScoped<IRepositoryHandler<StockVolume>, StockVolumeRepository>();
             services.AddScoped<IRepositoryHandler<CompanySourceType>, CompanySourceTypeRepository>();
 
-            services.AddScoped<RabbitActionService>();
+            services.AddSingleton<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();
         }
 

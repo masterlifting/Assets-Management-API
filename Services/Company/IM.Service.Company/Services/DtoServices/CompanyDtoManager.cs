@@ -1,6 +1,5 @@
 ﻿using IM.Service.Common.Net.HttpServices;
 using IM.Service.Common.Net.Models.Dto.Http;
-using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.DataAccess.Entities;
 using IM.Service.Company.DataAccess.Repository;
 using IM.Service.Company.Models.Dto;
@@ -12,33 +11,33 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IM.Service.Company.Services.DtoServices
+namespace IM.Service.Company.Services.DtoServices;
+
+public class CompanyDtoManager
 {
-    public class CompanyDtoManager
+    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
+    private readonly RepositorySet<Industry> industryRepository;
+    private readonly RepositorySet<Sector> sectorRepository;
+    private readonly RabbitSyncService rabbitService;
+
+    public CompanyDtoManager(
+        RepositorySet<DataAccess.Entities.Company> companyRepository,
+        RepositorySet<Industry> industryRepository,
+        RepositorySet<Sector> sectorRepository,
+        RabbitSyncService rabbitService)
     {
-        private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
-        private readonly RepositorySet<Industry> industryRepository;
-        private readonly RepositorySet<Sector> sectorRepository;
-        private readonly RabbitSyncService rabbitService;
+        this.companyRepository = companyRepository;
+        this.industryRepository = industryRepository;
+        this.sectorRepository = sectorRepository;
+        this.rabbitService = rabbitService;
+    }
 
-        public CompanyDtoManager(
-            RepositorySet<DataAccess.Entities.Company> companyRepository,
-            RepositorySet<Industry> industryRepository,
-            RepositorySet<Sector> sectorRepository,
-            RabbitSyncService rabbitService)
-        {
-            this.companyRepository = companyRepository;
-            this.industryRepository = industryRepository;
-            this.sectorRepository = sectorRepository;
-            this.rabbitService = rabbitService;
-        }
+    public async Task<ResponseModel<PaginatedModel<CompanyGetDto>>> GetAsync(HttpPagination pagination)
+    {
+        var count = await companyRepository.GetCountAsync();
+        var paginatedResult = companyRepository.GetPaginationQuery(pagination, x => x.Name);
 
-        public async Task<ResponseModel<PaginatedModel<CompanyGetDto>>> GetAsync(HttpPagination pagination)
-        {
-            var count = await companyRepository.GetCountAsync();
-            var paginatedResult = companyRepository.GetPaginationQuery(pagination, x => x.Name);
-
-            var companies = await paginatedResult.Select(x => new CompanyGetDto
+        var companies = await paginatedResult.Select(x => new CompanyGetDto
             {
                 Ticker = x.Id,
                 Name = x.Name,
@@ -48,130 +47,130 @@ namespace IM.Service.Company.Services.DtoServices
             })
             .ToArrayAsync();
 
-            return new()
-            {
-                Data = new()
-                {
-                    Items = companies,
-                    Count = count
-                }
-            };
-        }
-        public async Task<ResponseModel<CompanyGetDto>> GetAsync(string companyId)
+        return new()
         {
-            var company = await companyRepository.FindAsync(companyId.Trim());
-
-            if (company is null)
-                return new() { Errors = new[] { "company not found" } };
-
-            var industry = await industryRepository.FindAsync(company.IndustryId);
-
-            if (industry is null)
-                return new() { Errors = new[] { "industry not found" } };
-
-            var sector = await sectorRepository.FindAsync(industry.SectorId);
-
-            return new()
+            Data = new()
             {
-                Data = new()
-                {
-                    Ticker = company.Id,
-                    Name = company.Name,
-                    Description = company.Description,
-                    Industry = industry.Name,
-                    Sector = sector!.Name
-                }
-            };
-        }
-        public async Task<ResponseModel<string>> CreateAsync(CompanyPostDto model)
+                Items = companies,
+                Count = count
+            }
+        };
+    }
+    public async Task<ResponseModel<CompanyGetDto>> GetAsync(string companyId)
+    {
+        var company = await companyRepository.FindAsync(companyId.Trim());
+
+        if (company is null)
+            return new() { Errors = new[] { "company not found" } };
+
+        var industry = await industryRepository.FindAsync(company.IndustryId);
+
+        if (industry is null)
+            return new() { Errors = new[] { "industry not found" } };
+
+        var sector = await sectorRepository.FindAsync(industry.SectorId);
+
+        return new()
         {
-            var company = new DataAccess.Entities.Company
+            Data = new()
             {
-                Id = model.Id,
-                Name = model.Name,
-                IndustryId = model.IndustryId,
-                Description = model.Description
-            };
+                Ticker = company.Id,
+                Name = company.Name,
+                Description = company.Description,
+                Industry = industry.Name,
+                Sector = sector!.Name
+            }
+        };
+    }
 
-            var (error, createdCompany) = await companyRepository.CreateAsync(company, model.Name);
-
-            if (error is not null)
-                return new ResponseModel<string> { Errors = new[] { error } };
-
-            rabbitService.CreateCompany(new CompanyPostDto
-            {
-                Id = createdCompany!.Id,
-                Name = createdCompany.Name,
-                DataSources = model.DataSources
-            });
-
-            return new() { Data = $"'{createdCompany.Name}' was created" };
-        }
-        public async Task<ResponseModel<string>> CreateAsync(IEnumerable<CompanyPostDto> models)
+    public async Task<ResponseModel<string>> CreateAsync(CompanyPostDto model)
+    {
+        var company = new DataAccess.Entities.Company
         {
-            var array = models.ToArray();
+            Id = model.Id,
+            Name = model.Name,
+            IndustryId = model.IndustryId,
+            Description = model.Description
+        };
 
-            if (!array.Any())
-                return new() { Errors = new[] { "company data for creating not found" } };
+        var (error, createdCompany) = await companyRepository.CreateAsync(company, model.Name);
 
-            var ctxEntities = array.Select(x => new DataAccess.Entities.Company
-            {
-                Id = x.Id.ToUpperInvariant(),
-                Name = x.Name,
-                IndustryId = x.IndustryId,
-                Description = x.Description
-            }).ToArray();
+        if (error is not null)
+            return new ResponseModel<string> { Errors = new[] { error } };
 
-            var (error, result) = await companyRepository.CreateAsync(ctxEntities, new CompanyComparer(), "Companies");
-
-            if (error is not null)
-                return new() { Errors = new[] { error } };
-
-            rabbitService.CreateCompany(result!.Join(array, x => x.Id, y => y.Id, (x, y) => new CompanyPostDto
-            {
-                Id = x.Id,
-                Name = x.Name,
-                DataSources = y.DataSources,
-            }));
-
-            return new() { Data = $"Companies count: {result!.Length} was successed" };
-        }
-        public async Task<ResponseModel<string>> UpdateAsync(string companyId, CompanyPutDto model)
+        rabbitService.CreateCompany(new CompanyPostDto
         {
-            var company = new DataAccess.Entities.Company
-            {
-                Id = companyId.ToUpperInvariant().Trim(),
-                Name = model.Name,
-                IndustryId = model.IndustryId,
-                Description = model.Description
-            };
+            Id = createdCompany!.Id,
+            Name = createdCompany.Name,
+            DataSources = model.DataSources
+        });
 
-            var (error, updatedCompany) = await companyRepository.UpdateAsync(company, company.Name);
+        return new() { Data = $"'{createdCompany.Name}' was created" };
+    }
+    public async Task<ResponseModel<string>> CreateAsync(IEnumerable<CompanyPostDto> models)
+    {
+        var array = models.ToArray();
 
-            if (error is not null)
-                return new ResponseModel<string> { Errors = new[] { error } };
+        if (!array.Any())
+            return new() { Errors = new[] { "company data for creating not found" } };
 
-            rabbitService.UpdateCompany(new()
-            {
-                Id = updatedCompany!.Id,
-                Name = updatedCompany.Name,
-                DataSources = model.DataSources,
-            });
-
-            return new ResponseModel<string> { Data = $"'{updatedCompany.Name}' was updated" };
-        }
-        public async Task<ResponseModel<string>> DeleteAsync(string companyId)
+        var ctxEntities = array.Select(x => new DataAccess.Entities.Company
         {
-            companyId = companyId.ToUpperInvariant().Trim();
+            Id = x.Id.ToUpperInvariant(),
+            Name = x.Name,
+            IndustryId = x.IndustryId,
+            Description = x.Description
+        }).ToArray();
 
-            var (error, company) = await companyRepository.DeleteAsync(companyId, companyId);
+        var (error, result) = await companyRepository.CreateAsync(ctxEntities, "Companies");
 
-            if (error is not null)
-                return new ResponseModel<string> { Errors = new[] { error } };
+        if (error is not null)
+            return new() { Errors = new[] { error } };
 
-            rabbitService.DeleteCompany(companyId);
+        rabbitService.CreateCompany(result!.Join(array, x => x.Id, y => y.Id, (x, y) => new CompanyPostDto
+        {
+            Id = x.Id,
+            Name = x.Name,
+            DataSources = y.DataSources,
+        }));
 
-            return new ResponseModel<string> { Data = $"'{company!.Name}' was deleted" };
-        }
+        return new() { Data = $"Companies count: {result!.Length} was successed" };
+    }
+    public async Task<ResponseModel<string>> UpdateAsync(string companyId, CompanyPutDto model)
+    {
+        var company = new DataAccess.Entities.Company
+        {
+            Id = companyId.ToUpperInvariant().Trim(),
+            Name = model.Name,
+            IndustryId = model.IndustryId,
+            Description = model.Description
+        };
+
+        var (error, updatedCompany) = await companyRepository.UpdateAsync(company, company.Name);
+
+        if (error is not null)
+            return new ResponseModel<string> { Errors = new[] { error } };
+
+        rabbitService.UpdateCompany(new()
+        {
+            Id = updatedCompany!.Id,
+            Name = updatedCompany.Name,
+            DataSources = model.DataSources,
+        });
+
+        return new ResponseModel<string> { Data = $"'{updatedCompany.Name}' was updated" };
+    }
+    public async Task<ResponseModel<string>> DeleteAsync(string companyId)
+    {
+        companyId = companyId.ToUpperInvariant().Trim();
+
+        var (error, company) = await companyRepository.DeleteAsync(companyId, companyId);
+
+        if (error is not null)
+            return new ResponseModel<string> { Errors = new[] { error } };
+
+        rabbitService.DeleteCompany(companyId);
+
+        return new ResponseModel<string> { Data = $"'{company!.Name}' was deleted" };
     }
 }

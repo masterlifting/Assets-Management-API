@@ -3,8 +3,10 @@
 using Microsoft.EntityFrameworkCore;
 
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Company.DataAccess.Comparators;
 using IM.Service.Company.DataAccess.Entities;
 
 namespace IM.Service.Company.DataAccess.Repository;
@@ -18,9 +20,10 @@ public class IndustryRepository : IRepositoryHandler<Industry>
     {
         return Task.CompletedTask;
     }
-    public Task GetCreateHandlerAsync(ref Industry[] entities, IEqualityComparer<Industry> comparer)
+    public Task GetCreateHandlerAsync(ref Industry[] entities)
     {
         var exist = GetExist(entities);
+        var comparer = new IndustryComparer();
 
         if (exist.Any())
             entities = entities.Except(exist, comparer).ToArray();
@@ -32,7 +35,10 @@ public class IndustryRepository : IRepositoryHandler<Industry>
     {
         var ctxEntity = context.Industries.FindAsync(entity.Id).GetAwaiter().GetResult();
 
-        ctxEntity!.Name = entity.Name;
+        if (ctxEntity is null)
+            throw new DataException($"{nameof(Industry)} data not found. ");
+
+        ctxEntity.Name = entity.Name;
         ctxEntity.Description = entity.Description;
         ctxEntity.SectorId = entity.SectorId;
 
@@ -61,8 +67,22 @@ public class IndustryRepository : IRepositoryHandler<Industry>
         return Task.CompletedTask;
     }
 
+    public async Task<IList<Industry>> GetDeleteHandlerAsync(IReadOnlyCollection<Industry> entities)
+    {
+        var comparer = new IndustryComparer();
+        var result = new List<Industry>();
+
+        foreach (var group in entities.GroupBy(x => x.SectorId))
+        {
+            var dbEntities = await context.Industries.Where(x => x.SectorId.Equals(group.Key)).ToArrayAsync();
+            result.AddRange(dbEntities.Except(group, comparer));
+        }
+
+        return result;
+    }
+
     public Task SetPostProcessAsync(Industry entity) => Task.CompletedTask;
-    public Task SetPostProcessAsync(Industry[] entities) => Task.CompletedTask;
+    public Task SetPostProcessAsync(IReadOnlyCollection<Industry> entities) => Task.CompletedTask;
 
     private IQueryable<Industry> GetExist(IEnumerable<Industry> entities)
     {

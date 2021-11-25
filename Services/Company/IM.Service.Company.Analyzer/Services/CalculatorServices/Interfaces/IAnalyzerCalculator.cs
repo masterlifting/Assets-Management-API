@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 
-namespace IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces
+namespace IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
+
+public interface IAnalyzerCalculator<in T> where T : class
 {
-    public interface IAnalyzerCalculator<in T> where T : class
-    {
-        Task<bool> CalculateAsync();
-        Task<bool> IsSetCalculatingStatusAsync(T[] collection, string info);
-    }
+    Task<bool> CalculateAsync();
+    Task<bool> IsSetProcessingStatusAsync(T[] collection, string info);
 }

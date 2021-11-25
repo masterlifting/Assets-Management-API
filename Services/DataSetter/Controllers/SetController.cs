@@ -64,7 +64,7 @@ public class SetController : ControllerBase
         var splits = Array.Empty<StockSplitPostDto>();
         var reports = Array.Empty<ReportPostDto>();
         var volumes = Array.Empty<StockVolumePostDto>();
-        
+
         if (dbPrices.Any())
         {
             var priceSource = new EntityTypeDto
@@ -88,7 +88,7 @@ public class SetController : ControllerBase
             splits = dbCompany.StockSplits.Select(x => new StockSplitPostDto
             {
                 CompanyId = dbCompany.Ticker,
-                SourceType = sourceName,
+                SourceType = "manual",
                 Value = x.Divider,
                 Date = x.Date
             }).ToArray();
@@ -148,31 +148,95 @@ public class SetController : ControllerBase
             DataSources = sources
         };
 
-        await companyClient.Post("companies", company);
-        await dataClient.Post("prices/collection", prices);
-        await dataClient.Post("reports/collection", reports);
-        await dataClient.Post("stockSplits/collection", splits);
-        await dataClient.Post("stockVolumes/collection", volumes);
+        var a = await companyClient.Post("companies", company);
+        var b = await dataClient.Post("prices/collection", prices);
+        var c = await dataClient.Post("reports/collection", reports);
+        var d = await dataClient.Post("stockSplits/collection", splits);
+        var e = await dataClient.Post("stockVolumes/collection", volumes);
 
         return "Ok";
     }
 
-    [HttpGet("collection/")]
+    [HttpGet]
     public async Task<ResponseModel<string>> Get()
     {
-        var models = await companyContext.Companies.Select(x => new CompanyPostDto
-        {
-            Id = x.Ticker,
-            Name = x.Name,
-            Description = x.Description,
-            IndustryId = (byte)x.IndustryId
-        }).ToArrayAsync();
+        var companyIds = await companyContext.Companies.Select(x => x.Ticker).ToArrayAsync();
+        var result = new string[companyIds.Length];
 
-        return await companyClient.Post("companies/collection", models);
+        for (var i = 0; i < result.Length; i++)
+        {
+            var r = await Get(companyIds[i]);
+            result[i] = $"{companyIds[i]} -> {r}";
+        }
+        return new() { Errors = result };
     }
 
     [HttpPut("{companyId}")]
-    public async Task<ResponseModel<string>> Put(string companyId, CompanyPutDto model) => await companyClient.Put("companies", model, companyId);
+    public async Task<string> Put(string companyId)
+    {
+        companyId = companyId.ToUpperInvariant();
+
+        var dbCompany = await companyContext.Companies.FindAsync(companyId);
+
+        if (dbCompany is null)
+            return "Company not found";
+
+        var dbPrices = await pricesContext.Prices
+            .Where(x => x.TickerName == dbCompany.Ticker)
+            .OrderBy(x => x.Date)
+            .ToArrayAsync();
+        var dbReports = await reportsContext.Reports
+            .Where(x => x.TickerName == dbCompany.Ticker)
+            .OrderBy(x => x.Year)
+            .ThenBy(x => x.Quarter)
+            .ToArrayAsync();
+
+        List<EntityTypeDto> sources = new(2);
+        if (dbPrices.Any())
+        {
+            var priceSource = new EntityTypeDto
+            {
+                Id = dbPrices[0].SourceType == "tdameritrade" ? (byte)3 : (byte)2,
+                Value = dbPrices[0].TickerNameNavigation.SourceValue
+            };
+            sources.Add(priceSource);
+        }
+        if (dbReports.Any())
+        {
+            var reportSource = new EntityTypeDto
+            {
+                Id = 4,
+                Value = dbReports[0].TickerNameNavigation.SourceValue
+            };
+            sources.Add(reportSource);
+        }
+
+        var company = new CompanyPutDto
+        {
+            Name = dbCompany.Name,
+            Description = dbCompany.Description,
+            IndustryId = (byte)dbCompany.IndustryId,
+            DataSources = sources
+        };
+
+        var response = await companyClient.Put("companies", company, companyId);
+
+        return response.Data ?? string.Join(';', response.Errors);
+    }
+
+    [HttpPut]
+    public async Task<ResponseModel<string>> Put()
+    {
+        var companyIds = await companyContext.Companies.Select(x => x.Ticker).ToArrayAsync();
+        var result = new string[companyIds.Length];
+
+        for (var i = 0; i < result.Length; i++)
+        {
+            var r = await Put(companyIds[i]);
+            result[i] = $"{companyIds[i]} -> {r}";
+        }
+        return new() { Errors = result };
+    }
 
     [HttpDelete("{companyId}")]
     public async Task<ResponseModel<string>> Delete(string companyId) => await companyClient.Delete("companies", companyId);

@@ -97,7 +97,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
         {
             var result = new Report[reports.Length];
             var comparedSample = new Sample[samples.Length][];
-            var statusId = samples.Length == 16 ? (byte)StatusType.Calculated : (byte)StatusType.CalculatedPartial;
+            var statusId = samples.Length == 16 ? (byte)StatusType.Completed : (byte)StatusType.CalculatedPartial;
 
             for (uint i = 0; i < samples.Length; i++)
                 comparedSample[i] = RatingComparator.CompareSample(samples[i]);

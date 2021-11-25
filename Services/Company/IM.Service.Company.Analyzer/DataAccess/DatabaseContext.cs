@@ -34,33 +34,27 @@ namespace IM.Service.Company.Analyzer.DataAccess
             modelBuilder.Entity<Status>().HasData(
                 new()
                 {
-                    Id = (byte)StatusType.ToCalculate,
-                    Name = nameof(StatusType.ToCalculate),
-                    Description = "before calculating"
+                    Id = (byte)StatusType.Ready,
+                    Name = nameof(StatusType.Ready),
+                    Description = "ready to calculate"
                 }
                 , new()
                 {
-                    Id = (byte)StatusType.Calculating,
-                    Name = nameof(StatusType.Calculating),
+                    Id = (byte)StatusType.Processing,
+                    Name = nameof(StatusType.Processing),
                     Description = "calculating now"
                 }
                 , new()
                 {
-                    Id = (byte)StatusType.CalculatedPartial,
-                    Name = nameof(StatusType.CalculatedPartial),
-                    Description = "after calculating with partial result"
-                }
-                , new()
-                {
-                    Id = (byte)StatusType.Calculated,
-                    Name = nameof(StatusType.Calculated),
-                    Description = "calculating done"
+                    Id = (byte)StatusType.Completed,
+                    Name = nameof(StatusType.Completed),
+                    Description = "calculating complete"
                 }
                 , new()
                 {
                     Id = (byte)StatusType.Error,
                     Name = nameof(StatusType.Error),
-                    Description = "error on calculating"
+                    Description = "error"
                 });
         }
     }

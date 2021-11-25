@@ -1,14 +1,19 @@
 ﻿using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Company.Data.DataAccess.Comparators;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.Settings;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+
+using static IM.Service.Company.Data.Enums;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -29,19 +34,25 @@ public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
     {
         return Task.CompletedTask;
     }
-    public Task GetCreateHandlerAsync(ref CompanySourceType[] entities, IEqualityComparer<CompanySourceType> comparer)
+    public Task GetCreateHandlerAsync(ref CompanySourceType[] entities)
     {
-        var exist = GetExist(entities);
+        var exist = GetExist(entities).ToArray();
+
+        var comparer = new CompanySourceTypeComparer();
+        entities = entities.Distinct(comparer).ToArray();
 
         if (exist.Any())
             entities = entities.Except(exist, comparer).ToArray();
 
         return Task.CompletedTask;
     }
-        
+
     public Task GetUpdateHandlerAsync(ref CompanySourceType entity)
     {
         var ctxEntity = context.CompanySourceTypes.FindAsync(entity.CompanyId, entity.SourceTypeId).GetAwaiter().GetResult();
+
+        if (ctxEntity is null)
+            throw new DataException($"{nameof(CompanySourceType)} data not found. ");
 
         ctxEntity.CompanyId = entity.CompanyId;
         ctxEntity.SourceTypeId = entity.SourceTypeId;
@@ -72,26 +83,36 @@ public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
         return Task.CompletedTask;
     }
 
+    public async Task<IList<CompanySourceType>> GetDeleteHandlerAsync(IReadOnlyCollection<CompanySourceType> entities)
+    {
+        var comparer = new CompanySourceTypeComparer();
+        var result = new List<CompanySourceType>();
+
+        foreach (var group in entities.GroupBy(x => x.CompanyId))
+        {
+            var dbEntities = await context.CompanySourceTypes.Where(x => x.CompanyId.Equals(group.Key)).ToArrayAsync();
+            result.AddRange(dbEntities.Except(group, comparer));
+        }
+
+        return result;
+    }
+
     public Task SetPostProcessAsync(CompanySourceType entity)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        if (entity.Value is null)
+            return Task.CompletedTask;
 
-        publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Report, QueueActions.Call, entity.CompanyId);
-        publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, entity.CompanyId);
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        SetQueue(entity.SourceTypeId, entity.CompanyId, publisher);
 
         return Task.CompletedTask;
     }
-    public Task SetPostProcessAsync(CompanySourceType[] entities)
+    public Task SetPostProcessAsync(IReadOnlyCollection<CompanySourceType> entities)
     {
-        var companyIds = entities.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
-
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
 
-        foreach (var companyId in companyIds)
-        {
-            publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Report, QueueActions.Call, companyId);
-            publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
-        }
+        foreach (var entity in entities.Where(x => x.Value is not null))
+            SetQueue(entity.SourceTypeId, entity.CompanyId, publisher);
 
         return Task.CompletedTask;
     }
@@ -101,9 +122,55 @@ public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
         var existData = entities
             .Where(x => x.Value is not null)
             .GroupBy(x => new { x.CompanyId, x.SourceTypeId, x.Value })
-            .Select(x => x.Key)
+            .Select(x => new CompanySourceType
+            {
+                CompanyId = x.Key.CompanyId,
+                SourceTypeId = x.Key.SourceTypeId,
+                Value = x.Key.Value
+            })
             .ToArray();
 
-        return context.CompanySourceTypes.Where(x => existData.Contains(new { x.CompanyId, x.SourceTypeId, x.Value }));
+        var companyIds = existData.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
+        var sourceTypeIds = existData.GroupBy(x => x.SourceTypeId).Select(x => x.Key).ToArray();
+        var values = existData.GroupBy(x => x.Value).Select(x => x.Key).ToArray();
+
+        var dbc = context.CompanySourceTypes.Where(x => companyIds.Contains(x.CompanyId));
+        var dbs = context.CompanySourceTypes.Where(x => sourceTypeIds.Contains(x.SourceTypeId));
+
+
+        return dbc
+            .Join(dbs, x => new { x.CompanyId, x.SourceTypeId }, y => new { y.CompanyId, y.SourceTypeId }, (x, _) => x)
+            .Where(x => values.Contains(x.Value));
+    }
+
+    private static void SetQueue(byte sourceTypeId, string companyId, RabbitPublisher publisher)
+    {
+        if (!Enum.TryParse<SourceTypes>(sourceTypeId.ToString(), out var sourceType))
+            return;
+
+        switch (sourceType)
+        {
+            case SourceTypes.Official:
+                {
+                    break;
+                }
+            case SourceTypes.Moex:
+                {
+                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
+                    break;
+                }
+            case SourceTypes.Tdameritrade:
+                {
+                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
+
+                    break;
+                }
+            case SourceTypes.Investing:
+                {
+                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.CompanyReport, QueueActions.Call, companyId);
+                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockVolume, QueueActions.Call, companyId);
+                    break;
+                }
+        }
     }
 }

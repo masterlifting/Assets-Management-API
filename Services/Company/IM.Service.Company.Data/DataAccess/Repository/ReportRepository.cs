@@ -1,16 +1,18 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using System.Collections.Generic;
+using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.Settings;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.Models.Dto.Mq.Companies;
-using IM.Service.Common.Net.RabbitServices;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -30,8 +32,11 @@ public class ReportRepository : IRepositoryHandler<Report>
     {
         return Task.CompletedTask;
     }
-    public Task GetCreateHandlerAsync(ref Report[] entities, IEqualityComparer<Report> comparer)
+    public Task GetCreateHandlerAsync(ref Report[] entities)
     {
+        var comparer = new CompanyQuarterComparer<Report>();
+        entities = entities.Distinct(comparer).ToArray();
+        
         var exist = GetExist(entities);
 
         if (exist.Any())
@@ -39,23 +44,27 @@ public class ReportRepository : IRepositoryHandler<Report>
 
         return Task.CompletedTask;
     }
+
     public Task GetUpdateHandlerAsync(ref Report entity)
     {
-        var dbEntity = context.Reports.FindAsync(entity.CompanyId, entity.Year, entity.Quarter).GetAwaiter().GetResult();
+        var ctxEntity = context.Reports.FindAsync(entity.CompanyId, entity.Year, entity.Quarter).GetAwaiter().GetResult();
 
-        dbEntity.SourceType = entity.SourceType;
-        dbEntity.Multiplier = entity.Multiplier;
-        dbEntity.Turnover = entity.Turnover;
-        dbEntity.LongTermDebt = entity.LongTermDebt;
-        dbEntity.Asset = entity.Asset;
-        dbEntity.CashFlow = entity.CashFlow;
-        dbEntity.Obligation = entity.Obligation;
-        dbEntity.ProfitGross = entity.ProfitGross;
-        dbEntity.ProfitNet = entity.ProfitNet;
-        dbEntity.Revenue = entity.Revenue;
-        dbEntity.ShareCapital = entity.ShareCapital;
+        if (ctxEntity is null)
+            throw new DataException($"{nameof(Report)} data not found. ");
 
-        entity = dbEntity;
+        ctxEntity.SourceType = entity.SourceType;
+        ctxEntity.Multiplier = entity.Multiplier;
+        ctxEntity.Turnover = entity.Turnover;
+        ctxEntity.LongTermDebt = entity.LongTermDebt;
+        ctxEntity.Asset = entity.Asset;
+        ctxEntity.CashFlow = entity.CashFlow;
+        ctxEntity.Obligation = entity.Obligation;
+        ctxEntity.ProfitGross = entity.ProfitGross;
+        ctxEntity.ProfitNet = entity.ProfitNet;
+        ctxEntity.Revenue = entity.Revenue;
+        ctxEntity.ShareCapital = entity.ShareCapital;
+
+        entity = ctxEntity;
 
         return Task.CompletedTask;
     }
@@ -88,13 +97,27 @@ public class ReportRepository : IRepositoryHandler<Report>
         return Task.CompletedTask;
     }
 
+    public async Task<IList<Report>> GetDeleteHandlerAsync(IReadOnlyCollection<Report> entities)
+    {
+        var comparer = new CompanyQuarterComparer<Report>();
+        var result = new List<Report>();
+
+        foreach (var group in entities.GroupBy(x => x.CompanyId))
+        {
+            var dbEntities = await context.Reports.Where(x => x.CompanyId.Equals(group.Key)).ToArrayAsync();
+            result.AddRange(dbEntities.Except(group, comparer));
+        }
+
+        return result;
+    }
+
     public Task SetPostProcessAsync(Report entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
-            , QueueEntities.Report
+            , QueueEntities.CompanyReport
             , QueueActions.Create
             , JsonSerializer.Serialize(new ReportIdentityDto
             {
@@ -105,15 +128,16 @@ public class ReportRepository : IRepositoryHandler<Report>
 
         return Task.CompletedTask;
     }
-
-    public Task SetPostProcessAsync(Report[] entities)
+    public Task SetPostProcessAsync(IReadOnlyCollection<Report> entities)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        if (entities.Any())
+        {
+            var report = entities.OrderBy(x => x.Year).ThenBy(x => x.Quarter).First();
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
-        foreach (var report in entities)
             publisher.PublishTask(
                 QueueNames.CompanyAnalyzer
-                , QueueEntities.Report
+                , QueueEntities.CompanyReport
                 , QueueActions.Create
                 , JsonSerializer.Serialize(new ReportIdentityDto
                 {
@@ -121,6 +145,7 @@ public class ReportRepository : IRepositoryHandler<Report>
                     Year = report.Year,
                     Quarter = report.Quarter
                 }));
+        }
 
         return Task.CompletedTask;
     }

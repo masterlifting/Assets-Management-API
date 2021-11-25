@@ -1,7 +1,6 @@
 ﻿using IM.Service.Common.Net.HttpServices;
 using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Http.Companies;
-using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.DataAccess.Repository;
@@ -127,6 +126,9 @@ public class ReportsDtoManager
                 .OrderBy(y => y.Year)
                 .ThenBy(y => y.Quarter)
                 .Last())
+            .OrderByDescending(x => x.Year)
+            .ThenByDescending(x => x.Quarter)
+            .ThenBy(x => x.Company)
             .ToArray();
 
         return new()
@@ -192,7 +194,7 @@ public class ReportsDtoManager
             Turnover = x.Last().Turnover
         });
 
-        var (error, result) = await reportRepository.CreateAsync(ctxEntities, new CompanyQuarterComparer<Report>(), "Reports");
+        var (error, result) = await reportRepository.CreateAsync(ctxEntities, "Reports");
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -231,7 +233,7 @@ public class ReportsDtoManager
         companyId = companyId.ToUpperInvariant().Trim();
         var message = $"report of '{companyId}' delete at {year} - {quarter}";
 
-        var (error, deletedEntity) = await reportRepository.DeleteAsync(message, companyId, year, quarter);
+        var (error, _) = await reportRepository.DeleteAsync(message, companyId, year, quarter);
 
         return error is not null
             ? new() { Errors = new[] { error } }

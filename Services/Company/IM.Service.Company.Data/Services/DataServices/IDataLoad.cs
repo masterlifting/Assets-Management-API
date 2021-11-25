@@ -13,7 +13,5 @@ namespace IM.Service.Company.Data.Services.DataServices
 
          Task<TEntity[]> DataGetAsync(string source, TDataConfig config);
          Task<TEntity[]> DataGetAsync(string source, IEnumerable<TDataConfig> config);
-
-         Task<TEntity[]> SaveAsync(IEnumerable<TEntity> entities);
     }
 }

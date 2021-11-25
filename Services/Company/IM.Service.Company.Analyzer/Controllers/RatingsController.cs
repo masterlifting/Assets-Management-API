@@ -93,13 +93,13 @@ namespace IM.Service.Company.Analyzer.Controllers
         {
             var price = await priceRepository.FindFirstAsync(x => x.CompanyId == companyId, x => x.Date);
             if (price is not null)
-                price.StatusId = (byte)StatusType.ToCalculate;
+                price.StatusId = (byte)StatusType.Ready;
             else
                 price = new()
                 {
                     CompanyId = companyId,
                     Date = new DateTime(2018, 01, 01),
-                    StatusId = (byte)StatusType.ToCalculate,
+                    StatusId = (byte)StatusType.Ready,
                 };
 
             return (await priceRepository.CreateUpdateAsync(price, $"price for '{companyId}'")).error;
@@ -108,14 +108,14 @@ namespace IM.Service.Company.Analyzer.Controllers
         {
             var report = await reportRepository.FindFirstAsync(x => x.CompanyId == companyId, x => x.Year, x => x.Quarter);
             if (report is not null)
-                report.StatusId = (byte)StatusType.ToCalculate;
+                report.StatusId = (byte)StatusType.Ready;
             else
                 report = new()
                 {
                     CompanyId = companyId,
                     Year = 2018,
                     Quarter = 1,
-                    StatusId = (byte)StatusType.ToCalculate,
+                    StatusId = (byte)StatusType.Ready,
                 };
 
             return (await reportRepository.CreateUpdateAsync(report, $"report for '{companyId}'")).error;

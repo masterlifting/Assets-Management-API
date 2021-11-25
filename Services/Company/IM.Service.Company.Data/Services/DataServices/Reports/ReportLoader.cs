@@ -16,7 +16,7 @@ using static IM.Service.Company.Data.Services.DataServices.Reports.ReportHelper;
 
 namespace IM.Service.Company.Data.Services.DataServices.Reports;
 
-public class ReportLoader : IDataLoad<Report, ReportDataConfigModel>
+public class ReportLoader : IDataLoad<Report, QuarterDataConfigModel>
 {
     private readonly ILogger<ReportLoader> logger;
     private readonly ReportParser parser;
@@ -57,7 +57,7 @@ public class ReportLoader : IDataLoad<Report, ReportDataConfigModel>
 
         if (!sources.Any())
         {
-            logger.LogWarning(LogEvents.Processing, "'{company}' sources was not found", company.Name);
+            logger.LogWarning(LogEvents.Processing, "Sources for {company}' was not found", company.Name);
             return result;
         }
 
@@ -68,7 +68,7 @@ public class ReportLoader : IDataLoad<Report, ReportDataConfigModel>
 
             var lastReport = await GetLastDatabaseDataAsync(company.Id);
 
-            ReportDataConfigModel config = lastReport is null
+            QuarterDataConfigModel config = lastReport is null
                 ? new()
                 {
                     CompanyId = company.Id,
@@ -86,15 +86,15 @@ public class ReportLoader : IDataLoad<Report, ReportDataConfigModel>
 
             var reports = await DataGetAsync(source.Name, config);
 
-            result = !result.Any()
-                ? await SaveAsync(reports)
-                : result.Concat(await SaveAsync(reports)).ToArray();
+            if (!reports.Any())
+                continue;
+
+            var (error, reportResult) = await reportRepository.CreateUpdateAsync(reports, new CompanyQuarterComparer<Report>(), $"Reports for {company.Name}");
+
+            if (error is null)
+                result = result.Concat(reportResult!).ToArray();
         }
 
-        if (result.Length <= 0)
-            return result;
-
-        logger.LogInformation(LogEvents.Processing, "reports count: {count} for '{company}' was loaded", result.Length, company.Name);
         return result;
     }
     public async Task<Report[]> DataSetAsync()
@@ -119,14 +119,14 @@ public class ReportLoader : IDataLoad<Report, ReportDataConfigModel>
 
             var config = source
                 .Select(x => lastReportsDictionary.ContainsKey(x.CompanyId)
-                    ? new ReportDataConfigModel
+                    ? new QuarterDataConfigModel
                     {
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
                         Year = lastReportsDictionary[x.CompanyId].Year,
                         Quarter = lastReportsDictionary[x.CompanyId].Quarter
                     }
-                    : new ReportDataConfigModel
+                    : new QuarterDataConfigModel
                     {
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
@@ -137,15 +137,19 @@ public class ReportLoader : IDataLoad<Report, ReportDataConfigModel>
 
             var reports = await DataGetAsync(source.Key, config);
 
-            result = !result.Any()
-                ? await SaveAsync(reports)
-                : result.Concat(await SaveAsync(reports)).ToArray();
+            if (!reports.Any())
+                continue;
+
+            var (error, reportResult) = await reportRepository.CreateUpdateAsync(reports, new CompanyQuarterComparer<Report>(), $"Reports for source: {source.Key}");
+
+            if (error is null)
+                result = result.Concat(reportResult!).ToArray();
         }
 
         if (result.Length <= 0)
             return result;
 
-        logger.LogInformation(LogEvents.Processing, "reports count of companies: {count} was processed.", result.GroupBy(x => x.CompanyId).Count());
+        logger.LogInformation(LogEvents.Processing, "Reports count of companies: {count} was processed.", result.GroupBy(x => x.CompanyId).Count());
         return result;
     }
 
@@ -169,22 +173,16 @@ public class ReportLoader : IDataLoad<Report, ReportDataConfigModel>
             .ToArray();
     }
 
-    public async Task<Report[]> DataGetAsync(string source, ReportDataConfigModel config) =>
+    public async Task<Report[]> DataGetAsync(string source, QuarterDataConfigModel config) =>
         IsMissingLastQuarter(logger, config)
             ? await parser.GetReportsAsync(source, config)
             : Array.Empty<Report>();
-    public async Task<Report[]> DataGetAsync(string source, IEnumerable<ReportDataConfigModel> config)
+    public async Task<Report[]> DataGetAsync(string source, IEnumerable<QuarterDataConfigModel> config)
     {
         var _data = config.ToArray();
 
         return !_data.Any()
             ? Array.Empty<Report>()
             : await parser.GetReportsAsync(source, _data.Where(x => IsMissingLastQuarter(logger, x)));
-    }
-
-    public async Task<Report[]> SaveAsync(IEnumerable<Report> entities)
-    {
-        var (error, result) = await reportRepository.CreateUpdateAsync(entities, new CompanyQuarterComparer<Report>(), "entities");
-        return error is not null ? Array.Empty<Report>() : result!;
     }
 }

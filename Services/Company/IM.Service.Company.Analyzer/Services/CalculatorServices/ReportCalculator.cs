@@ -31,17 +31,17 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             this.dataClient = dataClient;
         }
 
-        public async Task<bool> IsSetCalculatingStatusAsync(Report[] reports, string info)
+        public async Task<bool> IsSetProcessingStatusAsync(Report[] reports, string info)
         {
             foreach (var report in reports)
-                report.StatusId = (byte)StatusType.Calculating;
+                report.StatusId = (byte)StatusType.Processing;
 
             return (await repository.UpdateAsync(reports, $"report calculating status for '{info}'")).error is not null;
         }
         public async Task<bool> CalculateAsync()
         {
             var reports = await repository.GetSampleAsync(x =>
-                x.StatusId == (byte)StatusType.ToCalculate
+                x.StatusId == (byte)StatusType.Ready
                 || x.StatusId == (byte)StatusType.CalculatedPartial
                 || x.StatusId == (byte)StatusType.Error);
 
@@ -62,7 +62,7 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices
             var (targetYear, targetQuarter) = SubtractQuarter(orderedReports[0].Year, orderedReports[0].Quarter);
             (targetYear, targetQuarter) = SubtractQuarter(targetYear, targetQuarter);
 
-            if (!await IsSetCalculatingStatusAsync(orderedReports, companyId))
+            if (!await IsSetProcessingStatusAsync(orderedReports, companyId))
                 throw new DataException($"set report calculating status for '{companyId}' failed");
 
             try

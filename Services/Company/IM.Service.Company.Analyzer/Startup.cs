@@ -56,7 +56,7 @@ public class Startup
         services.AddScoped<IRepositoryHandler<Rating>, RatingRepository>();
         services.AddScoped(typeof(RepositorySet<>));
 
-        services.AddScoped<RabbitActionService>();
+        services.AddSingleton<RabbitActionService>();
         services.AddHostedService<RabbitBackgroundService>();
         services.AddHostedService<CalculatorBackgroundService>();
     }

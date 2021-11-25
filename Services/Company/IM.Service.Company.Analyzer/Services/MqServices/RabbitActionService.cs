@@ -1,21 +1,19 @@
-﻿using System.Collections.Generic;
-using IM.Service.Common.Net.RabbitServices;
-using IM.Service.Company.Analyzer.DataAccess.Entities;
-using IM.Service.Company.Analyzer.DataAccess.Repository;
+﻿using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Company.Analyzer.Services.MqServices.Implementations;
+
+using Microsoft.Extensions.DependencyInjection;
+
+using System.Collections.Generic;
 
 namespace IM.Service.Company.Analyzer.Services.MqServices;
 
 public class RabbitActionService : RabbitService
 {
-    public RabbitActionService(
-        RepositorySet<DataAccess.Entities.Company> companyRepository,
-        RepositorySet<Report> reportRepository,
-        RepositorySet<Price> priceRepository) : base(
+    public RabbitActionService(IServiceScopeFactory scopeFactory) : base(
         new Dictionary<QueueExchanges, IRabbitActionService>
         {
-            { QueueExchanges.Sync, new RabbitSyncService(companyRepository) },
-            { QueueExchanges.Transfer, new RabbitTransferService(reportRepository, priceRepository) }
+            { QueueExchanges.Sync, new RabbitSyncService(scopeFactory) },
+            { QueueExchanges.Transfer, new RabbitTransferService(scopeFactory) }
         })
     { }
 }

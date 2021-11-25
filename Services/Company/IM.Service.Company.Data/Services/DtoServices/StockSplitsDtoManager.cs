@@ -1,7 +1,6 @@
 ﻿using IM.Service.Common.Net.HttpServices;
 using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Http.Companies;
-using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.DataAccess.Repository;
@@ -96,6 +95,8 @@ public class StockSplitsDtoManager
             .Select(x => x
                 .OrderBy(y => y.Date)
                 .Last())
+            .OrderByDescending(x => x.Date)
+            .ThenBy(x => x.Company)
             .ToArray();
 
         return new()
@@ -142,7 +143,7 @@ public class StockSplitsDtoManager
             Value = x.Last().Value
         });
 
-        var (error, result) = await stockSplitRepository.CreateAsync(ctxEntities, new CompanyDateComparer<StockSplit>(), "Stock splits");
+        var (error, result) = await stockSplitRepository.CreateAsync(ctxEntities, "Stock splits");
 
         return error is not null
             ? new() { Errors = new[] { error } }

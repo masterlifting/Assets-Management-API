@@ -7,7 +7,7 @@ namespace IM.Service.Company.Data.Services.DataServices.Reports.Interfaces
 {
     public interface IReportParser
     {
-        Task<Report[]> GetReportsAsync(string source, ReportDataConfigModel config);
-        Task<Report[]> GetReportsAsync(string source, IEnumerable<ReportDataConfigModel> config);
+        Task<Report[]> GetReportsAsync(string source, QuarterDataConfigModel config);
+        Task<Report[]> GetReportsAsync(string source, IEnumerable<QuarterDataConfigModel> config);
     }
 }

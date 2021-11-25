@@ -1,4 +1,5 @@
-﻿using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+﻿using System.Collections.Generic;
+using IM.Service.Common.Net.Models.Dto.Mq.Companies;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Company.Data.DataAccess.Entities;
@@ -6,11 +7,11 @@ using IM.Service.Company.Data.Settings;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-
-using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using IM.Service.Company.Data.DataAccess.Comparators;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -26,10 +27,24 @@ public class StockVolumeRepository : IRepositoryHandler<StockVolume>
 
     public Task GetCreateHandlerAsync(ref StockVolume entity)
     {
+        var exist = GetExist(new[] { entity });
+
+        if (!exist.Any())
+            return Task.CompletedTask;
+
+        var comparer = new StockVolumeComparer();
+        var checkedResult = new[] { entity }.Except(exist, comparer);
+
+        if (checkedResult.Any())
+            throw new ConstraintException($"Sotock volume with value: {entity.Value} is already. ");
+
         return Task.CompletedTask;
     }
-    public Task GetCreateHandlerAsync(ref StockVolume[] entities, IEqualityComparer<StockVolume> comparer)
+    public Task GetCreateHandlerAsync(ref StockVolume[] entities)
     {
+        var comparer = new StockVolumeComparer();
+        entities = entities.Distinct(comparer).ToArray();
+
         var exist = GetExist(entities);
 
         if (exist.Any())
@@ -37,14 +52,23 @@ public class StockVolumeRepository : IRepositoryHandler<StockVolume>
 
         return Task.CompletedTask;
     }
-    
+
     public Task GetUpdateHandlerAsync(ref StockVolume entity)
     {
-        var dbEntity = context.StockVolumes.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
+        var ctxEntity = context.StockVolumes.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
 
-        dbEntity.Value = entity.Value;
+        if (ctxEntity is null)
+            throw new DataException($"{nameof(StockVolume)} data not found. ");
 
-        entity = dbEntity;
+        var exist = GetExist(new[] { entity }).ToArrayAsync().GetAwaiter().GetResult();
+        var comparer = new StockVolumeComparer();
+        var checkedResult = exist.Except(new[] { entity }, comparer).ToArray();
+
+        if (checkedResult.Length > 1)
+            throw new ConstraintException($"Sotock volume with value: {entity.Value} is already. ");
+
+        ctxEntity.Value = entity.Value;
+        entity = ctxEntity;
 
         return Task.CompletedTask;
     }
@@ -65,6 +89,20 @@ public class StockVolumeRepository : IRepositoryHandler<StockVolume>
         return Task.CompletedTask;
     }
 
+    public async Task<IList<StockVolume>> GetDeleteHandlerAsync(IReadOnlyCollection<StockVolume> entities)
+    {
+        var comparer = new StockVolumeComparer();
+        var result = new List<StockVolume>();
+
+        foreach (var group in entities.GroupBy(x => x.CompanyId))
+        {
+            var dbEntities = await context.StockVolumes.Where(x => x.CompanyId.Equals(group.Key)).ToArrayAsync();
+            result.AddRange(dbEntities.Except(group, comparer));
+        }
+
+        return result;
+    }
+
     public Task SetPostProcessAsync(StockVolume entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
@@ -81,12 +119,13 @@ public class StockVolumeRepository : IRepositoryHandler<StockVolume>
 
         return Task.CompletedTask;
     }
-
-    public Task SetPostProcessAsync(StockVolume[] entities)
+    public Task SetPostProcessAsync(IReadOnlyCollection<StockVolume> entities)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        if (entities.Any())
+        {
+            var volume = entities.OrderBy(x => x.Date).First();
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
-        foreach (var volume in entities)
             publisher.PublishTask(
                 QueueNames.CompanyAnalyzer
                 , QueueEntities.Price
@@ -96,20 +135,18 @@ public class StockVolumeRepository : IRepositoryHandler<StockVolume>
                     CompanyId = volume.CompanyId,
                     Date = volume.Date
                 }));
+        }
 
         return Task.CompletedTask;
     }
 
     private IQueryable<StockVolume> GetExist(StockVolume[] entities)
     {
-        var dateMin = entities.Min(x => x.Date);
-        var dateMax = entities.Max(x => x.Date);
-
         var existData = entities
             .GroupBy(x => x.CompanyId)
             .Select(x => x.Key)
             .ToArray();
 
-        return context.StockVolumes.Where(x => existData.Contains(x.CompanyId) && x.Date >= dateMin && x.Date <= dateMax);
+        return context.StockVolumes.Where(x => existData.Contains(x.CompanyId));
     }
 }

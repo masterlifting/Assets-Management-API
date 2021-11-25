@@ -1,16 +1,18 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using System.Collections.Generic;
+using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.Settings;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.Models.Dto.Mq.Companies;
-using IM.Service.Common.Net.RabbitServices;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -29,8 +31,11 @@ public class PriceRepository : IRepositoryHandler<Price>
     {
         return Task.CompletedTask;
     }
-    public Task GetCreateHandlerAsync(ref Price[] entities, IEqualityComparer<Price> comparer)
+    public Task GetCreateHandlerAsync(ref Price[] entities)
     {
+        var comparer = new CompanyDateComparer<Price>();
+        entities = entities.Distinct(comparer).ToArray();
+        
         var exist = GetExist(entities);
 
         if (exist.Any())
@@ -41,11 +46,14 @@ public class PriceRepository : IRepositoryHandler<Price>
 
     public Task GetUpdateHandlerAsync(ref Price entity)
     {
-        var dbEntity = context.Prices.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
+        var ctxEntity = context.Prices.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
 
-        dbEntity.Value = entity.Value;
+        if (ctxEntity is null)
+            throw new DataException($"{nameof(Price)} data not found. ");
 
-        entity = dbEntity;
+        ctxEntity.Value = entity.Value;
+
+        entity = ctxEntity;
 
         return Task.CompletedTask;
     }
@@ -66,6 +74,20 @@ public class PriceRepository : IRepositoryHandler<Price>
         return Task.CompletedTask;
     }
 
+    public async Task<IList<Price>> GetDeleteHandlerAsync(IReadOnlyCollection<Price> entities)
+    {
+        var comparer = new CompanyDateComparer<Price>();
+        var result = new List<Price>();
+
+        foreach (var group in entities.GroupBy(x => x.CompanyId))
+        {
+            var dbEntities = await context.Prices.Where(x => x.CompanyId.Equals(group.Key)).ToArrayAsync();
+            result.AddRange(dbEntities.Except(group, comparer));
+        }
+
+        return result;
+    }
+
     public Task SetPostProcessAsync(Price entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
@@ -82,12 +104,13 @@ public class PriceRepository : IRepositoryHandler<Price>
 
         return Task.CompletedTask;
     }
-
-    public Task SetPostProcessAsync(Price[] entities)
+    public Task SetPostProcessAsync(IReadOnlyCollection<Price> entities)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
-        
-        foreach (var price in entities)
+        if (entities.Any())
+        {
+            var price = entities.OrderBy(x => x.Date).First();
+            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+
             publisher.PublishTask(
                 QueueNames.CompanyAnalyzer
                 , QueueEntities.Price
@@ -97,6 +120,7 @@ public class PriceRepository : IRepositoryHandler<Price>
                     CompanyId = price.CompanyId,
                     Date = price.Date
                 }));
+        }
 
         return Task.CompletedTask;
     }

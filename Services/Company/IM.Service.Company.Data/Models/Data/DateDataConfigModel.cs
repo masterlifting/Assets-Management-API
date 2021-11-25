@@ -2,7 +2,7 @@
 
 namespace IM.Service.Company.Data.Models.Data
 {
-    public record PriceDataConfigModel
+    public record DateDataConfigModel
     {
         public string CompanyId { get; init; } = null!;
         public DateTime Date { get; init; }

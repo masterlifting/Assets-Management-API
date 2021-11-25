@@ -8,42 +8,41 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace IM.Service.Company.Data.Services.DataServices.Prices.Implementations
+namespace IM.Service.Company.Data.Services.DataServices.Prices.Implementations;
+
+public class TdameritradeParser : IPriceParser
 {
-    public class TdameritradeParser : IPriceParser
+    private readonly TdAmeritradeClient client;
+    public TdameritradeParser(TdAmeritradeClient client) => this.client = client;
+
+    public async Task<Price[]> GetHistoryPricesAsync(string source, DateDataConfigModel config)
     {
-        private readonly TdAmeritradeClient client;
-        public TdameritradeParser(TdAmeritradeClient client) => this.client = client;
+        var prices = await client.GetHistoryPricesAsync(config.CompanyId);
+        return PriceMapper.Map(source, prices);
+    }
+    public async Task<Price[]> GetHistoryPricesAsync(string source, IEnumerable<DateDataConfigModel> config)
+    {
+        var dataArray = config.ToArray();
+        var result = new List<Price>(dataArray.Length);
 
-        public async Task<Price[]> GetHistoryPricesAsync(string source, PriceDataConfigModel config)
+        foreach (var item in dataArray)
         {
-            var prices = await client.GetHistoryPricesAsync(config.CompanyId);
-            return PriceMapper.Map(source, prices);
-        }
-        public async Task<Price[]> GetHistoryPricesAsync(string source, IEnumerable<PriceDataConfigModel> config)
-        {
-            var dataArray = config.ToArray();
-            var result = new List<Price>(dataArray.Length);
-
-            foreach (var item in dataArray)
-            {
-                var prices = await client.GetHistoryPricesAsync(item.CompanyId);
-                result.AddRange(PriceMapper.Map(source, prices));
-                await Task.Delay(200);
-            }
-
-            return result.ToArray();
+            var prices = await client.GetHistoryPricesAsync(item.CompanyId);
+            result.AddRange(PriceMapper.Map(source, prices));
+            await Task.Delay(200);
         }
 
-        public async Task<Price[]> GetLastPricesAsync(string source, PriceDataConfigModel config)
-        {
-            var prices = await client.GetLastPricesAsync(new[] { config.CompanyId });
-            return PriceMapper.Map(source, prices);
-        }
-        public async Task<Price[]> GetLastPricesAsync(string source, IEnumerable<PriceDataConfigModel> config)
-        {
-            var prices = await client.GetLastPricesAsync(config.Select(x => x.CompanyId));
-            return PriceMapper.Map(source, prices);
-        }
+        return result.ToArray();
+    }
+
+    public async Task<Price[]> GetLastPricesAsync(string source, DateDataConfigModel config)
+    {
+        var prices = await client.GetLastPricesAsync(new[] { config.CompanyId });
+        return PriceMapper.Map(source, prices);
+    }
+    public async Task<Price[]> GetLastPricesAsync(string source, IEnumerable<DateDataConfigModel> config)
+    {
+        var prices = await client.GetLastPricesAsync(config.Select(x => x.CompanyId));
+        return PriceMapper.Map(source, prices);
     }
 }

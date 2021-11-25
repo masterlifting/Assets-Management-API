@@ -22,20 +22,20 @@ public class PriceParser
     
     public bool IsSource(string source) => parser.ContainsKey(source);
 
-    public async Task<Price[]> LoadLastPricesAsync(string source, PriceDataConfigModel config) =>
+    public async Task<Price[]> LoadLastPricesAsync(string source, DateDataConfigModel config) =>
         parser.ContainsKey(source)
             ? await parser[source].GetLastPricesAsync(source, config)
             : Array.Empty<Price>();
-    public async Task<Price[]> LoadLastPricesAsync(string source, IEnumerable<PriceDataConfigModel> config) =>
+    public async Task<Price[]> LoadLastPricesAsync(string source, IEnumerable<DateDataConfigModel> config) =>
         parser.ContainsKey(source)
             ? await parser[source].GetLastPricesAsync(source, config)
             : Array.Empty<Price>();
 
-    public async Task<Price[]> LoadHistoryPricesAsync(string source, PriceDataConfigModel config) =>
+    public async Task<Price[]> LoadHistoryPricesAsync(string source, DateDataConfigModel config) =>
         parser.ContainsKey(source)
             ? await parser[source].GetHistoryPricesAsync(source, config)
             : Array.Empty<Price>();
-    public async Task<Price[]> LoadHistoryPricesAsync(string source, IEnumerable<PriceDataConfigModel> config) =>
+    public async Task<Price[]> LoadHistoryPricesAsync(string source, IEnumerable<DateDataConfigModel> config) =>
         parser.ContainsKey(source)
             ? await parser[source].GetHistoryPricesAsync(source, config)
             : Array.Empty<Price>();

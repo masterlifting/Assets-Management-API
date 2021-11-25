@@ -1,6 +1,6 @@
 ﻿using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Http.Companies;
-
+using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.Services.DataServices.Prices;
 using IM.Service.Company.Data.Services.DtoServices;
@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.RepositoryService.Filters;
+
 using static IM.Service.Common.Net.CommonEnums;
 
 namespace IM.Service.Company.Data.Controllers;
@@ -86,6 +86,6 @@ public class PricesController : ControllerBase
     public async Task<string> Load()
     {
         var prices = await loader.DataSetAsync();
-        return $"prices count: {prices.GroupBy(x => x.CompanyId).Count()} is loaded";
+        return $"Loaded prices count: {prices.GroupBy(x => x.CompanyId).Count()} is loaded";
     }
 }

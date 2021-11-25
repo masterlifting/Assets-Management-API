@@ -15,12 +15,12 @@ namespace IM.Service.Company.Data.Services.DataServices.Prices.Implementations
         private readonly MoexClient client;
         public MoexParser(MoexClient client) => this.client = client;
 
-        public async Task<Price[]> GetHistoryPricesAsync(string source, PriceDataConfigModel config)
+        public async Task<Price[]> GetHistoryPricesAsync(string source, DateDataConfigModel config)
         {
             var prices = await client.GetHistoryPricesAsync(config.CompanyId, config.Date);
             return PriceMapper.Map(source, prices);
         }
-        public async Task<Price[]> GetHistoryPricesAsync(string source, IEnumerable<PriceDataConfigModel> config)
+        public async Task<Price[]> GetHistoryPricesAsync(string source, IEnumerable<DateDataConfigModel> config)
         {
             var dataArray = config.ToArray();
             var result = new List<Price>(dataArray.Length);
@@ -35,12 +35,12 @@ namespace IM.Service.Company.Data.Services.DataServices.Prices.Implementations
             return result.ToArray();
         }
 
-        public async Task<Price[]> GetLastPricesAsync(string source, PriceDataConfigModel config)
+        public async Task<Price[]> GetLastPricesAsync(string source, DateDataConfigModel config)
         {
             var prices = await client.GetLastPricesAsync();
             return PriceMapper.Map(source, prices, new[] { config.CompanyId });
         }
-        public async Task<Price[]> GetLastPricesAsync(string source, IEnumerable<PriceDataConfigModel> config)
+        public async Task<Price[]> GetLastPricesAsync(string source, IEnumerable<DateDataConfigModel> config)
         {
             var prices = await client.GetLastPricesAsync();
             return PriceMapper.Map(source, prices, config.Select(x => x.CompanyId));
