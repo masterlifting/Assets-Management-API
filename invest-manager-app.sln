@@ -1,11 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31424.327
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Company", "Company", "{BC918CFB-A534-49B0-8822-ED1B0D7CF875}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CompanyServices", "CompanyServices", "{BC918CFB-A534-49B0-8822-ED1B0D7CF875}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Broker", "Broker", "{B7434BE1-C7A1-4D6E-B1E2-CD42DC369BE1}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BrokerServices", "BrokerServices", "{B7434BE1-C7A1-4D6E-B1E2-CD42DC369BE1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IM.Service.Identity", "Services\IM.Service.Identity\IM.Service.Identity.csproj", "{D53EB50B-DFBA-46B5-87C1-5F8170FDB693}"
 EndProject

@@ -7,7 +7,7 @@ using System.Data;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.Data.Settings;
@@ -94,7 +94,7 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
             QueueNames.CompanyAnalyzer
             , QueueEntities.Price
             , QueueActions.Create
-            , JsonSerializer.Serialize(new PriceIdentityDto
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
                 Date = entity.Date
@@ -113,7 +113,7 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
                 QueueNames.CompanyAnalyzer
                 , QueueEntities.Price
                 , QueueActions.Create
-                , JsonSerializer.Serialize(new PriceIdentityDto
+                , JsonSerializer.Serialize(new CompanyDateIdentityDto
                 {
                     CompanyId = split.CompanyId,
                     Date = split.Date

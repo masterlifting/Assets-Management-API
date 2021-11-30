@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Common.Net.RepositoryService.Comparators;
@@ -96,7 +96,17 @@ public class PriceRepository : IRepositoryHandler<Price>
             QueueNames.CompanyAnalyzer
             , QueueEntities.Price
             , QueueActions.Create
-            , JsonSerializer.Serialize(new PriceIdentityDto
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
+            {
+                CompanyId = entity.CompanyId,
+                Date = entity.Date
+            }));
+        
+        publisher.PublishTask(
+            QueueNames.CompanyAnalyzer
+            , QueueEntities.Coefficient
+            , QueueActions.Create
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
                 Date = entity.Date
@@ -106,21 +116,32 @@ public class PriceRepository : IRepositoryHandler<Price>
     }
     public Task SetPostProcessAsync(IReadOnlyCollection<Price> entities)
     {
-        if (entities.Any())
-        {
-            var price = entities.OrderBy(x => x.Date).First();
-            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        if (!entities.Any()) 
+            return Task.CompletedTask;
+        
+        var price = entities.OrderBy(x => x.Date).First();
+        
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
-            publisher.PublishTask(
-                QueueNames.CompanyAnalyzer
-                , QueueEntities.Price
-                , QueueActions.Create
-                , JsonSerializer.Serialize(new PriceIdentityDto
-                {
-                    CompanyId = price.CompanyId,
-                    Date = price.Date
-                }));
-        }
+        publisher.PublishTask(
+            QueueNames.CompanyAnalyzer
+            , QueueEntities.Price
+            , QueueActions.Create
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
+            {
+                CompanyId = price.CompanyId,
+                Date = price.Date
+            }));
+
+        publisher.PublishTask(
+            QueueNames.CompanyAnalyzer
+            , QueueEntities.Coefficient
+            , QueueActions.Create
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
+            {
+                CompanyId = price.CompanyId,
+                Date = price.Date
+            }));
 
         return Task.CompletedTask;
     }

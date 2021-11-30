@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 
 namespace DataSetter.Models.Dto
 {

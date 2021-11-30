@@ -2,8 +2,7 @@
 
 namespace IM.Service.Company.Data.DataAccess.Entities;
 
-// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
-public class Company : Common.Net.Models.Entity.Companies.Company
+public class Company : Common.Net.Models.Entity.Company
 {
     public virtual IEnumerable<CompanySourceType>? CompanySourceTypes { get; set; }
 

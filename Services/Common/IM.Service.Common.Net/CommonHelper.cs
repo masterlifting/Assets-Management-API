@@ -1,8 +1,10 @@
 ﻿using System;
 
-namespace IM.Service.Common.Net
+namespace IM.Service.Common.Net;
+
+public static class CommonHelper
 {
-    public static class CommonHelper
+    public static class QarterHelper
     {
         public static byte GetQuarter(int month) => month switch
         {
@@ -12,6 +14,7 @@ namespace IM.Service.Common.Net
             <= 12 and >= 10 => 4,
             _ => throw new NotSupportedException()
         };
+
         public static byte GetLastMonth(byte quarter) => quarter switch
         {
             1 => 3,
@@ -20,10 +23,18 @@ namespace IM.Service.Common.Net
             4 => 12,
             _ => throw new NotSupportedException()
         };
-        public static (int year, int month, int day) GetQuarterFirstDate(int year, byte quarter) => (year, GetFirstMonth(quarter), 1);
+        public static byte GetFirstMonth(byte quarter) => quarter switch
+        {
+            1 => 1,
+            2 => 4,
+            3 => 7,
+            4 => 10,
+            _ => throw new NotSupportedException()
+        };
+
         public static (int year, byte quarter) SubtractQuarter(DateTime date)
         {
-            var (year, quarter) = GetYearAndQuarter(date);
+            var (year, quarter) = (date.Year, GetQuarter(date.Month));
 
             if (quarter == 1)
             {
@@ -47,15 +58,5 @@ namespace IM.Service.Common.Net
 
             return (year, quarter);
         }
-
-        private static byte GetFirstMonth(byte quarter) => quarter switch
-        {
-            1 => 1,
-            2 => 4,
-            3 => 7,
-            4 => 10,
-            _ => throw new NotSupportedException()
-        };
-        private static (int year, byte quarter) GetYearAndQuarter(DateTime date) => (date.Year, GetQuarter(date.Month));
     }
 }

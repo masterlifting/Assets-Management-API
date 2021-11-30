@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
-using IM.Service.Common.Net.Models.Entity.Companies.Interfaces;
+using IM.Service.Common.Net.Models.Entity.CompanyServices.Interfaces;
 using static IM.Service.Common.Net.CommonEnums;
 
 

@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 
 namespace IM.Service.Company.Models.Dto
 {

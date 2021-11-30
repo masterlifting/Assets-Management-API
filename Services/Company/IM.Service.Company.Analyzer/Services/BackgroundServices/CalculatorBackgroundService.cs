@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 
 using System;
 using System.Threading;
@@ -13,46 +12,34 @@ namespace IM.Service.Company.Analyzer.Services.BackgroundServices;
 public class CalculatorBackgroundService : BackgroundService
 {
     private readonly ILogger<CalculatorBackgroundService> logger;
-    private readonly IServiceScopeFactory scopeFactory;
+    private readonly AnalyzerService service;
     private bool start = true;
-    public CalculatorBackgroundService(ILogger<CalculatorBackgroundService> logger, IServiceScopeFactory scopeFactory)
+    public CalculatorBackgroundService(ILogger<CalculatorBackgroundService> logger, AnalyzerService service)
     {
         this.logger = logger;
-        this.scopeFactory = scopeFactory;
+        this.service = service;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var delay = new TimeSpan(0, 1, 0);
+        //var delay = new TimeSpan(0, 0, 20);
 
-        while (start)
+        //while (start)
+        //{
+        //    start = false;
+        //    await Task.Delay(delay, stoppingToken);
+
+        try
         {
-            start = false;
-            await Task.Delay(delay, stoppingToken);
-
-            var serviceProvider = scopeFactory.CreateScope().ServiceProvider;
-            var priceCalculator = serviceProvider.GetRequiredService<PriceCalculator>();
-            var reportCalculator = serviceProvider.GetRequiredService<ReportCalculator>();
-            var ratingCalculator = serviceProvider.GetRequiredService<RatingCalculator>();
-
-            try
-            {
-                if (await priceCalculator.CalculateAsync())
-                    if (await reportCalculator.CalculateAsync())
-                        await ratingCalculator.CalculateAsync();
-                    else
-                        await ratingCalculator.CalculateAsync();
-                else if (await reportCalculator.CalculateAsync())
-                    await ratingCalculator.CalculateAsync();
-            }
-            catch (Exception exception)
-            {
-                logger.LogError(LogEvents.Processing, "Analyzer error: {exception}", exception.InnerException?.Message ?? exception.Message);
-            }
-
-            start = true;
+            await service.AnalyzeAsync();
         }
-        // ReSharper disable once FunctionNeverReturns
+        catch (Exception exception)
+        {
+            logger.LogError(LogEvents.Processing, "Analyzer error: {exception}", exception.InnerException?.Message ?? exception.Message);
+        }
+
+        //    start = true;
+        //}
     }
     public override Task StopAsync(CancellationToken stoppingToken)
     {

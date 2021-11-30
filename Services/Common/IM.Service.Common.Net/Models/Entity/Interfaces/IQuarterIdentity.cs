@@ -1,8 +1,7 @@
-﻿namespace IM.Service.Common.Net.Models.Entity.Interfaces
+﻿namespace IM.Service.Common.Net.Models.Entity.Interfaces;
+
+public interface IQuarterIdentity
 {
-    public interface IQuarterIdentity
-    {
-        int Year { get; init; }
-        byte Quarter { get; init; }
-    }
+    int Year { get; init; }
+    byte Quarter { get; init; }
 }

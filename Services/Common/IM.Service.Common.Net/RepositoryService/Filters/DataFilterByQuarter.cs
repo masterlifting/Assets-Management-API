@@ -1,6 +1,8 @@
-﻿using System;
+﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
+
+using System;
 using System.Linq.Expressions;
-using IM.Service.Common.Net.Models.Entity.Interfaces;
+
 using static IM.Service.Common.Net.CommonEnums;
 using static IM.Service.Common.Net.RepositoryService.Filters.DataFilterSetter;
 

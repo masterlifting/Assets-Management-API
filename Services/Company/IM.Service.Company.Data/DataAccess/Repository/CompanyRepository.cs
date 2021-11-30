@@ -1,19 +1,32 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using System;
+using IM.Service.Common.Net.RepositoryService;
 
 using Microsoft.EntityFrameworkCore;
 
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
+using IM.Service.Common.Net;
+using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
+using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService.Comparators;
+using IM.Service.Company.Data.Settings;
+using Microsoft.Extensions.Options;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
 public class CompanyRepository : IRepositoryHandler<Entities.Company>
 {
     private readonly DatabaseContext context;
-    public CompanyRepository(DatabaseContext context) => this.context = context;
+    private readonly string rabbitConnectionString;
+
+    public CompanyRepository(IOptions<ServiceSettings> options, DatabaseContext context)
+    {
+        this.context = context;
+        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+    }
 
     public Task GetCreateHandlerAsync(ref Entities.Company entity)
     {
@@ -23,7 +36,7 @@ public class CompanyRepository : IRepositoryHandler<Entities.Company>
     {
         var comparer = new CompanyComparer<Entities.Company>();
         entities = entities.Distinct(comparer).ToArray();
-        
+
         var exist = GetExist(entities);
 
         if (exist.Any())
@@ -43,6 +56,8 @@ public class CompanyRepository : IRepositoryHandler<Entities.Company>
         ctxEntity.CompanySourceTypes = entity.CompanySourceTypes;
 
         entity = ctxEntity;
+
+        SetTestQueueAsync(entity.Id).GetAwaiter().GetResult();
 
         return Task.CompletedTask;
     }
@@ -84,5 +99,82 @@ public class CompanyRepository : IRepositoryHandler<Entities.Company>
             .ToArray();
 
         return context.Companies.Where(x => existData.Contains(x.Name.ToLowerInvariant()));
+    }
+
+    private async Task SetTestQueueAsync(string companyId)
+    {
+        var price = await context.Prices.Where(x => x.CompanyId == companyId).OrderBy(x => x.Date).FirstOrDefaultAsync();
+        var report = await context.Reports.Where(x => x.CompanyId == companyId).OrderBy(x => x.Year).ThenBy(x => x.Quarter).FirstOrDefaultAsync();
+        var volume = await context.StockVolumes.Where(x => x.CompanyId == companyId).OrderBy(x => x.Date).FirstOrDefaultAsync();
+        var split = await context.StockSplits.Where(x => x.CompanyId == companyId).OrderBy(x => x.Date).FirstOrDefaultAsync();
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+
+        if (price is not null)
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Price
+                , QueueActions.Create
+                , JsonSerializer.Serialize(new CompanyDateIdentityDto
+                {
+                    CompanyId = price.CompanyId,
+                    Date = price.Date
+                }));
+
+        if (price is not null)
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Coefficient
+                , QueueActions.Create
+                , JsonSerializer.Serialize(new CompanyDateIdentityDto
+                {
+                    CompanyId = price.CompanyId,
+                    Date = price.Date
+                }));
+
+        if (report is not null)
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.CompanyReport
+                , QueueActions.Create
+                , JsonSerializer.Serialize(new CompanyDateIdentityDto
+                {
+                    CompanyId = report.CompanyId,
+                    Date = new DateTime(report.Year, CommonHelper.QarterHelper.GetFirstMonth(report.Quarter), 1)
+                }));
+
+        if (report is not null)
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Coefficient
+                , QueueActions.Create
+                , JsonSerializer.Serialize(new CompanyDateIdentityDto
+                {
+                    CompanyId = report.CompanyId,
+                    Date = new DateTime(report.Year, CommonHelper.QarterHelper.GetFirstMonth(report.Quarter), 1)
+                }));
+
+
+        if (split is not null)
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Price
+                , QueueActions.Create
+                , JsonSerializer.Serialize(new CompanyDateIdentityDto
+                {
+                    CompanyId = split.CompanyId,
+                    Date = split.Date
+                }));
+
+        if (volume is not null)
+            publisher.PublishTask(
+                QueueNames.CompanyAnalyzer
+                , QueueEntities.Coefficient
+                , QueueActions.Create
+                , JsonSerializer.Serialize(new CompanyDateIdentityDto
+                {
+                    CompanyId = volume.CompanyId,
+                    Date = volume.Date
+                }));
     }
 }

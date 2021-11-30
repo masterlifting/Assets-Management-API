@@ -1,11 +1,10 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using IM.Service.Common.Net.Models.Entity;
 
-using IM.Service.Common.Net.Models.Entity;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace IM.Service.Company.DataAccess.Entities;
 
-// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
 public class Industry : CommonEntityType
 {
     public virtual IEnumerable<Company>? Companies { get; set; }

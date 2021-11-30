@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using IM.Service.Common.Net.Models.Entity.Companies.Interfaces;
+using IM.Service.Common.Net.Models.Entity.CompanyServices.Interfaces;
 
 namespace IM.Service.Common.Net.RepositoryService.Comparators
 {

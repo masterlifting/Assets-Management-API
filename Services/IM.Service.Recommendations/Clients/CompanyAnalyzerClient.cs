@@ -4,11 +4,10 @@ using Microsoft.Extensions.Options;
 using System.Net.Http;
 using IM.Service.Recommendations.Settings;
 
-namespace IM.Service.Recommendations.Clients
+namespace IM.Service.Recommendations.Clients;
+
+public class CompanyAnalyzerClient : RestClient
 {
-    public class CompanyAnalyzerClient : RestClient
-    {
-        public CompanyAnalyzerClient(HttpClient httpClient, IOptions<ServiceSettings> options)
-            : base(httpClient, options.Value.ClientSettings.CompanyAnalyzer) { }
-    }
+    public CompanyAnalyzerClient(HttpClient httpClient, IOptions<ServiceSettings> options)
+        : base(httpClient, options.Value.ClientSettings.CompanyAnalyzer) { }
 }

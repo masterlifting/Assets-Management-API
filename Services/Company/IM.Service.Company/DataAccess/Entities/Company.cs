@@ -2,8 +2,7 @@
 
 namespace IM.Service.Company.DataAccess.Entities;
 
-// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
-public class Company : Common.Net.Models.Entity.Companies.Company
+public class Company : Common.Net.Models.Entity.Company
 {
     [Range(1, byte.MaxValue)]
     public byte IndustryId { get; set; }

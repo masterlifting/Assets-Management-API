@@ -1,5 +1,5 @@
-﻿using IM.Service.Common.Net.Models.Entity.Companies;
-using IM.Service.Common.Net.Models.Entity.Companies.Interfaces;
+﻿using IM.Service.Common.Net.Models.Entity.CompanyServices;
+using IM.Service.Common.Net.Models.Entity.CompanyServices.Interfaces;
 
 namespace IM.Service.Company.Data.DataAccess.Entities;
 

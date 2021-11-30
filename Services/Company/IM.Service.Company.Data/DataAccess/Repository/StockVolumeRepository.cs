@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Company.Data.DataAccess.Entities;
@@ -109,9 +109,9 @@ public class StockVolumeRepository : IRepositoryHandler<StockVolume>
 
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
-            , QueueEntities.Price
+            , QueueEntities.Coefficient
             , QueueActions.Create
-            , JsonSerializer.Serialize(new PriceIdentityDto
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
                 Date = entity.Date
@@ -128,9 +128,9 @@ public class StockVolumeRepository : IRepositoryHandler<StockVolume>
 
             publisher.PublishTask(
                 QueueNames.CompanyAnalyzer
-                , QueueEntities.Price
+                , QueueEntities.Coefficient
                 , QueueActions.Create
-                , JsonSerializer.Serialize(new PriceIdentityDto
+                , JsonSerializer.Serialize(new CompanyDateIdentityDto
                 {
                     CompanyId = volume.CompanyId,
                     Date = volume.Date

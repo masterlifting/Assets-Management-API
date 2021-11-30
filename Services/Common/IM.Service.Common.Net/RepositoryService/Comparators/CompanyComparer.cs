@@ -1,4 +1,5 @@
-﻿using IM.Service.Common.Net.Models.Entity.Companies;
+﻿
+using IM.Service.Common.Net.Models.Entity;
 
 using System;
 using System.Collections.Generic;

@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Company.Data.DataAccess;

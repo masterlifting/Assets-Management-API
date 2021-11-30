@@ -1,15 +1,14 @@
 ﻿using IM.Service.Common.Net.HttpServices;
+using IM.Service.Company.Settings;
 
 using Microsoft.Extensions.Options;
 
 using System.Net.Http;
-using IM.Service.Company.Settings;
 
-namespace IM.Service.Company.Clients
+namespace IM.Service.Company.Clients;
+
+public class CompanyAnalyzerClient : RestClient
 {
-    public class CompanyAnalyzerClient : RestClient
-    {
-        public CompanyAnalyzerClient(HttpClient httpClient, IOptions<ServiceSettings> options)
-            : base(httpClient, options.Value.ClientSettings.CompanyAnalyzer) { }
-    }
+    public CompanyAnalyzerClient(HttpClient httpClient, IOptions<ServiceSettings> options)
+        : base(httpClient, options.Value.ClientSettings.CompanyAnalyzer) { }
 }

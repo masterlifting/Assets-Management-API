@@ -86,7 +86,7 @@ internal class InvestingParserHandler
             {
                 CompanyId = companyId,
                 Year = financialPage.Dates[i].Year,
-                Quarter = CommonHelper.GetQuarter(financialPage.Dates[i].Month),
+                Quarter = CommonHelper.QarterHelper.GetQuarter(financialPage.Dates[i].Month),
                 SourceType = sourceName,
                 Multiplier = 1_000_000,
 

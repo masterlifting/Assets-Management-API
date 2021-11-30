@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
-using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+﻿using System;
+using System.Collections.Generic;
+using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Common.Net.RepositoryService.Comparators;
@@ -13,6 +14,7 @@ using System.Data;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using IM.Service.Common.Net;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -119,33 +121,51 @@ public class ReportRepository : IRepositoryHandler<Report>
             QueueNames.CompanyAnalyzer
             , QueueEntities.CompanyReport
             , QueueActions.Create
-            , JsonSerializer.Serialize(new ReportIdentityDto
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
-                Year = entity.Year,
-                Quarter = entity.Quarter
+                Date = new DateTime(entity.Year, CommonHelper.QarterHelper.GetFirstMonth(entity.Quarter),1)
+            }));
+
+        publisher.PublishTask(
+            QueueNames.CompanyAnalyzer
+            , QueueEntities.Coefficient
+            , QueueActions.Create
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
+            {
+                CompanyId = entity.CompanyId,
+                Date = new DateTime(entity.Year, CommonHelper.QarterHelper.GetFirstMonth(entity.Quarter), 1)
             }));
 
         return Task.CompletedTask;
     }
     public Task SetPostProcessAsync(IReadOnlyCollection<Report> entities)
     {
-        if (entities.Any())
-        {
-            var report = entities.OrderBy(x => x.Year).ThenBy(x => x.Quarter).First();
-            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        if (!entities.Any()) 
+            return Task.CompletedTask;
+        
+        var report = entities.OrderBy(x => x.Year).ThenBy(x => x.Quarter).First();
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
-            publisher.PublishTask(
-                QueueNames.CompanyAnalyzer
-                , QueueEntities.CompanyReport
-                , QueueActions.Create
-                , JsonSerializer.Serialize(new ReportIdentityDto
-                {
-                    CompanyId = report.CompanyId,
-                    Year = report.Year,
-                    Quarter = report.Quarter
-                }));
-        }
+        publisher.PublishTask(
+            QueueNames.CompanyAnalyzer
+            , QueueEntities.CompanyReport
+            , QueueActions.Create
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
+            {
+                CompanyId = report.CompanyId,
+                Date = new DateTime(report.Year, CommonHelper.QarterHelper.GetFirstMonth(report.Quarter), 1)
+            }));
+
+        publisher.PublishTask(
+            QueueNames.CompanyAnalyzer
+            , QueueEntities.Coefficient
+            , QueueActions.Create
+            , JsonSerializer.Serialize(new CompanyDateIdentityDto
+            {
+                CompanyId = report.CompanyId,
+                Date = new DateTime(report.Year, CommonHelper.QarterHelper.GetFirstMonth(report.Quarter), 1)
+            }));
 
         return Task.CompletedTask;
     }

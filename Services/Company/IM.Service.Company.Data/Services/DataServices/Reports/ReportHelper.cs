@@ -11,7 +11,7 @@ namespace IM.Service.Company.Data.Services.DataServices.Reports
     {
         public static bool IsMissingLastQuarter(ILogger<ReportLoader> logger, QuarterDataConfigModel lastReport)
         {
-            var (controlYear, controlQuarter) = CommonHelper.SubtractQuarter(DateTime.UtcNow);
+            var (controlYear, controlQuarter) = CommonHelper.QarterHelper.SubtractQuarter(DateTime.UtcNow);
 
             var isNew = controlYear > lastReport.Year || controlYear == lastReport.Year && controlQuarter > lastReport.Quarter;
 

@@ -42,8 +42,6 @@ public class RatingRepository : IRepositoryHandler<Rating>
             throw new DataException($"{nameof(Rating)} data not found. ");
 
         ctxEntity.Result = entity.Result;
-        ctxEntity.ResultPrice = entity.ResultPrice;
-        ctxEntity.ResultReport = entity.ResultReport;
         ctxEntity.UpdateTime = DateTime.UtcNow;
 
         entity = ctxEntity;
@@ -62,8 +60,6 @@ public class RatingRepository : IRepositoryHandler<Rating>
         foreach (var (Old, New) in result)
         {
             Old.Result = New.Result;
-            Old.ResultPrice = New.ResultPrice;
-            Old.ResultReport = New.ResultReport;
             Old.UpdateTime = DateTime.UtcNow;
         }
 

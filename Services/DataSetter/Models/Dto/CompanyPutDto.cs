@@ -1,5 +1,5 @@
 ﻿using IM.Service.Common.Net.Attributes;
-using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

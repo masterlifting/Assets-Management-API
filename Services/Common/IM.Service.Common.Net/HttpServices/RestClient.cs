@@ -4,234 +4,224 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Unicode;
 using System.Threading.Tasks;
 
-namespace IM.Service.Common.Net.HttpServices
+namespace IM.Service.Common.Net.HttpServices;
+
+public abstract class RestClient
 {
-    public abstract class RestClient : IDisposable
+    private readonly HttpClient httpClient;
+    private readonly StringBuilder uriBuilder;
+    private readonly string baseUri;
+
+    protected RestClient(HttpClient httpClient, HostModel settings)
     {
-        private readonly HttpClient httpClient;
-        private readonly StringBuilder uriBuilder;
-        private readonly string baseUri;
+        this.httpClient = httpClient;
+        uriBuilder = new StringBuilder();
+        uriBuilder.Append(settings.Schema);
+        uriBuilder.Append("://");
+        uriBuilder.Append(settings.Host);
+        uriBuilder.Append(':');
+        uriBuilder.Append(settings.Port);
+        baseUri = uriBuilder.ToString();
+        uriBuilder.Clear();
+    }
 
-        protected RestClient(HttpClient httpClient, HostModel settings)
+    public async Task<ResponseModel<PaginatedModel<TGet>>> Get<TGet>(string controller, string? queryString, HttpPagination pagination) where TGet : class
+    {
+        uriBuilder.Append(baseUri);
+
+        uriBuilder.Append('/');
+        uriBuilder.Append(controller);
+
+        if (queryString is not null)
         {
-            this.httpClient = httpClient;
-            uriBuilder = new StringBuilder();
-            uriBuilder.Append(settings.Schema);
-            uriBuilder.Append("://");
-            uriBuilder.Append(settings.Host);
-            uriBuilder.Append(':');
-            uriBuilder.Append(settings.Port);
-            baseUri = uriBuilder.ToString();
-            uriBuilder.Clear();
+            uriBuilder.Append(queryString);
+            uriBuilder.Append(queryString.Contains('?') ? '&' : '?');
         }
+        else
+            uriBuilder.Append('?');
 
-        public async Task<ResponseModel<PaginatedModel<TGet>>> Get<TGet>(string controller, string? queryString, HttpPagination pagination) where TGet : class
+        uriBuilder.Append(pagination.QueryParams);
+
+
+        var uri = uriBuilder.ToString();
+
+        ResponseModel<PaginatedModel<TGet>>? response;
+
+        try
         {
-            uriBuilder.Append(baseUri);
-
-            uriBuilder.Append('/');
-            uriBuilder.Append(controller);
-
-            if (queryString is not null)
-            {
-                uriBuilder.Append(queryString);
-                uriBuilder.Append(queryString.Contains('?') ? '&' : '?');
-            }
-            else
-                uriBuilder.Append('?');
-
-            uriBuilder.Append(pagination.QueryParams);
-
-
-            var uri = uriBuilder.ToString();
-
-            ResponseModel<PaginatedModel<TGet>>? response;
-
-            try
-            {
-                response = await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri);
-            }
-            catch (Exception ex)
-            {
-                response = new()
-                {
-                    Data = new PaginatedModel<TGet>(),
-                    Errors = new[] { ex.Message }
-                };
-            }
-
-            uriBuilder.Clear();
-
-            return response ?? new()
+            response = await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri);
+        }
+        catch (Exception ex)
+        {
+            response = new()
             {
                 Data = new PaginatedModel<TGet>(),
-                Errors = new[] { "get response is null" }
+                Errors = new[] { ex.Message }
             };
         }
-        public async Task<ResponseModel<TGet>> Get<TGet>(string controller, params object[] parameters) where TGet : class
+
+        uriBuilder.Clear();
+
+        return response ?? new()
         {
-            uriBuilder.Append(baseUri);
+            Data = new PaginatedModel<TGet>(),
+            Errors = new[] { "get response is null" }
+        };
+    }
+    public async Task<ResponseModel<TGet>> Get<TGet>(string controller, params object[] parameters) where TGet : class
+    {
+        uriBuilder.Append(baseUri);
 
-            uriBuilder.Append('/');
-            uriBuilder.Append(controller);
+        uriBuilder.Append('/');
+        uriBuilder.Append(controller);
 
-            var uri = GetUriByQueryParams(parameters);
+        var uri = GetUriByQueryParams(parameters);
 
-            ResponseModel<TGet>? response;
-            try
+        ResponseModel<TGet>? response;
+        try
+        {
+            response = await httpClient.GetFromJsonAsync<ResponseModel<TGet>?>(uri);
+        }
+        catch (Exception ex)
+        {
+            response = new()
             {
-                response = await httpClient.GetFromJsonAsync<ResponseModel<TGet>?>(uri);
-            }
-            catch (Exception ex)
-            {
-                response = new()
-                {
-                    Errors = new[] { ex.Message }
-                };
-            }
-
-            return response ?? new()
-            {
-                Errors = new[] { "get response is null" }
+                Errors = new[] { ex.Message }
             };
         }
-        public async Task<ResponseModel<string>> Post<TPost>(string controller, TPost model) where TPost : class
+
+        return response ?? new()
         {
-            uriBuilder.Append(baseUri);
+            Errors = new[] { "get response is null" }
+        };
+    }
+    public async Task<ResponseModel<string>> Post<TPost>(string controller, TPost model) where TPost : class
+    {
+        uriBuilder.Append(baseUri);
 
-            uriBuilder.Append('/');
-            uriBuilder.Append(controller);
+        uriBuilder.Append('/');
+        uriBuilder.Append(controller);
 
-            var uri = uriBuilder.ToString();
+        var uri = uriBuilder.ToString();
 
-            HttpResponseMessage? response = null;
-            ResponseModel<string>? result = null;
+        HttpResponseMessage? response = null;
+        ResponseModel<string>? result = null;
 
-            try
+        try
+        {
+            response = await httpClient.PostAsJsonAsync(uri, model);
+        }
+        catch (Exception ex)
+        {
+            result = new()
             {
-                response = await httpClient.PostAsJsonAsync(uri, model);
-            }
-            catch (Exception ex)
-            {
-                result = new()
-                {
-                    Errors = new[] { ex.Message }
-                };
-            }
+                Errors = new[] { ex.Message }
+            };
+        }
 
-            uriBuilder.Clear();
+        uriBuilder.Clear();
 
-            result = result is null
-                ? response is not null
-                    ? response.IsSuccessStatusCode
-                        ? new() { Data = "post response is success" }
-                        : new()
+        result = result is null
+            ? response is not null
+                ? response.IsSuccessStatusCode
+                    ? new() { Data = "post response is success" }
+                    : new()
+                    {
+                        Errors = new[]
                         {
-                            Errors = new[]
-                            {
-                                response.ToString()
-                            }
+                            response.ToString()
                         }
-                    : new() { Errors = new[] { "post response is null" } }
-                : new() { Errors = new[] { "post response failed" } };
+                    }
+                : new() { Errors = new[] { "post response is null" } }
+            : new() { Errors = new[] { "post response failed" } };
 
-            return result;
-        }
-        public async Task<ResponseModel<string>> Put<TPost>(string controller, TPost model, params object[] parameters) where TPost : class
+        return result;
+    }
+    public async Task<ResponseModel<string>> Put<TPost>(string controller, TPost model, params object[] parameters) where TPost : class
+    {
+        uriBuilder.Append(baseUri);
+
+        uriBuilder.Append('/');
+        uriBuilder.Append(controller);
+
+        var uri = GetUriByQueryParams(parameters);
+
+        HttpResponseMessage? response = null;
+        ResponseModel<string>? result = null;
+
+        try
         {
-            uriBuilder.Append(baseUri);
+            response = await httpClient.PutAsJsonAsync(uri, model);
+        }
+        catch (Exception ex)
+        {
+            result = new()
+            {
+                Errors = new[] { ex.Message }
+            };
+        }
 
+        uriBuilder.Clear();
+
+        result = result is null
+            ? response is not null
+                ? response.IsSuccessStatusCode
+                    ? new() { Data = "put response is success" }
+                    : new() { Errors = new[] { response.ToString() } }
+                : new() { Errors = new[] { "put response is null" } }
+            : new() { Errors = new[] { "put response failed" } };
+
+        return result;
+    }
+    public async Task<ResponseModel<string>> Delete(string controller, params object[] parameters)
+    {
+        uriBuilder.Append(baseUri);
+
+        uriBuilder.Append('/');
+        uriBuilder.Append(controller);
+
+        var uri = GetUriByQueryParams(parameters);
+
+        HttpResponseMessage? response = null;
+        ResponseModel<string>? result = null;
+
+        try
+        {
+            response = await httpClient.DeleteAsync(uri);
+        }
+        catch (Exception ex)
+        {
+            result = new()
+            {
+                Errors = new[] { ex.Message }
+            };
+        }
+
+        uriBuilder.Clear();
+
+        result = result is null
+            ? response is not null
+                ? response.IsSuccessStatusCode
+                    ? new() { Data = "delete response is success" }
+                    : new() { Errors = new[] { response.ToString() } }
+                : new() { Errors = new[] { "delete response is null" } }
+            : new() { Errors = new[] { "delete response failed" } };
+
+        return result;
+    }
+
+    private string GetUriByQueryParams(params object[] parameters)
+    {
+        foreach (var param in parameters)
+        {
             uriBuilder.Append('/');
-            uriBuilder.Append(controller);
-
-            var uri = GetUriByQueryParams(parameters);
-
-            HttpResponseMessage? response = null;
-            ResponseModel<string>? result = null;
-
-            try
-            {
-                response = await httpClient.PutAsJsonAsync(uri, model);
-            }
-            catch (Exception ex)
-            {
-                result = new()
-                {
-                    Errors = new[] { ex.Message }
-                };
-            }
-
-            uriBuilder.Clear();
-
-            result = result is null
-                ? response is not null
-                    ? response.IsSuccessStatusCode
-                        ? new() { Data = "put response is success" }
-                        : new() { Errors = new[] { response.ToString() } }
-                    : new() { Errors = new[] { "put response is null" } }
-                : new() { Errors = new[] { "put response failed" } };
-
-            return result;
-        }
-        public async Task<ResponseModel<string>> Delete(string controller, params object[] parameters)
-        {
-            uriBuilder.Append(baseUri);
-
-            uriBuilder.Append('/');
-            uriBuilder.Append(controller);
-
-            var uri = GetUriByQueryParams(parameters);
-
-            HttpResponseMessage? response = null;
-            ResponseModel<string>? result = null;
-
-            try
-            {
-                response = await httpClient.DeleteAsync(uri);
-            }
-            catch (Exception ex)
-            {
-                result = new()
-                {
-                    Errors = new[] { ex.Message }
-                };
-            }
-
-            uriBuilder.Clear();
-
-            result = result is null
-                ? response is not null
-                    ? response.IsSuccessStatusCode
-                        ? new() { Data = "delete response is success" }
-                        : new() { Errors = new[] { response.ToString() } }
-                    : new() { Errors = new[] { "delete response is null" } }
-                : new() { Errors = new[] { "delete response failed" } };
-
-            return result;
+            uriBuilder.Append(param);
         }
 
-        private string GetUriByQueryParams(params object[] parameters)
-        {
-            foreach (var param in parameters)
-            {
-                uriBuilder.Append('/');
-                uriBuilder.Append(param);
-            }
-
-            var result = uriBuilder.ToString();
-            uriBuilder.Clear();
-            return result;
-        }
-
-        public void Dispose()
-        {
-            httpClient.Dispose();
-            GC.SuppressFinalize(this);
-        }
+        var result = uriBuilder.ToString();
+        uriBuilder.Clear();
+        return result;
     }
 }

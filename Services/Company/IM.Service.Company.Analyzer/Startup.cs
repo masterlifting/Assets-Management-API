@@ -40,23 +40,28 @@ public class Startup
 
         services.AddControllers();
 
-        services.AddHttpClient<CompanyDataClient>()
+        services
+            .AddHttpClient<CompanyDataClient>()
             .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
             .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
+        services.AddSingleton<AnalyzerService>();
+        services.AddScoped<RatingService>();
+
         services.AddScoped<ReportCalculator>();
         services.AddScoped<PriceCalculator>();
-        services.AddScoped<RatingCalculator>();
+        services.AddScoped<CoefficientCalculator>();
 
         services.AddScoped<RatingDtoManager>();
 
         services.AddScoped<IRepositoryHandler<DataAccess.Entities.Company>, CompanyRepository>();
-        services.AddScoped<IRepositoryHandler<Price>, PriceRepository>();
-        services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();
+        services.AddScoped<IRepositoryHandler<AnalyzedEntity>, AnalyzedEntityRepository>();
+        services.AddScoped<IRepositoryHandler<RatingData>, RatingDataRepository>();
         services.AddScoped<IRepositoryHandler<Rating>, RatingRepository>();
         services.AddScoped(typeof(RepositorySet<>));
 
         services.AddSingleton<RabbitActionService>();
+
         services.AddHostedService<RabbitBackgroundService>();
         services.AddHostedService<CalculatorBackgroundService>();
     }

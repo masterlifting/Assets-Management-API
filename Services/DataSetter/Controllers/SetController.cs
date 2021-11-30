@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 using DataSetter.Clients;
 using DataSetter.DataAccess;
 using DataSetter.Models.Dto;
-using IM.Service.Common.Net.Models.Dto.Http.Companies;
-using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
+using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using Microsoft.EntityFrameworkCore;
 
-using static IM.Service.Common.Net.CommonHelper;
+using static IM.Service.Common.Net.CommonHelper.QarterHelper;
 
 namespace DataSetter.Controllers;
 

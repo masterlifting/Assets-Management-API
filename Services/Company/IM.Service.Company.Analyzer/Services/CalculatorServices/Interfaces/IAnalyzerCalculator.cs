@@ -1,9 +1,11 @@
-﻿using System.Threading.Tasks;
+﻿using IM.Service.Company.Analyzer.DataAccess.Entities;
+
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
 
-public interface IAnalyzerCalculator<in T> where T : class
+public interface IAnalyzerCalculator
 {
-    Task<bool> CalculateAsync();
-    Task<bool> IsSetProcessingStatusAsync(T[] collection, string info);
+    Task<RatingData[]> ComputeAsync(IEnumerable<AnalyzedEntity> data);
 }

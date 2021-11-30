@@ -7,7 +7,7 @@ using IM.Service.Company.Analyzer.DataAccess.Repository;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.Models.Dto.Http.Ratings;
+using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 
 namespace IM.Service.Company.Analyzer.Services.DtoServices
 {
@@ -48,8 +48,6 @@ namespace IM.Service.Company.Analyzer.Services.DtoServices
                 {
                     Company = company.Name,
                     Place = rating.Place,
-                    ResultPrice = rating.ResultPrice,
-                    ResultReport = rating.ResultReport,
                     Result = rating.Result,
                     UpdateTime = rating.UpdateTime
                 }
@@ -79,8 +77,6 @@ namespace IM.Service.Company.Analyzer.Services.DtoServices
                 {
                     Company = company.Name,
                     Place = rating.Place,
-                    ResultPrice = rating.ResultPrice,
-                    ResultReport = rating.ResultReport,
                     Result = rating.Result,
                     UpdateTime = rating.UpdateTime
                 }
@@ -95,8 +91,6 @@ namespace IM.Service.Company.Analyzer.Services.DtoServices
                     {
                         Company = y.Name,
                         Place = x.Place,
-                        ResultPrice = x.ResultPrice,
-                        ResultReport = x.ResultReport,
                         Result = x.Result,
                         UpdateTime = x.UpdateTime
                     })

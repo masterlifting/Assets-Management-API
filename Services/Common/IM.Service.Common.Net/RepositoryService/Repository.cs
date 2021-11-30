@@ -47,6 +47,13 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         try
         {
             var result = entities as TEntity[] ?? entities.ToArray();
+
+            if (!result.Any())
+            {
+                logger.LogWarning(LogEvents.Create, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                return (null, Array.Empty<TEntity>());
+            }
+
             await handler.GetCreateHandlerAsync(ref result);
             if (result.Any())
                 await context.Set<TEntity>().AddRangeAsync(result);
@@ -88,6 +95,12 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         try
         {
             var result = entities as TEntity[] ?? entities.ToArray();
+
+            if (!result.Any())
+            {
+                logger.LogWarning(LogEvents.Update, $"{info}. No incoming data type: {typeof(TEntity).Name}", info );
+                return (null, Array.Empty<TEntity>());
+            }
 
             await handler.GetUpdateHandlerAsync(ref result);
             if (result.Any())
@@ -143,6 +156,12 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         {
             var result = entities as TEntity[] ?? entities.ToArray();
 
+            if (!result.Any())
+            {
+                logger.LogWarning(LogEvents.CreateUpdate, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                return (null, Array.Empty<TEntity>());
+            }
+
             var createResult = result.ToArray();
             await handler.GetCreateHandlerAsync(ref createResult);
             if (createResult.Any())
@@ -176,6 +195,12 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         try
         {
             var result = entities as TEntity[] ?? entities.ToArray();
+
+            if (!result.Any())
+            {
+                logger.LogWarning(LogEvents.CreateUpdateDelete, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                return (null, Array.Empty<TEntity>());
+            }
 
             var createResult = result.ToArray();
             await handler.GetCreateHandlerAsync(ref createResult);
@@ -213,9 +238,16 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
+            var result = entities as TEntity[] ?? entities.ToArray();
+
+            if (!result.Any())
+            {
+                logger.LogWarning(LogEvents.ReCreate, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                return null;
+            }
+
             context.Set<TEntity>().RemoveRange(context.Set<TEntity>());
 
-            var result = entities as TEntity[] ?? entities.ToArray();
             await handler.GetCreateHandlerAsync(ref result);
             if (result.Any())
                 await context.Set<TEntity>().AddRangeAsync(result);
@@ -281,6 +313,13 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         try
         {
             var result = entities as TEntity[] ?? entities.ToArray();
+
+            if (!result.Any())
+            {
+                logger.LogWarning(LogEvents.Remove, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                return null;
+            }
+
             var deleteResult = context.Set<TEntity>().Except(result, comparer);
             context.Set<TEntity>().RemoveRange(deleteResult);
 

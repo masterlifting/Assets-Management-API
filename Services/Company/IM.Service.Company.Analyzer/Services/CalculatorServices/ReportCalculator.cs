@@ -1,115 +1,70 @@
-﻿using IM.Service.Company.Analyzer.Clients;
+﻿using IM.Service.Common.Net;
+using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
+using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
-using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
 
-using Microsoft.AspNetCore.Http;
-
-using System;
-using System.Data;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.Models.Dto.Http.Companies;
-using IM.Service.Common.Net.RepositoryService.Comparators;
+using IM.Service.Common.Net.Models.Dto.Http;
+using IM.Service.Company.Analyzer.Models.Calculator;
+using Microsoft.Extensions.DependencyInjection;
 using static IM.Service.Common.Net.CommonEnums;
-using static IM.Service.Common.Net.CommonHelper;
 using static IM.Service.Common.Net.HttpServices.QueryStringBuilder;
 using static IM.Service.Company.Analyzer.Enums;
 
-namespace IM.Service.Company.Analyzer.Services.CalculatorServices
+namespace IM.Service.Company.Analyzer.Services.CalculatorServices;
+
+public class ReportCalculator : IAnalyzerCalculator
 {
-    public class ReportCalculator : IAnalyzerCalculator<Report>
+    private readonly CompanyDataClient client;
+    public ReportCalculator(IServiceScopeFactory scopeFactory) => this.client = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<CompanyDataClient>();
+
+    public async Task<RatingData[]> ComputeAsync(IEnumerable<AnalyzedEntity> data)
     {
-        private readonly RepositorySet<Report> repository;
-        private readonly CompanyDataClient dataClient;
+        var companies = data.GroupBy(x => x.CompanyId).ToDictionary(x => x.Key);
+        List<Task<ResponseModel<PaginatedModel<ReportGetDto>>>> tasks = new(companies.Count);
 
-        public ReportCalculator(
-            RepositorySet<Report> repository,
-            CompanyDataClient dataClient)
+        foreach (var (key, entities) in companies)
         {
-            this.repository = repository;
-            this.dataClient = dataClient;
-        }
+            var date = entities.OrderBy(x => x.Date).First().Date;
+            var quarter = CommonHelper.QarterHelper.GetQuarter(date.Month);
 
-        public async Task<bool> IsSetProcessingStatusAsync(Report[] reports, string info)
-        {
-            foreach (var report in reports)
-                report.StatusId = (byte)StatusType.Processing;
-
-            return (await repository.UpdateAsync(reports, $"report calculating status for '{info}'")).error is not null;
-        }
-        public async Task<bool> CalculateAsync()
-        {
-            var reports = await repository.GetSampleAsync(x =>
-                x.StatusId == (byte)StatusType.Ready
-                || x.StatusId == (byte)StatusType.CalculatedPartial
-                || x.StatusId == (byte)StatusType.Error);
-
-            if (!reports.Any())
-                return false;
-
-            foreach (var group in reports.GroupBy(x => x.CompanyId))
-                await BaseCalculateAsync(group);
-
-            return true;
-        }
-
-        private async Task BaseCalculateAsync(IGrouping<string, Report> group)
-        {
-            var companyId = group.Key;
-            
-            var orderedReports = group.OrderBy(x => x.Year).ThenBy(x => x.Quarter).ToArray();
-            var (targetYear, targetQuarter) = SubtractQuarter(orderedReports[0].Year, orderedReports[0].Quarter);
-            (targetYear, targetQuarter) = SubtractQuarter(targetYear, targetQuarter);
-
-            if (!await IsSetProcessingStatusAsync(orderedReports, companyId))
-                throw new DataException($"set report calculating status for '{companyId}' failed");
-
-            try
-            {
-                var calculateResult = await GetCalculatedResultAsync(companyId, targetYear, targetQuarter);
-                await repository.CreateUpdateAsync(calculateResult, new CompanyQuarterComparer<Report>(), $"report calculated result for {companyId}");
-            }
-            catch (Exception exception)
-            {
-                foreach (var report in orderedReports)
-                    report.StatusId = (byte)StatusType.Error;
-
-                await repository.CreateUpdateAsync(orderedReports, new CompanyQuarterComparer<Report>(), $"calculate reports for {companyId}");
-
-                throw new ArithmeticException($"report calculated for '{companyId}' failed! \nError: {exception.Message}");
-            }
-        }
-        private async Task<(ReportGetDto[] dtoReports, PriceGetDto[]? dtoPrices)> GetCalculatingDataAsync(string companyId, int year, byte quarter)
-        {
-            var reportResponse = await dataClient.Get<ReportGetDto>(
+            tasks.Add(client.Get<ReportGetDto>(
                 "reports",
-                GetQueryString(HttpRequestFilterType.More, companyId, year, quarter),
-                new(1, int.MaxValue));
-
-            if (reportResponse.Errors.Any())
-                throw new BadHttpRequestException(string.Join('\n', reportResponse.Errors));
-
-            var priceDate = GetQuarterFirstDate(year, quarter);
-
-            var pricesResponse = await dataClient.Get<PriceGetDto>(
-                "prices",
-                GetQueryString(HttpRequestFilterType.More, companyId, priceDate.year, priceDate.month, priceDate.day),
-                new(1, int.MaxValue));
-
-            return pricesResponse.Errors.Any()
-                ? throw new BadHttpRequestException(string.Join('\n', reportResponse.Errors))
-                : (reportResponse.Data!.Items, pricesResponse.Data?.Items);
+                GetQueryString(HttpRequestFilterType.More, key, date.Year, quarter),
+                new(1, int.MaxValue)));
         }
-        private async Task<Report[]> GetCalculatedResultAsync(string companyId, int targetYear, byte targetQuarter)
-        {
-            var (dtoReports, dtoPrices) = await GetCalculatingDataAsync(companyId, targetYear, targetQuarter);
 
-            if (!dtoReports.Any())
-                throw new DataException($"reports for '{companyId}' not found!");
+        var results = await Task.WhenAll(tasks);
 
-            var calculator = new ReportComparator(dtoReports, dtoPrices);
-            return calculator.GetComparedSample();
-        }
+        return results
+            .Where(x => !x.Errors.Any())
+            .SelectMany(x => GetComparedSample(x.Data!.Items))
+            .ToArray();
     }
+    private static IEnumerable<RatingData> GetComparedSample(IEnumerable<ReportGetDto> dto) =>
+        dto
+            .OrderBy(x => x.Year)
+            .ThenBy(x => x.Quarter)
+            .Select(x => new Sample[]
+            {
+                 new () { CompanyId = x.Ticker, CompareTypes = CompareTypes.Asc, Value = x.Revenue.HasValue ? x.Revenue!.Value : 0 }
+                ,new () { CompanyId = x.Ticker, CompareTypes = CompareTypes.Asc, Value = x.ProfitNet.HasValue ? x.ProfitNet!.Value : 0 }
+                ,new () { CompanyId = x.Ticker, CompareTypes = CompareTypes.Asc, Value = x.ProfitGross.HasValue ? x.ProfitGross!.Value : 0 }
+                ,new () { CompanyId = x.Ticker, CompareTypes = CompareTypes.Asc, Value = x.Asset.HasValue ? x.Asset!.Value : 0 }
+                ,new () { CompanyId = x.Ticker, CompareTypes = CompareTypes.Asc, Value = x.Turnover.HasValue ? x.Turnover!.Value : 0 }
+                ,new () { CompanyId = x.Ticker, CompareTypes = CompareTypes.Asc, Value = x.ShareCapital.HasValue ? x.ShareCapital!.Value : 0 }
+                ,new () { CompanyId = x.Ticker, CompareTypes = CompareTypes.Asc, Value = x.CashFlow.HasValue ? x.CashFlow!.Value : 0 }
+                ,new () { CompanyId = x.Ticker, CompareTypes = CompareTypes.Desc, Value = x.Obligation.HasValue ? x.Obligation!.Value : 0 }
+                ,new () { CompanyId = x.Ticker, CompareTypes = CompareTypes.Desc, Value = x.LongTermDebt.HasValue ? x.LongTermDebt!.Value : 0 }
+            })
+            .Select(RatingComparator.CompareSample)
+            .Select((x, i) => new RatingData
+            {
+                CompanyId = x[i].CompanyId,
+                AnalyzedEntityTypeId = (byte)EntityTypes.Report,
+                Result = RatingComparator.ComputeSampleResult(x.Select(y => y.Value).ToArray())
+            });
 }

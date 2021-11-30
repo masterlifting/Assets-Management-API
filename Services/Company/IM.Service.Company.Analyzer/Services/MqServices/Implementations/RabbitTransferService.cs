@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Dto.Mq.Companies;
+﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
@@ -19,39 +19,25 @@ public class RabbitTransferService : IRabbitActionService
     public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data) =>
         action == QueueActions.Create && entity switch
         {
-            QueueEntities.CompanyReport => await SetReportToCalculateAsync(data),
-            QueueEntities.Price => await SetPriceToCalculateAsync(data),
+            QueueEntities.CompanyReport => await SetAnalyzedEntityAsync(EntityTypes.Report, data),
+            QueueEntities.Price => await SetAnalyzedEntityAsync(EntityTypes.Price, data),
+            QueueEntities.Coefficient => await SetAnalyzedEntityAsync(EntityTypes.Coefficient, data),
             _ => true
         };
-    private async Task<bool> SetReportToCalculateAsync(string data)
+    private async Task<bool> SetAnalyzedEntityAsync(EntityTypes entityType, string data)
     {
-        if (!RabbitHelper.TrySerialize(data, out ReportIdentityDto? dto))
+        if (!RabbitHelper.TrySerialize(data, out CompanyDateIdentityDto? dto))
             return false;
 
-        var entity = new Report
-        {
-            CompanyId = dto!.CompanyId,
-            Year = dto.Year,
-            Quarter = dto.Quarter,
-            StatusId = (byte)StatusType.Ready
-        };
-
-        var reportRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<Report>>();
-        return (await reportRepository.CreateUpdateAsync(entity, $"Report for '{dto.CompanyId}'")).error is null;
-    }
-    private async Task<bool> SetPriceToCalculateAsync(string data)
-    {
-        if (!RabbitHelper.TrySerialize(data, out PriceIdentityDto? dto))
-            return false;
-
-        var entity = new Price
+        var entity = new AnalyzedEntity
         {
             CompanyId = dto!.CompanyId,
             Date = dto.Date,
-            StatusId = (byte)StatusType.Ready
+            AnalyzedEntityTypeId = (byte) entityType,
+            StatusId = (byte)Statuses.Ready
         };
 
-        var priceRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<Price>>();
-        return (await priceRepository.CreateUpdateAsync(entity, $"Price for '{dto.CompanyId}'")).error is null;
+        var reportRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<AnalyzedEntity>>();
+        return (await reportRepository.CreateUpdateAsync(entity, $"{nameof(SetAnalyzedEntityAsync)}: '{dto.CompanyId}'")).error is null;
     }
 }

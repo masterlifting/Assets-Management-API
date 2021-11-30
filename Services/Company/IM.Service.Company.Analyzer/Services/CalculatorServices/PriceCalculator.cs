@@ -1,101 +1,63 @@
-﻿using IM.Service.Common.Net.Models.Dto.Http.Companies;
-using IM.Service.Common.Net.RepositoryService.Comparators;
-
+﻿using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
-using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
 
-using Microsoft.AspNetCore.Http;
-
-using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-
+using IM.Service.Common.Net.Models.Dto.Http;
+using IM.Service.Company.Analyzer.Models.Calculator;
+using Microsoft.Extensions.DependencyInjection;
 using static IM.Service.Common.Net.CommonEnums;
 using static IM.Service.Common.Net.HttpServices.QueryStringBuilder;
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices;
 
-public class PriceCalculator : IAnalyzerCalculator<Price>
+public class PriceCalculator : IAnalyzerCalculator
 {
-    private readonly RepositorySet<Price> priceRepository;
-    private readonly CompanyDataClient dataClient;
+    private readonly CompanyDataClient client;
+    public PriceCalculator(IServiceScopeFactory scopeFactory) => this.client = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<CompanyDataClient>();
 
-    public PriceCalculator(
-        RepositorySet<Price> priceRepository,
-        CompanyDataClient dataClient)
+    public async Task<RatingData[]> ComputeAsync(IEnumerable<AnalyzedEntity> data)
     {
-        this.priceRepository = priceRepository;
-        this.dataClient = dataClient;
-    }
+        var companies = data.GroupBy(x => x.CompanyId).ToDictionary(x => x.Key);
+        List<Task<ResponseModel<PaginatedModel<PriceGetDto>>>> tasks = new(companies.Count);
 
-    public async Task<bool> IsSetProcessingStatusAsync(Price[] prices, string info)
-    {
-        foreach (var price in prices)
-            price.StatusId = (byte)StatusType.Processing;
-
-        return (await priceRepository.UpdateAsync(prices, $"Processing for '{info}'")).error is null;
-    }
-    public async Task<bool> CalculateAsync()
-    {
-        var prices = await priceRepository.GetSampleAsync(x =>
-            x.StatusId == (byte)StatusType.Ready
-            || x.StatusId == (byte)StatusType.Error);
-
-        if (!prices.Any())
-            return false;
-
-        foreach (var group in prices.GroupBy(x => x.CompanyId))
-            await BaseCalculateAsync(group);
-
-        return true;
-    }
-
-    private async Task BaseCalculateAsync(IGrouping<string, Price> group)
-    {
-        var companyId = group.Key;
-            
-        var orderedPrices = group.OrderBy(x => x.Date).ToArray();
-        var dateStart = orderedPrices[0].Date.AddMonths(-1);
-
-        if (!await IsSetProcessingStatusAsync(orderedPrices, companyId))
-            throw new DataException($"Set price calculating status for '{companyId}' failed");
-
-        var calculateResult = await GetCalculatedResultAsync(companyId, dateStart);
-        var (error, _) = await priceRepository.CreateUpdateAsync(calculateResult, new CompanyDateComparer<Price>(), $"Price calculated result for {companyId}");
-        
-        if (error is not null)
+        foreach (var (key, entities) in companies)
         {
-            foreach (var price in orderedPrices)
-                price.StatusId = (byte)StatusType.Error;
-          
-            await priceRepository.CreateUpdateAsync(orderedPrices, new CompanyDateComparer<Price>(), $"Calculate prices for {companyId}");
-            throw new ArithmeticException($"Price calculated for '{companyId}' failed! \nError: {error}");
+            var date = entities.OrderBy(x => x.Date).First().Date;
+
+            tasks.Add(client.Get<PriceGetDto>(
+                "prices"
+                , GetQueryString(HttpRequestFilterType.More, key, date.Year, date.Month, date.Day),
+                new(1, int.MaxValue)));
         }
-    }
-    private async Task<Price[]> GetCalculatedResultAsync(string companyId, DateTime dateStart)
-    {
-        var calculatingData = await GetCalculatingDataAsync(companyId, dateStart);
 
-        if (!calculatingData.Any())
-            throw new DataException($"Prices for '{companyId}' not found!");
+        var results = await Task.WhenAll(tasks);
 
-        var calculator = new PriceComparator(calculatingData);
-        return calculator.GetComparedSample();
+        return results
+            .Where(x => !x.Errors.Any())
+            .SelectMany(x => GetComparedSample(x.Data!.Items))
+            .ToArray();
     }
-    private async Task<IReadOnlyCollection<PriceGetDto>> GetCalculatingDataAsync(string companyId, DateTime date)
-    {
-        var pricesResponse = await dataClient.Get<PriceGetDto>(
-            "prices",
-            GetQueryString(HttpRequestFilterType.More, companyId, date.Year, date.Month, date.Day),
-            new(1, int.MaxValue));
-
-        return pricesResponse.Errors.Any()
-            ? throw new BadHttpRequestException(string.Join('\n', pricesResponse.Errors))
-            : pricesResponse.Data!.Items;
-    }
+    private static IEnumerable<RatingData> GetComparedSample(IEnumerable<PriceGetDto> dto) =>
+        RatingComparator.CompareSample
+            (
+                dto
+                    .OrderBy(x => x.Date)
+                    .Select(x => new Sample
+                    {
+                        CompanyId = x.Ticker,
+                        CompareTypes = CompareTypes.Asc,
+                        Value = x.ValueTrue
+                    })
+            )
+            .Select(x => new RatingData
+            {
+                CompanyId = x.CompanyId,
+                AnalyzedEntityTypeId = (byte)EntityTypes.Price,
+                Result = x.Value
+            });
 }

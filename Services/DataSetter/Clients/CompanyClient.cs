@@ -6,11 +6,10 @@ using Microsoft.Extensions.Options;
 
 using System.Net.Http;
 
-namespace DataSetter.Clients
+namespace DataSetter.Clients;
+
+public class CompanyClient : RestClient
 {
-    public class CompanyClient : RestClient
-    {
-        public CompanyClient(HttpClient httpClient, IOptions<ServiceSettings> settings)
-            : base(httpClient, settings.Value.ClientSettings.Company) { }
-    }
+    public CompanyClient(HttpClient httpClient, IOptions<ServiceSettings> settings)
+        : base(httpClient, settings.Value.ClientSettings.Company) { }
 }
