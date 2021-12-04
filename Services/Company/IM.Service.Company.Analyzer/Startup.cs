@@ -32,10 +32,11 @@ public class Startup
     {
         services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
 
+        services.AddMemoryCache();
+
         services.AddDbContext<DatabaseContext>(provider =>
         {
             provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
-            provider.EnableSensitiveDataLogging();
         });
 
         services.AddControllers();
@@ -46,17 +47,15 @@ public class Startup
             .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
         services.AddSingleton<AnalyzerService>();
-        services.AddScoped<RatingService>();
 
-        services.AddScoped<ReportCalculator>();
-        services.AddScoped<PriceCalculator>();
-        services.AddScoped<CoefficientCalculator>();
+        services.AddScoped<CalculatorReport>();
+        services.AddScoped<CalculatorPrice>();
+        services.AddScoped<CalculatorCoefficient>();
 
         services.AddScoped<RatingDtoManager>();
 
         services.AddScoped<IRepositoryHandler<DataAccess.Entities.Company>, CompanyRepository>();
         services.AddScoped<IRepositoryHandler<AnalyzedEntity>, AnalyzedEntityRepository>();
-        services.AddScoped<IRepositoryHandler<RatingData>, RatingDataRepository>();
         services.AddScoped<IRepositoryHandler<Rating>, RatingRepository>();
         services.AddScoped(typeof(RepositorySet<>));
 

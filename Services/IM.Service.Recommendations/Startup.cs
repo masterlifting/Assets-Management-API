@@ -21,11 +21,13 @@ namespace IM.Service.Recommendations
     public class Startup
     {
         public Startup(IConfiguration configuration) => Configuration = configuration;
-        public IConfiguration Configuration { get; }
+        private IConfiguration Configuration { get; }
 
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
+
+            services.AddMemoryCache();
 
             services.AddDbContext<DatabaseContext>(provider =>
             {

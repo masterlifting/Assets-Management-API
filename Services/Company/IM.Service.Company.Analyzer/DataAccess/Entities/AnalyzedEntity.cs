@@ -13,10 +13,10 @@ public class AnalyzedEntity : ICompanyDateIdentity
     [Column(TypeName = "Date")]
     public DateTime Date { get; init; }
     
-    public AnalyzedEntityType EntityType { get; set; } = null!;
+    public AnalyzedEntityType EntityType { get; init; } = null!;
     public byte AnalyzedEntityTypeId { get; init; }
 
-    
+
     public Status Status { get; set; } = null!;
     public byte StatusId { get; set; }
 

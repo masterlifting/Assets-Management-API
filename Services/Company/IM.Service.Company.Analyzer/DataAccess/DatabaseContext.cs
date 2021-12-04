@@ -11,7 +11,6 @@ public sealed class DatabaseContext : DbContext
     public DbSet<AnalyzedEntity> AnalyzedEntities { get; set; } = null!;
     public DbSet<AnalyzedEntityType> AnalyzedEntityTypes { get; set; } = null!;
     public DbSet<Rating> Ratings { get; set; } = null!;
-    public DbSet<RatingData> RatingData { get; set; } = null!;
     public DbSet<Status> Statuses { get; set; } = null!;
 
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
@@ -23,10 +22,9 @@ public sealed class DatabaseContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<AnalyzedEntity>().HasKey(x => new { x.CompanyId, x.AnalyzedEntityTypeId, x.Date });
+        modelBuilder.Entity<AnalyzedEntity>().HasKey(x => new {x.CompanyId, x.AnalyzedEntityTypeId, x.Date });
         modelBuilder.Entity<AnalyzedEntity>().HasOne(x => x.Company).WithMany(x => x.AnalyzedEntities).OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Rating>().Property(x => x.Place).ValueGeneratedNever();
         modelBuilder.Entity<Rating>().HasOne(x => x.Company).WithOne(x => x.Rating).OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<AnalyzedEntityType>().HasData(

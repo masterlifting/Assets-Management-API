@@ -1,5 +1,4 @@
-﻿using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Company.Analyzer.DataAccess;
+﻿using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Comparators;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
@@ -9,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -24,57 +22,72 @@ public class AnalyzerService
 
     public async Task AnalyzeAsync()
     {
-        var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<AnalyzerService>>();
         var analyzedEntityRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<AnalyzedEntity>>();
+        var data = await analyzedEntityRepository.GetSampleAsync(x => x.StatusId == (byte)Statuses.Ready);
 
-        var data = await GetDataAsync(analyzedEntityRepository);
-        var changeStatusResult = await ChangeStatusAsync(data, Statuses.Processing, analyzedEntityRepository);
+        if (!data.Any())
+            return;
 
-        if (!changeStatusResult)
-            throw new DataException("Change status failed!");
+        foreach (var item in data)
+            item.StatusId = (byte)Statuses.Processing;
 
-        var ratingData = await GetRatingDataAsync(data);
-        var ratingDataRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<RatingData>>();
-        await ratingDataRepository.CreateUpdateAsync(ratingData, new RatingDataComparer(), nameof(RatingData));
+        var (dataError, _) = await analyzedEntityRepository.UpdateAsync(data, nameof(AnalyzeAsync));
 
+        if (dataError is not null)
+            return;
 
-        var ratingService = new RatingService(ratingData);
+        try
+        {
+            var ratingKeys = data
+                .GroupBy(x => (x.CompanyId))
+                .Select(x => x.Key)
+                .ToArray();
 
-        var ratingRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<Rating>>();
-        var oldRating = await ratingRepository.GetSampleAsync();
-        
-        var newRating = ratingService.GetRating(oldRating);
-        
-        changeStatusResult = await ChangeStatusAsync(data, Statuses.Completed, analyzedEntityRepository);
-        await ratingRepository.ReCreateAsync(newRating, nameof(Rating));
+            var calculatedData = await GetCalculatedDataAsync(data);
+
+            foreach (var item in calculatedData)
+                item.StatusId = (byte)Statuses.Completed;
+
+            var (analyzedEntityerror, _) = await analyzedEntityRepository.CreateUpdateAsync(calculatedData, new AnalyzedEntityComparer(), nameof(AnalyzeAsync));
+
+            foreach (var item in data)
+                item.StatusId = (byte)Statuses.Completed;
+
+            if (analyzedEntityerror is null)
+            {
+                var ratingTasks = ratingKeys
+                    .Select(async companyId => await CalculatorService.GetRatingAsync(companyId, await analyzedEntityRepository.GetSampleAsync(z => z.CompanyId == companyId)));
+
+                var calculatedRating = await Task.WhenAll(ratingTasks);
+
+                var ratingRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<Rating>>();
+                await ratingRepository.CreateUpdateAsync(calculatedRating, new RatingComparer(), nameof(AnalyzeAsync));
+            }
+            else
+                foreach (var item in data)
+                    item.StatusId = (byte)Statuses.Error;
+        }
+        catch
+        {
+            foreach (var item in data)
+                item.StatusId = (byte)Statuses.Error;
+        }
+
+        await analyzedEntityRepository.UpdateAsync(data, nameof(AnalyzeAsync));
     }
-
-    private static async Task<AnalyzedEntity[]> GetDataAsync(Repository<AnalyzedEntity, DatabaseContext> repository) =>
-        await repository.GetSampleAsync(x => x.StatusId == (byte)Statuses.Ready);
-    private static async Task<bool> ChangeStatusAsync(AnalyzedEntity[] data, Statuses status, Repository<AnalyzedEntity, DatabaseContext> repository)
+    private async Task<AnalyzedEntity[]> GetCalculatedDataAsync(IEnumerable<AnalyzedEntity> data)
     {
-        foreach (var entity in data)
-            entity.StatusId = (byte)status;
+        var client = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<CompanyDataClient>();
 
-        var (error, _) = await repository.UpdateAsync(data, nameof(ChangeStatusAsync));
-
-        if (error is not null)
-            throw new DataException("Status was not changed. " + error);
-
-        return true;
-    }
-    private async Task<RatingData[]> GetRatingDataAsync(IEnumerable<AnalyzedEntity> data)
-    {
         var calculators = new Dictionary<byte, IAnalyzerCalculator>
         {
-            {(byte)EntityTypes.Price, new PriceCalculator(scopeFactory)},
-            {(byte)EntityTypes.Report, new ReportCalculator(scopeFactory)},
-            {(byte)EntityTypes.Coefficient, new CoefficientCalculator(scopeFactory)}
+            {(byte)EntityTypes.Price, new CalculatorPrice(client)},
+            {(byte)EntityTypes.Report, new CalculatorReport(client)},
+            {(byte)EntityTypes.Coefficient, new CalculatorCoefficient(scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<CalculatorCoefficient>>(), client)}
         };
 
         var tasks = data
             .GroupBy(x => x.AnalyzedEntityTypeId)
-            .Where(x => x.Key != (byte)EntityTypes.Coefficient && x.Key != (byte)EntityTypes.Price)
             .Select(x => calculators[x.Key].ComputeAsync(x));
 
         var result = await Task.WhenAll(tasks);

@@ -29,6 +29,8 @@ public class Startup
     {
         services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
 
+        services.AddMemoryCache();
+
         services.AddDbContext<DatabaseContext>(provider =>
         {
             provider.UseLazyLoadingProxies();

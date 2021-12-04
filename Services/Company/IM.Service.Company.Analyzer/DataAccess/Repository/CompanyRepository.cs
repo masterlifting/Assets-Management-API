@@ -15,10 +15,8 @@ public class CompanyRepository : IRepositoryHandler<Entities.Company>
     private readonly DatabaseContext context;
     public CompanyRepository(DatabaseContext context) => this.context = context;
 
-    public Task GetCreateHandlerAsync(ref Entities.Company entity)
-    {
-        return Task.CompletedTask;
-    }
+    public Task GetCreateHandlerAsync(ref Entities.Company entity) => Task.CompletedTask;
+
     public Task GetCreateHandlerAsync(ref Entities.Company[] entities)
     {
         var exist = GetExist(entities);
@@ -65,8 +63,8 @@ public class CompanyRepository : IRepositoryHandler<Entities.Company>
     public async Task<IList<Entities.Company>> GetDeleteHandlerAsync(IReadOnlyCollection<Entities.Company> entities)
     {
         var comparer = new CompanyComparer<Entities.Company>();
-        var companies = await context.Companies.ToArrayAsync();
-        return companies.Except(entities, comparer).ToArray();
+        var ctxEntities = await context.Companies.ToArrayAsync();
+        return ctxEntities.Except(entities, comparer).ToArray();
     }
 
     public Task SetPostProcessAsync(Entities.Company entity) => Task.CompletedTask;

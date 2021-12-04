@@ -25,7 +25,7 @@ public class RabbitSyncService : IRabbitActionService
         var companyRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<DataAccess.Entities.Company>>();
 
         if (action == QueueActions.Delete)
-            return (await companyRepository.DeleteAsync(data, data)).error is not null;
+            return (await companyRepository.DeleteAsync(data, $"{nameof(GetCompanyResultAsync)}. {data}")).error is not null;
 
         if (!RabbitHelper.TrySerialize(data, out CompanyDto? dto))
             return false;
@@ -36,7 +36,7 @@ public class RabbitSyncService : IRabbitActionService
             Name = dto.Name
         };
 
-        return await GetActionAsync(companyRepository, action, entity, entity.Name);
+        return await GetActionAsync(companyRepository, action, entity, $"{nameof(GetCompanyResultAsync)}. {entity.Name}");
     }
     private static async Task<bool> GetActionAsync<T>(Repository<T, DatabaseContext> repository, QueueActions action, T data, string value) where T : class => action switch
     {

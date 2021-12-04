@@ -60,7 +60,7 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
         var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
 
         var result = exist
-            .Join(entities, x => (x.CompanyId, x.Date), y => (y.CompanyId, y.Date),
+            .Join(entities, x => (CompanyId: x.CompanyId, x.Date), y => (CompanyId: y.CompanyId, y.Date),
                 (x, y) => (Old: x, New: y))
             .ToArray();
 

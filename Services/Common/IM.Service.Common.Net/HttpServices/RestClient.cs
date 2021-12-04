@@ -4,18 +4,23 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace IM.Service.Common.Net.HttpServices;
 
 public abstract class RestClient
 {
+    private readonly IMemoryCache cache;
     private readonly HttpClient httpClient;
-    private readonly StringBuilder uriBuilder;
     private readonly string baseUri;
+    private readonly StringBuilder uriBuilder;
+    private readonly SemaphoreSlim semaphore = new(1, 1);
 
-    protected RestClient(HttpClient httpClient, HostModel settings)
+    protected RestClient(IMemoryCache cache, HttpClient httpClient, HostModel settings)
     {
+        this.cache = cache;
         this.httpClient = httpClient;
         uriBuilder = new StringBuilder();
         uriBuilder.Append(settings.Schema);
@@ -24,11 +29,11 @@ public abstract class RestClient
         uriBuilder.Append(':');
         uriBuilder.Append(settings.Port);
         baseUri = uriBuilder.ToString();
-        uriBuilder.Clear();
     }
 
-    public async Task<ResponseModel<PaginatedModel<TGet>>> Get<TGet>(string controller, string? queryString, HttpPagination pagination) where TGet : class
+    public async Task<ResponseModel<PaginatedModel<TGet>>> Get<TGet>(string controller, string? queryString, HttpPagination pagination, bool toCache = false) where TGet : class
     {
+        uriBuilder.Clear();
         uriBuilder.Append(baseUri);
 
         uriBuilder.Append('/');
@@ -51,7 +56,20 @@ public abstract class RestClient
 
         try
         {
-            response = await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri);
+            if (toCache)
+            {
+                await semaphore.WaitAsync();
+
+                response = await cache.GetOrCreateAsync(uri, async entry =>
+                {
+                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10);
+                    return await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri);
+                });
+
+                semaphore.Release();
+            }
+            else
+                response = await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri);
         }
         catch (Exception ex)
         {
@@ -72,6 +90,7 @@ public abstract class RestClient
     }
     public async Task<ResponseModel<TGet>> Get<TGet>(string controller, params object[] parameters) where TGet : class
     {
+        uriBuilder.Clear();
         uriBuilder.Append(baseUri);
 
         uriBuilder.Append('/');
@@ -99,6 +118,7 @@ public abstract class RestClient
     }
     public async Task<ResponseModel<string>> Post<TPost>(string controller, TPost model) where TPost : class
     {
+        uriBuilder.Clear();
         uriBuilder.Append(baseUri);
 
         uriBuilder.Append('/');
@@ -141,6 +161,7 @@ public abstract class RestClient
     }
     public async Task<ResponseModel<string>> Put<TPost>(string controller, TPost model, params object[] parameters) where TPost : class
     {
+        uriBuilder.Clear();
         uriBuilder.Append(baseUri);
 
         uriBuilder.Append('/');
@@ -177,6 +198,7 @@ public abstract class RestClient
     }
     public async Task<ResponseModel<string>> Delete(string controller, params object[] parameters)
     {
+        uriBuilder.Clear();
         uriBuilder.Append(baseUri);
 
         uriBuilder.Append('/');

@@ -16,12 +16,18 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     private readonly TContext context;
     private readonly IRepositoryHandler<TEntity> handler;
     private readonly ILogger<Repository<TEntity, TContext>> logger;
+    private readonly string name;
 
-    protected Repository(ILogger<Repository<TEntity, TContext>> logger, TContext context, IRepositoryHandler<TEntity> handler)
+    protected Repository(
+        ILogger<Repository<TEntity
+        , TContext>> logger
+        , TContext context
+        , IRepositoryHandler<TEntity> handler)
     {
         this.logger = logger;
         this.context = context;
         this.handler = handler;
+        name = typeof(TEntity).Name;
     }
 
     public async Task<(string? error, TEntity? result)> CreateAsync(TEntity entity, string info)
@@ -32,13 +38,13 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             await context.Set<TEntity>().AddAsync(entity);
             await context.SaveChangesAsync();
             await handler.SetPostProcessAsync(entity);
-            logger.LogInformation(LogEvents.Create, info);
+            logger.LogInformation(LogEvents.Create, "{info}. Entity: {name}", info, name);
             return (null, entity);
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
-            logger.LogError(LogEvents.Create, "{info}: Error: {exception}", info, message);
+            logger.LogError(LogEvents.Create, "{info}. Entity: {name}. Error: {exception}", info, name, message);
             return (message, null);
         }
     }
@@ -50,24 +56,27 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (!result.Any())
             {
-                logger.LogWarning(LogEvents.Create, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                logger.LogWarning(LogEvents.Create, "{info}. Entity: {name}. No incoming collection", info, name);
                 return (null, Array.Empty<TEntity>());
             }
 
+            var count = 0;
             await handler.GetCreateHandlerAsync(ref result);
+
             if (result.Any())
+            {
                 await context.Set<TEntity>().AddRangeAsync(result);
+                count = await context.SaveChangesAsync();
+                await handler.SetPostProcessAsync(result);
+            }
 
-            var count = await context.SaveChangesAsync();
-            await handler.SetPostProcessAsync(result);
-
-            logger.LogInformation(LogEvents.Create, "{info} count: {count}", info, count);
+            logger.LogInformation(LogEvents.Create, "{info}. Entity: {name}. Processed count: {count}", info, name, count);
             return (null, result);
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
-            logger.LogError(LogEvents.Create, "{info}: Error: {exception}", info, message);
+            logger.LogError(LogEvents.Create, "{info}. Entity: {name}. Error: {exception}", info, name, message);
             return (message, null);
         }
     }
@@ -80,13 +89,13 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             context.Set<TEntity>().Update(entity);
             await context.SaveChangesAsync();
             await handler.SetPostProcessAsync(entity);
-            logger.LogInformation(LogEvents.Update, info);
+            logger.LogInformation(LogEvents.Update, "{info}. Entity: {name}", info, name);
             return (null, entity);
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
-            logger.LogError(LogEvents.Update, "{info}: Error: {exception}", info, message);
+            logger.LogError(LogEvents.Update, "{info}. Entity: {name}. Error: {exception}", info, name, message);
             return (message, null);
         }
     }
@@ -98,24 +107,27 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (!result.Any())
             {
-                logger.LogWarning(LogEvents.Update, $"{info}. No incoming data type: {typeof(TEntity).Name}", info );
+                logger.LogWarning(LogEvents.Update, "{info}. Entity: {name}. No incoming collection", info, name);
                 return (null, Array.Empty<TEntity>());
             }
 
+            var count = 0;
             await handler.GetUpdateHandlerAsync(ref result);
+
             if (result.Any())
+            {
                 context.Set<TEntity>().UpdateRange(result);
+                count = await context.SaveChangesAsync();
+                await handler.SetPostProcessAsync(result);
+            }
 
-            var count = await context.SaveChangesAsync();
-            await handler.SetPostProcessAsync(result);
-
-            logger.LogInformation(LogEvents.Update, "{info} count: {count}", info, count);
+            logger.LogInformation(LogEvents.Update, "{info}. Entity: {name}. Processed count: {count}", info, name, count);
             return (null, result);
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
-            logger.LogError(LogEvents.Update, "{info}: Error: {exception}", info, message);
+            logger.LogError(LogEvents.Update, "{info}. Entity: {name}. Error: {exception}", info, name, message);
             return (message, null);
         }
     }
@@ -128,7 +140,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             await context.Set<TEntity>().AddAsync(entity);
             await context.SaveChangesAsync();
             await handler.SetPostProcessAsync(entity);
-            logger.LogInformation(LogEvents.Create, info);
+            logger.LogInformation(LogEvents.Create, "{info}. Entity: {name}", info, name);
             return (null, entity);
         }
         catch
@@ -139,13 +151,13 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 context.Set<TEntity>().Update(entity);
                 await context.SaveChangesAsync();
                 await handler.SetPostProcessAsync(entity);
-                logger.LogInformation(LogEvents.Update, info);
+                logger.LogInformation(LogEvents.Update, "{info}. Entity: {name}", info, name);
                 return (null, entity);
             }
             catch (Exception updateException)
             {
                 var message = updateException.InnerException?.Message ?? updateException.Message;
-                logger.LogError(LogEvents.Update, "{info}: Error: {exception}", info, message);
+                logger.LogError(LogEvents.Update, "{info}. Entity: {name}. Error: {exception}", info, name, message);
                 return (message, null);
             }
         }
@@ -158,34 +170,40 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (!result.Any())
             {
-                logger.LogWarning(LogEvents.CreateUpdate, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                logger.LogWarning(LogEvents.CreateUpdate, "{info}. Entity: {name}. No incoming collection", info, name);
                 return (null, Array.Empty<TEntity>());
             }
 
             var createResult = result.ToArray();
+
             await handler.GetCreateHandlerAsync(ref createResult);
+
             if (createResult.Any())
                 await context.Set<TEntity>().AddRangeAsync(createResult);
 
             var updateResult = result.Except(createResult, comparer).ToArray();
+
             if (updateResult.Any())
             {
                 await handler.GetUpdateHandlerAsync(ref updateResult);
                 context.Set<TEntity>().UpdateRange(updateResult);
             }
 
-            await context.SaveChangesAsync();
-
             result = createResult.Concat(updateResult).ToArray();
-            await handler.SetPostProcessAsync(result);
 
-            logger.LogInformation(LogEvents.CreateUpdate, "{info} count: {count}", info, result.Length);
+            if (result.Any())
+            {
+                await context.SaveChangesAsync();
+                await handler.SetPostProcessAsync(result);
+            }
+
+            logger.LogInformation(LogEvents.CreateUpdate, "{info}. Entity: {name}. Processed count: {count}", info, name, result.Length);
             return (null, result);
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
-            logger.LogError(LogEvents.CreateUpdate, "{info}: Error: {exception}", info, message);
+            logger.LogError(LogEvents.CreateUpdate, "{info}. Entity: {name}. Error: {exception}", info, name, message);
             return (message, null);
         }
     }
@@ -198,16 +216,19 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (!result.Any())
             {
-                logger.LogWarning(LogEvents.CreateUpdateDelete, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                logger.LogWarning(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. No incoming collection", info, name);
                 return (null, Array.Empty<TEntity>());
             }
 
             var createResult = result.ToArray();
+
             await handler.GetCreateHandlerAsync(ref createResult);
+
             if (createResult.Any())
                 await context.Set<TEntity>().AddRangeAsync(createResult);
 
             var updateResult = result.Except(createResult, comparer).ToArray();
+
             if (updateResult.Any())
             {
                 await handler.GetUpdateHandlerAsync(ref updateResult);
@@ -215,22 +236,27 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             }
 
             result = createResult.Concat(updateResult).ToArray();
+
             var deleteResult = await handler.GetDeleteHandlerAsync(result);
 
             if (deleteResult.Any())
                 context.Set<TEntity>().RemoveRange(deleteResult);
 
-            await context.SaveChangesAsync();
+            var processResult = result.Concat(deleteResult).ToArray();
 
-            await handler.SetPostProcessAsync(result.Concat(deleteResult).ToArray());
+            if (processResult.Any())
+            {
+                await context.SaveChangesAsync();
+                await handler.SetPostProcessAsync(processResult);
+            }
 
-            logger.LogInformation(LogEvents.CreateUpdateDelete, "{info} count: {count}", info, result.Length);
+            logger.LogInformation(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. Processed count: {pcount}. Deleted count: {dcount}", info, name, result.Length, deleteResult.Count);
             return (null, result);
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
-            logger.LogError(LogEvents.CreateUpdateDelete, "{info}: Error: {exception}", info, message);
+            logger.LogError(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. Error: {exception}", info, name, message);
             return (message, null);
         }
     }
@@ -242,26 +268,29 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (!result.Any())
             {
-                logger.LogWarning(LogEvents.ReCreate, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                logger.LogWarning(LogEvents.ReCreate, "{info}. Entity: {name}. No incoming collection", info, name);
                 return null;
             }
 
-            context.Set<TEntity>().RemoveRange(context.Set<TEntity>());
+            var old = context.Set<TEntity>();
+            context.Set<TEntity>().RemoveRange(old);
+            await context.SaveChangesAsync();
 
             await handler.GetCreateHandlerAsync(ref result);
             if (result.Any())
+            {
                 await context.Set<TEntity>().AddRangeAsync(result);
+                await handler.SetPostProcessAsync(result);
+                await context.SaveChangesAsync();
+            }
 
-            var count = await context.SaveChangesAsync();
-            await handler.SetPostProcessAsync(result);
-
-            logger.LogInformation(LogEvents.ReCreate, "{info} count: {count}", info, count);
+            logger.LogInformation(LogEvents.ReCreate, "{info}. Entity: {name}. Processed count: {count}", info, name, result.Length);
             return null;
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
-            logger.LogError(LogEvents.ReCreate, "{info}: Error: {exception}", info, message);
+            logger.LogError(LogEvents.ReCreate, "{info}. Entity: {name}. Error: {exception}", info, name, message);
             return message;
         }
     }
@@ -316,23 +345,25 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (!result.Any())
             {
-                logger.LogWarning(LogEvents.Remove, $"{info}. No incoming data type: {typeof(TEntity).Name}", info);
+                logger.LogWarning(LogEvents.Remove, "{info}. Entity: {name}. No incoming collection", info, name);
                 return null;
             }
 
-            var deleteResult = context.Set<TEntity>().Except(result, comparer);
+            var deleteResult = context.Set<TEntity>().Intersect(result, comparer).ToArray();
             context.Set<TEntity>().RemoveRange(deleteResult);
 
             var count = await context.SaveChangesAsync();
-            await handler.SetPostProcessAsync(result);
 
-            logger.LogInformation(LogEvents.Remove, "{info} count: {count}", info, count);
+            if (count > 0)
+                await handler.SetPostProcessAsync(deleteResult);
+
+            logger.LogInformation(LogEvents.Remove, "{info}. Entity: {name}. Processed count: {count}", info, name, count);
             return null;
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
-            logger.LogError(LogEvents.Remove, "{info}: Error: {exception}", info, message);
+            logger.LogError(LogEvents.Remove, "{info}. Entity: {name}. Error: {exception}", info, name, message);
             return message;
         }
     }

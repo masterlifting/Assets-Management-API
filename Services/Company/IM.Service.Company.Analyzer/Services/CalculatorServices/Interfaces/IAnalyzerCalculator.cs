@@ -7,5 +7,5 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
 
 public interface IAnalyzerCalculator
 {
-    Task<RatingData[]> ComputeAsync(IEnumerable<AnalyzedEntity> data);
+    Task<AnalyzedEntity[]> ComputeAsync(IEnumerable<AnalyzedEntity> data);
 }

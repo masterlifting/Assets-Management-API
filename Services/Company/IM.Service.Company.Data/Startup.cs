@@ -35,6 +35,8 @@ namespace IM.Service.Company.Data
         {
             services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
 
+            services.AddMemoryCache();
+
             services.AddDbContext<DatabaseContext>(provider =>
             {
                 provider.UseLazyLoadingProxies();

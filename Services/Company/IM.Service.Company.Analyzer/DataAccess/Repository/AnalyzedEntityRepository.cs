@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
-using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Common.Net.RepositoryService.Comparators;
+﻿using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Company.Analyzer.DataAccess.Comparators;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
+using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
@@ -23,7 +23,7 @@ public class AnalyzedEntityRepository : IRepositoryHandler<AnalyzedEntity>
     public Task GetCreateHandlerAsync(ref AnalyzedEntity[] entities)
     {
         var exist = GetExist(entities);
-        var comparer = new CompanyDateComparer<AnalyzedEntity>();
+        var comparer = new AnalyzedEntityComparer();
         entities = entities.Distinct(comparer).ToArray();
 
         if (exist.Any())
@@ -34,7 +34,7 @@ public class AnalyzedEntityRepository : IRepositoryHandler<AnalyzedEntity>
 
     public Task GetUpdateHandlerAsync(ref AnalyzedEntity entity)
     {
-        var ctxEntity = context.AnalyzedEntities.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
+        var ctxEntity = context.AnalyzedEntities.FindAsync(entity.CompanyId, entity.AnalyzedEntityTypeId, entity.Date).GetAwaiter().GetResult();
 
         if (ctxEntity is null)
             throw new DataException($"{nameof(AnalyzedEntity)} data not found. ");
@@ -51,7 +51,7 @@ public class AnalyzedEntityRepository : IRepositoryHandler<AnalyzedEntity>
         var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
 
         var result = exist
-            .Join(entities, x => (x.CompanyId, x.Date), y => (y.CompanyId, y.Date),
+            .Join(entities, x => ( x.CompanyId, x.AnalyzedEntityTypeId, x.Date), y => (y.CompanyId, y.AnalyzedEntityTypeId, y.Date),
                 (x, y) => (Old: x, New: y))
             .ToArray();
 
@@ -68,7 +68,7 @@ public class AnalyzedEntityRepository : IRepositoryHandler<AnalyzedEntity>
 
     public async Task<IList<AnalyzedEntity>> GetDeleteHandlerAsync(IReadOnlyCollection<AnalyzedEntity> entities)
     {
-        var comparer = new CompanyDateComparer<AnalyzedEntity>();
+        var comparer = new AnalyzedEntityComparer();
         var result = new List<AnalyzedEntity>();
 
         foreach (var group in entities.GroupBy(x => x.CompanyId))

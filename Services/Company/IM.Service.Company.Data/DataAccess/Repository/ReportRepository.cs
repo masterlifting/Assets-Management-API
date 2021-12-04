@@ -75,7 +75,7 @@ public class ReportRepository : IRepositoryHandler<Report>
         var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
 
         var result = exist
-            .Join(entities, x => (x.CompanyId, x.Year, x.Quarter), y => (y.CompanyId, y.Year, y.Quarter),
+            .Join(entities, x => (CompanyId: x.CompanyId, x.Year, x.Quarter), y => (CompanyId: y.CompanyId, y.Year, y.Quarter),
                 (x, y) => (Old: x, New: y))
             .ToArray();
 

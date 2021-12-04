@@ -23,6 +23,8 @@ namespace DataSetter
         public void ConfigureServices(IServiceCollection services)
         {
             services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
+            
+            services.AddMemoryCache();
 
             services.AddDbContext<CompaniesDbContext>(provider =>
             {

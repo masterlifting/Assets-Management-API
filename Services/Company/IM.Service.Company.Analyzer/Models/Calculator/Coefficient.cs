@@ -1,13 +1,12 @@
-﻿namespace IM.Service.Company.Analyzer.Models.Calculator
+﻿namespace IM.Service.Company.Analyzer.Models.Calculator;
+
+public record Coefficient
 {
-    public class Coefficient
-    {
-        public decimal Pe { get; set; }
-        public decimal Pb { get; set; }
-        public decimal DebtLoad { get; set; }
-        public decimal Profitability { get; set; }
-        public decimal Roa { get; set; }
-        public decimal Roe { get; set; }
-        public decimal Eps { get; set; }
-    }
+    public decimal Pe { get; init; }
+    public decimal Pb { get; init; }
+    public decimal DebtLoad { get; init; }
+    public decimal Profitability { get; init; }
+    public decimal Roa { get; init; }
+    public decimal Roe { get; init; }
+    public decimal Eps { get; init; }
 }

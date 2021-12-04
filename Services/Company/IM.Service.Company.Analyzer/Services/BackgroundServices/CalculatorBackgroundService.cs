@@ -22,24 +22,24 @@ public class CalculatorBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        //var delay = new TimeSpan(0, 0, 20);
+        var delay = new TimeSpan(0, 0, 20);
 
-        //while (start)
-        //{
-        //    start = false;
-        //    await Task.Delay(delay, stoppingToken);
-
-        try
+        while (start)
         {
-            await service.AnalyzeAsync();
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(LogEvents.Processing, "Analyzer error: {exception}", exception.InnerException?.Message ?? exception.Message);
-        }
+            start = false;
+            await Task.Delay(delay, stoppingToken);
 
-        //    start = true;
-        //}
+            try
+            {
+                await service.AnalyzeAsync();
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(LogEvents.Processing, "{place}. Error: {exception}", nameof(ExecuteAsync), exception.Message);
+            }
+
+            start = true;
+        }
     }
     public override Task StopAsync(CancellationToken stoppingToken)
     {

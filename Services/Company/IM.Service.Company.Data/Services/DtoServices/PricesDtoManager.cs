@@ -72,7 +72,7 @@ public class PricesDtoManager
             .Join(companyRepository.GetDbSet(), x => x.CompanyId, y => y.Id, (x, y) => new
             {
                 Company = y.Name,
-                x.CompanyId,
+                CompanyId = x.CompanyId,
                 x.Date,
                 x.Value,
                 x.SourceType
@@ -169,7 +169,7 @@ public class PricesDtoManager
             .Join(companyRepository.GetDbSet(), x => x.CompanyId, y => y.Id, (x, y) => new
             {
                 Company = y.Name,
-                x.CompanyId,
+                CompanyId = x.CompanyId,
                 x.Date,
                 x.Value,
                 x.SourceType
