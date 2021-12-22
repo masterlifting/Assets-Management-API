@@ -17,15 +17,15 @@ namespace IM.Service.Company.Data.Services.DtoServices;
 
 public class PricesDtoManager
 {
-    private readonly RepositorySet<Price> priceRepository;
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
-    private readonly RepositorySet<StockSplit> stockSplitRepository;
-    private readonly RepositorySet<StockVolume> stockVolumeRepository;
+    private readonly Repository<Price> priceRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<StockSplit> stockSplitRepository;
+    private readonly Repository<StockVolume> stockVolumeRepository;
     public PricesDtoManager(
-        RepositorySet<Price> priceRepository,
-        RepositorySet<DataAccess.Entities.Company> companyRepository,
-        RepositorySet<StockSplit> stockSplitRepository,
-        RepositorySet<StockVolume> stockVolumeRepository)
+        Repository<Price> priceRepository,
+        Repository<DataAccess.Entities.Company> companyRepository,
+        Repository<StockSplit> stockSplitRepository,
+        Repository<StockVolume> stockVolumeRepository)
     {
         this.priceRepository = priceRepository;
         this.companyRepository = companyRepository;
@@ -35,15 +35,16 @@ public class PricesDtoManager
 
     public async Task<ResponseModel<PriceGetDto>> GetAsync(string companyId, DateTime date)
     {
-        var company = await companyRepository.FindAsync(companyId.ToUpperInvariant().Trim());
+        companyId = companyId.ToUpperInvariant().Trim();
+        var company = await companyRepository.FindAsync(companyId);
 
         if (company is null)
-            return new() { Errors = new[] { "company not found" } };
+            return new() { Errors = new[] { $"'{companyId}' not found" } };
 
         var price = await priceRepository.FindAsync(company.Id, date);
 
         if (price is null)
-            return new() { Errors = new[] { "price not found" } };
+            return new() { Errors = new[] { $"Price for '{companyId}' not found" } };
 
         var stockSplits = await stockSplitRepository.GetSampleAsync(x => x.CompanyId == company.Id && x.Date <= date);
         var stockVolumes = await stockVolumeRepository.GetSampleOrderedAsync(x => x.CompanyId == company.Id && x.Date <= date, y => y.Date);
@@ -72,7 +73,7 @@ public class PricesDtoManager
             .Join(companyRepository.GetDbSet(), x => x.CompanyId, y => y.Id, (x, y) => new
             {
                 Company = y.Name,
-                CompanyId = x.CompanyId,
+                x.CompanyId,
                 x.Date,
                 x.Value,
                 x.SourceType
@@ -103,6 +104,7 @@ public class PricesDtoManager
             var stockSplits = await stockSplitRepository.GetSampleAsync(x => companyNamesDictionary.Keys.Contains(x.CompanyId) && x.Date <= date);
 
             var stockVolumes = await stockVolumeRepository.GetSampleAsync(x => companyNamesDictionary.Keys.Contains(x.CompanyId) && x.Date <= date);
+
             var stockVolumesDictionary = stockVolumes
                 .GroupBy(x => x.CompanyId)
                 .ToDictionary(x => x.Key);
@@ -110,7 +112,9 @@ public class PricesDtoManager
             foreach (var groupSplits in stockSplits.GroupBy(x => x.CompanyId))
             {
                 var companyName = companyNamesDictionary[groupSplits.Key];
-                var targetStockVolumes = stockVolumesDictionary[groupSplits.Key].OrderBy(x => x.Date);
+                var targetStockVolumes = stockVolumesDictionary.ContainsKey(groupSplits.Key)
+                    ? stockVolumesDictionary[groupSplits.Key].OrderBy(x => x.Date)
+                    : null;
 
                 var groupedSplits = groupSplits.OrderByDescending(x => x.Date).ToArray();
 
@@ -123,7 +127,7 @@ public class PricesDtoManager
                     {
                         Ticker = groupSplits.Key,
                         Company = companyName,
-                        StockVolume = targetStockVolumes.LastOrDefault(y => y.Date <= x.Date)?.Value,
+                        StockVolume = targetStockVolumes?.LastOrDefault(y => y.Date <= x.Date)?.Value,
                         ValueTrue = x.Value * stockSplitValue,
                         Value = x.Value,
                         Date = x.Date,
@@ -137,13 +141,15 @@ public class PricesDtoManager
             foreach (var group in priceResult.GroupBy(x => x.CompanyId))
             {
                 var companyName = companyNamesDictionary[group.Key];
-                var targetStockVolumes = stockVolumesDictionary[group.Key].OrderBy(x => x.Date);
+                var targetStockVolumes = stockVolumesDictionary.ContainsKey(group.Key)
+                    ? stockVolumesDictionary[group.Key].OrderBy(x => x.Date)
+                    : null;
 
                 result.AddRange(group.Select(x => new PriceGetDto
                 {
                     Ticker = group.Key,
                     Company = companyName,
-                    StockVolume = targetStockVolumes.LastOrDefault(y => y.Date <= x.Date)?.Value,
+                    StockVolume = targetStockVolumes?.LastOrDefault(y => y.Date <= x.Date)?.Value,
                     Date = x.Date,
                     SourceType = x.SourceType,
                     Value = x.Value,
@@ -169,7 +175,7 @@ public class PricesDtoManager
             .Join(companyRepository.GetDbSet(), x => x.CompanyId, y => y.Id, (x, y) => new
             {
                 Company = y.Name,
-                CompanyId = x.CompanyId,
+                x.CompanyId,
                 x.Date,
                 x.Value,
                 x.SourceType
@@ -216,7 +222,9 @@ public class PricesDtoManager
             foreach (var groupSplits in stockSplits.GroupBy(x => x.CompanyId))
             {
                 var companyName = companyNamesDictionary[groupSplits.Key];
-                var targetStockVolumes = stockVolumesDictionary[groupSplits.Key].OrderBy(x => x.Date);
+                var targetStockVolumes = stockVolumesDictionary.ContainsKey(groupSplits.Key)
+                    ? stockVolumesDictionary[groupSplits.Key].OrderBy(x => x.Date)
+                    : null;
                 var groupedSplits = groupSplits.OrderByDescending(x => x.Date).ToArray();
 
                 foreach (var split in groupedSplits)
@@ -228,7 +236,7 @@ public class PricesDtoManager
                     {
                         Ticker = groupSplits.Key,
                         Company = companyName,
-                        StockVolume = targetStockVolumes.LastOrDefault(y => y.Date <= x.Date)?.Value,
+                        StockVolume = targetStockVolumes?.LastOrDefault(y => y.Date <= x.Date)?.Value,
                         ValueTrue = x.Value * stockSplitValue,
                         Value = x.Value,
                         Date = x.Date,
@@ -243,7 +251,9 @@ public class PricesDtoManager
             {
                 Ticker = x.CompanyId,
                 Company = companyNamesDictionary[x.CompanyId],
-                StockVolume = stockVolumesDictionary[x.CompanyId].OrderBy(y => y.Date).LastOrDefault(y => y.Date <= x.Date)?.Value,
+                StockVolume = stockVolumesDictionary.ContainsKey(x.CompanyId)
+                    ? stockVolumesDictionary[x.CompanyId].OrderBy(y => y.Date).LastOrDefault(y => y.Date <= x.Date)?.Value
+                    : null,
                 Date = x.Date,
                 SourceType = x.SourceType,
                 Value = x.Value,
@@ -270,7 +280,7 @@ public class PricesDtoManager
             Date = model.Date.Date,
             Value = model.Value
         };
-        var message = $"price of '{model.CompanyId}' create at {model.Date:yyyy MMMM dd}";
+        var message = $"Price of '{model.CompanyId}' create at {model.Date:yyyy MMMM dd}";
         var (error, _) = await priceRepository.CreateAsync(ctxEntity, message);
 
         return error is not null
@@ -282,7 +292,7 @@ public class PricesDtoManager
         var prices = models.ToArray();
 
         if (!prices.Any())
-            return new() { Errors = new[] { "price data for creating not found" } };
+            return new() { Errors = new[] { "Price data for creating not found" } };
 
         var ctxEntities = prices.GroupBy(x => x.Date.Date).Select(x => new Price
         {
@@ -292,15 +302,15 @@ public class PricesDtoManager
             Value = x.Last().Value
         });
 
-        var (error, result) = await priceRepository.CreateAsync(ctxEntities, "Prices");
+        var (error, result) = await priceRepository.CreateAsync(ctxEntities, new CompanyDateComparer<Price>(), "Prices");
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = $"Prices count: {result!.Length} was successed" };
+            : new() { Data = $"Prices count: {result.Length} was successed" };
     }
     public async Task<ResponseModel<string>> UpdateAsync(PricePostDto model)
     {
-        var ctxEntity = new Price
+        var entity = new Price
         {
             CompanyId = model.CompanyId,
             SourceType = model.SourceType,
@@ -308,23 +318,23 @@ public class PricesDtoManager
             Value = model.Value
         };
 
-        var message = $"price of '{model.CompanyId}' update at {model.Date:yyyy MMMM dd}";
+        var info = $"Price of '{model.CompanyId}' update at {model.Date:yyyy MMMM dd}";
 
-        var (error, _) = await priceRepository.UpdateAsync(ctxEntity, message);
+        var (error, _) = await priceRepository.UpdateAsync(new object[] { entity.CompanyId, entity.Date }, entity, info);
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = message + " success" };
+            : new() { Data = info + " success" };
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
     {
         companyId = companyId.ToUpperInvariant().Trim();
 
-        var message = $"price of '{companyId}' delete at {date:yyyy MMMM dd}";
-        var (error, _) = await priceRepository.DeleteAsync(message, companyId, date);
+        var info = $"Price of '{companyId}' delete at {date:yyyy MMMM dd}";
+        var (error, _) = await priceRepository.DeleteAsync(new object[] { companyId, date }, info);
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = message + " success" };
+            : new() { Data = info + " success" };
     }
 }

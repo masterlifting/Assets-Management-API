@@ -1,5 +1,4 @@
 ﻿using IM.Service.Common.Net;
-using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
@@ -8,6 +7,7 @@ using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -22,62 +22,104 @@ public class CalculatorReport : IAnalyzerCalculator
     private readonly CompanyDataClient client;
     public CalculatorReport(CompanyDataClient client) => this.client = client;
 
-    public async Task<AnalyzedEntity[]> ComputeAsync(IEnumerable<AnalyzedEntity> data)
+    public async Task<AnalyzedEntity[]> ComputeAsync(IReadOnlyCollection<AnalyzedEntity> data)
     {
-        var companies = data
-            .GroupBy(x => x.CompanyId)
-            .ToDictionary(x => x.Key);
+        var _data = data
+            .Where(x => x.AnalyzedEntityTypeId == (byte)EntityTypes.Report)
+            .ToImmutableArray();
 
-        List<Task<ResponseModel<PaginatedModel<ReportGetDto>>>> tasks = new(companies.Count);
+        if (!_data.Any())
+            return Array.Empty<AnalyzedEntity>();
 
-        foreach (var (key, group) in companies)
-        {
-            var date = group.OrderBy(x => x.Date).First().Date;
+        var companyIds = _data
+            .Select(x => x.CompanyId)
+            .Distinct()
+            .ToImmutableArray();
 
-            var quarter = CommonHelper.QarterHelper.GetQuarter(date.Month);
+        var date = _data.MinBy(x => x.Date)!.Date;
+        var quarter = CommonHelper.QarterHelper.GetQuarter(date.Month);
 
-            tasks.Add(client.Get<ReportGetDto>(
-                "reports",
-                GetQueryString(HttpRequestFilterType.More, key, date.Year, quarter),
-                new(1, int.MaxValue),
-                true));
-        }
+        var response = await client.Get<ReportGetDto>(
+            "reports",
+            GetQueryString(HttpRequestFilterType.More, companyIds, date.Year, quarter),
+            new(1, int.MaxValue),
+            true);
 
-        var results = await Task.WhenAll(tasks);
+        if (!response.Errors.Any())
+            return GetComparedSample(response.Data!.Items)
+                .ToArray();
 
-        return results
-            .Where(x => !x.Errors.Any())
-            .SelectMany(x => GetComparedSample(x.Data!.Items))
-            .ToArray();
+        foreach (var item in _data)
+            item.StatusId = (byte)Statuses.Error;
+
+        return _data.ToArray();
     }
-    private static IEnumerable<AnalyzedEntity> GetComparedSample(IEnumerable<ReportGetDto> dto) =>
-        dto
-            .OrderBy(x => x.Year)
-            .ThenBy(x => x.Quarter)
-            .Select(x =>
-            {
-                var month = CommonHelper.QarterHelper.GetFirstMonth(x.Quarter);
-                var date = new DateTime(x.Year, month, 1);
 
-                return new Sample[]
-                {
-                    new () { CompanyId = x.Ticker, Date = date, CompareTypes = CompareTypes.Asc, Value = x.Revenue.HasValue ? x.Revenue!.Value : 0 }
-                    ,new () { CompanyId = x.Ticker, Date = date, CompareTypes = CompareTypes.Asc, Value = x.ProfitNet.HasValue ? x.ProfitNet!.Value : 0 }
-                    ,new () { CompanyId = x.Ticker, Date = date, CompareTypes = CompareTypes.Asc, Value = x.ProfitGross.HasValue ? x.ProfitGross!.Value : 0 }
-                    ,new () { CompanyId = x.Ticker, Date = date, CompareTypes = CompareTypes.Asc, Value = x.Asset.HasValue ? x.Asset!.Value : 0 }
-                    ,new () { CompanyId = x.Ticker, Date = date, CompareTypes = CompareTypes.Asc, Value = x.Turnover.HasValue ? x.Turnover!.Value : 0 }
-                    ,new () { CompanyId = x.Ticker, Date = date, CompareTypes = CompareTypes.Asc, Value = x.ShareCapital.HasValue ? x.ShareCapital!.Value : 0 }
-                    ,new () { CompanyId = x.Ticker, Date = date, CompareTypes = CompareTypes.Asc, Value = x.CashFlow.HasValue ? x.CashFlow!.Value : 0 }
-                    ,new () { CompanyId = x.Ticker, Date = date, CompareTypes = CompareTypes.Desc, Value = x.Obligation.HasValue ? x.Obligation!.Value : 0 }
-                    ,new () { CompanyId = x.Ticker, Date = date, CompareTypes = CompareTypes.Desc, Value = x.LongTermDebt.HasValue ? x.LongTermDebt!.Value : 0 }
-                };
-            })
-            .Select(CalculatorService.CompareSample)
-            .Select(x => new AnalyzedEntity
+    private static IEnumerable<AnalyzedEntity> GetComparedSample(in IEnumerable<ReportGetDto> dto) =>
+        dto
+            .GroupBy(x => x.Ticker)
+            .SelectMany(x =>
             {
-                CompanyId = x[0].CompanyId,
-                Date = x[0].Date,
-                AnalyzedEntityTypeId = (byte)EntityTypes.Report,
-                Result = CalculatorService.ComputeSampleResult(x.Select(y => y.Value))
+                var companyOrderedData = x
+                    .OrderBy(y => y.Year)
+                    .ThenBy(y => y.Quarter)
+                    .ToImmutableArray();
+
+                var companySamples = companyOrderedData
+                    .Select((y, i) => new Sample[]
+                        {
+                            new ()  { Id = i, CompareType = CompareTypes.Asc, Value = y.Revenue.HasValue ? y.Revenue!.Value : 0 }
+                            ,new () { Id = i, CompareType = CompareTypes.Asc, Value = y.ProfitNet.HasValue ? y.ProfitNet!.Value : 0 }
+                            ,new () { Id = i, CompareType = CompareTypes.Asc, Value = y.ProfitGross.HasValue ? y.ProfitGross!.Value : 0 }
+                            ,new () { Id = i, CompareType = CompareTypes.Asc, Value = y.Asset.HasValue ? y.Asset!.Value : 0 }
+                            ,new () { Id = i, CompareType = CompareTypes.Asc, Value = y.Turnover.HasValue ? y.Turnover!.Value : 0 }
+                            ,new () { Id = i, CompareType = CompareTypes.Asc, Value = y.ShareCapital.HasValue ? y.ShareCapital!.Value : 0 }
+                            ,new () { Id = i, CompareType = CompareTypes.Asc, Value = y.CashFlow.HasValue ? y.CashFlow!.Value : 0 }
+                            ,new () { Id = i, CompareType = CompareTypes.Desc, Value = y.Obligation.HasValue ? y.Obligation!.Value : 0 }
+                            ,new () { Id = i, CompareType = CompareTypes.Desc, Value = y.LongTermDebt.HasValue ? y.LongTermDebt!.Value : 0 }
+                        })
+                    .ToArray();
+
+                var comparedSamples = CalculatorService
+                    .CompareSampleByColumn(in companySamples, 9)
+                    .SelectMany(y => y)
+                    .GroupBy(y => y.Id)
+                    .ToImmutableDictionary(y => y.Key);
+
+                return companyOrderedData
+                    .Take(1)
+                    .Select(report => new AnalyzedEntity
+                    {
+                        CompanyId = x.Key,
+                        Date = GetDateTime(report.Year, report.Quarter),
+                        AnalyzedEntityTypeId = (byte)EntityTypes.Report,
+                        StatusId = (byte)Statuses.Starter,
+                        Result = 0
+                    })
+                    .Concat(companyOrderedData
+                        .Skip(1)
+                        .Select((report, index) =>
+                        {
+                            var isComputed = comparedSamples.ContainsKey(index);
+
+                            return new AnalyzedEntity
+                            {
+                                CompanyId = x.Key,
+                                Date = GetDateTime(report.Year, report.Quarter),
+                                AnalyzedEntityTypeId = (byte)EntityTypes.Report,
+                                StatusId = isComputed
+                                    ? (byte)Statuses.Computed
+                                    : (byte)Statuses.NotComputed,
+                                Result = isComputed
+                                    ? CalculatorService.ComputeSampleResult(comparedSamples[index]
+                                        .Select(sample => sample.Value)
+                                        .ToImmutableArray())
+                                    : 0
+                            };
+                        }));
+
             });
+
+    private static DateTime GetDateTime(int year, byte quarter) =>
+        new(year, CommonHelper.QarterHelper.GetLastMonth(quarter), 28);
 }

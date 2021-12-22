@@ -1,12 +1,12 @@
 ﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Company.Analyzer.DataAccess;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using System.Threading.Tasks;
-using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Company.Analyzer.DataAccess;
 
 namespace IM.Service.Company.Analyzer.Services.MqServices.Implementations;
 
@@ -22,26 +22,26 @@ public class RabbitSyncService : IRabbitActionService
     };
     private async Task<bool> GetCompanyResultAsync(QueueActions action, string data)
     {
-        var companyRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<DataAccess.Entities.Company>>();
+        var companyRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<DataAccess.Entities.Company>>();
 
         if (action == QueueActions.Delete)
-            return (await companyRepository.DeleteAsync(data, $"{nameof(GetCompanyResultAsync)}. {data}")).error is not null;
+            return (await companyRepository.DeleteAsync(new[] { data }, $"{nameof(GetCompanyResultAsync)}.{data}")).error is not null;
 
         if (!RabbitHelper.TrySerialize(data, out CompanyDto? dto))
             return false;
 
-        var entity = new DataAccess.Entities.Company
+        var company = new DataAccess.Entities.Company
         {
             Id = dto!.Id,
             Name = dto.Name
         };
 
-        return await GetActionAsync(companyRepository, action, entity, $"{nameof(GetCompanyResultAsync)}. {entity.Name}");
+        return await GetActionAsync(companyRepository, action, new[] { company.Id }, company, $"{nameof(GetCompanyResultAsync)}.{company.Name}");
     }
-    private static async Task<bool> GetActionAsync<T>(Repository<T, DatabaseContext> repository, QueueActions action, T data, string value) where T : class => action switch
+    private static async Task<bool> GetActionAsync<T>(Repository<T, DatabaseContext> repository, QueueActions action, object[] id, T entity, string info) where T : class => action switch
     {
-        QueueActions.Create => (await repository.CreateAsync(data, value)).error is null,
-        QueueActions.Update => (await repository.CreateUpdateAsync(data, value)).error is null,
+        QueueActions.Create => (await repository.CreateAsync(entity, info)).error is null,
+        QueueActions.Update => (await repository.CreateUpdateAsync(id, entity, info)).error is null,
         _ => true
     };
 }

@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Dto.Http;
+﻿using System;
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
@@ -6,6 +6,7 @@ using IM.Service.Company.Analyzer.Models.Calculator;
 using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
 
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,47 +21,82 @@ public class CalculatorPrice : IAnalyzerCalculator
     private readonly CompanyDataClient client;
     public CalculatorPrice(CompanyDataClient client) => this.client = client;
 
-    public async Task<AnalyzedEntity[]> ComputeAsync(IEnumerable<AnalyzedEntity> data)
+    public async Task<AnalyzedEntity[]> ComputeAsync(IReadOnlyCollection<AnalyzedEntity> data)
     {
-        var companies = data
-            .GroupBy(x => x.CompanyId)
-            .ToDictionary(x => x.Key);
+        var _data = data
+            .Where(x => x.AnalyzedEntityTypeId == (byte)EntityTypes.Price)
+            .ToImmutableArray();
 
-        List<Task<ResponseModel<PaginatedModel<PriceGetDto>>>> tasks = new(companies.Count);
+        if (!_data.Any())
+            return Array.Empty<AnalyzedEntity>();
 
-        foreach (var (key, group) in companies)
-        {
-            var date = group.OrderBy(x => x.Date).First().Date;
+        var companyIds = _data
+            .Select(x => x.CompanyId)
+            .Distinct()
+            .ToImmutableArray();
 
-            tasks.Add(client.Get<PriceGetDto>(
-                "prices"
-                , GetQueryString(HttpRequestFilterType.More, key, date.Year, date.Month, date.Day),
-                new(1, int.MaxValue),
-                true));
-        }
+        var date = _data.MinBy(x => x.Date)!.Date;
 
-        var results = await Task.WhenAll(tasks);
+        var response = await client.Get<PriceGetDto>(
+            "prices",
+            GetQueryString(HttpRequestFilterType.More, companyIds, date.Year, date.Month, date.Day),
+            new(1, int.MaxValue),
+            true);
 
-        return results
-            .Where(x => !x.Errors.Any())
-            .SelectMany(x => GetComparedSample(x.Data!.Items))
-            .ToArray();
+        if (!response.Errors.Any())
+            return GetComparedSample(response.Data!.Items)
+                .ToArray();
+
+        foreach (var item in _data)
+            item.StatusId = (byte)Statuses.Error;
+
+        return _data.ToArray();
     }
-    private static IEnumerable<AnalyzedEntity> GetComparedSample(IEnumerable<PriceGetDto> dto) =>
-        CalculatorService.CompareSample(dto
-            .OrderBy(x => x.Date)
-            .Select(x => new Sample
+    
+    private static IEnumerable<AnalyzedEntity> GetComparedSample(in IEnumerable<PriceGetDto> dto) =>
+         dto
+            .GroupBy(x => x.Ticker)
+            .SelectMany(x =>
             {
-                CompanyId = x.Ticker,
-                Date = x.Date,
-                CompareTypes = CompareTypes.Asc,
-                Value = x.ValueTrue
-            }))
-            .Select(x => new AnalyzedEntity
-            {
-                CompanyId = x.CompanyId,
-                Date = x.Date,
-                AnalyzedEntityTypeId = (byte)EntityTypes.Price,
-                Result = x.Value
+                var companyOrderedData = x
+                    .OrderBy(y => y.Date)
+                    .ToImmutableArray();
+
+                var companySample = companyOrderedData
+                    .Select((y, i) => new Sample { Id = i, CompareType = CompareTypes.Asc, Value = y.ValueTrue });
+
+                var comparedSample = CalculatorService
+                    .CompareSample(companySample)
+                    .ToImmutableDictionary(y => y.Id, z => z.Value);
+
+                return companyOrderedData
+                    .Take(1)
+                    .Select(price => new AnalyzedEntity
+                    {
+                        CompanyId = x.Key,
+                        Date = price.Date,
+                        AnalyzedEntityTypeId = (byte)EntityTypes.Price,
+                        StatusId = (byte)Statuses.Starter,
+                        Result = 0
+                    })
+                    .Concat(companyOrderedData
+                        .Skip(1)
+                        .Select((price, index) =>
+                        {
+                            var isComputed = comparedSample.ContainsKey(index);
+
+                            return new AnalyzedEntity
+                            {
+                                CompanyId = x.Key,
+                                Date = price.Date,
+                                AnalyzedEntityTypeId = (byte)EntityTypes.Price,
+                                StatusId = isComputed
+                                    ? (byte)Statuses.Computed
+                                    : (byte)Statuses.NotComputed,
+                                Result = isComputed
+                                    ? comparedSample[index]
+                                    : 0
+                            };
+                        }));
             });
 }

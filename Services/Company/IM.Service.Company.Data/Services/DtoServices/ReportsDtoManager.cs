@@ -10,16 +10,17 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RepositoryService.Comparators;
 
 namespace IM.Service.Company.Data.Services.DtoServices;
 
 public class ReportsDtoManager
 {
-    private readonly RepositorySet<Report> reportRepository;
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<Report> reportRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
     public ReportsDtoManager(
-        RepositorySet<Report> reportRepository, 
-        RepositorySet<DataAccess.Entities.Company> companyRepository)
+        Repository<Report> reportRepository,
+        Repository<DataAccess.Entities.Company> companyRepository)
     {
         this.reportRepository = reportRepository;
         this.companyRepository = companyRepository;
@@ -27,36 +28,40 @@ public class ReportsDtoManager
 
     public async Task<ResponseModel<ReportGetDto>> GetAsync(string companyId, int year, byte quarter)
     {
+        companyId = companyId.ToUpperInvariant().Trim();
         var company = await companyRepository.FindAsync(companyId.ToUpperInvariant().Trim());
 
         if (company is null)
-            return new() { Errors = new[] { "company not found" } };
+            return new() { Errors = new[] { $"'{companyId}' not found" } };
 
         var report = await reportRepository.FindAsync(company.Id, year, quarter);
 
-        if (report is null)
-            return new() { Errors = new[] { "report not found" } };
+        if (report is not null)
+            return new()
+            {
+                Data = new()
+                {
+                    Ticker = company.Id,
+                    Company = company.Name,
+                    Year = report.Year,
+                    Quarter = report.Quarter,
+                    SourceType = report.SourceType,
+                    Multiplier = report.Multiplier,
+                    Asset = report.Asset,
+                    CashFlow = report.CashFlow,
+                    LongTermDebt = report.LongTermDebt,
+                    Obligation = report.Obligation,
+                    ProfitGross = report.ProfitGross,
+                    ProfitNet = report.ProfitNet,
+                    Revenue = report.Revenue,
+                    ShareCapital = report.ShareCapital,
+                    Turnover = report.Turnover
+                }
+            };
 
         return new()
         {
-            Data = new()
-            {
-                Ticker = company.Id,
-                Company = company.Name,
-                Year = report.Year,
-                Quarter = report.Quarter,
-                SourceType = report.SourceType,
-                Multiplier = report.Multiplier,
-                Asset = report.Asset,
-                CashFlow = report.CashFlow,
-                LongTermDebt = report.LongTermDebt,
-                Obligation = report.Obligation,
-                ProfitGross = report.ProfitGross,
-                ProfitNet = report.ProfitNet,
-                Revenue = report.Revenue,
-                ShareCapital = report.ShareCapital,
-                Turnover = report.Turnover
-            }
+            Errors = new[] { $"Report for '{companyId}' not found" }
         };
     }
     public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> GetAsync(CompanyDataFilterByQuarter<Report> filter, HttpPagination pagination)
@@ -161,8 +166,8 @@ public class ReportsDtoManager
             Turnover = model.Turnover
         };
 
-        var message = $"report of '{model.CompanyId}' create at {model.Year} - {model.Quarter}";
-            
+        var message = $"Report of '{model.CompanyId}' create at {model.Year} - {model.Quarter}";
+
         var (error, _) = await reportRepository.CreateAsync(ctxEntity, message);
 
         return error is not null
@@ -174,7 +179,7 @@ public class ReportsDtoManager
         var reports = models.ToArray();
 
         if (!reports.Any())
-            return new() { Errors = new[] { "report data for creating not found" } };
+            return new() { Errors = new[] { "Report data for creating not found" } };
 
         var ctxEntities = reports.GroupBy(x => (x.Year, x.Quarter)).Select(x => new Report
         {
@@ -194,15 +199,15 @@ public class ReportsDtoManager
             Turnover = x.Last().Turnover
         });
 
-        var (error, result) = await reportRepository.CreateAsync(ctxEntities, "Reports");
+        var (error, result) = await reportRepository.CreateAsync(ctxEntities, new CompanyQuarterComparer<Report>(), "Reports");
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = $"Reports count: {result!.Length} was successed" };
+            : new() { Data = $"Reports count: {result.Length} was successed" };
     }
     public async Task<ResponseModel<string>> UpdateAsync(ReportPostDto model)
     {
-        var ctxEntity = new Report
+        var entity = new Report
         {
             CompanyId = model.CompanyId,
             Year = model.Year,
@@ -220,23 +225,23 @@ public class ReportsDtoManager
             Turnover = model.Turnover
         };
 
-        var message = $"report of '{model.CompanyId}' update at {model.Year} - {model.Quarter}";
+        var info = $"Report of '{model.CompanyId}' update at {model.Year} - {model.Quarter}";
 
-        var (error, _) = await reportRepository.UpdateAsync(ctxEntity, message);
+        var (error, _) = await reportRepository.UpdateAsync(new object[] { entity.CompanyId, entity.Year, entity.Quarter }, entity, info );
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = message + " success" };
+            : new() { Data = info + " success" };
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, int year, byte quarter)
     {
         companyId = companyId.ToUpperInvariant().Trim();
-        var message = $"report of '{companyId}' delete at {year} - {quarter}";
+        var info = $"Report of '{companyId}' delete at {year} - {quarter}";
 
-        var (error, _) = await reportRepository.DeleteAsync(message, companyId, year, quarter);
+        var (error, _) = await reportRepository.DeleteAsync(new object[]{ companyId, year, quarter } , info );
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = message + " success" };
+            : new() { Data = info + " success" };
     }
 }

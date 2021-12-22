@@ -22,7 +22,7 @@ public class CalculatorBackgroundService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var delay = new TimeSpan(0, 0, 20);
+        var delay = new TimeSpan(0, 0, 30);
 
         while (start)
         {

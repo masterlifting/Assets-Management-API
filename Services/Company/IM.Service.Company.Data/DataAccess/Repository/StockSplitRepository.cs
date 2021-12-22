@@ -1,78 +1,48 @@
-﻿using System.Collections.Generic;
+﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
+using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.Data.DataAccess.Entities;
+using IM.Service.Company.Data.Settings;
 
 using Microsoft.EntityFrameworkCore;
-using System.Data;
+using Microsoft.Extensions.Options;
+
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
-using IM.Service.Common.Net.RabbitServices;
-using IM.Service.Common.Net.RepositoryService.Comparators;
-using IM.Service.Company.Data.Settings;
-using Microsoft.Extensions.Options;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
-public class StockSplitRepository : IRepositoryHandler<StockSplit>
+public class StockSplitRepository : RepositoryHandler<StockSplit, DatabaseContext>
 {
     private readonly DatabaseContext context;
     private readonly string rabbitConnectionString;
-    public StockSplitRepository(IOptions<ServiceSettings> options, DatabaseContext context)
+    public StockSplitRepository(IOptions<ServiceSettings> options, DatabaseContext context) : base(context)
     {
         this.context = context;
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public Task GetCreateHandlerAsync(ref StockSplit entity)
+    public override async Task<IEnumerable<StockSplit>> GetUpdateRangeHandlerAsync(IEnumerable<StockSplit> entities)
     {
-        return Task.CompletedTask;
-    }
-    public Task GetCreateHandlerAsync(ref StockSplit[] entities)
-    {
-        var comparer = new CompanyDateComparer<StockSplit>();
-        entities = entities.Distinct(comparer).ToArray();
-        
-        var exist = GetExist(entities);
+        entities = entities.ToArray();
+        var existEntities = await GetExist(entities).ToArrayAsync();
 
-        if (exist.Any())
-            entities = entities.Except(exist, comparer).ToArray();
-
-        return Task.CompletedTask;
-    }
-
-    public Task GetUpdateHandlerAsync(ref StockSplit entity)
-    {
-        var ctxEntity = context.StockSplits.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
-
-        if (ctxEntity is null)
-            throw new DataException($"{nameof(StockSplit)} data not found. ");
-
-        ctxEntity.Value = entity.Value;
-
-        entity = ctxEntity;
-
-        return Task.CompletedTask;
-    }
-    public Task GetUpdateHandlerAsync(ref StockSplit[] entities)
-    {
-        var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
-
-        var result = exist
-            .Join(entities, x => (CompanyId: x.CompanyId, x.Date), y => (CompanyId: y.CompanyId, y.Date),
+        var result = existEntities
+            .Join(entities,
+                x => (x.CompanyId, x.Date),
+                y => (y.CompanyId, y.Date),
                 (x, y) => (Old: x, New: y))
             .ToArray();
 
         foreach (var (Old, New) in result)
             Old.Value = New.Value;
 
-        entities = result.Select(x => x.Old).ToArray();
-
-        return Task.CompletedTask;
+        return result.Select(x => x.Old).ToArray();
     }
-
-    public async Task<IList<StockSplit>> GetDeleteHandlerAsync(IReadOnlyCollection<StockSplit> entities)
+    public override async Task<IEnumerable<StockSplit>> GetDeleteRangeHandlerAsync(IEnumerable<StockSplit> entities)
     {
         var comparer = new CompanyDateComparer<StockSplit>();
         var result = new List<StockSplit>();
@@ -86,7 +56,7 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
         return result;
     }
 
-    public Task SetPostProcessAsync(StockSplit entity)
+    public override Task SetPostProcessAsync(StockSplit entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
@@ -102,7 +72,7 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
 
         return Task.CompletedTask;
     }
-    public Task SetPostProcessAsync(IReadOnlyCollection<StockSplit> entities)
+    public override Task SetPostProcessAsync(IReadOnlyCollection<StockSplit> entities)
     {
         if (entities.Any())
         {
@@ -123,8 +93,9 @@ public class StockSplitRepository : IRepositoryHandler<StockSplit>
         return Task.CompletedTask;
     }
 
-    private IQueryable<StockSplit> GetExist(StockSplit[] entities)
+    public override IQueryable<StockSplit> GetExist(IEnumerable<StockSplit> entities)
     {
+        entities = entities.ToArray();
         var dateMin = entities.Min(x => x.Date);
         var dateMax = entities.Max(x => x.Date);
 

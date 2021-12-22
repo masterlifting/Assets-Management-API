@@ -11,16 +11,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RepositoryService.Comparators;
 
 namespace IM.Service.Company.Data.Services.DtoServices;
 
 public class StockSplitsDtoManager
 {
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
-    private readonly RepositorySet<StockSplit> stockSplitRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<StockSplit> stockSplitRepository;
     public StockSplitsDtoManager(
-        RepositorySet<DataAccess.Entities.Company> companyRepository,
-        RepositorySet<StockSplit> stockSplitRepository)
+        Repository<DataAccess.Entities.Company> companyRepository,
+        Repository<StockSplit> stockSplitRepository)
     {
         this.companyRepository = companyRepository;
         this.stockSplitRepository = stockSplitRepository;
@@ -28,26 +29,30 @@ public class StockSplitsDtoManager
 
     public async Task<ResponseModel<StockSplitGetDto>> GetAsync(string companyId, DateTime date)
     {
+        companyId = companyId.ToUpperInvariant().Trim();
         var company = await companyRepository.FindAsync(companyId.ToUpperInvariant().Trim());
 
         if (company is null)
-            return new() { Errors = new[] { "company not found" } };
+            return new() { Errors = new[] { $"'{companyId}' not found" } };
 
         var stockSplit = await stockSplitRepository.FindAsync(company.Id, date);
 
-        if (stockSplit is null)
-            return new() { Errors = new[] { "split not found" } };
+        if (stockSplit is not null)
+            return new()
+            {
+                Errors = Array.Empty<string>(),
+                Data = new()
+                {
+                    Company = company.Name,
+                    Date = stockSplit.Date,
+                    SourceType = stockSplit.SourceType,
+                    Value = stockSplit.Value,
+                }
+            };
 
         return new()
         {
-            Errors = Array.Empty<string>(),
-            Data = new()
-            {
-                Company = company.Name,
-                Date = stockSplit.Date,
-                SourceType = stockSplit.SourceType,
-                Value = stockSplit.Value,
-            }
+            Errors = new[] { $"Split for '{companyId}' not found" }
         };
     }
     public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetAsync(CompanyDataFilterByDate<StockSplit> filter, HttpPagination pagination)
@@ -119,9 +124,9 @@ public class StockSplitsDtoManager
             Date = model.Date.Date,
             Value = model.Value
         };
-        
-        var message = $"split of '{model.CompanyId}' create at {model.Date:yyyy MMMM dd}";
-        
+
+        var message = $"Split of '{model.CompanyId}' create at {model.Date:yyyy MMMM dd}";
+
         var (error, _) = await stockSplitRepository.CreateAsync(ctxEntity, message);
 
         return error is not null
@@ -133,7 +138,7 @@ public class StockSplitsDtoManager
         var stockSplits = models.ToArray();
 
         if (!stockSplits.Any())
-            return new() { Errors = new[] { "split data for creating not found" } };
+            return new() { Errors = new[] { "Split data for creating not found" } };
 
         var ctxEntities = stockSplits.GroupBy(x => x.Date.Date).Select(x => new StockSplit
         {
@@ -143,15 +148,15 @@ public class StockSplitsDtoManager
             Value = x.Last().Value
         });
 
-        var (error, result) = await stockSplitRepository.CreateAsync(ctxEntities, "Stock splits");
+        var (error, result) = await stockSplitRepository.CreateAsync(ctxEntities, new CompanyDateComparer<StockSplit>(), "Stock splits");
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = $"Stock splits count: {result!.Length} was successed" };
+            : new() { Data = $"Stock splits count: {result.Length} was successed" };
     }
     public async Task<ResponseModel<string>> UpdateAsync(StockSplitPostDto model)
     {
-        var ctxEntity = new StockSplit
+        var entity = new StockSplit
         {
             CompanyId = model.CompanyId,
             SourceType = model.SourceType,
@@ -159,24 +164,24 @@ public class StockSplitsDtoManager
             Value = model.Value
         };
 
-        var message = $"split of '{model.CompanyId}' update at {model.Date:yyyy MMMM dd}";
-        
-        var (error, _) = await stockSplitRepository.UpdateAsync(ctxEntity, message);
+        var info = $"Split of '{model.CompanyId}' update at {model.Date:yyyy MMMM dd}";
+
+        var (error, _) = await stockSplitRepository.UpdateAsync(new object[] { entity.CompanyId, entity.Date }, entity, info);
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = message + " success" };
+            : new() { Data = info + " success" };
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
     {
         companyId = companyId.ToUpperInvariant().Trim();
 
-        var message = $"split of '{companyId}' delete at {date:yyyy MMMM dd}";
-        
-        var (error, _) = await stockSplitRepository.DeleteAsync(message, companyId, date);
+        var info = $"Split of '{companyId}' delete at {date:yyyy MMMM dd}";
+
+        var (error, _) = await stockSplitRepository.DeleteAsync(new object[] { companyId, date }, info);
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = message + " success" };
+            : new() { Data = info + " success" };
     }
 }

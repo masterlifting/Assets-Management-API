@@ -8,18 +8,14 @@ public class Rating
 {
     [Key]
     public int Id { get; init; }
-
-    public Company Company { get; init; } = null!;
-    public string CompanyId { get; init; } = null!;
-
-
-    public int Place { get; set; }
-    public DateTime UpdateTime { get; set; } = DateTime.UtcNow;
-
     
     [Column(TypeName = "Decimal(18,4)")]
     public decimal Result { get; set; }
 
+    public string CompanyId { get; init; } = null!;
+    public Company Company { get; init; } = null!;
+
+    public DateTime Date { get; set; } = DateTime.UtcNow;
 
     [Column(TypeName = "Decimal(18,4)")]
     public decimal ResultPrice { get; set; }

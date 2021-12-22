@@ -19,16 +19,16 @@ namespace IM.Service.Company.Data.Services.DataServices.Prices;
 public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
 {
     private readonly ILogger<PriceLoader> logger;
-    private readonly RepositorySet<Price> priceRepository;
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
-    private readonly RepositorySet<CompanySourceType> companySourceTypeRepository;
+    private readonly Repository<Price> priceRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<CompanySourceType> companySourceTypeRepository;
     private readonly PriceParser parser;
     public PriceLoader(
         ILogger<PriceLoader> logger,
-        RepositorySet<Price> priceRepository,
+        Repository<Price> priceRepository,
         PriceParser parser,
-        RepositorySet<DataAccess.Entities.Company> companyRepository,
-        RepositorySet<CompanySourceType> companySourceTypeRepository)
+        Repository<DataAccess.Entities.Company> companyRepository,
+        Repository<CompanySourceType> companySourceTypeRepository)
     {
         this.logger = logger;
         this.priceRepository = priceRepository;

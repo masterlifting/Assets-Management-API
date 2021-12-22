@@ -8,7 +8,7 @@ namespace IM.Service.Recommendations.Services.MqServices
 {
     public class RabbitActionService : RabbitService
     {
-        public RabbitActionService( RepositorySet<Company> companyRepository) : base(
+        public RabbitActionService( Repository<Company> companyRepository) : base(
             new Dictionary<QueueExchanges, IRabbitActionService>
             {
                 { QueueExchanges.Sync, new RabbitSyncService(companyRepository) },

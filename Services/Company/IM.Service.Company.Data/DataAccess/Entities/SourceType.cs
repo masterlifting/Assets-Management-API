@@ -1,5 +1,4 @@
-﻿
-using IM.Service.Common.Net.Models.Entity;
+﻿using IM.Service.Common.Net.Models.Entity;
 
 using System.Collections.Generic;
 

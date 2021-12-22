@@ -20,49 +20,59 @@ public sealed class DatabaseContext : DbContext
         modelBuilder.UseSerialColumns();
         modelBuilder.Entity<Entities.Company>().HasIndex(x => x.Name).IsUnique();
         modelBuilder.Entity<Sector>().HasData(
-            new() { Id = 1, Name = "Нецикличные компании" }
-            , new() { Id = 2, Name = "Финансы" }
-            , new() { Id = 3, Name = "Цикличные компании" }
-            , new() { Id = 4, Name = "Энергетика" }
-            , new() { Id = 5, Name = "Коммунальные услуги" }
-            , new() { Id = 6, Name = "Здравоохранение" }
-            , new() { Id = 7, Name = "Услуги" }
-            , new() { Id = 8, Name = "Средства производства" }
-            , new() { Id = 9, Name = "Сырье" }
-            , new() { Id = 10, Name = "Технологии" }
+             new() { Id = 1, Name = "Сырье" }
+            , new() { Id = 2, Name = "Средства производства" }
+            , new() { Id = 3, Name = "Технологии" }
+            , new() { Id = 4, Name = "Коммунальные услуги" }
+            , new() { Id = 5, Name = "Энергетика" }
+            , new() { Id = 6, Name = "Цикличные компании" }
+            , new() { Id = 7, Name = "Финансы" }
+            , new() { Id = 8, Name = "Нецикличные компании" }
+            , new() { Id = 9, Name = "Здравоохранение" }
+            , new() { Id = 10, Name = "Услуги" }
             , new() { Id = 11, Name = "Транспорт" }
         );
         modelBuilder.Entity<Industry>().HasData(
-            new() { Id = 1, SectorId = 1, Name = "Пищевая промышленность" }
-            , new() { Id = 2, SectorId = 1, Name = "Напитки" }
-            , new() { Id = 3, SectorId = 2, Name = "Региональные банки" }
-            , new() { Id = 4, SectorId = 2, Name = "Потребительские финансовые услуги" }
-            , new() { Id = 5, SectorId = 3, Name = "Автомобильная промышленность" }
-            , new() { Id = 6, SectorId = 4, Name = "Нефтегазовая промышленность" }
-            , new() { Id = 7, SectorId = 4, Name = "Интегрированная нефтегазовая промышленность" }
-            , new() { Id = 8, SectorId = 5, Name = "Электроэнергетика" }
-            , new() { Id = 9, SectorId = 6, Name = "Производство и поставки медицинского оборудования" }
-            , new() { Id = 10, SectorId = 7, Name = "Услуги связи" }
-            , new() { Id = 11, SectorId = 7, Name = "Розничная торговля" }
-            , new() { Id = 12, SectorId = 7, Name = "Эфирное и кабельное телевидение" }
-            , new() { Id = 13, SectorId = 7, Name = "Деловые услуги" }
-            , new() { Id = 14, SectorId = 7, Name = "Отдых" }
-            , new() { Id = 15, SectorId = 6, Name = "Биотехнологии и лекарства" }
-            , new() { Id = 16, SectorId = 5, Name = "Газоснабжение" }
-            , new() { Id = 17, SectorId = 8, Name = "Строительство-снабжение" }
-            , new() { Id = 18, SectorId = 8, Name = "Аэрокосмическая и оборонная промышленность" }
-            , new() { Id = 19, SectorId = 8, Name = "Различные средства производства" }
-            , new() { Id = 20, SectorId = 9, Name = "Разные промышленные товары" }
-            , new() { Id = 21, SectorId = 9, Name = "Химическое производство" }
-            , new() { Id = 22, SectorId = 9, Name = "Золото и серебро" }
-            , new() { Id = 23, SectorId = 9, Name = "Металлодобывающая промышленность" }
-            , new() { Id = 24, SectorId = 9, Name = "Нерудная промышленность" }
-            , new() { Id = 25, SectorId = 10, Name = "Научно-техническое приборостроение" }
-            , new() { Id = 26, SectorId = 10, Name = "Компьютерные услуги" }
-            , new() { Id = 27, SectorId = 10, Name = "Программное обеспечение и программирование" }
-            , new() { Id = 28, SectorId = 10, Name = "Коммуникационное оборудование" }
-            , new() { Id = 29, SectorId = 11, Name = "Воздушные перевозки" }
-            , new() { Id = 30, SectorId = 10, Name = "Полупроводники" }
+             new() { Id = 1, SectorId = 1, Name = "Разные промышленные товары" }
+            , new() { Id = 2, SectorId = 1, Name = "Химическое производство" }
+            , new() { Id = 3, SectorId = 1, Name = "Золото и серебро" }
+            , new() { Id = 4, SectorId = 1, Name = "Металлодобывающая промышленность" }
+            , new() { Id = 5, SectorId = 1, Name = "Нерудная промышленность" }
+
+            , new() { Id = 6, SectorId = 2, Name = "Строительство-снабжение" }
+            , new() { Id = 7, SectorId = 2, Name = "Аэрокосмическая и оборонная промышленность" }
+            , new() { Id = 8, SectorId = 2, Name = "Различные средства производства" }
+
+            , new() { Id = 9, SectorId = 3, Name = "Научно-техническое приборостроение" }
+            , new() { Id = 10, SectorId = 3, Name = "Компьютерные услуги" }
+            , new() { Id = 11, SectorId = 3, Name = "Программное обеспечение и программирование" }
+            , new() { Id = 12, SectorId = 3, Name = "Коммуникационное оборудование" }
+            , new() { Id = 13, SectorId = 3, Name = "Полупроводники" }
+
+            , new() { Id = 14, SectorId = 4, Name = "Электроэнергетика" }
+            , new() { Id = 15, SectorId = 4, Name = "Газоснабжение" }
+
+            , new() { Id = 16, SectorId = 5, Name = "Нефтегазовая промышленность" }
+            , new() { Id = 17, SectorId = 5, Name = "Интегрированная нефтегазовая промышленность" }
+
+            , new() { Id = 18, SectorId = 6, Name = "Автомобильная промышленность" }
+
+            , new() { Id = 19, SectorId = 7, Name = "Региональные банки" }
+            , new() { Id = 20, SectorId = 7, Name = "Потребительские финансовые услуги" }
+
+            , new() { Id = 21, SectorId = 8, Name = "Пищевая промышленность" }
+            , new() { Id = 22, SectorId = 8, Name = "Напитки" }
+
+            , new() { Id = 23, SectorId = 9, Name = "Производство и поставки медицинского оборудования" }
+            , new() { Id = 24, SectorId = 9, Name = "Биотехнологии и лекарства" }
+
+            , new() { Id = 25, SectorId = 10, Name = "Услуги связи" }
+            , new() { Id = 26, SectorId = 10, Name = "Розничная торговля" }
+            , new() { Id = 27, SectorId = 10, Name = "Эфирное и кабельное телевидение" }
+            , new() { Id = 28, SectorId = 10, Name = "Деловые услуги" }
+            , new() { Id = 29, SectorId = 10, Name = "Отдых" }
+
+            , new() { Id = 30, SectorId = 11, Name = "Воздушные перевозки" }
         );
         base.OnModelCreating(modelBuilder);
     }

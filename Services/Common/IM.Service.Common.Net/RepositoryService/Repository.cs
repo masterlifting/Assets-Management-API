@@ -34,7 +34,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            await handler.GetCreateHandlerAsync(ref entity);
+            entity = await handler.GetCreateHandlerAsync(entity);
             await context.Set<TEntity>().AddAsync(entity);
             await context.SaveChangesAsync();
             await handler.SetPostProcessAsync(entity);
@@ -48,20 +48,22 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             return (message, null);
         }
     }
-    public async Task<(string? error, TEntity[]? result)> CreateAsync(IEnumerable<TEntity> entities, string info)
+    public async Task<(string? error, TEntity[] result)> CreateAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
         try
         {
-            var result = entities as TEntity[] ?? entities.ToArray();
+            entities = entities.ToArray();
 
-            if (!result.Any())
+            if (!entities.Any())
             {
                 logger.LogWarning(LogEvents.Create, "{info}. Entity: {name}. No incoming collection", info, name);
                 return (null, Array.Empty<TEntity>());
             }
 
-            var count = 0;
-            await handler.GetCreateHandlerAsync(ref result);
+            entities = await handler.GetCreateRangeHandlerAsync(entities, comparer);
+
+            var result = entities.ToArray();
+            var count = result.Length;
 
             if (result.Any())
             {
@@ -77,16 +79,15 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         {
             var message = exception.InnerException?.Message ?? exception.Message;
             logger.LogError(LogEvents.Create, "{info}. Entity: {name}. Error: {exception}", info, name, message);
-            return (message, null);
+            return (message, Array.Empty<TEntity>());
         }
     }
 
-    public async Task<(string? error, TEntity? result)> UpdateAsync(TEntity entity, string info)
+    public async Task<(string? error, TEntity? result)> UpdateAsync(object[] id, TEntity entity, string info)
     {
         try
         {
-            await handler.GetUpdateHandlerAsync(ref entity);
-            context.Set<TEntity>().Update(entity);
+            entity = await handler.GetUpdateHandlerAsync(id, entity);
             await context.SaveChangesAsync();
             await handler.SetPostProcessAsync(entity);
             logger.LogInformation(LogEvents.Update, "{info}. Entity: {name}", info, name);
@@ -99,20 +100,22 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             return (message, null);
         }
     }
-    public async Task<(string? error, TEntity[]? result)> UpdateAsync(IEnumerable<TEntity> entities, string info)
+    public async Task<(string? error, TEntity[] result)> UpdateAsync(IEnumerable<TEntity> entities, string info)
     {
         try
         {
-            var result = entities as TEntity[] ?? entities.ToArray();
+            entities = entities.ToArray();
 
-            if (!result.Any())
+            if (!entities.Any())
             {
                 logger.LogWarning(LogEvents.Update, "{info}. Entity: {name}. No incoming collection", info, name);
                 return (null, Array.Empty<TEntity>());
             }
 
-            var count = 0;
-            await handler.GetUpdateHandlerAsync(ref result);
+            entities = await handler.GetUpdateRangeHandlerAsync(entities);
+
+            var result = entities.ToArray();
+            var count = result.Length;
 
             if (result.Any())
             {
@@ -128,15 +131,15 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         {
             var message = exception.InnerException?.Message ?? exception.Message;
             logger.LogError(LogEvents.Update, "{info}. Entity: {name}. Error: {exception}", info, name, message);
-            return (message, null);
+            return (message, Array.Empty<TEntity>());
         }
     }
 
-    public async Task<(string? error, TEntity? result)> CreateUpdateAsync(TEntity entity, string info)
+    public async Task<(string? error, TEntity? result)> CreateUpdateAsync(object[] id, TEntity entity, string info)
     {
         try
         {
-            await handler.GetCreateHandlerAsync(ref entity);
+            entity = await handler.GetCreateHandlerAsync(entity);
             await context.Set<TEntity>().AddAsync(entity);
             await context.SaveChangesAsync();
             await handler.SetPostProcessAsync(entity);
@@ -147,7 +150,8 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         {
             try
             {
-                await handler.GetUpdateHandlerAsync(ref entity);
+                entity = await handler.GetUpdateHandlerAsync(id, entity);
+                context.Entry(entity).State = EntityState.Modified;
                 context.Set<TEntity>().Update(entity);
                 await context.SaveChangesAsync();
                 await handler.SetPostProcessAsync(entity);
@@ -162,34 +166,37 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             }
         }
     }
-    public async Task<(string? error, TEntity[]? result)> CreateUpdateAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+    public async Task<(string? error, TEntity[] result)> CreateUpdateAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
         try
         {
-            var result = entities as TEntity[] ?? entities.ToArray();
+            entities = entities.ToArray();
 
-            if (!result.Any())
+            if (!entities.Any())
             {
                 logger.LogWarning(LogEvents.CreateUpdate, "{info}. Entity: {name}. No incoming collection", info, name);
                 return (null, Array.Empty<TEntity>());
             }
 
-            var createResult = result.ToArray();
-
-            await handler.GetCreateHandlerAsync(ref createResult);
+            var createEntities = await handler.GetCreateRangeHandlerAsync(entities, comparer);
+            var createResult = createEntities.ToArray();
 
             if (createResult.Any())
                 await context.Set<TEntity>().AddRangeAsync(createResult);
 
-            var updateResult = result.Except(createResult, comparer).ToArray();
+            var updateEntities = entities.Except(createResult, comparer);
+            var updateResult = updateEntities.ToArray();
 
             if (updateResult.Any())
             {
-                await handler.GetUpdateHandlerAsync(ref updateResult);
-                context.Set<TEntity>().UpdateRange(updateResult);
+                updateEntities = await handler.GetUpdateRangeHandlerAsync(updateResult);
+                updateResult = updateEntities.ToArray();
+
+                if (updateResult.Any())
+                    context.Set<TEntity>().UpdateRange(updateResult);
             }
 
-            result = createResult.Concat(updateResult).ToArray();
+            var result = createResult.Concat(updateResult).ToArray();
 
             if (result.Any())
             {
@@ -204,84 +211,88 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         {
             var message = exception.InnerException?.Message ?? exception.Message;
             logger.LogError(LogEvents.CreateUpdate, "{info}. Entity: {name}. Error: {exception}", info, name, message);
-            return (message, null);
+            return (message, Array.Empty<TEntity>());
         }
     }
 
-    public async Task<(string? error, TEntity[]? result)> CreateUpdateDeleteAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+    public async Task<(string? error, TEntity[] result)> CreateUpdateDeleteAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
         try
         {
-            var result = entities as TEntity[] ?? entities.ToArray();
+            entities = entities.ToArray();
 
-            if (!result.Any())
+            if (!entities.Any())
             {
                 logger.LogWarning(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. No incoming collection", info, name);
                 return (null, Array.Empty<TEntity>());
             }
 
-            var createResult = result.ToArray();
-
-            await handler.GetCreateHandlerAsync(ref createResult);
+            var createEntities = await handler.GetCreateRangeHandlerAsync(entities, comparer);
+            var createResult = createEntities.ToArray();
 
             if (createResult.Any())
                 await context.Set<TEntity>().AddRangeAsync(createResult);
 
-            var updateResult = result.Except(createResult, comparer).ToArray();
+            var updateEntities = entities.Except(createResult, comparer);
+            var updateResult = updateEntities.ToArray();
 
             if (updateResult.Any())
             {
-                await handler.GetUpdateHandlerAsync(ref updateResult);
-                context.Set<TEntity>().UpdateRange(updateResult);
+                updateEntities = await handler.GetUpdateRangeHandlerAsync(updateResult);
+                updateResult = updateEntities.ToArray();
+
+                if (updateResult.Any())
+                    context.Set<TEntity>().UpdateRange(updateResult);
             }
 
-            result = createResult.Concat(updateResult).ToArray();
+            var processingResult = createResult.Concat(updateResult).ToArray();
 
-            var deleteResult = await handler.GetDeleteHandlerAsync(result);
+            var deleteEntities = await handler.GetDeleteRangeHandlerAsync(processingResult);
+            var deleteResult = deleteEntities.ToArray();
 
             if (deleteResult.Any())
                 context.Set<TEntity>().RemoveRange(deleteResult);
 
-            var processResult = result.Concat(deleteResult).ToArray();
-
-            if (processResult.Any())
+            if (processingResult.Any() || deleteResult.Any())
             {
                 await context.SaveChangesAsync();
-                await handler.SetPostProcessAsync(processResult);
+                await handler.SetPostProcessAsync(processingResult.Concat(deleteResult).ToArray());
             }
 
-            logger.LogInformation(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. Processed count: {pcount}. Deleted count: {dcount}", info, name, result.Length, deleteResult.Count);
-            return (null, result);
+            logger.LogInformation(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. Processed count: {pcount}. Deleted count: {dcount}", info, name, processingResult.Length, deleteResult.Length);
+            return (null, processingResult);
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
             logger.LogError(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. Error: {exception}", info, name, message);
-            return (message, null);
+            return (message, Array.Empty<TEntity>());
         }
     }
-    public async Task<string?> ReCreateAsync(IEnumerable<TEntity> entities, string info)
+    public async Task<string?> ReCreateAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
         try
         {
-            var result = entities as TEntity[] ?? entities.ToArray();
+            entities = entities.ToArray();
 
-            if (!result.Any())
+            if (!entities.Any())
             {
                 logger.LogWarning(LogEvents.ReCreate, "{info}. Entity: {name}. No incoming collection", info, name);
                 return null;
             }
 
-            var old = context.Set<TEntity>();
-            context.Set<TEntity>().RemoveRange(old);
+            var oldData = context.Set<TEntity>();
+            context.Set<TEntity>().RemoveRange(oldData);
             await context.SaveChangesAsync();
 
-            await handler.GetCreateHandlerAsync(ref result);
+            var newData = await handler.GetCreateRangeHandlerAsync(entities, comparer);
+            var result = newData.ToArray();
+
             if (result.Any())
             {
                 await context.Set<TEntity>().AddRangeAsync(result);
-                await handler.SetPostProcessAsync(result);
                 await context.SaveChangesAsync();
+                await handler.SetPostProcessAsync(result);
             }
 
             logger.LogInformation(LogEvents.ReCreate, "{info}. Entity: {name}. Processed count: {count}", info, name, result.Length);
@@ -312,23 +323,16 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             return message;
         }
     }
-    public async Task<(string? error, TEntity? entity)> DeleteAsync(string info, params object[] id)
+    public async Task<(string? error, TEntity? entity)> DeleteAsync(object[] id, string info)
     {
         try
         {
-            var entity = await context.Set<TEntity>().FindAsync(id);
-
-            if (entity is null)
-                throw new NullReferenceException(nameof(entity));
-
-            context.Set<TEntity>().Remove(entity);
-
+            var result = await handler.GetDeleteHandlerAsync(id);
+            context.Set<TEntity>().Remove(result);
             await context.SaveChangesAsync();
-
-            await handler.SetPostProcessAsync(entity);
-
+            await handler.SetPostProcessAsync(result);
             logger.LogInformation(LogEvents.Remove, info);
-            return (null, entity);
+            return (null, result);
         }
         catch (Exception exception)
         {
@@ -337,40 +341,43 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             return (message, null);
         }
     }
-    public async Task<string?> DeleteAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+    public async Task<(string? error, TEntity[] result)> DeleteAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
         try
         {
-            var result = entities as TEntity[] ?? entities.ToArray();
+            entities = entities.ToArray();
 
-            if (!result.Any())
+            if (!entities.Any())
             {
                 logger.LogWarning(LogEvents.Remove, "{info}. Entity: {name}. No incoming collection", info, name);
-                return null;
+                return (null, Array.Empty<TEntity>());
             }
 
-            var deleteResult = context.Set<TEntity>().Intersect(result, comparer).ToArray();
-            context.Set<TEntity>().RemoveRange(deleteResult);
+            var deleteResult = context.Set<TEntity>().Intersect(entities, comparer).ToArray();
 
-            var count = await context.SaveChangesAsync();
-
-            if (count > 0)
+            var count = 0;
+            if (deleteResult.Any())
+            {
+                context.Set<TEntity>().RemoveRange(deleteResult);
+                count = await context.SaveChangesAsync();
                 await handler.SetPostProcessAsync(deleteResult);
+            }
 
             logger.LogInformation(LogEvents.Remove, "{info}. Entity: {name}. Processed count: {count}", info, name, count);
-            return null;
+            return (null, deleteResult);
         }
         catch (Exception exception)
         {
             var message = exception.InnerException?.Message ?? exception.Message;
             logger.LogError(LogEvents.Remove, "{info}. Entity: {name}. Error: {exception}", info, name, message);
-            return message;
+            return (message, Array.Empty<TEntity>());
         }
     }
 
     public DbSet<TEntity> GetDbSet() => context.Set<TEntity>();
 
     public async Task<TEntity?> FindAsync(params object[] parameters) => await context.Set<TEntity>().FindAsync(parameters);
+    public async Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().FirstOrDefaultAsync(predicate);
     public async Task<TEntity?> FindLastAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector) =>
         await context.Set<TEntity>().OrderBy(orderSelector).LastOrDefaultAsync(predicate);
     public async Task<TEntity?> FindFirstAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector) =>
@@ -387,6 +394,11 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             .OrderBy(orderSelector)
             .Skip((pagination.Page - 1) * pagination.Limit)
             .Take(pagination.Limit);
+    public IQueryable<TEntity> GetPaginationQueryDesc<TSelector>(HttpPagination pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+        context.Set<TEntity>()
+            .OrderByDescending(orderSelector)
+            .Skip((pagination.Page - 1) * pagination.Limit)
+            .Take(pagination.Limit);
     public IQueryable<TEntity> GetPaginationQuery<TSelector1, TSelector2>(HttpPagination pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
         context.Set<TEntity>()
             .OrderBy(orderSelector1)
@@ -394,16 +406,20 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             .Skip((pagination.Page - 1) * pagination.Limit)
             .Take(pagination.Limit);
     public IQueryable<TEntity> GetPaginationQuery<TSelector>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
-        query.OrderBy(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
+        query
+            .OrderBy(orderSelector)
+            .Skip((pagination.Page - 1) * pagination.Limit)
+            .Take(pagination.Limit);
     public IQueryable<TEntity> GetPaginationQuery<TSelector1, TSelector2>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
         query.OrderBy(orderSelector1).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
 
     public async Task<TEntity[]> GetSampleAsync() => await context.Set<TEntity>().AsNoTracking().ToArrayAsync();
+    public async Task<TEntity[]> GetSampleAsync(IQueryable<TEntity> query) => await query.AsNoTracking().ToArrayAsync();
     public async Task<TEntity[]> GetSampleAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync();
     public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, TResult>> selector) =>
-        await context.Set<TEntity>().Select(selector).ToArrayAsync();
+        await context.Set<TEntity>().AsNoTracking().Select(selector).ToArrayAsync();
     public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector) =>
-        await context.Set<TEntity>().Where(predicate).Select(selector).ToArrayAsync();
+        await context.Set<TEntity>().AsNoTracking().Where(predicate).Select(selector).ToArrayAsync();
     public async Task<TEntity[]> GetSampleOrderedAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector) =>
         await context.Set<TEntity>().AsNoTracking().Where(predicate).OrderBy(orderSelector).ToArrayAsync();
 

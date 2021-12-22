@@ -15,8 +15,9 @@ namespace IM.Service.Company.Data.Services.DataServices.StockSplits.Implementati
 public class ConcreteParser : IStockSplitParser
 {
     private readonly ILogger<StockSplitParser> logger;
+    public ConcreteParser(ILogger<StockSplitParser> logger) => this.logger = logger;
 
-    public async Task<StockSplit[]> GetStockSplitsAsync(string source, DateDataConfigModel config)
+    public Task<StockSplit[]> GetStockSplitsAsync(string source, DateDataConfigModel config)
     {
         var result = Array.Empty<StockSplit>();
 
@@ -30,7 +31,7 @@ public class ConcreteParser : IStockSplitParser
             logger.LogError(LogEvents.Processing, "investing parser error: {error}", exception.InnerException?.Message ?? exception.Message);
         }
 
-        return result;
+        return Task.FromResult(result);
     }
     public async Task<StockSplit[]> GetStockSplitsAsync(string source, IEnumerable<DateDataConfigModel> config)
     {

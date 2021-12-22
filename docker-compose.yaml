@@ -11,7 +11,8 @@ services:
     environment:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - ${DB_DATA}:/var/lib/postgresql/data
+       - ${DB_DATA}:/var/lib/postgresql/data
+       - .volumes/db/data:${DB_DATA}
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq

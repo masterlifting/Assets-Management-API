@@ -1,19 +1,18 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace IM.Service.Recommendations.DataAccess.Entities
+namespace IM.Service.Recommendations.DataAccess.Entities;
+
+public class Purchase
 {
-    public class Purchase
-    {
-        [Key]
-        public int Id { get; set; }
+    [Key]
+    public int Id { get; set; }
 
-        public string CompanyId { get; set; } = null!;
-        public virtual Company Company { get; set; } = null!;
+    public string CompanyId { get; set; } = null!;
+    public virtual Company Company { get; set; } = null!;
 
-        public DateTime UpdateTime { get; set; } = DateTime.UtcNow;
+    public DateTime Date { get; set; } = DateTime.UtcNow;
 
-        public decimal Price { get; set; }
-        public int Percent { get; set; }
-    }
+    public decimal Price { get; set; }
+    public int Percent { get; set; }
 }

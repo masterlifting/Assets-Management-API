@@ -17,7 +17,9 @@ public static class Enums
     {
         Ready = 1,
         Processing = 2,
-        Completed = 3,
-        Error = 4
+        Starter = 3,
+        Computed = 4,
+        NotComputed = 5,
+        Error = 6
     }
 }

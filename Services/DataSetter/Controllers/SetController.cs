@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using IM.Service.Common.Net.Models.Dto.Http;
-
-using Microsoft.AspNetCore.Mvc;
-
 using System.Threading.Tasks;
 using DataSetter.Clients;
 using DataSetter.DataAccess;
 using DataSetter.Models.Dto;
+using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
 using static IM.Service.Common.Net.CommonHelper.QarterHelper;
 
 namespace DataSetter.Controllers;
@@ -22,40 +20,39 @@ public class SetController : ControllerBase
 {
     private readonly CompanyClient companyClient;
     private readonly CompanyDataClient dataClient;
-    private readonly CompaniesDbContext companyContext;
-    private readonly PricesDbContext pricesContext;
-    private readonly ReportsDbContext reportsContext;
+    private readonly InvestmentManagerContext context;
+
 
     public SetController(
         CompanyClient companyClient
         , CompanyDataClient dataClient
-        , CompaniesDbContext companyContext
-        , PricesDbContext pricesContext
-        , ReportsDbContext reportsContext)
+        , InvestmentManagerContext context)
     {
         this.companyClient = companyClient;
         this.dataClient = dataClient;
-        this.companyContext = companyContext;
-        this.pricesContext = pricesContext;
-        this.reportsContext = reportsContext;
+        this.context = context;
     }
 
-    [HttpGet("{companyId}")]
-    public async Task<string> Get(string companyId)
+    //[HttpGet("{companyId}")]
+    public async Task<string> Get(long tickerId)
     {
-        var dbCompany = await companyContext.Companies.FindAsync(companyId.ToUpperInvariant());
+        var ticker = await context.Tickers.FindAsync(tickerId);
+
+        if (ticker is null)
+            return "ticker not found";
+
+        var dbCompany = await context.Companies.FindAsync(ticker.CompanyId);
 
         if (dbCompany is null)
             return "Company not found";
 
-        var dbPrices = await pricesContext.Prices
-            .Where(x => x.TickerName == dbCompany.Ticker)
-            .OrderBy(x => x.Date)
+        var dbPrices = await context.Prices
+            .Where(x => x.TickerId == tickerId)
+            .OrderBy(x => x.BidDate)
             .ToArrayAsync();
-        var dbReports = await reportsContext.Reports
-            .Where(x => x.TickerName == dbCompany.Ticker)
-            .OrderBy(x => x.Year)
-            .ThenBy(x => x.Quarter)
+        var dbReports = await context.Reports
+            .Where(x => x.CompanyId == ticker.CompanyId)
+            .OrderBy(x => x.DateReport)
             .ToArrayAsync();
 
         //create models
@@ -67,10 +64,12 @@ public class SetController : ControllerBase
 
         if (dbPrices.Any())
         {
+            var exchange = await context.Exchanges.FindAsync(ticker.ExchangeId);
+
             var priceSource = new EntityTypeDto
             {
-                Id = dbPrices[0].SourceType == "tdameritrade" ? (byte)3 : (byte)2,
-                Value = dbPrices[0].TickerNameNavigation.SourceValue
+                Id = exchange?.Name == "tdameritrade" ? (byte)3 : (byte)2,
+                Value = ticker.Name
             };
 
             sources.Add(priceSource);
@@ -79,26 +78,27 @@ public class SetController : ControllerBase
 
             prices = dbPrices.Select(x => new PricePostDto
             {
-                CompanyId = dbCompany.Ticker,
+                CompanyId = ticker.Name,
                 SourceType = sourceName,
-                Date = x.Date,
+                Date = x.BidDate,
                 Value = x.Value
             }).ToArray();
 
-            splits = dbCompany.StockSplits.Select(x => new StockSplitPostDto
-            {
-                CompanyId = dbCompany.Ticker,
-                SourceType = "manual",
-                Value = x.Divider,
-                Date = x.Date
-            }).ToArray();
+            //splits = dbCompany.StockSplits.Select(x => new StockSplitPostDto
+            //{
+            //    CompanyId = ticker.Name,
+            //    SourceType = "manual",
+            //    Value = x.Divider,
+            //    Date = x.Date
+            //}).ToArray();
         }
         if (dbReports.Any())
         {
+            var source = await context.ReportSources.FirstOrDefaultAsync(x => x.CompanyId == ticker.CompanyId);
             var reportSource = new EntityTypeDto
             {
                 Id = 4,
-                Value = dbReports[0].TickerNameNavigation.SourceValue
+                Value = source!.Value
             };
 
             var sourceName = string.Intern("investing");
@@ -107,17 +107,17 @@ public class SetController : ControllerBase
 
             reports = dbReports.Select(x => new ReportPostDto
             {
-                CompanyId = dbCompany.Ticker,
+                CompanyId = ticker.Name,
                 SourceType = sourceName,
-                Asset = x.Asset,
+                Asset = x.Assets,
                 CashFlow = x.CashFlow,
                 LongTermDebt = x.LongTermDebt,
-                Multiplier = x.Multiplier,
-                Obligation = x.Obligation,
-                ProfitGross = x.ProfitGross,
-                ProfitNet = x.ProfitNet,
-                Quarter = x.Quarter,
-                Year = x.Year,
+                Multiplier = 1_000_000,
+                Obligation = x.Obligations,
+                ProfitGross = x.GrossProfit,
+                ProfitNet = x.NetProfit,
+                Quarter = GetQuarter(x.DateReport.Month),
+                Year = x.DateReport.Year,
                 Revenue = x.Revenue,
                 ShareCapital = x.ShareCapital,
                 Turnover = x.Turnover
@@ -127,23 +127,18 @@ public class SetController : ControllerBase
                 .GroupBy(x => x.StockVolume)
                 .Select(x => new StockVolumePostDto
                 {
-                    CompanyId = dbCompany.Ticker,
+                    CompanyId = ticker.Name,
                     SourceType = sourceName,
                     Value = x.Key,
-                    Date = new DateTime
-                    (
-                        x.OrderBy(y => y.Year).First().Year,
-                        GetLastMonth(x.OrderBy(y => y.Year).ThenBy(y => y.Quarter).First().Quarter),
-                        1
-                    )
+                    Date = x.OrderBy(y => y.DateReport).First().DateReport
                 }).ToArray();
         }
 
         var company = new CompanyPostDto
         {
-            Id = dbCompany.Ticker,
+            Id = ticker.Name,
             Name = dbCompany.Name,
-            Description = dbCompany.Description,
+            Description = "",
             IndustryId = (byte)dbCompany.IndustryId,
             DataSources = sources
         };
@@ -151,93 +146,96 @@ public class SetController : ControllerBase
         var a = await companyClient.Post("companies", company);
         var b = await dataClient.Post("prices/collection", prices);
         var c = await dataClient.Post("reports/collection", reports);
-        var d = await dataClient.Post("stockSplits/collection", splits);
+        //var d = await dataClient.Post("stockSplits/collection", splits);
         var e = await dataClient.Post("stockVolumes/collection", volumes);
 
-        return "Ok";
+        return ticker.Name;
     }
 
-    [HttpGet]
-    public async Task<ResponseModel<string>> Get()
+    [HttpGet("count/")]
+    public async Task<ResponseModel<string>> Get(int count = 0)
     {
-        var companyIds = await companyContext.Companies.Select(x => x.Ticker).ToArrayAsync();
-        var result = new string[companyIds.Length];
+        var tickers = await context.Tickers.Where(x => x.Prices.Any(y => y.BidDate >= DateTime.Now.AddMonths(-1))).ToArrayAsync();
+        var data = tickers.Skip(count).Select(x => x.Id).ToImmutableArray();
+
+        var result = new string[data.Length];
 
         for (var i = 0; i < result.Length; i++)
         {
-            var r = await Get(companyIds[i]);
-            result[i] = $"{companyIds[i]} -> {r}";
+            var r = await Get(data[i]);
+            result[i] = $"{data[i]}\t-> {r}";
+            await Task.Delay(3000);
         }
         return new() { Errors = result };
     }
 
-    [HttpPut("{companyId}")]
-    public async Task<string> Put(string companyId)
-    {
-        companyId = companyId.ToUpperInvariant();
+    //[HttpPut("{companyId}")]
+    //public async Task<string> Put(string companyId)
+    //{
+    //    companyId = companyId.ToUpperInvariant();
 
-        var dbCompany = await companyContext.Companies.FindAsync(companyId);
+    //    var dbCompany = await context.Companies.FindAsync(companyId);
 
-        if (dbCompany is null)
-            return "Company not found";
+    //    if (dbCompany is null)
+    //        return "Company not found";
 
-        var dbPrices = await pricesContext.Prices
-            .Where(x => x.TickerName == dbCompany.Ticker)
-            .OrderBy(x => x.Date)
-            .ToArrayAsync();
-        var dbReports = await reportsContext.Reports
-            .Where(x => x.TickerName == dbCompany.Ticker)
-            .OrderBy(x => x.Year)
-            .ThenBy(x => x.Quarter)
-            .ToArrayAsync();
+    //    var dbPrices = await context.Prices
+    //        .Where(x => x.TickerName == dbCompany.Ticker)
+    //        .OrderBy(x => x.Date)
+    //        .ToArrayAsync();
+    //    var dbReports = await context.Reports
+    //        .Where(x => x.TickerName == dbCompany.Ticker)
+    //        .OrderBy(x => x.Year)
+    //        .ThenBy(x => x.Quarter)
+    //        .ToArrayAsync();
 
-        List<EntityTypeDto> sources = new(2);
-        if (dbPrices.Any())
-        {
-            var priceSource = new EntityTypeDto
-            {
-                Id = dbPrices[0].SourceType == "tdameritrade" ? (byte)3 : (byte)2,
-                Value = dbPrices[0].TickerNameNavigation.SourceValue
-            };
-            sources.Add(priceSource);
-        }
-        if (dbReports.Any())
-        {
-            var reportSource = new EntityTypeDto
-            {
-                Id = 4,
-                Value = dbReports[0].TickerNameNavigation.SourceValue
-            };
-            sources.Add(reportSource);
-        }
+    //    List<EntityTypeDto> sources = new(2);
+    //    if (dbPrices.Any())
+    //    {
+    //        var priceSource = new EntityTypeDto
+    //        {
+    //            Id = dbPrices[0].SourceType == "tdameritrade" ? (byte)3 : (byte)2,
+    //            Value = dbPrices[0].TickerNameNavigation.SourceValue
+    //        };
+    //        sources.Add(priceSource);
+    //    }
+    //    if (dbReports.Any())
+    //    {
+    //        var reportSource = new EntityTypeDto
+    //        {
+    //            Id = 4,
+    //            Value = dbReports[0].TickerNameNavigation.SourceValue
+    //        };
+    //        sources.Add(reportSource);
+    //    }
 
-        var company = new CompanyPutDto
-        {
-            Name = dbCompany.Name,
-            Description = dbCompany.Description,
-            IndustryId = (byte)dbCompany.IndustryId,
-            DataSources = sources
-        };
+    //    var company = new CompanyPutDto
+    //    {
+    //        Name = dbCompany.Name,
+    //        Description = dbCompany.Description,
+    //        IndustryId = (byte)dbCompany.IndustryId,
+    //        DataSources = sources
+    //    };
 
-        var response = await companyClient.Put("companies", company, companyId);
+    //    var response = await companyClient.Put("companies", company, companyId);
 
-        return response.Data ?? string.Join(';', response.Errors);
-    }
+    //    return response.Data ?? string.Join(';', response.Errors);
+    //}
 
-    [HttpPut]
-    public async Task<ResponseModel<string>> Put()
-    {
-        var companyIds = await companyContext.Companies.Select(x => x.Ticker).ToArrayAsync();
-        var result = new string[companyIds.Length];
+    //[HttpPut]
+    //public async Task<ResponseModel<string>> Put()
+    //{
+    //    var companyIds = await context.Companies.Select(x => x.Ticker).ToArrayAsync();
+    //    var result = new string[companyIds.Length];
 
-        for (var i = 0; i < result.Length; i++)
-        {
-            var r = await Put(companyIds[i]);
-            result[i] = $"{companyIds[i]} -> {r}";
-        }
-        return new() { Errors = result };
-    }
+    //    for (var i = 0; i < result.Length; i++)
+    //    {
+    //        var r = await Put(companyIds[i]);
+    //        result[i] = $"{companyIds[i]} -> {r}";
+    //    }
+    //    return new() { Errors = result };
+    //}
 
-    [HttpDelete("{companyId}")]
-    public async Task<ResponseModel<string>> Delete(string companyId) => await companyClient.Delete("companies", companyId);
+    //[HttpDelete("{companyId}")]
+    //public async Task<ResponseModel<string>> Delete(string companyId) => await companyClient.Delete("companies", companyId);
 }

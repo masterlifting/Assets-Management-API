@@ -1,57 +1,29 @@
 ﻿using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Company.DataAccess.Comparators;
+using IM.Service.Company.DataAccess.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Company.DataAccess.Comparators;
-using IM.Service.Company.DataAccess.Entities;
 
 namespace IM.Service.Company.DataAccess.Repository;
 
-public class IndustryRepository : IRepositoryHandler<Industry>
+public class IndustryRepository : RepositoryHandler<Industry, DatabaseContext>
 {
     private readonly DatabaseContext context;
-    public IndustryRepository(DatabaseContext context) => this.context = context;
+    public IndustryRepository(DatabaseContext context) : base(context) => this.context = context;
 
-    public Task GetCreateHandlerAsync(ref Industry entity)
+    public override async Task<IEnumerable<Industry>> GetUpdateRangeHandlerAsync(IEnumerable<Industry> entities)
     {
-        return Task.CompletedTask;
-    }
-    public Task GetCreateHandlerAsync(ref Industry[] entities)
-    {
-        var exist = GetExist(entities);
-        var comparer = new IndustryComparer();
+        entities = entities.ToArray();
+        var existEntities = await GetExist(entities).ToArrayAsync();
 
-        if (exist.Any())
-            entities = entities.Except(exist, comparer).ToArray();
-
-        return Task.CompletedTask;
-    }
-    
-    public Task GetUpdateHandlerAsync(ref Industry entity)
-    {
-        var ctxEntity = context.Industries.FindAsync(entity.Id).GetAwaiter().GetResult();
-
-        if (ctxEntity is null)
-            throw new DataException($"{nameof(Industry)} data not found. ");
-
-        ctxEntity.Name = entity.Name;
-        ctxEntity.Description = entity.Description;
-        ctxEntity.SectorId = entity.SectorId;
-
-        entity = ctxEntity;
-
-        return Task.CompletedTask;
-    }
-    public Task GetUpdateHandlerAsync(ref Industry[] entities)
-    {
-        var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
-
-        var result = exist
-            .Join(entities, x => x.Id, y => y.Id,
+        var result = existEntities
+            .Join(entities, 
+                x => x.Id, 
+                y => y.Id,
                 (x, y) => (Old: x, New: y))
             .ToArray();
 
@@ -62,12 +34,9 @@ public class IndustryRepository : IRepositoryHandler<Industry>
             Old.SectorId = New.SectorId;
         }
 
-        entities = result.Select(x => x.Old).ToArray();
-
-        return Task.CompletedTask;
+        return result.Select(x => x.Old).ToArray();
     }
-
-    public async Task<IList<Industry>> GetDeleteHandlerAsync(IReadOnlyCollection<Industry> entities)
+    public override async Task<IEnumerable<Industry>> GetDeleteRangeHandlerAsync(IEnumerable<Industry> entities)
     {
         var comparer = new IndustryComparer();
         var result = new List<Industry>();
@@ -80,11 +49,7 @@ public class IndustryRepository : IRepositoryHandler<Industry>
 
         return result;
     }
-
-    public Task SetPostProcessAsync(Industry entity) => Task.CompletedTask;
-    public Task SetPostProcessAsync(IReadOnlyCollection<Industry> entities) => Task.CompletedTask;
-
-    private IQueryable<Industry> GetExist(IEnumerable<Industry> entities)
+    public override IQueryable<Industry> GetExist(IEnumerable<Industry> entities)
     {
         var existData = entities
             .GroupBy(x => x.Name)

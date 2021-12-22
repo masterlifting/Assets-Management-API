@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using static IM.Service.Common.Net.CommonEnums;
@@ -33,32 +34,75 @@ public class StockSplitsController : ControllerBase
     public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetLast(int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
         await manager.GetLastAsync(new CompanyDataFilterByDate<StockSplit>(HttpRequestFilterType.More, year, month, day), new(page, limit));
 
+
     [HttpGet("{companyId}")]
-    public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> Get(string companyId, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
-        await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(HttpRequestFilterType.More, companyId, year, month, day), new(page, limit));
+    public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> Get(string companyId, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0)
+    {
+        var companyIds = companyId.Split(',');
 
-    [HttpGet("{companyId}/{Year:int}")]
-    public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(string companyId, int year, int page = 0, int limit = 0) =>
-        await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(companyId, year), new(page, limit));
+        return companyIds.Any()
+            ? await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(HttpRequestFilterType.More, companyIds, year, month, day), new(page, limit))
+            : await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(HttpRequestFilterType.More, companyId, year, month, day), new(page, limit));
+    }
 
-    [HttpGet("{companyId}/{Year:int}/{Month:int}")]
-    public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(string companyId, int year, int month, int page = 0, int limit = 0) =>
-        await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(companyId, year, month), new(page, limit));
+    [HttpGet("{companyId}/{year:int}")]
+    public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(string companyId, int year, int page = 0, int limit = 0)
+    {
+        var companyIds = companyId.Split(',');
+        return companyIds.Any()
+            ? await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(companyIds, year), new(page, limit))
+            : await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(companyId, year), new(page, limit));
+    }
 
-    [HttpGet("{companyId}/{Year:int}/{Month:int}/{Day:int}")]
-    public async Task<ResponseModel<StockSplitGetDto>> Get(string companyId, int year, int month, int day) =>
-        await manager.GetAsync(companyId, new DateTime(year, month, day));
+    [HttpGet("{companyId}/{year:int}/{month:int}")]
+    public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(string companyId, int year, int month, int page = 0, int limit = 0)
+    {
+        var companyIds = companyId.Split(',');
+        return companyIds.Any()
+            ? await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(companyIds, year, month), new(page, limit))
+            : await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(companyId, year, month), new(page, limit));
+    }
+
+    [HttpGet("{companyId}/{year:int}/{month:int}/{day:int}")]
+    public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> Get(string companyId, int year, int month, int day)
+    {
+        var companyIds = companyId.Split(',');
+
+        if (!companyIds.Any())
+        {
+            var result = await manager.GetAsync(companyId, new DateTime(year, month, day));
+            return result.Errors.Any()
+                ? new() { Errors = result.Errors }
+                : new() { Data = new() { Count = 1, Items = new[] { result.Data! } } };
+        }
+
+        List<ResponseModel<StockSplitGetDto>> results = new(companyIds.Length);
+
+        foreach (var Id in companyIds)
+            results.Add(await manager.GetAsync(Id, new DateTime(year, month, day)));
+
+        var resultWithoutErrors = results.Where(x => !x.Errors.Any()).ToArray();
+        return new()
+        {
+            Errors = results.SelectMany(x => x.Errors).ToArray(),
+            Data = new()
+            {
+                Count = resultWithoutErrors.Length,
+                Items = resultWithoutErrors.Select(x => x.Data!).ToArray()
+            }
+        };
+    }
 
 
-    [HttpGet("{Year:int}")]
+    [HttpGet("{year:int}")]
     public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(int year, int page = 0, int limit = 0) =>
         await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(year), new(page, limit));
 
-    [HttpGet("{Year:int}/{Month:int}")]
+    [HttpGet("{year:int}/{month:int}")]
     public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(int year, int month, int page = 0, int limit = 0) =>
         await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(year, month), new(page, limit));
 
-    [HttpGet("{Year:int}/{Month:int}/{Day:int}")]
+    [HttpGet("{year:int}/{month:int}/{day:int}")]
     public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> GetEqual(int year, int month, int day, int page = 0, int limit = 0) =>
         await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(HttpRequestFilterType.Equal, year, month, day), new(page, limit));
 
@@ -68,7 +112,7 @@ public class StockSplitsController : ControllerBase
     [HttpPost("collection/")]
     public async Task<ResponseModel<string>> Post(IEnumerable<StockSplitPostDto> models) => await manager.CreateAsync(models);
 
-    [HttpPut("{companyId}/{Year:int}/{Month:int}/{Day:int}")]
+    [HttpPut("{companyId}/{year:int}/{month:int}/{day:int}")]
     public async Task<ResponseModel<string>> Put(string companyId, int year, int month, int day, StockSplitPutDto model) =>
         await manager.UpdateAsync(new StockSplitPostDto
         {
@@ -77,7 +121,7 @@ public class StockSplitsController : ControllerBase
             SourceType = model.SourceType,
             Value = model.Value
         });
-    [HttpDelete("{companyId}/{Year:int}/{Month:int}/{Day:int}")]
+    [HttpDelete("{companyId}/{year:int}/{month:int}/{day:int}")]
     public async Task<ResponseModel<string>> Delete(string companyId, int year, int month, int day) =>
         await manager.DeleteAsync(companyId, new DateTime(year, month, day));
 

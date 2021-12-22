@@ -88,34 +88,6 @@ public abstract class RestClient
             Errors = new[] { "get response is null" }
         };
     }
-    public async Task<ResponseModel<TGet>> Get<TGet>(string controller, params object[] parameters) where TGet : class
-    {
-        uriBuilder.Clear();
-        uriBuilder.Append(baseUri);
-
-        uriBuilder.Append('/');
-        uriBuilder.Append(controller);
-
-        var uri = GetUriByQueryParams(parameters);
-
-        ResponseModel<TGet>? response;
-        try
-        {
-            response = await httpClient.GetFromJsonAsync<ResponseModel<TGet>?>(uri);
-        }
-        catch (Exception ex)
-        {
-            response = new()
-            {
-                Errors = new[] { ex.Message }
-            };
-        }
-
-        return response ?? new()
-        {
-            Errors = new[] { "get response is null" }
-        };
-    }
     public async Task<ResponseModel<string>> Post<TPost>(string controller, TPost model) where TPost : class
     {
         uriBuilder.Clear();

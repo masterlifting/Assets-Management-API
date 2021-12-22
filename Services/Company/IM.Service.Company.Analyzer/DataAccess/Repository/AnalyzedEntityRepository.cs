@@ -5,53 +5,25 @@ using IM.Service.Company.Analyzer.DataAccess.Entities;
 using Microsoft.EntityFrameworkCore;
 
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Repository;
 
-public class AnalyzedEntityRepository : IRepositoryHandler<AnalyzedEntity>
+public class AnalyzedEntityRepository : RepositoryHandler<AnalyzedEntity, DatabaseContext>
 {
     private readonly DatabaseContext context;
-    public AnalyzedEntityRepository(DatabaseContext context) => this.context = context;
+    public AnalyzedEntityRepository(DatabaseContext context) : base(context) => this.context = context;
 
-    public Task GetCreateHandlerAsync(ref AnalyzedEntity entity)
+    public override async Task<IEnumerable<AnalyzedEntity>> GetUpdateRangeHandlerAsync(IEnumerable<AnalyzedEntity> entities)
     {
-        return Task.CompletedTask;
-    }
-    public Task GetCreateHandlerAsync(ref AnalyzedEntity[] entities)
-    {
-        var exist = GetExist(entities);
-        var comparer = new AnalyzedEntityComparer();
-        entities = entities.Distinct(comparer).ToArray();
+        entities = entities.ToArray();
+        var existEntities = await GetExist(entities).ToArrayAsync();
 
-        if (exist.Any())
-            entities = entities.Except(exist, comparer).ToArray();
-
-        return Task.CompletedTask;
-    }
-
-    public Task GetUpdateHandlerAsync(ref AnalyzedEntity entity)
-    {
-        var ctxEntity = context.AnalyzedEntities.FindAsync(entity.CompanyId, entity.AnalyzedEntityTypeId, entity.Date).GetAwaiter().GetResult();
-
-        if (ctxEntity is null)
-            throw new DataException($"{nameof(AnalyzedEntity)} data not found. ");
-
-        ctxEntity.Result = entity.Result;
-        ctxEntity.StatusId = entity.StatusId;
-
-        entity = ctxEntity;
-
-        return Task.CompletedTask;
-    }
-    public Task GetUpdateHandlerAsync(ref AnalyzedEntity[] entities)
-    {
-        var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
-
-        var result = exist
-            .Join(entities, x => ( x.CompanyId, x.AnalyzedEntityTypeId, x.Date), y => (y.CompanyId, y.AnalyzedEntityTypeId, y.Date),
+        var result = existEntities
+            .Join(entities,
+                x => (x.CompanyId, x.AnalyzedEntityTypeId, x.Date),
+                y => (y.CompanyId, y.AnalyzedEntityTypeId, y.Date),
                 (x, y) => (Old: x, New: y))
             .ToArray();
 
@@ -61,12 +33,9 @@ public class AnalyzedEntityRepository : IRepositoryHandler<AnalyzedEntity>
             Old.StatusId = New.StatusId;
         }
 
-        entities = result.Select(x => x.Old).ToArray();
-
-        return Task.CompletedTask;
+        return result.Select(x => x.Old);
     }
-
-    public async Task<IList<AnalyzedEntity>> GetDeleteHandlerAsync(IReadOnlyCollection<AnalyzedEntity> entities)
+    public override async Task<IEnumerable<AnalyzedEntity>> GetDeleteRangeHandlerAsync(IEnumerable<AnalyzedEntity> entities)
     {
         var comparer = new AnalyzedEntityComparer();
         var result = new List<AnalyzedEntity>();
@@ -79,12 +48,10 @@ public class AnalyzedEntityRepository : IRepositoryHandler<AnalyzedEntity>
 
         return result;
     }
-
-    public Task SetPostProcessAsync(AnalyzedEntity entity) => Task.CompletedTask;
-    public Task SetPostProcessAsync(IReadOnlyCollection<AnalyzedEntity> entities) => Task.CompletedTask;
-
-    private IQueryable<AnalyzedEntity> GetExist(AnalyzedEntity[] entities)
+    public override IQueryable<AnalyzedEntity> GetExist(IEnumerable<AnalyzedEntity> entities)
     {
+        entities = entities.ToArray();
+
         var dateMin = entities.Min(x => x.Date);
         var dateMax = entities.Max(x => x.Date);
 

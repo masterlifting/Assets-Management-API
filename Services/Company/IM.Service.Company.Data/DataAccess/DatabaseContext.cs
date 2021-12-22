@@ -35,10 +35,10 @@ namespace IM.Service.Company.Data.DataAccess
                 .WithMany(x => x.CompanySourceTypes)
                 .HasForeignKey(x => x.SourceTypeId);
 
-            modelBuilder.Entity<Price>().HasKey(x => new {CompanyId = x.CompanyId, x.Date });
-            modelBuilder.Entity<StockSplit>().HasKey(x => new {CompanyId = x.CompanyId, x.Date });
-            modelBuilder.Entity<StockVolume>().HasKey(x => new {CompanyId = x.CompanyId, x.Date });
-            modelBuilder.Entity<Report>().HasKey(x => new {CompanyId = x.CompanyId, x.Year, x.Quarter });
+            modelBuilder.Entity<Price>().HasKey(x => new {x.CompanyId, x.Date });
+            modelBuilder.Entity<StockSplit>().HasKey(x => new {x.CompanyId, x.Date });
+            modelBuilder.Entity<StockVolume>().HasKey(x => new {x.CompanyId, x.Date });
+            modelBuilder.Entity<Report>().HasKey(x => new {x.CompanyId, x.Year, x.Quarter });
 
             modelBuilder.Entity<Price>().HasOne(x => x.Company).WithMany(x => x.Prices).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<StockSplit>().HasOne(x => x.Company).WithMany(x => x.StockSplits).OnDelete(DeleteBehavior.Cascade);

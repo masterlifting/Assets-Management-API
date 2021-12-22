@@ -33,24 +33,63 @@ public class ReportsController : ControllerBase
     public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> GetLast(int year = 0, int quarter = 0, int page = 0, int limit = 0) =>
         await manager.GetLastAsync(new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.More, year, quarter), new(page, limit));
 
+
     [HttpGet("{companyId}")]
-    public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> Get(string companyId, int year = 0, int quarter = 0, int page = 0, int limit = 0) =>
-        await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.More, companyId, year, quarter), new(page, limit));
+    public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> Get(string companyId, int year = 0, int quarter = 0, int page = 0, int limit = 0)
+    {
+        var companyIds = companyId.Split(',');
 
-    [HttpGet("{companyId}/{Year:int}")]
-    public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> GetEqual(string companyId, int year, int page = 0, int limit = 0) =>
-        await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(companyId, year), new(page, limit));
+        return companyIds.Any()
+            ? await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.More, companyIds, year, quarter), new(page, limit))
+            : await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.More, companyId, year, quarter), new(page, limit));
+    }
 
-    [HttpGet("{companyId}/{Year:int}/{Quarter:int}")]
-    public async Task<ResponseModel<ReportGetDto>> Get(string companyId, int year, int quarter) =>
-        await manager.GetAsync(companyId, year, (byte)quarter);
+    [HttpGet("{companyId}/{year:int}")]
+    public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> GetEqual(string companyId, int year, int page = 0, int limit = 0)
+    {
+        var companyIds = companyId.Split(',');
+
+        return companyIds.Any()
+            ? await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(companyIds, year), new(page, limit))
+            : await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(companyId, year), new(page, limit));
+    }
+
+    [HttpGet("{companyId}/{year:int}/{quarter:int}")]
+    public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> Get(string companyId, int year, int quarter)
+    {
+        var companyIds = companyId.Split(',');
+
+        if (!companyIds.Any())
+        {
+            var result = await manager.GetAsync(companyId, year, (byte)quarter);
+            return result.Errors.Any()
+                ? new() { Errors = result.Errors }
+                : new() { Data = new() { Count = 1, Items = new[] { result.Data! } } };
+        }
+
+        List<ResponseModel<ReportGetDto>> results = new(companyIds.Length);
+
+        foreach (var Id in companyIds)
+            results.Add(await manager.GetAsync(companyId, year, (byte)quarter));
+
+        var resultWithoutErrors = results.Where(x => !x.Errors.Any()).ToArray();
+        return new()
+        {
+            Errors = results.SelectMany(x => x.Errors).ToArray(),
+            Data = new()
+            {
+                Count = resultWithoutErrors.Length,
+                Items = resultWithoutErrors.Select(x => x.Data!).ToArray()
+            }
+        };
+    }
 
 
-    [HttpGet("{Year:int}")]
+    [HttpGet("{year:int}")]
     public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> GetEqual(int year, int page = 0, int limit = 0) =>
         await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(year), new(page, limit));
 
-    [HttpGet("{Year:int}/{Quarter:int}")]
+    [HttpGet("{year:int}/{quarter:int}")]
     public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> GetEqual(int year, int quarter, int page = 0, int limit = 0) =>
         await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(year, quarter), new(page, limit));
 
@@ -60,7 +99,7 @@ public class ReportsController : ControllerBase
     [HttpPost("collection/")]
     public async Task<ResponseModel<string>> Post(IEnumerable<ReportPostDto> models) => await manager.CreateAsync(models);
 
-    [HttpPut("{companyId}/{Year:int}/{Quarter:int}")]
+    [HttpPut("{companyId}/{year:int}/{quarter:int}")]
     public async Task<ResponseModel<string>> Put(string companyId, int year, int quarter, ReportPutDto model) =>
         await manager.UpdateAsync(new ReportPostDto
         {
@@ -80,7 +119,7 @@ public class ReportsController : ControllerBase
             ShareCapital = model.ShareCapital,
         });
 
-    [HttpDelete("{companyId}/{Year:int}/{Quarter:int}")]
+    [HttpDelete("{companyId}/{year:int}/{quarter:int}")]
     public async Task<ResponseModel<string>> Delete(string companyId, int year, int quarter) =>
         await manager.DeleteAsync(companyId, year, (byte)quarter);
 

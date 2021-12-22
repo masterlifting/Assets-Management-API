@@ -9,7 +9,6 @@ using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -17,57 +16,26 @@ using static IM.Service.Company.Data.Enums;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
-public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
+public class CompanySourceTypeRepository : RepositoryHandler<CompanySourceType, DatabaseContext>
 {
     private readonly DatabaseContext context;
     private readonly string rabbitConnectionString;
 
-    public CompanySourceTypeRepository(
-        IOptions<ServiceSettings> options,
-        DatabaseContext context)
+    public CompanySourceTypeRepository(IOptions<ServiceSettings> options, DatabaseContext context) : base(context)
     {
         this.context = context;
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public Task GetCreateHandlerAsync(ref CompanySourceType entity)
+    public override async Task<IEnumerable<CompanySourceType>> GetUpdateRangeHandlerAsync(IEnumerable<CompanySourceType> entities)
     {
-        return Task.CompletedTask;
-    }
-    public Task GetCreateHandlerAsync(ref CompanySourceType[] entities)
-    {
-        var exist = GetExist(entities).ToArray();
+        entities = entities.ToArray();
+        var existEntities = await GetExist(entities).ToArrayAsync();
 
-        var comparer = new CompanySourceTypeComparer();
-        entities = entities.Distinct(comparer).ToArray();
-
-        if (exist.Any())
-            entities = entities.Except(exist, comparer).ToArray();
-
-        return Task.CompletedTask;
-    }
-
-    public Task GetUpdateHandlerAsync(ref CompanySourceType entity)
-    {
-        var ctxEntity = context.CompanySourceTypes.FindAsync(entity.CompanyId, entity.SourceTypeId).GetAwaiter().GetResult();
-
-        if (ctxEntity is null)
-            throw new DataException($"{nameof(CompanySourceType)} data not found. ");
-
-        ctxEntity.CompanyId = entity.CompanyId;
-        ctxEntity.SourceTypeId = entity.SourceTypeId;
-        ctxEntity.Value = entity.Value;
-
-        entity = ctxEntity;
-
-        return Task.CompletedTask;
-    }
-    public Task GetUpdateHandlerAsync(ref CompanySourceType[] entities)
-    {
-        var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
-
-        var result = exist
-            .Join(entities, x => new { x.CompanyId, x.SourceTypeId }, y => new { y.CompanyId, y.SourceTypeId },
+        var result = existEntities
+            .Join(entities,
+                x => (x.CompanyId, x.SourceTypeId),
+                y => (y.CompanyId, y.SourceTypeId),
                 (x, y) => (Old: x, New: y))
             .ToArray();
 
@@ -78,12 +46,9 @@ public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
             Old.Value = New.Value;
         }
 
-        entities = result.Select(x => x.Old).ToArray();
-
-        return Task.CompletedTask;
+        return result.Select(x => x.Old);
     }
-
-    public async Task<IList<CompanySourceType>> GetDeleteHandlerAsync(IReadOnlyCollection<CompanySourceType> entities)
+    public override async Task<IEnumerable<CompanySourceType>> GetDeleteRangeHandlerAsync(IEnumerable<CompanySourceType> entities)
     {
         var comparer = new CompanySourceTypeComparer();
         var result = new List<CompanySourceType>();
@@ -97,7 +62,7 @@ public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
         return result;
     }
 
-    public Task SetPostProcessAsync(CompanySourceType entity)
+    public override Task SetPostProcessAsync(CompanySourceType entity)
     {
         if (entity.Value is null)
             return Task.CompletedTask;
@@ -107,7 +72,7 @@ public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
 
         return Task.CompletedTask;
     }
-    public Task SetPostProcessAsync(IReadOnlyCollection<CompanySourceType> entities)
+    public override Task SetPostProcessAsync(IReadOnlyCollection<CompanySourceType> entities)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
 
@@ -117,7 +82,7 @@ public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
         return Task.CompletedTask;
     }
 
-    private IQueryable<CompanySourceType> GetExist(IEnumerable<CompanySourceType> entities)
+    public override IQueryable<CompanySourceType> GetExist(IEnumerable<CompanySourceType> entities)
     {
         var existData = entities
             .Where(x => x.Value is not null)
@@ -137,7 +102,6 @@ public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
         var dbc = context.CompanySourceTypes.Where(x => companyIds.Contains(x.CompanyId));
         var dbs = context.CompanySourceTypes.Where(x => sourceTypeIds.Contains(x.SourceTypeId));
 
-
         return dbc
             .Join(dbs, x => new { x.CompanyId, x.SourceTypeId }, y => new { y.CompanyId, y.SourceTypeId }, (x, _) => x)
             .Where(x => values.Contains(x.Value));
@@ -156,19 +120,19 @@ public class CompanySourceTypeRepository : IRepositoryHandler<CompanySourceType>
                 }
             case SourceTypes.Moex:
                 {
-                    //publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
+                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
                     break;
                 }
             case SourceTypes.Tdameritrade:
                 {
-                    //publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
+                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
 
                     break;
                 }
             case SourceTypes.Investing:
                 {
-                    //publisher.PublishTask(QueueNames.CompanyData, QueueEntities.CompanyReport, QueueActions.Call, companyId);
-                    //publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockVolume, QueueActions.Call, companyId);
+                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.CompanyReport, QueueActions.Call, companyId);
+                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockVolume, QueueActions.Call, companyId);
                     break;
                 }
         }

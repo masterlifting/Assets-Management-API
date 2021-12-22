@@ -46,7 +46,7 @@ public class Startup
             .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
             .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
-        services.AddScoped(typeof(RepositorySet<>));
+        services.AddScoped(typeof(Repository<>));
         services.AddScoped<IRepositoryHandler<Industry>, IndustryRepository>();
         services.AddScoped<IRepositoryHandler<Sector>, SectorRepository>();
         services.AddScoped<IRepositoryHandler<DataAccess.Entities.Company>, CompanyRepository>();

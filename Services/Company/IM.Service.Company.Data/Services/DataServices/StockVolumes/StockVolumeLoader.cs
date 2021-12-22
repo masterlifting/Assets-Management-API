@@ -18,15 +18,15 @@ public class StockVolumeLoader : IDataLoad<StockVolume, DateDataConfigModel>
 {
     private readonly ILogger<StockVolumeLoader> logger;
     private readonly StockVolumeParser parser;
-    private readonly RepositorySet<StockVolume> stockVolumeRepository;
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
-    private readonly RepositorySet<CompanySourceType> companySourceTypeRepository;
+    private readonly Repository<StockVolume> stockVolumeRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<CompanySourceType> companySourceTypeRepository;
     public StockVolumeLoader(
         ILogger<StockVolumeLoader> logger,
         StockVolumeParser parser,
-        RepositorySet<StockVolume> stockVolumeRepository,
-        RepositorySet<DataAccess.Entities.Company> companyRepository,
-        RepositorySet<CompanySourceType> companySourceTypeRepository)
+        Repository<StockVolume> stockVolumeRepository,
+        Repository<DataAccess.Entities.Company> companyRepository,
+        Repository<CompanySourceType> companySourceTypeRepository)
     {
         this.logger = logger;
         this.parser = parser;

@@ -26,20 +26,10 @@ namespace DataSetter
             
             services.AddMemoryCache();
 
-            services.AddDbContext<CompaniesDbContext>(provider =>
+            services.AddDbContext<InvestmentManagerContext>(provider =>
             {
                 provider.UseLazyLoadingProxies();
-                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:DbCompanies"]);
-            });
-            services.AddDbContext<PricesDbContext>(provider =>
-            {
-                provider.UseLazyLoadingProxies();
-                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:DbPrices"]);
-            });
-            services.AddDbContext<ReportsDbContext>(provider =>
-            {
-                provider.UseLazyLoadingProxies();
-                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:DbReports"]);
+                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Paviams"]);
             });
 
             services.AddControllers();

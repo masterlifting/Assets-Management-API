@@ -14,11 +14,11 @@ namespace IM.Service.Company.Analyzer.Controllers;
 public class RatingsController : ControllerBase
 {
     private readonly RatingDtoManager manager;
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
 
     public RatingsController(
         RatingDtoManager manager,
-        RepositorySet<DataAccess.Entities.Company> companyRepository)
+        Repository<DataAccess.Entities.Company> companyRepository)
     {
         this.manager = manager;
         this.companyRepository = companyRepository;

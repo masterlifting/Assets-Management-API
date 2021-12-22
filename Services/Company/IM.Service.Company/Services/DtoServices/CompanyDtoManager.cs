@@ -10,20 +10,21 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RepositoryService.Comparators;
 
 namespace IM.Service.Company.Services.DtoServices;
 
 public class CompanyDtoManager
 {
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
-    private readonly RepositorySet<Industry> industryRepository;
-    private readonly RepositorySet<Sector> sectorRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<Industry> industryRepository;
+    private readonly Repository<Sector> sectorRepository;
     private readonly RabbitSyncService rabbitService;
 
     public CompanyDtoManager(
-        RepositorySet<DataAccess.Entities.Company> companyRepository,
-        RepositorySet<Industry> industryRepository,
-        RepositorySet<Sector> sectorRepository,
+        Repository<DataAccess.Entities.Company> companyRepository,
+        Repository<Industry> industryRepository,
+        Repository<Sector> sectorRepository,
         RabbitSyncService rabbitService)
     {
         this.companyRepository = companyRepository;
@@ -38,13 +39,13 @@ public class CompanyDtoManager
         var paginatedResult = companyRepository.GetPaginationQuery(pagination, x => x.Name);
 
         var companies = await paginatedResult.Select(x => new CompanyGetDto
-            {
-                Ticker = x.Id,
-                Name = x.Name,
-                Sector = x.Industry.Sector.Name,
-                Industry = x.Industry.Name,
-                Description = x.Description
-            })
+        {
+            Ticker = x.Id,
+            Name = x.Name,
+            Sector = x.Industry.Sector.Name,
+            Industry = x.Industry.Name,
+            Description = x.Description
+        })
             .ToArrayAsync();
 
         return new()
@@ -122,19 +123,19 @@ public class CompanyDtoManager
             Description = x.Description
         }).ToArray();
 
-        var (error, result) = await companyRepository.CreateAsync(ctxEntities, "Companies");
+        var (error, result) = await companyRepository.CreateAsync(ctxEntities, new CompanyComparer<DataAccess.Entities.Company>(), "Companies");
 
         if (error is not null)
             return new() { Errors = new[] { error } };
 
-        rabbitService.CreateCompany(result!.Join(array, x => x.Id, y => y.Id, (x, y) => new CompanyPostDto
+        rabbitService.CreateCompany(result.Join(array, x => x.Id, y => y.Id, (x, y) => new CompanyPostDto
         {
             Id = x.Id,
             Name = x.Name,
             DataSources = y.DataSources,
         }));
 
-        return new() { Data = $"Companies count: {result!.Length} was successed" };
+        return new() { Data = $"Companies count: {result.Length} was successed" };
     }
     public async Task<ResponseModel<string>> UpdateAsync(string companyId, CompanyPutDto model)
     {
@@ -146,7 +147,7 @@ public class CompanyDtoManager
             Description = model.Description
         };
 
-        var (error, updatedCompany) = await companyRepository.UpdateAsync(company, company.Name);
+        var (error, updatedCompany) = await companyRepository.UpdateAsync(new[] { company.Id }, company, company.Name);
 
         if (error is not null)
             return new ResponseModel<string> { Errors = new[] { error } };
@@ -164,7 +165,7 @@ public class CompanyDtoManager
     {
         companyId = companyId.ToUpperInvariant().Trim();
 
-        var (error, company) = await companyRepository.DeleteAsync(companyId, companyId);
+        var (error, company) = await companyRepository.DeleteAsync(new[] { companyId }, companyId);
 
         if (error is not null)
             return new ResponseModel<string> { Errors = new[] { error } };

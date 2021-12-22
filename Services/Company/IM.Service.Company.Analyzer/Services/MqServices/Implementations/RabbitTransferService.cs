@@ -33,11 +33,11 @@ public class RabbitTransferService : IRabbitActionService
         {
             CompanyId = dto!.CompanyId,
             Date = dto.Date,
-            AnalyzedEntityTypeId = (byte) entityType,
+            AnalyzedEntityTypeId = (byte)entityType,
             StatusId = (byte)Statuses.Ready
         };
 
-        var reportRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<RepositorySet<AnalyzedEntity>>();
-        return (await reportRepository.CreateUpdateAsync(entity, $"{nameof(SetAnalyzedEntityAsync)}: '{dto.CompanyId}'")).error is null;
+        var reportRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<AnalyzedEntity>>();
+        return (await reportRepository.CreateUpdateAsync(new object[] { entity.CompanyId, entity.AnalyzedEntityTypeId, entity.Date }, entity, $"{nameof(SetAnalyzedEntityAsync)}.{dto.CompanyId}")).error is null;
     }
 }

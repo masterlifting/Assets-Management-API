@@ -11,16 +11,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RepositoryService.Comparators;
 
 namespace IM.Service.Company.Data.Services.DtoServices;
 
 public class StockVolumesDtoManager
 {
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
-    private readonly RepositorySet<StockVolume> stockVolumeRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<StockVolume> stockVolumeRepository;
     public StockVolumesDtoManager(
-        RepositorySet<DataAccess.Entities.Company> companyRepository,
-        RepositorySet<StockVolume> stockVolumeRepository)
+        Repository<DataAccess.Entities.Company> companyRepository,
+        Repository<StockVolume> stockVolumeRepository)
     {
         this.companyRepository = companyRepository;
         this.stockVolumeRepository = stockVolumeRepository;
@@ -28,26 +29,30 @@ public class StockVolumesDtoManager
 
     public async Task<ResponseModel<StockVolumeGetDto>> GetAsync(string companyId, DateTime date)
     {
+        companyId = companyId.ToUpperInvariant().Trim();
         var company = await companyRepository.FindAsync(companyId.ToUpperInvariant().Trim());
 
         if (company is null)
-            return new() { Errors = new[] { "company not found" } };
+            return new() { Errors = new[] { $"'{companyId}' not found" } };
 
         var stockVolume = await stockVolumeRepository.FindAsync(company.Id, date);
 
-        if (stockVolume is null)
-            return new() { Errors = new[] { "stock volume not found" } };
+        if (stockVolume is not null)
+            return new()
+            {
+                Errors = Array.Empty<string>(),
+                Data = new()
+                {
+                    Company = company.Name,
+                    Date = stockVolume.Date,
+                    SourceType = stockVolume.SourceType,
+                    Value = stockVolume.Value,
+                }
+            };
 
         return new()
         {
-            Errors = Array.Empty<string>(),
-            Data = new()
-            {
-                Company = company.Name,
-                Date = stockVolume.Date,
-                SourceType = stockVolume.SourceType,
-                Value = stockVolume.Value,
-            }
+            Errors = new[] { $"Stock volume for '{companyId}' not found" }
         };
     }
     public async Task<ResponseModel<PaginatedModel<StockVolumeGetDto>>> GetAsync(CompanyDataFilterByDate<StockVolume> filter, HttpPagination pagination)
@@ -119,7 +124,7 @@ public class StockVolumesDtoManager
             Date = model.Date.Date,
             Value = model.Value
         };
-        var message = $"stock volume of '{model.CompanyId}' create at {model.Date:yyyy MMMM dd}";
+        var message = $"Stock volume of '{model.CompanyId}' create at {model.Date:yyyy MMMM dd}";
         var (error, _) = await stockVolumeRepository.CreateAsync(ctxEntity, message);
 
         return error is not null
@@ -131,7 +136,7 @@ public class StockVolumesDtoManager
         var stockVolumes = models.ToArray();
 
         if (!stockVolumes.Any())
-            return new() { Errors = new[] { "stock volume data for creating not found" } };
+            return new() { Errors = new[] { "Stock volume data for creating not found" } };
 
         var ctxEntities = stockVolumes.GroupBy(x => x.Date.Date).Select(x => new StockVolume
         {
@@ -141,15 +146,15 @@ public class StockVolumesDtoManager
             Value = x.Last().Value
         });
 
-        var (error, result) = await stockVolumeRepository.CreateAsync(ctxEntities, "Stock volumes");
+        var (error, result) = await stockVolumeRepository.CreateAsync(ctxEntities, new CompanyDateComparer<StockVolume>(), "Stock volumes");
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = $"Stock volumes count: {result!.Length} was successed" };
+            : new() { Data = $"Stock volumes count: {result.Length} was successed" };
     }
     public async Task<ResponseModel<string>> UpdateAsync(StockVolumePostDto model)
     {
-        var ctxEntity = new StockVolume
+        var entity = new StockVolume
         {
             CompanyId = model.CompanyId,
             SourceType = model.SourceType,
@@ -157,22 +162,22 @@ public class StockVolumesDtoManager
             Value = model.Value
         };
 
-        var message = $"stock volume of '{model.CompanyId}' update at {model.Date:yyyy MMMM dd}";
-        var (error, _) = await stockVolumeRepository.UpdateAsync(ctxEntity, message);
+        var info = $"Stock volume of '{model.CompanyId}' update at {model.Date:yyyy MMMM dd}";
+        var (error, _) = await stockVolumeRepository.UpdateAsync(new object[] { entity.CompanyId, entity.Date }, entity, info);
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = message + " success" };
+            : new() { Data = info + " success" };
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
     {
         companyId = companyId.ToUpperInvariant().Trim();
 
-        var message = $"stock volume of '{companyId}' delete at {date:yyyy MMMM dd}";
-        var (error, _) = await stockVolumeRepository.DeleteAsync(message, companyId, date);
+        var info = $"Stock volume of '{companyId}' delete at {date:yyyy MMMM dd}";
+        var (error, _) = await stockVolumeRepository.DeleteAsync(new object[] { companyId, date }, info);
 
         return error is not null
             ? new() { Errors = new[] { error } }
-            : new() { Data = message + " success" };
+            : new() { Data = info + " success" };
     }
 }

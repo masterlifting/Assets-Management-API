@@ -70,7 +70,7 @@ namespace IM.Service.Company.Data
             services.AddScoped<StockSplitsDtoManager>();
             services.AddScoped<StockVolumesDtoManager>();
 
-            services.AddScoped(typeof(RepositorySet<>));
+            services.AddScoped(typeof(Repository<>));
             services.AddScoped<IRepositoryHandler<DataAccess.Entities.Company>, CompanyRepository>();
             services.AddScoped<IRepositoryHandler<Price>, PriceRepository>();
             services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();

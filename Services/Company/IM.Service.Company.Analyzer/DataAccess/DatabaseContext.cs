@@ -1,4 +1,5 @@
 using IM.Service.Company.Analyzer.DataAccess.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 using static IM.Service.Company.Analyzer.Enums;
@@ -22,6 +23,7 @@ public sealed class DatabaseContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<Rating>().HasIndex(x => x.Result);
         modelBuilder.Entity<AnalyzedEntity>().HasKey(x => new {x.CompanyId, x.AnalyzedEntityTypeId, x.Date });
         modelBuilder.Entity<AnalyzedEntity>().HasOne(x => x.Company).WithMany(x => x.AnalyzedEntities).OnDelete(DeleteBehavior.Cascade);
 
@@ -48,19 +50,31 @@ public sealed class DatabaseContext : DbContext
             {
                 Id = (byte)Enums.Statuses.Ready,
                 Name = nameof(Enums.Statuses.Ready),
-                Description = "ready to calculate"
+                Description = "ready to compute"
             }
             , new()
             {
                 Id = (byte)Enums.Statuses.Processing,
                 Name = nameof(Enums.Statuses.Processing),
-                Description = "calculating now"
+                Description = "computing in process"
             }
             , new()
             {
-                Id = (byte)Enums.Statuses.Completed,
-                Name = nameof(Enums.Statuses.Completed),
-                Description = "calculating complete"
+                Id = (byte)Enums.Statuses.Starter,
+                Name = nameof(Enums.Statuses.Starter),
+                Description = "computing start value"
+            }
+            , new()
+            {
+                Id = (byte)Enums.Statuses.Computed,
+                Name = nameof(Enums.Statuses.Computed),
+                Description = "computing was completed"
+            }
+            , new()
+            {
+                Id = (byte)Enums.Statuses.NotComputed,
+                Name = nameof(Enums.Statuses.NotComputed),
+                Description = "computing was not done"
             }
             , new()
             {

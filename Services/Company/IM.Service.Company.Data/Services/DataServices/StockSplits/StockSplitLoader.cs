@@ -18,15 +18,15 @@ public class StockSplitLoader : IDataLoad<StockSplit, DateDataConfigModel>
 {
     private readonly ILogger<StockSplitLoader> logger;
     private readonly StockSplitParser parser;
-    private readonly RepositorySet<StockSplit> stockSplitRepository;
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
-    private readonly RepositorySet<CompanySourceType> companySourceTypeRepository;
+    private readonly Repository<StockSplit> stockSplitRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<CompanySourceType> companySourceTypeRepository;
     public StockSplitLoader(
         ILogger<StockSplitLoader> logger,
         StockSplitParser parser,
-        RepositorySet<StockSplit> stockSplitRepository,
-        RepositorySet<DataAccess.Entities.Company> companyRepository,
-        RepositorySet<CompanySourceType> companySourceTypeRepository)
+        Repository<StockSplit> stockSplitRepository,
+        Repository<DataAccess.Entities.Company> companyRepository,
+        Repository<CompanySourceType> companySourceTypeRepository)
     {
         this.logger = logger;
         this.parser = parser;

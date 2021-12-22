@@ -54,10 +54,10 @@ public class Startup
 
         services.AddScoped<RatingDtoManager>();
 
+        services.AddScoped(typeof(Repository<>));
         services.AddScoped<IRepositoryHandler<DataAccess.Entities.Company>, CompanyRepository>();
         services.AddScoped<IRepositoryHandler<AnalyzedEntity>, AnalyzedEntityRepository>();
         services.AddScoped<IRepositoryHandler<Rating>, RatingRepository>();
-        services.AddScoped(typeof(RepositorySet<>));
 
         services.AddSingleton<RabbitActionService>();
 

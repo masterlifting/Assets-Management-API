@@ -20,15 +20,15 @@ public class ReportLoader : IDataLoad<Report, QuarterDataConfigModel>
 {
     private readonly ILogger<ReportLoader> logger;
     private readonly ReportParser parser;
-    private readonly RepositorySet<Report> reportRepository;
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
-    private readonly RepositorySet<CompanySourceType> companySourceTypeRepository;
+    private readonly Repository<Report> reportRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<CompanySourceType> companySourceTypeRepository;
     public ReportLoader(
         ILogger<ReportLoader> logger,
         ReportParser parser,
-        RepositorySet<Report> reportRepository,
-        RepositorySet<DataAccess.Entities.Company> companyRepository,
-        RepositorySet<CompanySourceType> companySourceTypeRepository)
+        Repository<Report> reportRepository,
+        Repository<DataAccess.Entities.Company> companyRepository,
+        Repository<CompanySourceType> companySourceTypeRepository)
     {
         this.logger = logger;
         this.parser = parser;

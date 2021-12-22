@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
+﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Common.Net.RepositoryService.Comparators;
@@ -9,72 +8,42 @@ using IM.Service.Company.Data.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using System.Data;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
-public class PriceRepository : IRepositoryHandler<Price>
+public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
 {
     private readonly DatabaseContext context;
     private readonly string rabbitConnectionString;
 
-    public PriceRepository(IOptions<ServiceSettings> options, DatabaseContext context)
+    public PriceRepository(IOptions<ServiceSettings> options, DatabaseContext context) : base(context)
     {
         this.context = context;
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public Task GetCreateHandlerAsync(ref Price entity)
+    public override async Task<IEnumerable<Price>> GetUpdateRangeHandlerAsync(IEnumerable<Price> entities)
     {
-        return Task.CompletedTask;
-    }
-    public Task GetCreateHandlerAsync(ref Price[] entities)
-    {
-        var comparer = new CompanyDateComparer<Price>();
-        entities = entities.Distinct(comparer).ToArray();
-        
-        var exist = GetExist(entities);
+        entities = entities.ToArray();
+        var existEntities = await GetExist(entities).ToArrayAsync();
 
-        if (exist.Any())
-            entities = entities.Except(exist, comparer).ToArray();
-
-        return Task.CompletedTask;
-    }
-
-    public Task GetUpdateHandlerAsync(ref Price entity)
-    {
-        var ctxEntity = context.Prices.FindAsync(entity.CompanyId, entity.Date).GetAwaiter().GetResult();
-
-        if (ctxEntity is null)
-            throw new DataException($"{nameof(Price)} data not found. ");
-
-        ctxEntity.Value = entity.Value;
-
-        entity = ctxEntity;
-
-        return Task.CompletedTask;
-    }
-    public Task GetUpdateHandlerAsync(ref Price[] entities)
-    {
-        var exist = GetExist(entities).ToArrayAsync().GetAwaiter().GetResult();
-
-        var result = exist
-            .Join(entities, x => (CompanyId: x.CompanyId, x.Date), y => (CompanyId: y.CompanyId, y.Date),
+        var result = existEntities
+            .Join(entities, 
+                x => (x.CompanyId, x.Date), 
+                y => (y.CompanyId, y.Date),
                 (x, y) => (Old: x, New: y))
             .ToArray();
 
         foreach (var (Old, New) in result)
             Old.Value = New.Value;
 
-        entities = result.Select(x => x.Old).ToArray();
-
-        return Task.CompletedTask;
+        return result.Select(x => x.Old);
     }
-
-    public async Task<IList<Price>> GetDeleteHandlerAsync(IReadOnlyCollection<Price> entities)
+    public override async Task<IEnumerable<Price>> GetDeleteRangeHandlerAsync(IEnumerable<Price> entities)
     {
         var comparer = new CompanyDateComparer<Price>();
         var result = new List<Price>();
@@ -88,7 +57,7 @@ public class PriceRepository : IRepositoryHandler<Price>
         return result;
     }
 
-    public Task SetPostProcessAsync(Price entity)
+    public override Task SetPostProcessAsync(Price entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
@@ -114,7 +83,7 @@ public class PriceRepository : IRepositoryHandler<Price>
 
         return Task.CompletedTask;
     }
-    public Task SetPostProcessAsync(IReadOnlyCollection<Price> entities)
+    public override Task SetPostProcessAsync(IReadOnlyCollection<Price> entities)
     {
         if (!entities.Any()) 
             return Task.CompletedTask;
@@ -146,8 +115,9 @@ public class PriceRepository : IRepositoryHandler<Price>
         return Task.CompletedTask;
     }
 
-    private IQueryable<Price> GetExist(Price[] entities)
+    public override IQueryable<Price> GetExist(IEnumerable<Price> entities)
     {
+        entities = entities.ToArray();
         var dateMin = entities.Min(x => x.Date);
         var dateMax = entities.Max(x => x.Date);
 

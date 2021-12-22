@@ -44,7 +44,7 @@ namespace IM.Service.Recommendations
             services.AddScoped<SaleDtoAggregator>();
 
             services.AddScoped<IRepositoryHandler<Company>, CompanyRepository>();
-            services.AddScoped(typeof(RepositorySet<>));
+            services.AddScoped(typeof(Repository<>));
 
             services.AddScoped<RabbitActionService>();
             services.AddHostedService<RabbitBackgroundService>();

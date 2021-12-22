@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DataSetter.DataAccess.Entities.Companies
+namespace DataSetter.DataAccess.Entities
 {
     public partial class Industry
     {
@@ -10,12 +10,10 @@ namespace DataSetter.DataAccess.Entities.Companies
             Companies = new HashSet<Company>();
         }
 
-        public short Id { get; set; }
-        public short SectorId { get; set; }
+        public long Id { get; set; }
+        public DateTime DateUpdate { get; set; }
         public string Name { get; set; } = null!;
-        public string? Description { get; set; }
 
-        public virtual Sector Sector { get; set; } = null!;
         public virtual ICollection<Company> Companies { get; set; }
     }
 }

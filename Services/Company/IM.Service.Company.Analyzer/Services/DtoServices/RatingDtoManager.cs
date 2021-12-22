@@ -13,12 +13,12 @@ namespace IM.Service.Company.Analyzer.Services.DtoServices;
 
 public class RatingDtoManager
 {
-    private readonly RepositorySet<Rating> ratingRepository;
-    private readonly RepositorySet<DataAccess.Entities.Company> companyRepository;
+    private readonly Repository<Rating> ratingRepository;
+    private readonly Repository<DataAccess.Entities.Company> companyRepository;
 
     public RatingDtoManager(
-        RepositorySet<Rating> ratingRepository,
-        RepositorySet<DataAccess.Entities.Company> companyRepository)
+        Repository<Rating> ratingRepository,
+        Repository<DataAccess.Entities.Company> companyRepository)
     {
         this.ratingRepository = ratingRepository;
         this.companyRepository = companyRepository;
@@ -26,34 +26,33 @@ public class RatingDtoManager
 
     public async Task<ResponseModel<RatingGetDto>> GetAsync(int place)
     {
-        var rating = await ratingRepository.FindAsync(place);
-
-        if (rating is null)
-            return new()
-            {
-                Errors = new[] { "rating not found" }
-            };
-
+        var rating = await ratingRepository
+            .GetQuery()
+            .OrderByDescending(x => x.Result)
+            .Skip(place - 1)
+            .Take(1)
+            .FirstAsync();
+        
         var company = await companyRepository.FindAsync(rating.CompanyId);
 
-        if (company is null)
+        if (company is not null)
             return new()
             {
-                Errors = new[] { "company not found" }
+                Data = new()
+                {
+                    Company = company.Name,
+                    Place = place,
+                    Result = rating.Result,
+                    ResultPrice = rating.ResultPrice,
+                    ResultReport = rating.ResultReport,
+                    ResultCoefficient = rating.ResultCoefficient,
+                    UpdateTime = rating.Date
+                }
             };
 
         return new()
         {
-            Data = new()
-            {
-                Company = company.Name,
-                Place = rating.Place,
-                Result = rating.Result,
-                ResultPrice = rating.ResultPrice,
-                ResultReport = rating.ResultReport,
-                ResultCoefficient = rating.ResultCoefficient,
-                UpdateTime = rating.UpdateTime
-            }
+            Errors = new[] { "company not found" }
         };
     }
     public async Task<ResponseModel<RatingGetDto>> GetAsync(string companyId)
@@ -66,9 +65,19 @@ public class RatingDtoManager
                 Errors = new[] { "company not found" }
             };
 
-        var rating = await ratingRepository.FindAsync(company.Id);
+        var orderedRatingIds = await ratingRepository
+            .GetQuery()
+            .OrderByDescending(x => x.Result)
+            .Select(x => x.Id)
+            .ToArrayAsync();
 
-        if (rating is null)
+        var places = orderedRatingIds
+            .Select((x, i) => new { Place = i + 1, RatingId = x })
+            .ToDictionary(x => x.RatingId, y => y.Place);
+
+        var result = await ratingRepository.FindAsync(x => x.CompanyId == company.Id);
+
+        if (result is null)
             return new()
             {
                 Errors = new[] { "rating not found" }
@@ -79,31 +88,57 @@ public class RatingDtoManager
             Data = new()
             {
                 Company = company.Name,
-                Place = rating.Place,
-                Result = rating.Result,
-                ResultPrice = rating.ResultPrice,
-                ResultReport = rating.ResultReport,
-                ResultCoefficient = rating.ResultCoefficient,
-                UpdateTime = rating.UpdateTime
+                Place = places[result.Id],
+                Result = result.Result,
+                ResultPrice = result.ResultPrice,
+                ResultReport = result.ResultReport,
+                ResultCoefficient = result.ResultCoefficient,
+                UpdateTime = result.Date
             }
         };
     }
     public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetAsync(HttpPagination pagination)
     {
         var count = await ratingRepository.GetCountAsync();
-        var ratingPaginatedResult = ratingRepository.GetPaginationQuery(pagination, x => x.Place);
-        var result = await ratingPaginatedResult
-            .Join(companyRepository.GetDbSet(), x => x.CompanyId, y => y.Id, (x, y) => new RatingGetDto
-            {
-                Company = y.Name,
-                Place = x.Place,
-                Result = x.Result,
-                ResultPrice = x.ResultPrice,
-                ResultReport = x.ResultReport,
-                ResultCoefficient = x.ResultCoefficient,
-                UpdateTime = x.UpdateTime,
-            })
+        var orderedCompanyIds = await ratingRepository
+            .GetQuery()
+            .OrderByDescending(x => x.Result)
+            .Select(x => x.CompanyId)
             .ToArrayAsync();
+
+        var places = orderedCompanyIds.Select((x, i) => new { Place = i + 1, CompanyId = x });
+
+        var queryResult = await ratingRepository.GetPaginationQueryDesc(pagination, x => x.Result)
+            .Join(companyRepository.GetDbSet(),
+                x => x.CompanyId,
+                y => y.Id,
+                (x, y) => new
+                {
+                    Company = y.Name,
+                    x.CompanyId,
+                    x.Result,
+                    x.ResultPrice,
+                    x.ResultReport,
+                    x.ResultCoefficient,
+                    UpdateTime = x.Date
+                })
+            .ToArrayAsync();
+
+        var result = queryResult.Join(places,
+                x => x.CompanyId,
+                y => y.CompanyId,
+                (x, y) => new RatingGetDto
+                {
+                    Place = y.Place,
+                    Company = x.Company,
+                    Result = x.Result,
+                    ResultPrice = x.ResultPrice,
+                    ResultReport = x.ResultReport,
+                    ResultCoefficient = x.ResultCoefficient,
+                    UpdateTime = x.UpdateTime
+                })
+            .ToArray();
+
 
         return new()
         {
