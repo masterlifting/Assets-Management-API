@@ -2,7 +2,6 @@
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Company.Data.DataAccess.Entities;
-using IM.Service.Company.Data.Services.DataServices.Prices;
 using IM.Service.Company.Data.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
@@ -20,12 +19,7 @@ namespace IM.Service.Company.Data.Controllers;
 public class PricesController : ControllerBase
 {
     private readonly PricesDtoManager manager;
-    private readonly PriceLoader loader;
-    public PricesController(PricesDtoManager manager, PriceLoader loader)
-    {
-        this.manager = manager;
-        this.loader = loader;
-    }
+    public PricesController(PricesDtoManager manager) => this.manager = manager;
 
     public async Task<ResponseModel<PaginatedModel<PriceGetDto>>> Get(int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
         await manager.GetAsync(new CompanyDataFilterByDate<Price>(HttpRequestFilterType.More, year, month, day), new(page, limit));
@@ -125,10 +119,7 @@ public class PricesController : ControllerBase
     public async Task<ResponseModel<string>> Delete(string companyId, int year, int month, int day) =>
         await manager.DeleteAsync(companyId, new DateTime(year, month, day));
 
-    [HttpPost("load/")]
-    public async Task<string> Load()
-    {
-        var prices = await loader.DataSetAsync();
-        return $"Loaded prices count: {prices.GroupBy(x => x.CompanyId).Count()} is loaded";
-    }
+    
+    [HttpGet("load/")]
+    public string Load() => manager.Load();
 }

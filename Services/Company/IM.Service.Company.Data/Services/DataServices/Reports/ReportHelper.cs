@@ -18,7 +18,7 @@ namespace IM.Service.Company.Data.Services.DataServices.Reports
             if (isNew)
                 return isNew;
 
-            logger.LogInformation(LogEvents.Processing, "last quarter is actual for '{companyId}'. Report will not be loaded.", lastReport.CompanyId);
+            logger.LogInformation(LogEvents.Processing, "For '{companyId}' reports is actual.", lastReport.CompanyId);
             return isNew;
         }
 

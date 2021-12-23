@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using static IM.Service.Company.Data.Services.DataServices.Prices.PriceHelper;
+using static IM.Service.Company.Data.Enums;
 
 namespace IM.Service.Company.Data.Services.DataServices.Prices;
 
@@ -84,14 +85,14 @@ public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
 
             var loadedData = await DataGetAsync(source.Name, config);
 
-            if (!loadedData.Any()) 
+            if (!loadedData.Any())
                 continue;
-            
+
             var (error, savedResult) = await priceRepository.CreateUpdateAsync(loadedData,
                 new CompanyDateComparer<Price>(), $"Prices for {company.Name}");
-                
+
             if (error is null)
-                result = result.Concat(savedResult!).ToArray();
+                result = result.Concat(savedResult).ToArray();
         }
 
         return result;
@@ -101,12 +102,14 @@ public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
         var lasts = await GetLastDatabaseDataAsync();
         var lastsDictionary = lasts.ToDictionary(x => x.CompanyId, y => y.Date);
         var companySourceTypes = await companyRepository.GetDbSet()
-            .Join(companySourceTypeRepository.GetDbSet(), x => x.Id, y => y.CompanyId, (x, y) => new
-            {
-                CompanyId = x.Id,
-                SourceName = y.SourceType.Name,
-                SourceValue = y.Value
-            })
+            .Join(companySourceTypeRepository
+                .GetDbSet()
+                .Where(x => x.SourceTypeId == (byte)SourceTypes.Tdameritrade || x.SourceTypeId == (byte)SourceTypes.Moex), x => x.Id, y => y.CompanyId, (x, y) => new
+                {
+                    CompanyId = x.Id,
+                    SourceName = y.SourceType.Name,
+                    SourceValue = y.Value
+                })
             .ToArrayAsync();
 
         var result = Array.Empty<Price>();
@@ -137,10 +140,10 @@ public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
             if (!loadedData.Any())
                 continue;
 
-            var (error, savedResult) = await priceRepository.CreateUpdateAsync(loadedData,new CompanyDateComparer<Price>(), $"Prices for source: {source.Key}");
+            var (error, savedResult) = await priceRepository.CreateUpdateAsync(loadedData, new CompanyDateComparer<Price>(), $"Prices for source: {source.Key}");
 
             if (error is null)
-                result = result.Concat(savedResult!).ToArray();
+                result = result.Concat(savedResult).ToArray();
         }
 
         if (result.Length <= 0)

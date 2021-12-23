@@ -2,7 +2,6 @@
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Company.Data.DataAccess.Entities;
-using IM.Service.Company.Data.Services.DataServices.Reports;
 using IM.Service.Company.Data.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
@@ -19,12 +18,7 @@ namespace IM.Service.Company.Data.Controllers;
 public class ReportsController : ControllerBase
 {
     private readonly ReportsDtoManager manager;
-    private readonly ReportLoader loader;
-    public ReportsController(ReportsDtoManager manager, ReportLoader loader)
-    {
-        this.manager = manager;
-        this.loader = loader;
-    }
+    public ReportsController(ReportsDtoManager manager) => this.manager = manager;
 
     public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> Get(int year = 0, int quarter = 0, int page = 0, int limit = 0) =>
         await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.More, year, quarter), new(page, limit));
@@ -123,10 +117,6 @@ public class ReportsController : ControllerBase
     public async Task<ResponseModel<string>> Delete(string companyId, int year, int quarter) =>
         await manager.DeleteAsync(companyId, year, (byte)quarter);
 
-    [HttpPost("load/")]
-    public async Task<string> Load()
-    {
-        var reports = await loader.DataSetAsync();
-        return $"Loaded reports count: {reports.GroupBy(x => x.CompanyId).Count()} is loaded";
-    }
+    [HttpGet("load/")]
+    public string Load() => manager.Load();
 }

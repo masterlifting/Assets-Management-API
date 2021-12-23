@@ -2,7 +2,6 @@
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Company.Data.DataAccess.Entities;
-using IM.Service.Company.Data.Services.DataServices.StockVolumes;
 using IM.Service.Company.Data.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
@@ -20,12 +19,7 @@ namespace IM.Service.Company.Data.Controllers;
 public class StockVolumesController : ControllerBase
 {
     private readonly StockVolumesDtoManager manager;
-    private readonly StockVolumeLoader loader;
-    public StockVolumesController(StockVolumesDtoManager manager, StockVolumeLoader loader)
-    {
-        this.manager = manager;
-        this.loader = loader;
-    }
+    public StockVolumesController(StockVolumesDtoManager manager) => this.manager = manager;
 
     public async Task<ResponseModel<PaginatedModel<StockVolumeGetDto>>> Get(int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
         await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(HttpRequestFilterType.More, year, month, day), new(page, limit));
@@ -125,10 +119,6 @@ public class StockVolumesController : ControllerBase
     public async Task<ResponseModel<string>> Delete(string companyId, int year, int month, int day) =>
         await manager.DeleteAsync(companyId, new DateTime(year, month, day));
 
-    [HttpPost("load/")]
-    public async Task<string> Load()
-    {
-        var volumes = await loader.DataSetAsync();
-        return $"Loaded stock volumes count: {volumes.Length}";
-    }
+    [HttpGet("load/")]
+    public string Load() => manager.Load();
 }

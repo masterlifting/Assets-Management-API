@@ -52,8 +52,8 @@ namespace IM.Service.Common.Net.RabbitServices
                     channel.QueueDeclare(queue.NameString, false, false, false, null);
                     queues.Add(queue);
 
-                    foreach (var route in queue.Params)
-                        channel.QueueBind(queue.NameString, exchange.NameString, $"{queue.NameString}.{route.EntityNameString}.*");
+                    foreach (var route in queue.Entities)
+                        channel.QueueBind(queue.NameString, exchange.NameString, $"{queue.NameString}.{route.NameString}.*");
                 }
             }
 

@@ -1,4 +1,5 @@
-﻿using IM.Service.Common.Net.HttpServices;
+﻿using System;
+using IM.Service.Common.Net.HttpServices;
 using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Company.DataAccess.Entities;
 using IM.Service.Company.DataAccess.Repository;
@@ -173,5 +174,11 @@ public class CompanyDtoManager
         rabbitService.DeleteCompany(companyId);
 
         return new ResponseModel<string> { Data = $"'{company!.Name}' was deleted" };
+    }
+
+    public async Task<string> SyncAsync()
+    {
+        var data = await companyRepository.GetSampleAsync(x => ValueTuple.Create(x.Id, x.Name));
+        return rabbitService.Sync(data);
     }
 }

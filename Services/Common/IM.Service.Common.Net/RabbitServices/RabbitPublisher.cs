@@ -39,29 +39,29 @@ public class RabbitPublisher
         {
             channel.QueueDeclare(queue.NameString, false, false, false, null);
 
-            foreach (var route in queue.Params)
-                channel.QueueBind(queue.NameString, currentExchange.NameString, $"{queue.NameString}.{route.EntityNameString}.*");
+            foreach (var route in queue.Entities)
+                channel.QueueBind(queue.NameString, currentExchange.NameString, $"{queue.NameString}.{route.NameString}.*");
         }
     }
 
     public void PublishTask(IEnumerable<QueueNames> queues, QueueEntities entity, QueueActions action, string data)
     {
         foreach (var queue in exchange.Queues.Join(queues, x => x.NameEnum, y => y, (x, _) => x))
-        foreach (var routingKey in queue.Params.Where(x => x.EntityNameEnum == entity && x.Actions.Contains(action)))
+        foreach (var routingKey in queue.Entities.Where(x => x.NameEnum == entity && x.Actions.Contains(action)))
             channel.BasicPublish(
                 exchange.NameString
-                , $"{queue.NameString}.{routingKey.EntityNameString}.{action}"
+                , $"{queue.NameString}.{routingKey.NameString}.{action}"
                 , null
                 , Encoding.UTF8.GetBytes(data));
     }
     public void PublishTask(IEnumerable<QueueNames> queues, QueueEntities entity, QueueActions action, string[] data)
     {
         foreach (var queue in exchange.Queues.Join(queues, x => x.NameEnum, y => y, (x, _) => x))
-        foreach (var routingKey in queue.Params.Where(x => x.EntityNameEnum == entity && x.Actions.Contains(action)))
+        foreach (var routingKey in queue.Entities.Where(x => x.NameEnum == entity && x.Actions.Contains(action)))
         foreach (var d in data)
             channel.BasicPublish(
                 exchange.NameString
-                , $"{queue.NameString}.{routingKey.EntityNameString}.{action}"
+                , $"{queue.NameString}.{routingKey.NameString}.{action}"
                 , null
                 , Encoding.UTF8.GetBytes(d));
     }
@@ -73,14 +73,14 @@ public class RabbitPublisher
         if (currentQueue is null)
             throw new NullReferenceException($"{nameof(queue)} is null");
 
-        var queueParams = currentQueue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
+        var queueParams = currentQueue.Entities.FirstOrDefault(x => x.NameEnum == entity && x.Actions.Contains(action));
 
         if (queueParams is null)
             throw new NullReferenceException($"{nameof(queueParams)} is null");
 
         channel.BasicPublish(
             exchange.NameString
-            , $"{currentQueue.NameString}.{queueParams.EntityNameString}.{action}"
+            , $"{currentQueue.NameString}.{queueParams.NameString}.{action}"
             , null
             , Encoding.UTF8.GetBytes(data));
     }
@@ -91,7 +91,7 @@ public class RabbitPublisher
         if (currentQueue is null)
             throw new NullReferenceException($"{nameof(queue)} is null");
 
-        var queueParams = currentQueue.Params.FirstOrDefault(x => x.EntityNameEnum == entity && x.Actions.Contains(action));
+        var queueParams = currentQueue.Entities.FirstOrDefault(x => x.NameEnum == entity && x.Actions.Contains(action));
 
         if (queueParams is null)
             throw new NullReferenceException($"{nameof(queueParams)} is null");
@@ -99,7 +99,7 @@ public class RabbitPublisher
         foreach (var item in data)
             channel.BasicPublish(
                 exchange.NameString
-                , $"{currentQueue.NameString}.{queueParams.EntityNameString}.{action}"
+                , $"{currentQueue.NameString}.{queueParams.NameString}.{action}"
                 , null
                 , Encoding.UTF8.GetBytes(item));
     }

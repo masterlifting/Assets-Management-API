@@ -11,7 +11,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService.Comparators;
+using IM.Service.Company.Data.Settings;
+using Microsoft.Extensions.Options;
 
 namespace IM.Service.Company.Data.Services.DtoServices;
 
@@ -19,10 +22,15 @@ public class StockVolumesDtoManager
 {
     private readonly Repository<DataAccess.Entities.Company> companyRepository;
     private readonly Repository<StockVolume> stockVolumeRepository;
+    private readonly string rabbitConnectionString;
+
     public StockVolumesDtoManager(
+        IOptions<ServiceSettings> options,
         Repository<DataAccess.Entities.Company> companyRepository,
         Repository<StockVolume> stockVolumeRepository)
     {
+        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+
         this.companyRepository = companyRepository;
         this.stockVolumeRepository = stockVolumeRepository;
     }
@@ -179,5 +187,12 @@ public class StockVolumesDtoManager
         return error is not null
             ? new() { Errors = new[] { error } }
             : new() { Data = info + " success" };
+    }
+
+    public string Load()
+    {
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockVolumes, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
+        return "Task to pase stock volumes is running.";
     }
 }

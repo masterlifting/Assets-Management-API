@@ -1,4 +1,5 @@
-﻿using IM.Service.Common.Net.HttpServices;
+﻿using System;
+using IM.Service.Common.Net.HttpServices;
 using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Common.Net.RepositoryService.Filters;
@@ -10,7 +11,10 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService.Comparators;
+using IM.Service.Company.Data.Settings;
+using Microsoft.Extensions.Options;
 
 namespace IM.Service.Company.Data.Services.DtoServices;
 
@@ -18,10 +22,15 @@ public class ReportsDtoManager
 {
     private readonly Repository<Report> reportRepository;
     private readonly Repository<DataAccess.Entities.Company> companyRepository;
+    private readonly string rabbitConnectionString;
+
     public ReportsDtoManager(
+        IOptions<ServiceSettings> options,
         Repository<Report> reportRepository,
         Repository<DataAccess.Entities.Company> companyRepository)
     {
+        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+
         this.reportRepository = reportRepository;
         this.companyRepository = companyRepository;
     }
@@ -243,5 +252,12 @@ public class ReportsDtoManager
         return error is not null
             ? new() { Errors = new[] { error } }
             : new() { Data = info + " success" };
+    }
+
+    public string Load()
+    {
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.CompanyData, QueueEntities.CompanyReports, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
+        return "Task to pase reports is running.";
     }
 }

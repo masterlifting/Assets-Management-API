@@ -12,6 +12,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Company.Data.Settings;
+using Microsoft.Extensions.Options;
 
 namespace IM.Service.Company.Data.Services.DtoServices;
 
@@ -21,12 +24,17 @@ public class PricesDtoManager
     private readonly Repository<DataAccess.Entities.Company> companyRepository;
     private readonly Repository<StockSplit> stockSplitRepository;
     private readonly Repository<StockVolume> stockVolumeRepository;
+    private readonly string rabbitConnectionString;
+
     public PricesDtoManager(
+        IOptions<ServiceSettings> options,
         Repository<Price> priceRepository,
         Repository<DataAccess.Entities.Company> companyRepository,
         Repository<StockSplit> stockSplitRepository,
         Repository<StockVolume> stockVolumeRepository)
     {
+        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+
         this.priceRepository = priceRepository;
         this.companyRepository = companyRepository;
         this.stockSplitRepository = stockSplitRepository;
@@ -336,5 +344,12 @@ public class PricesDtoManager
         return error is not null
             ? new() { Errors = new[] { error } }
             : new() { Data = info + " success" };
+    }
+
+    public string Load()
+    {
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.CompanyData,QueueEntities.Prices,QueueActions.Call, DateTime.UtcNow.ToShortDateString());
+        return "Task to pase prices is running.";
     }
 }

@@ -1,4 +1,5 @@
-﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
+﻿using System.Linq;
+using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
@@ -6,25 +7,27 @@ using IM.Service.Company.Analyzer.DataAccess.Repository;
 using Microsoft.Extensions.DependencyInjection;
 
 using System.Threading.Tasks;
-
+using IM.Service.Company.Analyzer.DataAccess.Comparators;
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.MqServices.Implementations;
 
-public class RabbitTransferService : IRabbitActionService
+public class RabbitTransferService : RabbitRepositoryHandler, IRabbitActionService
 {
     private readonly IServiceScopeFactory scopeFactory;
     public RabbitTransferService(IServiceScopeFactory scopeFactory) => this.scopeFactory = scopeFactory;
 
-    public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data) =>
-        action == QueueActions.Create && entity switch
+    public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data) => entity switch
         {
-            QueueEntities.CompanyReport => await SetAnalyzedEntityAsync(EntityTypes.Report, data),
-            QueueEntities.Price => await SetAnalyzedEntityAsync(EntityTypes.Price, data),
-            QueueEntities.Coefficient => await SetAnalyzedEntityAsync(EntityTypes.Coefficient, data),
+            QueueEntities.CompanyReport => await SetAnalyzedEntityAsync(EntityTypes.Report, action, data),
+            QueueEntities.CompanyReports => await SetAnalyzedEntitiesAsync(EntityTypes.Report, action, data),
+            QueueEntities.Price => await SetAnalyzedEntityAsync(EntityTypes.Price, action, data),
+            QueueEntities.Prices => await SetAnalyzedEntitiesAsync(EntityTypes.Price, action, data),
+            QueueEntities.Coefficient => await SetAnalyzedEntityAsync(EntityTypes.Coefficient, action, data),
+            QueueEntities.Coefficients => await SetAnalyzedEntitiesAsync(EntityTypes.Coefficient, action, data),
             _ => true
         };
-    private async Task<bool> SetAnalyzedEntityAsync(EntityTypes entityType, string data)
+    private async Task<bool> SetAnalyzedEntityAsync(EntityTypes entityType, QueueActions action, string data)
     {
         if (!RabbitHelper.TrySerialize(data, out CompanyDateIdentityDto? dto))
             return false;
@@ -37,7 +40,29 @@ public class RabbitTransferService : IRabbitActionService
             StatusId = (byte)Statuses.Ready
         };
 
-        var reportRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<AnalyzedEntity>>();
-        return (await reportRepository.CreateUpdateAsync(new object[] { entity.CompanyId, entity.AnalyzedEntityTypeId, entity.Date }, entity, $"{nameof(SetAnalyzedEntityAsync)}.{dto.CompanyId}")).error is null;
+        return await GetRepositoryActionAsync(
+            scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<AnalyzedEntity>>(), 
+            action, 
+            new object[] {entity.CompanyId, entity.AnalyzedEntityTypeId, entity.Date}, 
+            entity);
+    }
+    private async Task<bool> SetAnalyzedEntitiesAsync(EntityTypes entityType, QueueActions action, string data)
+    {
+        if (!RabbitHelper.TrySerialize(data, out CompanyDateIdentityDto[]? dtos))
+            return false;
+
+        var entities = dtos!.Select(x => new AnalyzedEntity
+        {
+            CompanyId = x.CompanyId,
+            Date = x.Date,
+            AnalyzedEntityTypeId = (byte)entityType,
+            StatusId = (byte)Statuses.Ready
+        });
+
+        return await GetRepositoryActionAsync(
+                scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<AnalyzedEntity>>(),
+                action,
+                entities,
+                new AnalyzedEntityComparer());
     }
 }

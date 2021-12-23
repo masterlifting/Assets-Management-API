@@ -40,9 +40,9 @@ public class CompanyRepository : RepositoryHandler<Entities.Company, DatabaseCon
     public override IQueryable<Entities.Company> GetExist(IEnumerable<Entities.Company> entities)
     {
         var existData = entities
-            .GroupBy(x => x.Name)
-            .Select(x => x.Key.ToLowerInvariant());
+            .GroupBy(x => x.Id)
+            .Select(x => x.Key);
 
-        return context.Companies.Where(x => existData.Contains(x.Name.ToLowerInvariant()));
+        return context.Companies.Where(x => existData.Contains(x.Id));
     }
 }

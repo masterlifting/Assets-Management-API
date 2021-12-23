@@ -11,7 +11,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService.Comparators;
+using IM.Service.Company.Data.Settings;
+using Microsoft.Extensions.Options;
 
 namespace IM.Service.Company.Data.Services.DtoServices;
 
@@ -19,10 +22,15 @@ public class StockSplitsDtoManager
 {
     private readonly Repository<DataAccess.Entities.Company> companyRepository;
     private readonly Repository<StockSplit> stockSplitRepository;
+    private readonly string rabbitConnectionString;
+
     public StockSplitsDtoManager(
+        IOptions<ServiceSettings> options,
         Repository<DataAccess.Entities.Company> companyRepository,
         Repository<StockSplit> stockSplitRepository)
     {
+        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+
         this.companyRepository = companyRepository;
         this.stockSplitRepository = stockSplitRepository;
     }
@@ -183,5 +191,12 @@ public class StockSplitsDtoManager
         return error is not null
             ? new() { Errors = new[] { error } }
             : new() { Data = info + " success" };
+    }
+
+    public string Load()
+    {
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockSplits, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
+        return "Task to pase splits is running.";
     }
 }

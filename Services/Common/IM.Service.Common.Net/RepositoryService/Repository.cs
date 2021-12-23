@@ -204,7 +204,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 await handler.SetPostProcessAsync(result);
             }
 
-            logger.LogInformation(LogEvents.CreateUpdate, "{info}. Entity: {name}. Processed count: {count}", info, name, result.Length);
+            logger.LogInformation(LogEvents.CreateUpdate, "{info}. Entity: {name}. Created: {ccount}. Updated: {ucount}", info, name, createResult.Length, updateResult.Length);
             return (null, result);
         }
         catch (Exception exception)
@@ -259,7 +259,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 await handler.SetPostProcessAsync(processingResult.Concat(deleteResult).ToArray());
             }
 
-            logger.LogInformation(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. Processed count: {pcount}. Deleted count: {dcount}", info, name, processingResult.Length, deleteResult.Length);
+            logger.LogInformation(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. Created: {ccount}. Updated: {ucount}. Deleted: {dcount}", info, name, createResult.Length, updateResult.Length, deleteResult.Length);
             return (null, processingResult);
         }
         catch (Exception exception)

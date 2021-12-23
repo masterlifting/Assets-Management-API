@@ -2,7 +2,6 @@
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Company.Data.DataAccess.Entities;
-using IM.Service.Company.Data.Services.DataServices.StockSplits;
 using IM.Service.Company.Data.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
@@ -20,12 +19,7 @@ namespace IM.Service.Company.Data.Controllers;
 public class StockSplitsController : ControllerBase
 {
     private readonly StockSplitsDtoManager manager;
-    private readonly StockSplitLoader loader;
-    public StockSplitsController(StockSplitsDtoManager manager, StockSplitLoader loader)
-    {
-        this.manager = manager;
-        this.loader = loader;
-    }
+    public StockSplitsController(StockSplitsDtoManager manager) => this.manager = manager;
 
     public async Task<ResponseModel<PaginatedModel<StockSplitGetDto>>> Get(int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
         await manager.GetAsync(new CompanyDataFilterByDate<StockSplit>(HttpRequestFilterType.More, year, month, day), new(page, limit));
@@ -125,10 +119,6 @@ public class StockSplitsController : ControllerBase
     public async Task<ResponseModel<string>> Delete(string companyId, int year, int month, int day) =>
         await manager.DeleteAsync(companyId, new DateTime(year, month, day));
 
-    [HttpPost("load/")]
-    public async Task<string> Load()
-    {
-        var splits = await loader.DataSetAsync();
-        return $"Loaded stock splits count: {splits.Length}";
-    }
+    [HttpGet("load/")]
+    public string Load() => manager.Load();
 }

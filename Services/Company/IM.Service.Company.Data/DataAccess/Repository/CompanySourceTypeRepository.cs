@@ -126,7 +126,6 @@ public class CompanySourceTypeRepository : RepositoryHandler<CompanySourceType, 
             case SourceTypes.Tdameritrade:
                 {
                     publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
-
                     break;
                 }
             case SourceTypes.Investing:

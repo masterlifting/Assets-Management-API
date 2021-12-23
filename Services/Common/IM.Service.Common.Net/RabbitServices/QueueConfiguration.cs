@@ -14,28 +14,55 @@ public static class QueueConfiguration
             {
                 new Queue(QueueNames.CompanyData)
                 {
-                    Params = new[]
+                    Entities = new[]
                     {
-                        new QueueParam(QueueEntities.Company)
+                        new QueueEntity(QueueEntities.Company)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Create,
+                                QueueActions.CreateUpdate,
+                                QueueActions.CreateUpdateDelete,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Companies)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.CreateUpdate,
+                                QueueActions.CreateUpdateDelete,
                                 QueueActions.Update,
                                 QueueActions.Delete
                             }
                         }
+
                     }
                 },
                 new Queue(QueueNames.CompanyAnalyzer)
                 {
-                    Params = new[]
+                    Entities = new[]
                     {
-                        new QueueParam(QueueEntities.Company)
+                        new QueueEntity(QueueEntities.Company)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Create,
+                                QueueActions.CreateUpdate,
+                                QueueActions.CreateUpdateDelete,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Companies)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.CreateUpdate,
+                                QueueActions.CreateUpdateDelete,
                                 QueueActions.Update,
                                 QueueActions.Delete
                             }
@@ -50,37 +77,64 @@ public static class QueueConfiguration
             {
                 new Queue(QueueNames.CompanyAnalyzer)
                 {
-                    Params = new[]
+                    Entities = new[]
                     {
-                        new QueueParam(QueueEntities.CompanyReport)
+                        new QueueEntity(QueueEntities.CompanyReport)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Create
                             }
                         },
-                        new QueueParam(QueueEntities.Price)
+                        new QueueEntity(QueueEntities.CompanyReports)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Create
                             }
                         },
-                        new QueueParam(QueueEntities.Coefficient)
+                        new QueueEntity(QueueEntities.Price)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Prices)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Coefficient)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Coefficients)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Create
                             }
                         }
-
                     }
                 },
                 new Queue(QueueNames.Recommendation)
                 {
-                    Params = new[]
+                    Entities = new[]
                     {
-                        new QueueParam(QueueEntities.Rating)
+                        new QueueEntity(QueueEntities.Rating)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Ratings)
                         {
                             Actions = new[]
                             {
@@ -97,30 +151,58 @@ public static class QueueConfiguration
             {
                 new Queue(QueueNames.CompanyData)
                 {
-                    Params = new[]
+                    Entities = new[]
                     {
-                        new QueueParam(QueueEntities.Price)
+                        new QueueEntity(QueueEntities.Price)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Call
                             }
                         },
-                        new QueueParam(QueueEntities.CompanyReport)
+                        new QueueEntity(QueueEntities.Prices)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Call
                             }
                         },
-                        new QueueParam(QueueEntities.StockSplit)
+                        new QueueEntity(QueueEntities.CompanyReport)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Call
                             }
                         },
-                        new QueueParam(QueueEntities.StockVolume)
+                        new QueueEntity(QueueEntities.CompanyReports)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Call
+                            }
+                        },
+                        new QueueEntity(QueueEntities.StockSplit)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Call
+                            }
+                        },
+                        new QueueEntity(QueueEntities.StockSplits)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Call
+                            }
+                        },
+                        new QueueEntity(QueueEntities.StockVolume)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Call
+                            }
+                        },
+                        new QueueEntity(QueueEntities.StockVolumes)
                         {
                             Actions = new[]
                             {
@@ -149,16 +231,25 @@ public enum QueueExchanges
 public enum QueueEntities
 {
     Company,
+    Companies,
     CompanyReport,
+    CompanyReports,
     StockSplit,
+    StockSplits,
     StockVolume,
+    StockVolumes,
     Price,
+    Prices,
     Rating,
-    Coefficient
+    Ratings,
+    Coefficient,
+    Coefficients
 }
 public enum QueueActions
 {
     Create,
+    CreateUpdate,
+    CreateUpdateDelete,
     Update,
     Delete,
     Call

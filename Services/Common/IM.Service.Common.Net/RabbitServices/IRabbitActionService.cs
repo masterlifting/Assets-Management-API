@@ -1,10 +1,8 @@
-﻿
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace IM.Service.Common.Net.RabbitServices
+namespace IM.Service.Common.Net.RabbitServices;
+
+public interface IRabbitActionService
 {
-    public interface IRabbitActionService
-    {
-        Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data);
-    }
+    Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data);
 }

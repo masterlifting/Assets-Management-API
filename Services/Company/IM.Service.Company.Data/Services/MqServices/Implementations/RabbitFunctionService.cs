@@ -33,32 +33,56 @@ public class RabbitFunctionService : IRabbitActionService
                         await priceLoader.DataSetAsync(companyId);
                         break;
                     }
+                case QueueEntities.Prices:
+                    {
+                        var priceLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<PriceLoader>();
+                        await priceLoader.DataSetAsync();
+                        break;
+                    }
                 case QueueEntities.CompanyReport:
                     {
                         var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ReportLoader>();
                         await reportLoader.DataSetAsync(companyId);
                         break;
                     }
+                case QueueEntities.CompanyReports:
+                    {
+                        var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ReportLoader>();
+                        await reportLoader.DataSetAsync();
+                        break;
+                    }
                 case QueueEntities.StockSplit:
-                {
-                    var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockSplitLoader>();
-                    await reportLoader.DataSetAsync(companyId);
-                    break;
-                }
+                    {
+                        var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockSplitLoader>();
+                        await reportLoader.DataSetAsync(companyId);
+                        break;
+                    }
+                case QueueEntities.StockSplits:
+                    {
+                        var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockSplitLoader>();
+                        await reportLoader.DataSetAsync();
+                        break;
+                    }
                 case QueueEntities.StockVolume:
-                {
-                    var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockVolumeLoader>();
-                    await reportLoader.DataSetAsync(companyId);
-                    break;
-                }
+                    {
+                        var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockVolumeLoader>();
+                        await reportLoader.DataSetAsync(companyId);
+                        break;
+                    }
+                case QueueEntities.StockVolumes:
+                    {
+                        var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockVolumeLoader>();
+                        await reportLoader.DataSetAsync();
+                        break;
+                    }
             }
 
             return true;
         }
         catch (Exception exception)
         {
-            var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger< RabbitFunctionService>>();
-            logger.LogError(LogEvents.Call, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), Enum.GetName(action), exception.Message);
+            var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<RabbitFunctionService>>();
+            logger.LogError(LogEvents.Call, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), action, exception.Message);
             return false;
         }
     }
