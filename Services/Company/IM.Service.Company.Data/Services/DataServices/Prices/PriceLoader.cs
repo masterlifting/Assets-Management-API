@@ -13,7 +13,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using static IM.Service.Company.Data.Services.DataServices.Prices.PriceHelper;
-using static IM.Service.Company.Data.Enums;
 
 namespace IM.Service.Company.Data.Services.DataServices.Prices;
 
@@ -74,13 +73,13 @@ public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
                 {
                     CompanyId = company.Id,
                     SourceValue = source.Value,
-                    Date = last.Date
+                    Date = DateOnly.FromDateTime(last.Date)
                 }
                 : new()
                 {
                     CompanyId = company.Id,
                     SourceValue = source.Value,
-                    Date = DateTime.UtcNow.AddYears(-1)
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-1))
                 };
 
             var loadedData = await DataGetAsync(source.Name, config);
@@ -88,8 +87,7 @@ public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
             if (!loadedData.Any())
                 continue;
 
-            var (error, savedResult) = await priceRepository.CreateUpdateAsync(loadedData,
-                new CompanyDateComparer<Price>(), $"Prices for {company.Name}");
+            var (error, savedResult) = await priceRepository.CreateUpdateAsync(loadedData, new CompanyDateComparer<Price>(), $"Prices for {company.Name}");
 
             if (error is null)
                 result = result.Concat(savedResult).ToArray();
@@ -102,9 +100,10 @@ public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
         var lasts = await GetLastDatabaseDataAsync();
         var lastsDictionary = lasts.ToDictionary(x => x.CompanyId, y => y.Date);
         var companySourceTypes = await companyRepository.GetDbSet()
-            .Join(companySourceTypeRepository
-                .GetDbSet()
-                .Where(x => x.SourceTypeId == (byte)SourceTypes.Tdameritrade || x.SourceTypeId == (byte)SourceTypes.Moex), x => x.Id, y => y.CompanyId, (x, y) => new
+            .Join(companySourceTypeRepository.GetDbSet(), 
+x => x.Id, 
+y => y.CompanyId, 
+(x, y) => new
                 {
                     CompanyId = x.Id,
                     SourceName = y.SourceType.Name,
@@ -125,13 +124,13 @@ public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
                     {
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
-                        Date = lastsDictionary[x.CompanyId].Date
+                        Date = DateOnly.FromDateTime(lastsDictionary[x.CompanyId].Date)
                     }
                     : new DateDataConfigModel
                     {
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
-                        Date = DateTime.UtcNow.AddYears(-1)
+                        Date = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-1))
                     })
                 .ToArray();
 
@@ -182,16 +181,16 @@ public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
     }
     public async Task<Price[]> DataGetAsync(string source, IEnumerable<DateDataConfigModel> config)
     {
-        var _data = config.ToArray();
+        config = config.ToArray();
 
-        if (!_data.Any())
+        if (!config.Any())
             return Array.Empty<Price>();
 
         var exchangeDate = GetExchangeWorkDate(source);
 
-        var dataToHistory = _data.Where(x => x.Date < exchangeDate).ToArray();
+        var dataToHistory = config.Where(x => x.Date < exchangeDate).ToArray();
 
-        var result = await parser.LoadLastPricesAsync(source, _data);
+        var result = await parser.LoadLastPricesAsync(source, config);
 
         if (dataToHistory.Any())
             result = result.Concat(await parser.LoadHistoryPricesAsync(source, dataToHistory)).ToArray();

@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -63,7 +64,7 @@ public class StockSplitRepository : RepositoryHandler<StockSplit, DatabaseContex
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
             , QueueEntities.Price
-            , QueueActions.Create
+            , QueueActions.CreateUpdate
             , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
@@ -74,21 +75,28 @@ public class StockSplitRepository : RepositoryHandler<StockSplit, DatabaseContex
     }
     public override Task SetPostProcessAsync(IReadOnlyCollection<StockSplit> entities)
     {
-        if (entities.Any())
-        {
-            var split = entities.OrderBy(x => x.Date).First();
-            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        if (!entities.Any())
+            return Task.CompletedTask;
 
-            publisher.PublishTask(
-                QueueNames.CompanyAnalyzer
-                , QueueEntities.Price
-                , QueueActions.Create
-                , JsonSerializer.Serialize(new CompanyDateIdentityDto
-                {
-                    CompanyId = split.CompanyId,
-                    Date = split.Date
-                }));
-        }
+        var data = JsonSerializer.Serialize(entities
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x
+                .OrderBy(y => y.Date)
+                .First())
+            .Select(x => new CompanyDateIdentityDto
+            {
+                CompanyId = x.CompanyId,
+                Date = x.Date
+            })
+            .ToArray());
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+
+        publisher.PublishTask(
+            QueueNames.CompanyAnalyzer
+            , QueueEntities.Prices
+            , QueueActions.CreateUpdate
+            , data);
 
         return Task.CompletedTask;
     }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 
 using System.Threading;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Company.Analyzer.Services.BackgroundServices;
 

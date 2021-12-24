@@ -71,13 +71,13 @@ public class StockVolumeLoader : IDataLoad<StockVolume, DateDataConfigModel>
                 {
                     CompanyId = company.Id,
                     SourceValue = source.Value,
-                    Date = last.Date
+                    Date = DateOnly.FromDateTime(last.Date)
                 }
                 : new()
                 {
                     CompanyId = company.Id,
                     SourceValue = source.Value,
-                    Date = DateTime.UtcNow.AddYears(-1)
+                    Date = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-1))
                 };
 
             var loadedData = await DataGetAsync(source.Name, config);
@@ -119,13 +119,13 @@ public class StockVolumeLoader : IDataLoad<StockVolume, DateDataConfigModel>
                     {
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
-                        Date = lastsDictionary[x.CompanyId].Date
+                        Date = DateOnly.FromDateTime(lastsDictionary[x.CompanyId].Date)
                     }
                     : new DateDataConfigModel
                     {
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
-                        Date = DateTime.UtcNow.AddYears(-1)
+                        Date = DateOnly.FromDateTime(DateTime.UtcNow.AddYears(-1))
                     })
                 .ToArray();
 

@@ -19,9 +19,8 @@ public class PriceParser
             { nameof(Enums.SourceTypes.Moex), new MoexParser(moexClient) },
             { nameof(Enums.SourceTypes.Tdameritrade), new TdameritradeParser(tdAmeritradeClient) }
         };
-    
-    public bool IsSource(string source) => parser.ContainsKey(source);
 
+    public bool IsSource(string source) => parser.ContainsKey(source);
     public async Task<Price[]> LoadLastPricesAsync(string source, DateDataConfigModel config) =>
         parser.ContainsKey(source)
             ? await parser[source].GetLastPricesAsync(source, config)

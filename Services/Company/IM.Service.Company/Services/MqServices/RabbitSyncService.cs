@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Company.Services.MqServices;
 

@@ -11,7 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
+using IM.Service.Common.Net.RabbitServices.Configuration;
 using static IM.Service.Company.Data.Enums;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
@@ -86,7 +86,7 @@ public class CompanySourceTypeRepository : RepositoryHandler<CompanySourceType, 
     {
         var existData = entities
             .Where(x => x.Value is not null)
-            .GroupBy(x => new { x.CompanyId, x.SourceTypeId, x.Value })
+            .GroupBy(x => (x.CompanyId, x.SourceTypeId, x.Value ))
             .Select(x => new CompanySourceType
             {
                 CompanyId = x.Key.CompanyId,
@@ -96,14 +96,14 @@ public class CompanySourceTypeRepository : RepositoryHandler<CompanySourceType, 
             .ToArray();
 
         var companyIds = existData.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
-        var sourceTypeIds = existData.GroupBy(x => x.SourceTypeId).Select(x => x.Key).ToArray();
+        var typeIds = existData.GroupBy(x => x.SourceTypeId).Select(x => x.Key).ToArray();
         var values = existData.GroupBy(x => x.Value).Select(x => x.Key).ToArray();
 
         var dbc = context.CompanySourceTypes.Where(x => companyIds.Contains(x.CompanyId));
-        var dbs = context.CompanySourceTypes.Where(x => sourceTypeIds.Contains(x.SourceTypeId));
+        var dbt = context.CompanySourceTypes.Where(x => typeIds.Contains(x.SourceTypeId));
 
         return dbc
-            .Join(dbs, x => new { x.CompanyId, x.SourceTypeId }, y => new { y.CompanyId, y.SourceTypeId }, (x, _) => x)
+            .Join(dbt, x => new { x.CompanyId, x.SourceTypeId }, y => new { y.CompanyId, y.SourceTypeId }, (x, _) => x)
             .Where(x => values.Contains(x.Value));
     }
 
@@ -118,12 +118,7 @@ public class CompanySourceTypeRepository : RepositoryHandler<CompanySourceType, 
                 {
                     break;
                 }
-            case SourceTypes.Moex:
-                {
-                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
-                    break;
-                }
-            case SourceTypes.Tdameritrade:
+            case SourceTypes.Moex or SourceTypes.Tdameritrade:
                 {
                     publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
                     break;

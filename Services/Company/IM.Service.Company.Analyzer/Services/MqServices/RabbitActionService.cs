@@ -4,6 +4,7 @@ using IM.Service.Company.Analyzer.Services.MqServices.Implementations;
 using Microsoft.Extensions.DependencyInjection;
 
 using System.Collections.Generic;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Company.Analyzer.Services.MqServices;
 

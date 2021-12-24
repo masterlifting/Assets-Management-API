@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-
+using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Common.Net.RepositoryService;
 
 using Microsoft.EntityFrameworkCore;

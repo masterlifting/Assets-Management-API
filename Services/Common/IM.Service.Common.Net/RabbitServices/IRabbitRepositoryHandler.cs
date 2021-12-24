@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Common.Net.RabbitServices;
 

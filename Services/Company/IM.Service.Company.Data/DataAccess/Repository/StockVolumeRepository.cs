@@ -13,6 +13,7 @@ using System.Data;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -72,7 +73,7 @@ public class StockVolumeRepository : RepositoryHandler<StockVolume, DatabaseCont
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
             , QueueEntities.Coefficient
-            , QueueActions.Create
+            , QueueActions.CreateUpdate
             , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
@@ -83,21 +84,28 @@ public class StockVolumeRepository : RepositoryHandler<StockVolume, DatabaseCont
     }
     public override Task SetPostProcessAsync(IReadOnlyCollection<StockVolume> entities)
     {
-        if (entities.Any())
-        {
-            var volume = entities.OrderBy(x => x.Date).First();
-            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        if (!entities.Any())
+            return Task.CompletedTask;
 
-            publisher.PublishTask(
-                QueueNames.CompanyAnalyzer
-                , QueueEntities.Coefficient
-                , QueueActions.Create
-                , JsonSerializer.Serialize(new CompanyDateIdentityDto
-                {
-                    CompanyId = volume.CompanyId,
-                    Date = volume.Date
-                }));
-        }
+        var data = JsonSerializer.Serialize(entities
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x
+                .OrderBy(y => y.Date)
+                .First())
+            .Select(x => new CompanyDateIdentityDto
+            {
+                CompanyId = x.CompanyId,
+                Date = x.Date
+            })
+            .ToArray());
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+
+        publisher.PublishTask(
+            QueueNames.CompanyAnalyzer
+            , QueueEntities.Coefficients
+            , QueueActions.CreateUpdate
+            , data);
 
         return Task.CompletedTask;
     }

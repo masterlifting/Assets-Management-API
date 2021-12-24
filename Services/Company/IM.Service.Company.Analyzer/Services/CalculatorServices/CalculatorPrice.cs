@@ -35,7 +35,7 @@ public class CalculatorPrice : IAnalyzerCalculator
             .Distinct()
             .ToImmutableArray();
 
-        var date = _data.MinBy(x => x.Date)!.Date;
+        var date = _data.MinBy(x => x.Date)!.Date.AddDays(-15);
 
         var response = await client.Get<PriceGetDto>(
             "prices",
@@ -70,17 +70,6 @@ public class CalculatorPrice : IAnalyzerCalculator
                     .ToImmutableDictionary(y => y.Id, z => z.Value);
 
                 return companyOrderedData
-                    .Take(1)
-                    .Select(price => new AnalyzedEntity
-                    {
-                        CompanyId = x.Key,
-                        Date = price.Date,
-                        AnalyzedEntityTypeId = (byte)EntityTypes.Price,
-                        StatusId = (byte)Statuses.Starter,
-                        Result = 0
-                    })
-                    .Concat(companyOrderedData
-                        .Skip(1)
                         .Select((price, index) =>
                         {
                             var isComputed = comparedSample.ContainsKey(index);
@@ -97,6 +86,6 @@ public class CalculatorPrice : IAnalyzerCalculator
                                     ? comparedSample[index]
                                     : 0
                             };
-                        }));
+                        });
             });
 }

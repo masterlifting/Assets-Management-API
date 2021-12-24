@@ -43,12 +43,12 @@ public class CalculatorCoefficient : IAnalyzerCalculator
             .Distinct()
             .ToImmutableArray();
 
-        var date = _data.MinBy(x => x.Date)!.Date;
-        var quarter = CommonHelper.QarterHelper.GetQuarter(date.Month);
+        var date = _data.MinBy(x => x.Date)!.Date.AddMonths(-6);
+        var reportQuarter = CommonHelper.QarterHelper.GetQuarter(date.Month);
 
         var reportResponseTask = Task.Run(() => client.Get<ReportGetDto>(
             "reports",
-            GetQueryString(HttpRequestFilterType.More, companyIds, date.Year, quarter),
+            GetQueryString(HttpRequestFilterType.More, companyIds, date.Year, reportQuarter),
             new(1, int.MaxValue),
             true));
         var priceResponseTask = Task.Run(() => client.Get<PriceGetDto>(
@@ -138,17 +138,6 @@ public class CalculatorCoefficient : IAnalyzerCalculator
 
             return companyErrorData
                 .Concat(companyOrderedData
-                    .Take(1)
-                    .Select(report => new AnalyzedEntity
-                    {
-                        CompanyId = x.Key,
-                        Date = GetDateTime(report.Year, report.Quarter),
-                        AnalyzedEntityTypeId = (byte)EntityTypes.Coefficient,
-                        StatusId = (byte)Statuses.Starter,
-                        Result = 0
-                    })
-                .Concat(companyOrderedData
-                    .Skip(1)
                     .Select((report, index) =>
                     {
                         var isComputed = comparedSamples.ContainsKey(index);
@@ -167,7 +156,7 @@ public class CalculatorCoefficient : IAnalyzerCalculator
                                     .ToImmutableArray())
                                 : 0
                         };
-                    })));
+                    }));
 
         });
     private static Coefficient ComputeCoefficient(ReportGetDto report, PriceGetDto? price)

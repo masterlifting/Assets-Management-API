@@ -6,6 +6,7 @@ using IM.Service.Recommendations.DataAccess.Entities;
 using IM.Service.Recommendations.DataAccess.Repository;
 
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Recommendations.Services.MqServices.Implementations;
 

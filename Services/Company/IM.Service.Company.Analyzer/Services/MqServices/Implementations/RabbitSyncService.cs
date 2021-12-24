@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Company.Analyzer.Services.MqServices.Implementations;
 

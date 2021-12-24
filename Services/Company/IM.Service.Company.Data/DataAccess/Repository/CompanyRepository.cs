@@ -14,6 +14,7 @@ using System.Data.SqlTypes;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 

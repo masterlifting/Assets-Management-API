@@ -33,6 +33,9 @@ public abstract class RestClient
 
     public async Task<ResponseModel<PaginatedModel<TGet>>> Get<TGet>(string controller, string? queryString, HttpPagination pagination, bool toCache = false) where TGet : class
     {
+        if (toCache)
+            await semaphore.WaitAsync();
+
         uriBuilder.Clear();
         uriBuilder.Append(baseUri);
 
@@ -58,8 +61,6 @@ public abstract class RestClient
         {
             if (toCache)
             {
-                await semaphore.WaitAsync();
-
                 response = await cache.GetOrCreateAsync(uri, async entry =>
                 {
                     entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10);

@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -77,7 +78,7 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
             , QueueEntities.CompanyReport
-            , QueueActions.Create
+            , QueueActions.CreateUpdate
             , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
@@ -87,7 +88,7 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
             , QueueEntities.Coefficient
-            , QueueActions.Create
+            , QueueActions.CreateUpdate
             , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
@@ -101,28 +102,32 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
         if (!entities.Any())
             return Task.CompletedTask;
 
-        var report = entities.OrderBy(x => x.Year).ThenBy(x => x.Quarter).First();
+        var data = JsonSerializer.Serialize(entities
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x
+                .OrderBy(y => y.Year)
+                .ThenBy(y => y.Quarter)
+                .First())
+            .Select(x => new CompanyDateIdentityDto
+            {
+                CompanyId = x.CompanyId,
+                Date = new DateTime(x.Year, CommonHelper.QarterHelper.GetFirstMonth(x.Quarter), 1)
+            })
+            .ToArray());
+
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
-            , QueueEntities.CompanyReport
-            , QueueActions.Create
-            , JsonSerializer.Serialize(new CompanyDateIdentityDto
-            {
-                CompanyId = report.CompanyId,
-                Date = new DateTime(report.Year, CommonHelper.QarterHelper.GetFirstMonth(report.Quarter), 1)
-            }));
+            , QueueEntities.CompanyReports
+            , QueueActions.CreateUpdate
+            , data);
 
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
-            , QueueEntities.Coefficient
-            , QueueActions.Create
-            , JsonSerializer.Serialize(new CompanyDateIdentityDto
-            {
-                CompanyId = report.CompanyId,
-                Date = new DateTime(report.Year, CommonHelper.QarterHelper.GetFirstMonth(report.Quarter), 1)
-            }));
+            , QueueEntities.Coefficients
+            , QueueActions.CreateUpdate
+            , data);
 
         return Task.CompletedTask;
     }

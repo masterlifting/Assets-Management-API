@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -32,8 +33,8 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities
-            .Join(entities, 
-                x => (x.CompanyId, x.Date), 
+            .Join(entities,
+                x => (x.CompanyId, x.Date),
                 y => (y.CompanyId, y.Date),
                 (x, y) => (Old: x, New: y))
             .ToArray();
@@ -64,17 +65,17 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
             , QueueEntities.Price
-            , QueueActions.Create
+            , QueueActions.CreateUpdate
             , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
                 Date = entity.Date
             }));
-        
+
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
             , QueueEntities.Coefficient
-            , QueueActions.Create
+            , QueueActions.CreateUpdate
             , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
@@ -85,32 +86,34 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
     }
     public override Task SetPostProcessAsync(IReadOnlyCollection<Price> entities)
     {
-        if (!entities.Any()) 
+        if (!entities.Any())
             return Task.CompletedTask;
-        
-        var price = entities.OrderBy(x => x.Date).First();
-        
+
+        var data = JsonSerializer.Serialize(entities
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x
+                .OrderBy(y => y.Date)
+                .First())
+            .Select(x => new CompanyDateIdentityDto
+            {
+                CompanyId = x.CompanyId,
+                Date = x.Date
+            })
+            .ToArray());
+
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
-            , QueueEntities.Price
-            , QueueActions.Create
-            , JsonSerializer.Serialize(new CompanyDateIdentityDto
-            {
-                CompanyId = price.CompanyId,
-                Date = price.Date
-            }));
+            , QueueEntities.Prices
+            , QueueActions.CreateUpdate
+            , data);
 
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
-            , QueueEntities.Coefficient
-            , QueueActions.Create
-            , JsonSerializer.Serialize(new CompanyDateIdentityDto
-            {
-                CompanyId = price.CompanyId,
-                Date = price.Date
-            }));
+            , QueueEntities.Coefficients
+            , QueueActions.CreateUpdate
+            , data);
 
         return Task.CompletedTask;
     }

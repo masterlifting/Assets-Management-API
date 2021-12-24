@@ -1,8 +1,7 @@
-namespace IM.Service.Company.Data.Models.Client.Price.MoexModels
+namespace IM.Service.Company.Data.Models.Client.Price.MoexModels;
+
+public class MoexLastPriceResultModel
 {
-    public class MoexLastPriceResultModel
-    {
-        public MoexLastPriceResultModel(MoexLastPriceData? data) => Data = data;
-        public MoexLastPriceData? Data { get; }
-    }
+    public MoexLastPriceResultModel(MoexLastPriceData? data) => Data = data;
+    public MoexLastPriceData? Data { get; }
 }

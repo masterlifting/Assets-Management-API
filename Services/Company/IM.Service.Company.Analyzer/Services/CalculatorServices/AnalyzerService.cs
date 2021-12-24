@@ -26,7 +26,7 @@ public class AnalyzerService
     public async Task AnalyzeAsync()
     {
         var repository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<AnalyzedEntity>>();
-        var queryFilter = repository.GetQuery(x => x.StatusId == (byte)Statuses.Ready).Take(10);
+        var queryFilter = repository.GetQuery(x => x.StatusId == (byte)Statuses.Ready).Take(50);
         var data = await repository.GetSampleAsync(queryFilter);
 
         if (!data.Any() || !(await ChangeStatusAsync(Statuses.Processing, data, repository)))
@@ -43,14 +43,10 @@ public class AnalyzerService
                 .GroupBy(x => x.CompanyId)
                 .Select(x => x.Key)
                 .ToImmutableList();
-            
-            foreach (var (analyzedEntity, result) in computedData
-                         .Where(x => x.StatusId == (byte)Statuses.Starter)
-                         .Join(data,
-                             x => (x.CompanyId, x.AnalyzedEntityTypeId, x.Date),
-                             y => (y.CompanyId, y.AnalyzedEntityTypeId, y.Date),
-                             (x, y) => (x, y.Result)))
-                analyzedEntity.Result = result;
+
+            computedData = computedData
+                .Where(x => x.StatusId != (byte) Statuses.NotComputed)
+                .ToArray();
         }
         catch
         {

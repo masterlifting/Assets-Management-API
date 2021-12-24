@@ -14,7 +14,6 @@ public class StockSplitParser
         parser = new(StringComparer.InvariantCultureIgnoreCase);
 
     public bool IsSource(string source) => parser.ContainsKey(source);
-
     public async Task<StockSplit[]> GetStockSplitsAsync(string source, DateDataConfigModel config) =>
         parser.ContainsKey(source)
             ? await parser[source].GetStockSplitsAsync(source, config)

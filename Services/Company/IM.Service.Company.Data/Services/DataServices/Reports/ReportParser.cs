@@ -24,7 +24,6 @@ public class ReportParser
         };
 
     public bool IsSource(string source) => parser.ContainsKey(source);
-
     public async Task<Report[]> GetReportsAsync(string source, QuarterDataConfigModel config) =>
         parser.ContainsKey(source)
             ? await parser[source].GetReportsAsync(source, config)

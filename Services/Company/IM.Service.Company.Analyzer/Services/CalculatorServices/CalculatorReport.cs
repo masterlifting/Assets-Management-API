@@ -36,7 +36,8 @@ public class CalculatorReport : IAnalyzerCalculator
             .Distinct()
             .ToImmutableArray();
 
-        var date = _data.MinBy(x => x.Date)!.Date;
+        var date = _data.MinBy(x => x.Date)!.Date.AddYears(-1);
+
         var quarter = CommonHelper.QarterHelper.GetQuarter(date.Month);
 
         var response = await client.Get<ReportGetDto>(
@@ -87,17 +88,6 @@ public class CalculatorReport : IAnalyzerCalculator
                     .ToImmutableDictionary(y => y.Key);
 
                 return companyOrderedData
-                    .Take(1)
-                    .Select(report => new AnalyzedEntity
-                    {
-                        CompanyId = x.Key,
-                        Date = GetDateTime(report.Year, report.Quarter),
-                        AnalyzedEntityTypeId = (byte)EntityTypes.Report,
-                        StatusId = (byte)Statuses.Starter,
-                        Result = 0
-                    })
-                    .Concat(companyOrderedData
-                        .Skip(1)
                         .Select((report, index) =>
                         {
                             var isComputed = comparedSamples.ContainsKey(index);
@@ -116,7 +106,7 @@ public class CalculatorReport : IAnalyzerCalculator
                                         .ToImmutableArray())
                                     : 0
                             };
-                        }));
+                        });
 
             });
 

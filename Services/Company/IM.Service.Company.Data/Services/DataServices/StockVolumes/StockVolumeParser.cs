@@ -24,7 +24,6 @@ public class StockVolumeParser
         };
 
     public bool IsSource(string source) => parser.ContainsKey(source);
-
     public async Task<StockVolume[]> GetStockVolumesAsync(string source, DateDataConfigModel config) =>
         parser.ContainsKey(source)
             ? await parser[source].GetStockVolumesAsync(source, config)

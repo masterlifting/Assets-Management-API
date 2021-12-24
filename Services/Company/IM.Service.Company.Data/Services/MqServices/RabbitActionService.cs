@@ -1,4 +1,5 @@
 ﻿using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Company.Data.Services.MqServices.Implementations;
 
 using Microsoft.Extensions.DependencyInjection;

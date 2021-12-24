@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.Data.Settings;
 using Microsoft.Extensions.Options;

@@ -92,7 +92,7 @@ public class ReportLoader : IDataLoad<Report, QuarterDataConfigModel>
             var (error, reportResult) = await reportRepository.CreateUpdateAsync(reports, new CompanyQuarterComparer<Report>(), $"Reports for {company.Name}");
 
             if (error is null)
-                result = result.Concat(reportResult!).ToArray();
+                result = result.Concat(reportResult).ToArray();
         }
 
         return result;
@@ -143,7 +143,7 @@ public class ReportLoader : IDataLoad<Report, QuarterDataConfigModel>
             var (error, reportResult) = await reportRepository.CreateUpdateAsync(reports, new CompanyQuarterComparer<Report>(), $"Reports for source: {source.Key}");
 
             if (error is null)
-                result = result.Concat(reportResult!).ToArray();
+                result = result.Concat(reportResult).ToArray();
         }
 
         if (result.Length <= 0)

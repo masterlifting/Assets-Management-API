@@ -1,8 +1,7 @@
-﻿using IM.Service.Common.Net.RabbitServices.Configuration;
-
+﻿
 using System.Collections.Generic;
 
-namespace IM.Service.Common.Net.RabbitServices;
+namespace IM.Service.Common.Net.RabbitServices.Configuration;
 
 public static class QueueConfiguration
 {
@@ -83,42 +82,48 @@ public static class QueueConfiguration
                         {
                             Actions = new[]
                             {
-                                QueueActions.Create
+                                QueueActions.Create,
+                                QueueActions.CreateUpdate
                             }
                         },
                         new QueueEntity(QueueEntities.CompanyReports)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Create
+                                QueueActions.Create,
+                                QueueActions.CreateUpdate
                             }
                         },
                         new QueueEntity(QueueEntities.Price)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Create
+                                QueueActions.Create,
+                                QueueActions.CreateUpdate
                             }
                         },
                         new QueueEntity(QueueEntities.Prices)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Create
+                                QueueActions.Create,
+                                QueueActions.CreateUpdate
                             }
                         },
                         new QueueEntity(QueueEntities.Coefficient)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Create
+                                QueueActions.Create,
+                                QueueActions.CreateUpdate
                             }
                         },
                         new QueueEntity(QueueEntities.Coefficients)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Create
+                                QueueActions.Create,
+                                QueueActions.CreateUpdate
                             }
                         }
                     }

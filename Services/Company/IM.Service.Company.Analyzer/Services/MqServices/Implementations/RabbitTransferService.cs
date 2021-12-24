@@ -7,6 +7,7 @@ using IM.Service.Company.Analyzer.DataAccess.Repository;
 using Microsoft.Extensions.DependencyInjection;
 
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Company.Analyzer.DataAccess.Comparators;
 using static IM.Service.Company.Analyzer.Enums;
 
@@ -21,8 +22,10 @@ public class RabbitTransferService : RabbitRepositoryHandler, IRabbitActionServi
         {
             QueueEntities.CompanyReport => await SetAnalyzedEntityAsync(EntityTypes.Report, action, data),
             QueueEntities.CompanyReports => await SetAnalyzedEntitiesAsync(EntityTypes.Report, action, data),
+            
             QueueEntities.Price => await SetAnalyzedEntityAsync(EntityTypes.Price, action, data),
             QueueEntities.Prices => await SetAnalyzedEntitiesAsync(EntityTypes.Price, action, data),
+            
             QueueEntities.Coefficient => await SetAnalyzedEntityAsync(EntityTypes.Coefficient, action, data),
             QueueEntities.Coefficients => await SetAnalyzedEntitiesAsync(EntityTypes.Coefficient, action, data),
             _ => true

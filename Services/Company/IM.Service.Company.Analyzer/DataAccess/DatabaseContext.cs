@@ -60,12 +60,6 @@ public sealed class DatabaseContext : DbContext
             }
             , new()
             {
-                Id = (byte)Enums.Statuses.Starter,
-                Name = nameof(Enums.Statuses.Starter),
-                Description = "computing start value"
-            }
-            , new()
-            {
                 Id = (byte)Enums.Statuses.Computed,
                 Name = nameof(Enums.Statuses.Computed),
                 Description = "computing was completed"

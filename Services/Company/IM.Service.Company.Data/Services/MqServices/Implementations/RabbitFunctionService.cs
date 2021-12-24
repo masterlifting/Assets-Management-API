@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 
 using System;
 using System.Threading.Tasks;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Company.Data.Services.DataServices.StockSplits;
 using IM.Service.Company.Data.Services.DataServices.StockVolumes;
 

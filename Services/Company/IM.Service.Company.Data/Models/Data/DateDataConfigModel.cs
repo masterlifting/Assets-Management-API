@@ -1,11 +1,10 @@
 ﻿using System;
 
-namespace IM.Service.Company.Data.Models.Data
+namespace IM.Service.Company.Data.Models.Data;
+
+public record DateDataConfigModel
 {
-    public record DateDataConfigModel
-    {
-        public string CompanyId { get; init; } = null!;
-        public DateTime Date { get; init; }
-        public string? SourceValue { get; init; }
-    }
+    public string CompanyId { get; init; } = null!;
+    public DateOnly Date { get; init; }
+    public string? SourceValue { get; init; }
 }

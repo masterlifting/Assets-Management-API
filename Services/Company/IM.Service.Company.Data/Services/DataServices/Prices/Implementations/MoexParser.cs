@@ -1,4 +1,5 @@
-﻿using IM.Service.Company.Data.Clients.Price;
+﻿using System;
+using IM.Service.Company.Data.Clients.Price;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.Models.Data;
 using IM.Service.Company.Data.Services.DataServices.Prices.Interfaces;
@@ -17,7 +18,7 @@ namespace IM.Service.Company.Data.Services.DataServices.Prices.Implementations
 
         public async Task<Price[]> GetHistoryPricesAsync(string source, DateDataConfigModel config)
         {
-            var prices = await client.GetHistoryPricesAsync(config.CompanyId, config.Date);
+            var prices = await client.GetHistoryPricesAsync(config.CompanyId, config.Date.ToDateTime(new TimeOnly(13,00,00)));
             return PriceMapper.Map(source, prices);
         }
         public async Task<Price[]> GetHistoryPricesAsync(string source, IEnumerable<DateDataConfigModel> config)
@@ -27,7 +28,7 @@ namespace IM.Service.Company.Data.Services.DataServices.Prices.Implementations
 
             foreach (var item in dataArray)
             {
-                var prices = await client.GetHistoryPricesAsync(item.CompanyId, item.Date);
+                var prices = await client.GetHistoryPricesAsync(item.CompanyId, item.Date.ToDateTime(new TimeOnly(13, 00, 00)));
                 result.AddRange(PriceMapper.Map(source, prices));
                 await Task.Delay(200);
             }
