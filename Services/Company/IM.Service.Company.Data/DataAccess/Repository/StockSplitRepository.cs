@@ -104,14 +104,10 @@ public class StockSplitRepository : RepositoryHandler<StockSplit, DatabaseContex
     public override IQueryable<StockSplit> GetExist(IEnumerable<StockSplit> entities)
     {
         entities = entities.ToArray();
-        var dateMin = entities.Min(x => x.Date);
-        var dateMax = entities.Max(x => x.Date);
 
-        var existData = entities
-            .GroupBy(x => x.CompanyId)
-            .Select(x => x.Key)
-            .ToArray();
+        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
+        var dates = entities.Select(x => x.Date).Distinct();
 
-        return context.StockSplits.Where(x => existData.Contains(x.CompanyId) && x.Date >= dateMin && x.Date <= dateMax);
+        return context.StockSplits.Where(x => companyIds.Contains(x.CompanyId) && dates.Contains(x.Date));
     }
 }

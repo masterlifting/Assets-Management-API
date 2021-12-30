@@ -84,27 +84,17 @@ public class CompanySourceTypeRepository : RepositoryHandler<CompanySourceType, 
 
     public override IQueryable<CompanySourceType> GetExist(IEnumerable<CompanySourceType> entities)
     {
-        var existData = entities
-            .Where(x => x.Value is not null)
-            .GroupBy(x => (x.CompanyId, x.SourceTypeId, x.Value ))
-            .Select(x => new CompanySourceType
-            {
-                CompanyId = x.Key.CompanyId,
-                SourceTypeId = x.Key.SourceTypeId,
-                Value = x.Key.Value
-            })
-            .ToArray();
+        entities = entities.ToArray();
+        
+        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
+        var typeIds = entities.Select(x => x.SourceTypeId).Distinct();
+        var values = entities.Select(x => x.Value).Distinct();
 
-        var companyIds = existData.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
-        var typeIds = existData.GroupBy(x => x.SourceTypeId).Select(x => x.Key).ToArray();
-        var values = existData.GroupBy(x => x.Value).Select(x => x.Key).ToArray();
-
-        var dbc = context.CompanySourceTypes.Where(x => companyIds.Contains(x.CompanyId));
-        var dbt = context.CompanySourceTypes.Where(x => typeIds.Contains(x.SourceTypeId));
-
-        return dbc
-            .Join(dbt, x => new { x.CompanyId, x.SourceTypeId }, y => new { y.CompanyId, y.SourceTypeId }, (x, _) => x)
-            .Where(x => values.Contains(x.Value));
+        return context.CompanySourceTypes
+            .Where(x =>
+                companyIds.Contains(x.CompanyId)
+                && typeIds.Contains(x.SourceTypeId)
+                && values.Contains(x.Value));
     }
 
     private static void SetQueue(byte sourceTypeId, string companyId, RabbitPublisher publisher)

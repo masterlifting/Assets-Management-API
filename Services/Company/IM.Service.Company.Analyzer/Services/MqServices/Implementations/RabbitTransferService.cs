@@ -30,6 +30,7 @@ public class RabbitTransferService : RabbitRepositoryHandler, IRabbitActionServi
             QueueEntities.Coefficients => await SetAnalyzedEntitiesAsync(EntityTypes.Coefficient, action, data),
             _ => true
         };
+    
     private async Task<bool> SetAnalyzedEntityAsync(EntityTypes entityType, QueueActions action, string data)
     {
         if (!RabbitHelper.TrySerialize(data, out CompanyDateIdentityDto? dto))

@@ -194,6 +194,6 @@ public class StockVolumesDtoManager
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockVolumes, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
-        return "Task to pase stock volumes is running.";
+        return "Task to parse stock volumes is running.";
     }
 }

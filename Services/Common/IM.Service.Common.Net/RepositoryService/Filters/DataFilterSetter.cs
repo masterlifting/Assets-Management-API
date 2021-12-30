@@ -14,6 +14,6 @@ public static class DataFilterSetter
             : month;
         return targetMonth > 12 ? 12 : targetMonth <= 0 ? 1 : targetMonth;
     }
-    public static int SetYear(int year) => year > DateTime.UtcNow.Year ? DateTime.UtcNow.Year : year <= 0 ? DateTime.UtcNow.Year : year;
+    public static int SetYear(int year) => year > DateTime.UtcNow.Year ? DateTime.UtcNow.Year : year <= 1985 ? DateTime.UtcNow.Year : year;
     public static byte SetQuarter(int quarter) => quarter > 4 ? (byte)4 : quarter <= 0 ? (byte)1 : (byte)quarter;
 }

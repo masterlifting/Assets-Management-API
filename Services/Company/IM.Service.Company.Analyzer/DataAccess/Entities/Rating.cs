@@ -1,10 +1,11 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using IM.Service.Common.Net.Models.Entity.CompanyServices.Interfaces;
 
 namespace IM.Service.Company.Analyzer.DataAccess.Entities;
 
-public class Rating
+public class Rating : ICompanyDateIdentity
 {
     [Key]
     public int Id { get; init; }

@@ -15,7 +15,7 @@ using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-using static IM.Service.Common.Net.CommonHelper.QarterHelper;
+using static IM.Service.Common.Net.CommonHelper.QuarterHelper;
 
 namespace DataSetter.Controllers;
 
@@ -50,14 +50,14 @@ public class SetController : ControllerBase
         if (dbCompany is null)
             return "Company not found";
 
-        //var dbPrices = await context.Prices
-        //    .Where(x => x.TickerId == tickerId)
-        //    .OrderBy(x => x.BidDate)
-        //    .ToArrayAsync();
-        //var dbReports = await context.Reports
-        //    .Where(x => x.CompanyId == ticker.CompanyId)
-        //    .OrderBy(x => x.DateReport)
-        //    .ToArrayAsync();
+        var dbPrices = await context.Prices
+            .Where(x => x.TickerId == tickerId)
+            .OrderBy(x => x.BidDate)
+            .ToArrayAsync();
+        var dbReports = await context.Reports
+            .Where(x => x.CompanyId == ticker.CompanyId)
+            .OrderBy(x => x.DateReport)
+            .ToArrayAsync();
 
         //create models
         StockSplitPostDto? split = null;
@@ -69,90 +69,90 @@ public class SetController : ControllerBase
                     Value = 1,
                     Date = dbCompany.DateSplit.Value
                 };
-        //List<EntityTypeDto> sources = new(2);
-        //var prices = Array.Empty<PricePostDto>();
-        //var reports = Array.Empty<ReportPostDto>();
-        //var volumes = Array.Empty<StockVolumePostDto>();
+        List<EntityTypeDto> sources = new(2);
+        var prices = Array.Empty<PricePostDto>();
+        var reports = Array.Empty<ReportPostDto>();
+        var volumes = Array.Empty<StockVolumePostDto>();
 
-        //if (dbPrices.Any())
-        //{
-        //    var exchange = await context.Exchanges.FindAsync(ticker.ExchangeId);
+        if (dbPrices.Any())
+        {
+            var exchange = await context.Exchanges.FindAsync(ticker.ExchangeId);
 
-        //    var priceSource = new EntityTypeDto
-        //    {
-        //        Id = exchange!.Id == 2 ? (byte)3 : (byte)2,
-        //        Value = ticker.Name
-        //    };
+            var priceSource = new EntityTypeDto
+            {
+                Id = exchange!.Id == 2 ? (byte)3 : (byte)2,
+                Value = ticker.Name
+            };
 
-        //    sources.Add(priceSource);
+            sources.Add(priceSource);
 
-        //    var sourceName = string.Intern(priceSource.Id == 3 ? "tdameritrade" : "moex");
+            var sourceName = string.Intern(priceSource.Id == 3 ? "tdameritrade" : "moex");
 
-        //    prices = dbPrices.Select(x => new PricePostDto
-        //    {
-        //        CompanyId = ticker.Name,
-        //        SourceType = sourceName,
-        //        Date = x.BidDate,
-        //        Value = x.Value
-        //    }).ToArray();
+            prices = dbPrices.Select(x => new PricePostDto
+            {
+                CompanyId = ticker.Name,
+                SourceType = sourceName,
+                Date = x.BidDate,
+                Value = x.Value
+            }).ToArray();
 
-        //}
-        //if (dbReports.Any())
-        //{
-        //    var source = await context.ReportSources.FirstOrDefaultAsync(x => x.CompanyId == ticker.CompanyId);
-        //    var reportSource = new EntityTypeDto
-        //    {
-        //        Id = 4,
-        //        Value = source!.Value
-        //    };
+        }
+        if (dbReports.Any())
+        {
+            var source = await context.ReportSources.FirstOrDefaultAsync(x => x.CompanyId == ticker.CompanyId);
+            var reportSource = new EntityTypeDto
+            {
+                Id = 4,
+                Value = source!.Value
+            };
 
-        //    var sourceName = string.Intern("investing");
+            var sourceName = string.Intern("investing");
 
-        //    sources.Add(reportSource);
+            sources.Add(reportSource);
 
-        //    reports = dbReports.Select(x => new ReportPostDto
-        //    {
-        //        CompanyId = ticker.Name,
-        //        SourceType = sourceName,
-        //        Asset = x.Assets,
-        //        CashFlow = x.CashFlow,
-        //        LongTermDebt = x.LongTermDebt,
-        //        Multiplier = 1_000_000,
-        //        Obligation = x.Obligations,
-        //        ProfitGross = x.GrossProfit,
-        //        ProfitNet = x.NetProfit,
-        //        Quarter = GetQuarter(x.DateReport.Month),
-        //        Year = x.DateReport.Year,
-        //        Revenue = x.Revenue,
-        //        ShareCapital = x.ShareCapital,
-        //        Turnover = x.Turnover
-        //    }).ToArray();
+            reports = dbReports.Select(x => new ReportPostDto
+            {
+                CompanyId = ticker.Name,
+                SourceType = sourceName,
+                Asset = x.Assets,
+                CashFlow = x.CashFlow,
+                LongTermDebt = x.LongTermDebt,
+                Multiplier = 1_000_000,
+                Obligation = x.Obligations,
+                ProfitGross = x.GrossProfit,
+                ProfitNet = x.NetProfit,
+                Quarter = GetQuarter(x.DateReport.Month),
+                Year = x.DateReport.Year,
+                Revenue = x.Revenue,
+                ShareCapital = x.ShareCapital,
+                Turnover = x.Turnover
+            }).ToArray();
 
-        //    volumes = dbReports
-        //        .GroupBy(x => x.StockVolume)
-        //        .Select(x => new StockVolumePostDto
-        //        {
-        //            CompanyId = ticker.Name,
-        //            SourceType = sourceName,
-        //            Value = x.Key,
-        //            Date = x.OrderBy(y => y.DateReport).First().DateReport
-        //        }).ToArray();
-        //}
+            volumes = dbReports
+                .GroupBy(x => x.StockVolume)
+                .Select(x => new StockVolumePostDto
+                {
+                    CompanyId = ticker.Name,
+                    SourceType = sourceName,
+                    Value = x.Key,
+                    Date = x.OrderBy(y => y.DateReport).First().DateReport
+                }).ToArray();
+        }
 
-        //var company = new CompanyPostDto
-        //{
-        //    Id = ticker.Name,
-        //    Name = dbCompany.Name,
-        //    Description = "",
-        //    IndustryId = (byte)dbCompany.IndustryId,
-        //    DataSources = sources
-        //};
+        var company = new CompanyPostDto
+        {
+            Id = ticker.Name,
+            Name = dbCompany.Name,
+            Description = "",
+            IndustryId = (byte)dbCompany.IndustryId,
+            DataSources = sources
+        };
 
         //await companyClient.Put("companies", company, company.Id);
-        //await dataClient.Post("prices/collection", prices);
+        await dataClient.Post("prices/collection", prices);
         //await dataClient.Post("reports/collection", reports);
-        if (split is not null)
-            await dataClient.Post("stockSplits", split);
+        //if (split is not null)
+        //    await dataClient.Post("stockSplits", split);
         //await dataClient.Post("stockVolumes/collection", volumes);
 
         return ticker.Name;

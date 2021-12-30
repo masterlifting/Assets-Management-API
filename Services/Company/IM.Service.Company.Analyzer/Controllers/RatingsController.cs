@@ -1,12 +1,14 @@
 ﻿using IM.Service.Common.Net.HttpServices;
 using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
-using IM.Service.Company.Analyzer.DataAccess.Repository;
 using IM.Service.Company.Analyzer.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
-
+using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net;
+using IM.Service.Common.Net.RepositoryService.Filters;
+using IM.Service.Company.Analyzer.DataAccess.Entities;
 
 namespace IM.Service.Company.Analyzer.Controllers;
 
@@ -14,15 +16,7 @@ namespace IM.Service.Company.Analyzer.Controllers;
 public class RatingsController : ControllerBase
 {
     private readonly RatingDtoManager manager;
-    private readonly Repository<DataAccess.Entities.Company> companyRepository;
-
-    public RatingsController(
-        RatingDtoManager manager,
-        Repository<DataAccess.Entities.Company> companyRepository)
-    {
-        this.manager = manager;
-        this.companyRepository = companyRepository;
-    }
+    public RatingsController(RatingDtoManager manager) => this.manager = manager;
 
     public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> Get(int page = 0, int limit = 0) =>
         await manager.GetAsync(new HttpPagination(page, limit));
@@ -33,80 +27,63 @@ public class RatingsController : ControllerBase
     [HttpGet("{place:int}")]
     public async Task<ResponseModel<RatingGetDto>> Get(int place) => await manager.GetAsync(place);
 
-    //[HttpGet("recalculate/")]
-    //public async Task<ResponseModel<string>> Recalculate(DateTime? dateStart = null)
-    //{
-    //    var errors = Array.Empty<string>();
+    [HttpGet("price/")]
+    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetPriceResultOrdered(int page = 0, int limit = 0) =>
+        await manager.GetPriceResultOrderedAsync(new HttpPagination(page, limit));
+    [HttpGet("report/")]
+    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetReportResultOrdered(int page = 0, int limit = 0) =>
+        await manager.GetReportResultOrderedAsync(new HttpPagination(page, limit));
+    [HttpGet("coefficient/")]
+    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetCoefficientResultOrdered(int page = 0, int limit = 0) =>
+        await manager.GetCoefficientResultOrderedAsync(new HttpPagination(page, limit));
 
-    //    foreach (var companyId in await companyRepository.GetSampleAsync(x => x.Name))
-    //    {
-    //        var priceResultError = await SetPriceAsync(companyId);
-    //        if (priceResultError is not null)
-    //            errors = errors.Append(priceResultError).ToArray();
 
-    //        var reportResultError = await SetReportAsync(companyId);
-    //        if (reportResultError is not null)
-    //            errors = errors.Append(reportResultError).ToArray();
-    //    }
+    [HttpGet("recalculate/")]
+    public async Task<string> Recalculate() => await manager.RecalculateAsync();
+    
+    [HttpGet("recalculate/{companyId}")]
+    public async Task<string> Recalculate(string companyId)
+    {
+        var companyIds = companyId.Split(',');
+        return companyIds.Length > 1 ? await manager.RecalculateAsync(companyIds) : await manager.RecalculateAsync(companyId);
+    }
 
-    //    return new()
-    //    {
-    //        Data = "recalculating rating set",
-    //        Errors = errors
-    //    };
-    //}
-    //[HttpGet("{companyId}/recalculate/")]
-    //public async Task<ResponseModel<string>> Recalculate(string companyId, DateTime? dateStart = null)
-    //{
-    //    var errors = Array.Empty<string>();
-    //    var ctxTicker = await companyRepository.FindAsync(companyId.ToUpperInvariant().Trim());
-    //    if (ctxTicker is null)
-    //        return new() { Errors = new[] { $"'{companyId}' not found!" } };
+    [HttpGet("recalculate/{companyId}/{year:int}")]
+    public async Task<string> Recalculate(string companyId, int year)
+    {
+        var companyIds = companyId.Split(',');
+        return companyIds.Length > 1
+            ? await manager.RecalculateAsync(new CompanyDataFilterByDate<Rating>(companyIds, year))
+            : await manager.RecalculateAsync(new CompanyDataFilterByDate<Rating>(companyId, year));
+    }
 
-    //    var priceResultError = await SetPriceAsync(companyId);
-    //    if (priceResultError is not null)
-    //        errors = errors.Append(priceResultError).ToArray();
+    [HttpGet("recalculate/{companyId}/{year:int}/{month:int}")]
+    public async Task<string> Recalculate(string companyId, int year, int month)
+    {
+        var companyIds = companyId.Split(',');
+        return companyIds.Length > 1
+            ? await manager.RecalculateAsync(new CompanyDataFilterByDate<Rating>(companyIds, year, month))
+            : await manager.RecalculateAsync(new CompanyDataFilterByDate<Rating>(companyId, year, month));
+    }
 
-    //    var reportResultError = await SetReportAsync(companyId);
-    //    if (reportResultError is not null)
-    //        errors = errors.Append(reportResultError).ToArray();
+    [HttpGet("recalculate/{companyId}/{year:int}/{month:int}/{day:int}")]
+    public async Task<string> Recalculate(string companyId, int year, int month, int day)
+    {
+        var companyIds = companyId.Split(',');
+        return companyIds.Length > 1
+            ? await manager.RecalculateAsync(new CompanyDataFilterByDate<Rating>(CommonEnums.HttpRequestFilterType.Equal, companyIds, year, month,day))
+            : await manager.RecalculateAsync(new CompanyDataFilterByDate<Rating>(CommonEnums.HttpRequestFilterType.Equal, companyId, year, month,day));
+    }
 
-    //    return new()
-    //    {
-    //        Data = "recalculating rating set",
-    //        Errors = errors
-    //    };
-    //}
+    [HttpGet("recalculate/{year:int}")]
+    public async Task<string> Recalculate(int year) =>
+        await manager.RecalculateAsync(new CompanyDataFilterByDate<Rating>(year));
 
-    //private async Task<string?> SetPriceAsync(string companyId)
-    //{
-    //    var price = await priceRepository.FindFirstAsync(x => x.CompanyId == companyId, x => x.Date);
-    //    if (price is not null)
-    //        price.StatusId = (byte)StatusType.Ready;
-    //    else
-    //        price = new()
-    //        {
-    //            CompanyId = companyId,
-    //            Date = new DateTime(2018, 01, 01),
-    //            StatusId = (byte)StatusType.Ready,
-    //        };
+    [HttpGet("recalculate/{year:int}/{month:int}")]
+    public async Task<string> Recalculate(int year, int month) =>
+        await manager.RecalculateAsync(new CompanyDataFilterByDate<Rating>(year, month));
 
-    //    return (await priceRepository.CreateUpdateAsync(price, $"price for '{companyId}'")).error;
-    //}
-    //private async Task<string?> SetReportAsync(string companyId)
-    //{
-    //    var report = await reportRepository.FindFirstAsync(x => x.CompanyId == companyId, x => x.Year, x => x.Quarter);
-    //    if (report is not null)
-    //        report.StatusId = (byte)StatusType.Ready;
-    //    else
-    //        report = new()
-    //        {
-    //            CompanyId = companyId,
-    //            Year = 2018,
-    //            Quarter = 1,
-    //            StatusId = (byte)StatusType.Ready,
-    //        };
-
-    //    return (await reportRepository.CreateUpdateAsync(report, $"report for '{companyId}'")).error;
-    //}
+    [HttpGet("recalculate/{year:int}/{month:int}/{day:int}")]
+    public async Task<string> Recalculate(int year, int month, int day) =>
+        await manager.RecalculateAsync(new CompanyDataFilterByDate<Rating>(CommonEnums.HttpRequestFilterType.Equal, year, month, day));
 }

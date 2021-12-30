@@ -11,5 +11,5 @@ public class Price : PriceBody, ICompanyDateIdentity
     public string CompanyId { get; init; } = null!;
 
     [Column(TypeName = "Date")]
-    public DateTime Date { get; init; }
+    public DateTime Date { get; set; }
 }

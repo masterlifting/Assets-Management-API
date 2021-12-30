@@ -10,5 +10,5 @@ public class StockVolume : StockVolumeBody, ICompanyDateIdentity
     public virtual Company Company { get; init; } = null!;
     public string CompanyId { get; init; } = null!;
     [Column(TypeName = "Date")]
-    public DateTime Date { get; init; }
+    public DateTime Date { get; set; }
 }

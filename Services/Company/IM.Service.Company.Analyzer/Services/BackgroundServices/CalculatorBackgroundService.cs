@@ -32,6 +32,7 @@ public class CalculatorBackgroundService : BackgroundService
             try
             {
                 await service.AnalyzeAsync();
+                GC.Collect();
             }
             catch (Exception exception)
             {

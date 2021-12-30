@@ -33,28 +33,39 @@ public class StockVolumesController : ControllerBase
     public async Task<ResponseModel<PaginatedModel<StockVolumeGetDto>>> Get(string companyId, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0)
     {
         var companyIds = companyId.Split(',');
-
-        return companyIds.Any()
-            ? await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(HttpRequestFilterType.More, companyIds, year, month, day), new(page, limit))
-            : await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(HttpRequestFilterType.More, companyId, year, month, day), new(page, limit));
+        return !companyIds.Any()
+            ? new()
+            : companyIds.Length > 1
+                ? await manager.GetAsync(
+                    new CompanyDataFilterByDate<StockVolume>(HttpRequestFilterType.More, companyIds, year, month, day),
+                    new(page, limit))
+                : await manager.GetAsync(
+                    new CompanyDataFilterByDate<StockVolume>(HttpRequestFilterType.More, companyId, year, month, day),
+                    new(page, limit));
     }
 
     [HttpGet("{companyId}/{year:int}")]
     public async Task<ResponseModel<PaginatedModel<StockVolumeGetDto>>> GetEqual(string companyId, int year, int page = 0, int limit = 0)
     {
         var companyIds = companyId.Split(',');
-        return companyIds.Any()
-            ? await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(companyIds, year), new(page, limit))
-            : await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(companyId, year), new(page, limit));
+        return !companyIds.Any()
+            ? new()
+            : companyIds.Length > 1
+                ? await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(companyIds, year), new(page, limit))
+                : await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(companyId, year), new(page, limit));
     }
 
     [HttpGet("{companyId}/{year:int}/{month:int}")]
     public async Task<ResponseModel<PaginatedModel<StockVolumeGetDto>>> GetEqual(string companyId, int year, int month, int page = 0, int limit = 0)
     {
         var companyIds = companyId.Split(',');
-        return companyIds.Any()
-            ? await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(companyIds, year, month), new(page, limit))
-            : await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(companyId, year, month), new(page, limit));
+        return !companyIds.Any()
+            ? new()
+            : companyIds.Length > 1
+                ? await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(companyIds, year, month),
+                    new(page, limit))
+                : await manager.GetAsync(new CompanyDataFilterByDate<StockVolume>(companyId, year, month),
+                    new(page, limit));
     }
 
     [HttpGet("{companyId}/{year:int}/{month:int}/{day:int}")]
@@ -63,6 +74,9 @@ public class StockVolumesController : ControllerBase
         var companyIds = companyId.Split(',');
 
         if (!companyIds.Any())
+            return new();
+
+        if (companyIds.Length == 1)
         {
             var result = await manager.GetAsync(companyId, new DateTime(year, month, day));
             return result.Errors.Any()
@@ -72,8 +86,8 @@ public class StockVolumesController : ControllerBase
 
         List<ResponseModel<StockVolumeGetDto>> results = new(companyIds.Length);
 
-        foreach (var Id in companyIds)
-            results.Add(await manager.GetAsync(Id, new DateTime(year, month, day)));
+        foreach (var id in companyIds)
+            results.Add(await manager.GetAsync(id, new DateTime(year, month, day)));
 
         var resultWithoutErrors = results.Where(x => !x.Errors.Any()).ToArray();
         return new()

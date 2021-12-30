@@ -4,8 +4,9 @@ namespace IM.Service.Common.Net;
 
 public static class CommonHelper
 {
-    public static class QarterHelper
+    public static class QuarterHelper
     {
+        public static DateTime ToDateTime(int year, byte quarter) => new(year, GetLastMonth(quarter), 28);
         public static byte GetQuarter(int month) => month switch
         {
             >= 1 and < 4 => 1,

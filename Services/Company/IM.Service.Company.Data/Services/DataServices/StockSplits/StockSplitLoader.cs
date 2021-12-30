@@ -85,7 +85,7 @@ public class StockSplitLoader : IDataLoad<StockSplit, DateDataConfigModel>
             if (!loadedData.Any())
                 continue;
 
-            var (error, savedResult) = await stockSplitRepository.CreateUpdateAsync(loadedData, new CompanyDateComparer<StockSplit>(), $"Stock splits for {company.Name}");
+            var (error, savedResult) = await stockSplitRepository.CreateAsync(loadedData, new CompanyDateComparer<StockSplit>(), $"Stock splits for {company.Name}");
 
             if (error is null)
                 result = result.Concat(savedResult).ToArray();
@@ -134,7 +134,7 @@ public class StockSplitLoader : IDataLoad<StockSplit, DateDataConfigModel>
             if (!loadedData.Any())
                 continue;
 
-            var (error, savedResult) = await stockSplitRepository.CreateUpdateAsync(loadedData, new CompanyDateComparer<StockSplit>(), $"Stock splits for source: {source.Key}");
+            var (error, savedResult) = await stockSplitRepository.CreateAsync(loadedData, new CompanyDateComparer<StockSplit>(), $"Stock splits for source: {source.Key}");
 
             if (error is null)
                 result = result.Concat(savedResult).ToArray();

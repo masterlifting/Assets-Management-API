@@ -351,6 +351,6 @@ public class PricesDtoManager
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData,QueueEntities.Prices,QueueActions.Call, DateTime.UtcNow.ToShortDateString());
-        return "Task to pase prices is running.";
+        return "Task to parse prices is running.";
     }
 }

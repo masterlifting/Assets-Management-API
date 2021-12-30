@@ -1,19 +1,19 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using System;
+using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess;
 using IM.Service.Company.Analyzer.DataAccess.Comparators;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
-using IM.Service.Company.Analyzer.Services.CalculatorServices.Interfaces;
-
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
-
+using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.RabbitServices.Configuration;
+using IM.Service.Company.Analyzer.Settings;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices;
@@ -26,46 +26,88 @@ public class AnalyzerService
     public async Task AnalyzeAsync()
     {
         var repository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<AnalyzedEntity>>();
-        var queryFilter = repository.GetQuery(x => x.StatusId == (byte)Statuses.Ready).Take(50);
-        var data = await repository.GetSampleAsync(queryFilter);
 
-        if (!data.Any() || !(await ChangeStatusAsync(Statuses.Processing, data, repository)))
+        var readyData = await repository.GetSampleAsync(x => x.StatusId == (byte)Statuses.Ready);
+
+        if (!readyData.Any())
             return;
 
-        IImmutableList<string> ratingKeys;
+        if (!await SetStatusAsync(Statuses.Processing, readyData, repository))
+            return;
+
+        var notComputedData = await repository.GetSampleAsync(x => x.StatusId == (byte) Statuses.NotComputed);
+        await repository.DeleteAsync(notComputedData, new AnalyzedEntityComparer(), nameof(AnalyzeAsync));
+
         AnalyzedEntity[] computedData;
+
         try
         {
-            computedData = await CalculateDataAsync(data);
-
-            ratingKeys = computedData
-                .Where(x => x.StatusId == (byte) Statuses.Computed)
-                .GroupBy(x => x.CompanyId)
-                .Select(x => x.Key)
-                .ToImmutableList();
-
-            computedData = computedData
-                .Where(x => x.StatusId != (byte) Statuses.NotComputed)
-                .ToArray();
+            computedData = await CalculateDataAsync(readyData);
         }
         catch
         {
-            await ChangeStatusAsync(Statuses.Error, data, repository);
+            await SetStatusAsync(Statuses.Error, readyData, repository);
             return;
         }
 
+        if (!computedData.Any())
+        {
+            await SetStatusAsync(Statuses.Ready, readyData, repository);
+            return;
+        }
+
+        // Удаляю данные, по которым формировались расчеты т.к. они будут пересозданы все равно
+        await repository.DeleteAsync(readyData, new AnalyzedEntityComparer(), nameof(AnalyzeAsync));
+
+        // Беру данные, с которых начинались сравнения
+        var computingStartData = computedData
+            .Where(x => x.StatusId == (byte)Statuses.NotComputed && x.Result == -1)
+            .ToArray();
+
+        // Перевожу их в статус - Вычесленные
+        foreach (var item in computedData.Join(computingStartData,
+                     x => new { x.CompanyId, x.AnalyzedEntityTypeId, x.Date },
+                     y => new { y.CompanyId, y.AnalyzedEntityTypeId, y.Date },
+                     (x, _) => x))
+        {
+            item.Result = 0;
+            item.StatusId = (byte)Statuses.Computed;
+        }
+
+        // Ищу по ним совпадения в БД
+        var companyIds = computingStartData.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
+        var typeIds = computingStartData.Select(x => x.AnalyzedEntityTypeId).Distinct();
+        var dates = computingStartData.Select(x => x.Date).Distinct();
+
+        var dbStartData = await repository.GetQuery(x =>
+                companyIds.Contains(x.CompanyId)
+                && typeIds.Contains(x.AnalyzedEntityTypeId)
+                && dates.Contains(x.Date))
+            .ToArrayAsync();
+
+        // Устанавливаю им результаты, которые были на момент расчета
+        foreach (var (item, dbResult) in computedData.Join(dbStartData,
+                     x => new { x.CompanyId, x.AnalyzedEntityTypeId, x.Date },
+                     y => new { y.CompanyId, y.AnalyzedEntityTypeId, y.Date },
+                    (x, y) => (x, y.Result)))
+        {
+            item.Result = dbResult;
+        }
+
+        // Сохраняю расчитанные данные
         var (error, _) = await repository.CreateUpdateAsync(computedData, new AnalyzedEntityComparer(), nameof(AnalyzeAsync));
 
+        // Если сохранение прошло успешно, то пересчитываю рейтинг
         if (error is null)
-            await SetRatingAsync(ratingKeys, repository);
+            await SetRatingAsync();
     }
 
-    private async Task<bool> ChangeStatusAsync(Statuses status, AnalyzedEntity[] entities, Repository<AnalyzedEntity, DatabaseContext> repository)
+    private async Task<bool> SetStatusAsync(Statuses status, AnalyzedEntity[] entities, Repository<AnalyzedEntity, DatabaseContext> repository)
     {
         foreach (var item in entities)
             item.StatusId = (byte)status;
 
-        var (error, _) = await repository.CreateUpdateAsync(entities, new AnalyzedEntityComparer(), nameof(ChangeStatusAsync) + " to " + status);
+        var (error, _) = await repository.CreateUpdateAsync(entities, new AnalyzedEntityComparer(), nameof(SetStatusAsync) + " to " + status);
 
         return error is null;
     }
@@ -73,34 +115,24 @@ public class AnalyzerService
     {
         var client = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<CompanyDataClient>();
 
-        var calculators = new Dictionary<byte, IAnalyzerCalculator>
-            {
-                {(byte)EntityTypes.Price, new CalculatorPrice(client)},
-                {(byte)EntityTypes.Report, new CalculatorReport(client)},
-                {(byte)EntityTypes.Coefficient, new CalculatorCoefficient(scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<CalculatorCoefficient>>(), client)}
-            };
+        var calculatorData = new CalculatorData(client, data);
 
-        var tasks = data
-            .GroupBy(x => x.AnalyzedEntityTypeId)
-            .Select(x => calculators[x.Key].ComputeAsync(x.ToImmutableArray()));
+        var priceCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(calculatorData.Prices));
+        var reportCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(calculatorData.Reports));
+        var coefficientCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(calculatorData.Reports, calculatorData.Prices));
 
-        var result = await Task.WhenAll(tasks);
+        var result = await Task.WhenAll(priceCalculateTask, reportCalculateTask, coefficientCalculateTask);
 
         return result.SelectMany(x => x).ToArray();
     }
-    private async Task SetRatingAsync(IImmutableList<string> companyIds, Repository<AnalyzedEntity, DatabaseContext> repository)
+    private Task SetRatingAsync()
     {
-        List<Task<Rating>> ratingTasks = new(companyIds.Count);
-        foreach (var companyId in companyIds)
-        {
-            var queryFilter = repository.GetQuery(x => x.CompanyId == companyId && x.StatusId == (byte)Statuses.Computed);
-            var data = await repository.GetSampleAsync(queryFilter);
-            ratingTasks.Add(CalculatorService.RatingCalculator.GetRatingAsync(companyId, data));
-        }
+        var options = scopeFactory.CreateScope().ServiceProvider.GetRequiredService< IOptions < ServiceSettings > > ();
+        var rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Ratings, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
 
-        var rating = await Task.WhenAll(ratingTasks);
-
-        var ratingRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Rating>>();
-        await ratingRepository.CreateUpdateAsync(rating, new RatingComparer(), nameof(AnalyzeAsync) + '.' + nameof(SetRatingAsync));
+        return Task.CompletedTask;
     }
 }

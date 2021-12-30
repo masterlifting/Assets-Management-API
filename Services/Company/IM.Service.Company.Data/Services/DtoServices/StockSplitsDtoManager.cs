@@ -198,6 +198,6 @@ public class StockSplitsDtoManager
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockSplits, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
-        return "Task to pase splits is running.";
+        return "Task to parse splits is running.";
     }
 }

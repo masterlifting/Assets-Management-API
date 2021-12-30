@@ -52,23 +52,14 @@ public class AnalyzedEntityRepository : RepositoryHandler<AnalyzedEntity, Databa
     {
         entities = entities.ToArray();
 
-        var dateMin = entities.Min(x => x.Date);
-        var dateMax = entities.Max(x => x.Date);
+        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
+        var typeIds = entities.Select(x => x.AnalyzedEntityTypeId).Distinct();
+        var dates = entities.Select(x => x.Date).Distinct();
 
-        var existData = entities
-            .GroupBy(x => (x.CompanyId,x.AnalyzedEntityTypeId))
-            .Select(x => x.Key)
-            .ToArray();
-
-        var companyIds = existData.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
-        var typeIds = existData.GroupBy(x => x.AnalyzedEntityTypeId).Select(x => x.Key).ToArray();
-
-        var dbc = context.AnalyzedEntities.Where(x => companyIds.Contains(x.CompanyId) && x.Date >= dateMin && x.Date <= dateMax);
-        var dbt = context.AnalyzedEntities.Where(x => typeIds.Contains(x.AnalyzedEntityTypeId) && x.Date >= dateMin && x.Date <= dateMax);
-
-        return dbc.Join(dbt,
-            x => new {x.CompanyId, x.AnalyzedEntityTypeId},
-            y => new { y.CompanyId, y.AnalyzedEntityTypeId},
-            (x, _) => x);
+        return context.AnalyzedEntities
+            .Where(x =>
+                companyIds.Contains(x.CompanyId)
+                && typeIds.Contains(x.AnalyzedEntityTypeId)
+                && dates.Contains(x.Date));
     }
 }

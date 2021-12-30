@@ -64,16 +64,6 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
 
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
-            , QueueEntities.Price
-            , QueueActions.CreateUpdate
-            , JsonSerializer.Serialize(new CompanyDateIdentityDto
-            {
-                CompanyId = entity.CompanyId,
-                Date = entity.Date
-            }));
-
-        publisher.PublishTask(
-            QueueNames.CompanyAnalyzer
             , QueueEntities.Coefficient
             , QueueActions.CreateUpdate
             , JsonSerializer.Serialize(new CompanyDateIdentityDto
@@ -105,12 +95,6 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
 
         publisher.PublishTask(
             QueueNames.CompanyAnalyzer
-            , QueueEntities.Prices
-            , QueueActions.CreateUpdate
-            , data);
-
-        publisher.PublishTask(
-            QueueNames.CompanyAnalyzer
             , QueueEntities.Coefficients
             , QueueActions.CreateUpdate
             , data);
@@ -121,14 +105,10 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
     public override IQueryable<Price> GetExist(IEnumerable<Price> entities)
     {
         entities = entities.ToArray();
-        var dateMin = entities.Min(x => x.Date);
-        var dateMax = entities.Max(x => x.Date);
 
-        var existData = entities
-            .GroupBy(x => x.CompanyId)
-            .Select(x => x.Key)
-            .ToArray();
+        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
+        var dates = entities.Select(x => x.Date).Distinct();
 
-        return context.Prices.Where(x => existData.Contains(x.CompanyId) && x.Date >= dateMin && x.Date <= dateMax);
+        return context.Prices.Where(x => companyIds.Contains(x.CompanyId) && dates.Contains(x.Date));
     }
 }

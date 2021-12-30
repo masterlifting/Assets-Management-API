@@ -112,11 +112,11 @@ public class StockVolumeRepository : RepositoryHandler<StockVolume, DatabaseCont
 
     public override IQueryable<StockVolume> GetExist(IEnumerable<StockVolume> entities)
     {
-        var existData = entities
-            .GroupBy(x => x.CompanyId)
-            .Select(x => x.Key)
-            .ToArray();
+        entities = entities.ToArray();
 
-        return context.StockVolumes.Where(x => existData.Contains(x.CompanyId));
+        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
+        var values = entities.Select(x => x.Value).Distinct();
+
+        return context.StockVolumes.Where(x => companyIds.Contains(x.CompanyId) && values.Contains(x.Value));
     }
 }

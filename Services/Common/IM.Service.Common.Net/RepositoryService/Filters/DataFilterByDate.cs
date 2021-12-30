@@ -12,20 +12,24 @@ public class DataFilterByDate<T> where T : IDateIdentity
 {
     private readonly HttpRequestFilterType filterType;
     private readonly FilterDateEqualType equalType;
-    private int Year { get; }
-    private int Month { get; }
-    private int Day { get; }
+
+    public int Year { get; }
+    public int Month { get; }
+    public int Day { get; }
 
     protected DataFilterByDate(int year)
     {
         equalType = FilterDateEqualType.Year;
         Year = SetYear(year);
+        Month = 1;
+        Day = 1;
     }
     protected DataFilterByDate(int year, int month)
     {
         equalType = FilterDateEqualType.YearMonth;
         Year = SetYear(year);
         Month = SetMonth(month, filterType);
+        Day = 1;
     }
     protected DataFilterByDate(HttpRequestFilterType filterType, int year, int month, int day)
     {

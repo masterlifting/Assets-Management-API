@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using DataSetter.DataAccess.Entities;
 
 namespace DataSetter.DataAccess
@@ -52,15 +50,6 @@ namespace DataSetter.DataAccess
         public virtual DbSet<Ticker> Tickers { get; set; } = null!;
         public virtual DbSet<TransactionStatus> TransactionStatuses { get; set; } = null!;
         public virtual DbSet<Weekend> Weekends { get; set; } = null!;
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseNpgsql("Server=paviams.com;Port=6543;Database=InvestmentManager;UserId=postgres;Password=P11o12n85");
-            }
-        }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

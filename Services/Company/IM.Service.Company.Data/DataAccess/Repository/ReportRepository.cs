@@ -1,5 +1,4 @@
-﻿using IM.Service.Common.Net;
-using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
+﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Common.Net.RepositoryService.Comparators;
@@ -8,13 +7,13 @@ using IM.Service.Company.Data.Settings;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using IM.Service.Common.Net.RabbitServices.Configuration;
+
+using static  IM.Service.Common.Net.CommonHelper;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -75,24 +74,14 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
-        publisher.PublishTask(
-            QueueNames.CompanyAnalyzer
-            , QueueEntities.CompanyReport
-            , QueueActions.CreateUpdate
-            , JsonSerializer.Serialize(new CompanyDateIdentityDto
-            {
-                CompanyId = entity.CompanyId,
-                Date = new DateTime(entity.Year, CommonHelper.QarterHelper.GetFirstMonth(entity.Quarter), 1)
-            }));
-
-        publisher.PublishTask(
+       publisher.PublishTask(
             QueueNames.CompanyAnalyzer
             , QueueEntities.Coefficient
             , QueueActions.CreateUpdate
             , JsonSerializer.Serialize(new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
-                Date = new DateTime(entity.Year, CommonHelper.QarterHelper.GetFirstMonth(entity.Quarter), 1)
+                Date = QuarterHelper.ToDateTime(entity.Year, entity.Quarter)
             }));
 
         return Task.CompletedTask;
@@ -111,19 +100,13 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
             .Select(x => new CompanyDateIdentityDto
             {
                 CompanyId = x.CompanyId,
-                Date = new DateTime(x.Year, CommonHelper.QarterHelper.GetFirstMonth(x.Quarter), 1)
+                Date = QuarterHelper.ToDateTime(x.Year, x.Quarter)
             })
             .ToArray());
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 
-        publisher.PublishTask(
-            QueueNames.CompanyAnalyzer
-            , QueueEntities.CompanyReports
-            , QueueActions.CreateUpdate
-            , data);
-
-        publisher.PublishTask(
+       publisher.PublishTask(
             QueueNames.CompanyAnalyzer
             , QueueEntities.Coefficients
             , QueueActions.CreateUpdate
@@ -135,14 +118,15 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
     public override IQueryable<Report> GetExist(IEnumerable<Report> entities)
     {
         entities = entities.ToArray();
-        var yearMin = entities.Min(x => x.Year);
-        var yearMax = entities.Max(x => x.Year);
 
-        var existData = entities
-            .GroupBy(x => x.CompanyId)
-            .Select(x => x.Key)
-            .ToArray();
+        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
+        var years = entities.Select(x => x.Year).Distinct();
+        var quarters = entities.Select(x => x.Quarter).Distinct();
 
-        return context.Reports.Where(x => existData.Contains(x.CompanyId) && x.Year >= yearMin && x.Year <= yearMax);
+        return context.Reports
+            .Where(x =>
+                companyIds.Contains(x.CompanyId)
+                && years.Contains(x.Year)
+                && quarters.Contains(x.Quarter));
     }
 }

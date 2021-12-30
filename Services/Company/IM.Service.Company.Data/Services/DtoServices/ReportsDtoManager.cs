@@ -259,6 +259,6 @@ public class ReportsDtoManager
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.CompanyReports, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
-        return "Task to pase reports is running.";
+        return "Task to parse reports is running.";
     }
 }

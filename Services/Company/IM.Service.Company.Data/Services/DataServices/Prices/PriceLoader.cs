@@ -87,10 +87,14 @@ public class PriceLoader : IDataLoad<Price, DateDataConfigModel>
             if (!loadedData.Any())
                 continue;
 
-            var (error, savedResult) = await priceRepository.CreateUpdateAsync(loadedData, new CompanyDateComparer<Price>(), $"Prices for {company.Name}");
+            var (createError, createResult) = await priceRepository.CreateAsync(loadedData.Where(x => x.Date < DateTime.UtcNow.Date), new CompanyDateComparer<Price>(), $"Prices for {company.Name}");
+            var (createUpdateError, createUpdateResult) = await priceRepository.CreateUpdateAsync(loadedData.Where(x => x.Date == DateTime.UtcNow.Date), new CompanyDateComparer<Price>(), $"Prices for {company.Name}");
 
-            if (error is null)
-                result = result.Concat(savedResult).ToArray();
+            if (createError is null)
+                result = result.Concat(createResult).ToArray();
+
+            if (createUpdateError is null)
+                result = result.Concat(createUpdateResult).ToArray();
         }
 
         return result;
@@ -138,17 +142,21 @@ y => y.CompanyId,
 
             if (!loadedData.Any())
                 continue;
+            
+            var (createError, createResult) = await priceRepository.CreateAsync(loadedData.Where(x => x.Date < DateTime.UtcNow.Date), new CompanyDateComparer<Price>(), $"Prices for source: {source.Key}");
+            var (createUpdateError, createUpdateResult) = await priceRepository.CreateUpdateAsync(loadedData.Where(x => x.Date == DateTime.UtcNow.Date), new CompanyDateComparer<Price>(), $"Prices for source: {source.Key}");
 
-            var (error, savedResult) = await priceRepository.CreateUpdateAsync(loadedData, new CompanyDateComparer<Price>(), $"Prices for source: {source.Key}");
-
-            if (error is null)
-                result = result.Concat(savedResult).ToArray();
+            if (createError is null)
+                result = result.Concat(createResult).ToArray();
+            
+            if (createUpdateError is null)
+                result = result.Concat(createUpdateResult).ToArray();
         }
 
         if (result.Length <= 0)
             return result;
 
-        logger.LogInformation(LogEvents.Processing, "Prices count of companies: {count} was processed.", result.GroupBy(x => x.CompanyId).Count());
+        logger.LogInformation(LogEvents.Processing, "Prices count of companies: {count} processed.", result.GroupBy(x => x.CompanyId).Count());
         return result;
     }
 

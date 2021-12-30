@@ -85,10 +85,10 @@ public class StockVolumeLoader : IDataLoad<StockVolume, DateDataConfigModel>
             if (!loadedData.Any())
                 continue;
 
-            var (error, savedResult) = await stockVolumeRepository.CreateUpdateAsync(loadedData, new StockVolumeComparer(), $"Stock volumes for {company.Name}");
+            var (error, savedResult) = await stockVolumeRepository.CreateAsync(loadedData, new StockVolumeComparer(), $"Stock volumes for {company.Name}");
 
             if (error is null)
-                result = result.Concat(savedResult!).ToArray();
+                result = result.Concat(savedResult).ToArray();
         }
 
         return result;
@@ -134,10 +134,10 @@ public class StockVolumeLoader : IDataLoad<StockVolume, DateDataConfigModel>
             if (!loadedData.Any())
                 continue;
 
-            var (error, savedResult) = await stockVolumeRepository.CreateUpdateAsync(loadedData, new StockVolumeComparer(), $"Stock volumes for source: {source.Key}");
+            var (error, savedResult) = await stockVolumeRepository.CreateAsync(loadedData, new StockVolumeComparer(), $"Stock volumes for source: {source.Key}");
 
             if (error is null)
-                result = result.Concat(savedResult!).ToArray();
+                result = result.Concat(savedResult).ToArray();
         }
 
         if (result.Length <= 0)

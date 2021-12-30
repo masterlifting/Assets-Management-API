@@ -69,7 +69,6 @@ internal class InvestingParserHandler
         await Task.WhenAll(
             client.GetFinancialPageAsync(sourceValue),
             client.GetBalancePageAsync(sourceValue)
-        //client.GetDividendPageAsync(sourceValue)
         );
 
     internal static Report[] ParseReports(IReadOnlyList<HtmlDocument> site, string companyId, string sourceName)
@@ -79,14 +78,13 @@ internal class InvestingParserHandler
 
         var financialPage = new FinancialPage(site[0], culture);
         var balancePage = new BalancePage(site[1]);
-        //var dividendPage = new DividendPage(site[3], financialPage.Dates.ToArray());
 
         for (var i = 0; i < result.Length; i++)
             result[i] = new()
             {
                 CompanyId = companyId,
                 Year = financialPage.Dates[i].Year,
-                Quarter = CommonHelper.QarterHelper.GetQuarter(financialPage.Dates[i].Month),
+                Quarter = CommonHelper.QuarterHelper.GetQuarter(financialPage.Dates[i].Month),
                 SourceType = sourceName,
                 Multiplier = 1_000_000,
 
@@ -226,104 +224,4 @@ internal class InvestingParserHandler
             return result;
         }
     }
-
-    #region UnUse
-    //private class DividendPage
-    //{
-    //    private readonly HtmlDocument page;
-    //    public DividendPage(HtmlDocument? page, IReadOnlyList<DateTime> dates)
-    //    {
-    //        this.page = page ?? throw new NullReferenceException("Loaded page is null");
-
-    //        Dividends = GetDividends(dates);
-    //    }
-    //    public decimal?[] Dividends { get; }
-
-    //    private decimal?[] GetDividends(IReadOnlyList<DateTime> dates)
-    //    {
-    //        var result = new decimal?[] { null, null, null, null };
-
-    //        var dividendData = page
-    //            .DocumentNode
-    //            .SelectNodes("//th[@class]")
-    //            .FirstOrDefault(x => x.InnerText == "Экс-дивиденд");
-
-    //        if (dividendData is null)
-    //            return result;
-
-    //        var dividendDatesData = dividendData
-    //            .ParentNode
-    //            .ParentNode
-    //            .NextSibling
-    //            .NextSibling
-    //            .ChildNodes
-    //            .Where(x => x.Name == "tr")
-    //            .Select(x => x.ChildNodes.Where(y => y.Name == "td")
-    //            .Select(z => z.InnerText))
-    //            .Select(x => x.FirstOrDefault())
-    //            .ToArray();
-
-    //        var dividendDates = new List<DateTime>(dividendDatesData.Length);
-
-    //        foreach (var item in dividendDatesData)
-    //            if (DateTime.TryParse(item, out var date))
-    //                dividendDates.Add(date);
-
-    //        if (!dividendDates.Any())
-    //            return result;
-
-    //        var dividendValueData = dividendData
-    //            .ParentNode?
-    //            .ParentNode?
-    //            .NextSibling?
-    //            .NextSibling?
-    //            .ChildNodes
-    //            .Where(x => x.Name == "tr")
-    //            .Select(x => x.ChildNodes.Where(y => y.Name == "td")
-    //            .Select(z => z.InnerText))
-    //            .Select(x => x.Skip(1)
-    //            .FirstOrDefault())
-    //            .ToArray();
-
-    //        if (dividendValueData is null)
-    //            return result;
-
-    //        for (var i = 0; i < dates.Count; i++)
-    //        {
-    //            var reportYear = dates[i].Year;
-    //            var reportQuarter = CommonHelper.GetQuarter(dates[i].Month);
-
-    //            for (var j = 0; j < dividendDates.Count; j++)
-    //            {
-    //                var dividendYear = dividendDates[j].Year;
-    //                var dividendQuarter = CommonHelper.GetQuarter(dividendDates[j].Month);
-
-    //                if (reportYear != dividendYear || reportQuarter != dividendQuarter)
-    //                    continue;
-
-    //                var dividendValue = dividendValueData[j]?.Replace(".", "", StringComparison.CurrentCultureIgnoreCase);
-
-    //                if (!decimal.TryParse(dividendValue, out var config))
-    //                    continue;
-
-    //                if (j > 0)
-    //                {
-    //                    var previousDividendYear = dividendDates[j - 1].Year;
-    //                    var previousDividendQuarter = CommonHelper.GetQuarter(dividendDates[j - 1].Month);
-    //                    if (dividendYear == previousDividendYear && dividendQuarter == previousDividendQuarter)
-    //                    {
-    //                        var dividendPreviousValue = dividendValueData[j - 1]?.Replace(".", "", StringComparison.CurrentCultureIgnoreCase);
-    //                        if (decimal.TryParse(dividendPreviousValue, out var previousData))
-    //                            config += previousData;
-    //                    }
-    //                }
-
-    //                result[i] = config;
-    //            }
-    //        }
-
-    //        return result;
-    //    }
-    //}
-    #endregion
 }

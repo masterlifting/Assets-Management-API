@@ -215,6 +215,26 @@ public static class QueueConfiguration
                             }
                         }
                     }
+                },
+                new Queue(QueueNames.CompanyAnalyzer)
+                {
+                    Entities = new[]
+                    {
+                        new QueueEntity(QueueEntities.Rating)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Call
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Ratings)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Call
+                            }
+                        }
+                    }
                 }
             }
         }

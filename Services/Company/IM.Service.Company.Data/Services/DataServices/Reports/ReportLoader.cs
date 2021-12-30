@@ -179,10 +179,9 @@ public class ReportLoader : IDataLoad<Report, QuarterDataConfigModel>
             : Array.Empty<Report>();
     public async Task<Report[]> DataGetAsync(string source, IEnumerable<QuarterDataConfigModel> config)
     {
-        var _data = config.ToArray();
-
-        return !_data.Any()
+        config = config.ToArray();
+        return !config.Any()
             ? Array.Empty<Report>()
-            : await parser.GetReportsAsync(source, _data.Where(x => IsMissingLastQuarter(logger, x)));
+            : await parser.GetReportsAsync(source, config.Where(x => IsMissingLastQuarter(logger, x)));
     }
 }

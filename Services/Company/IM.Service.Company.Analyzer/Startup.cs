@@ -17,10 +17,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-using Polly;
-
-using System;
-
 namespace IM.Service.Company.Analyzer;
 
 public class Startup
@@ -41,16 +37,11 @@ public class Startup
 
         services.AddControllers();
 
-        services
-            .AddHttpClient<CompanyDataClient>()
-            .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
-            .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
+        services.AddHttpClient<CompanyDataClient>();
 
         services.AddSingleton<AnalyzerService>();
-
-        services.AddScoped<CalculatorReport>();
-        services.AddScoped<CalculatorPrice>();
-        services.AddScoped<CalculatorCoefficient>();
+        services.AddScoped<RatingService>();
+        services.AddScoped<CalculatorData>();
 
         services.AddScoped<RatingDtoManager>();
 
