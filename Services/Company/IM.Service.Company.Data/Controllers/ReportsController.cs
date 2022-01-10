@@ -32,24 +32,16 @@ public class ReportsController : ControllerBase
     public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> Get(string companyId, int year = 0, int quarter = 0, int page = 0, int limit = 0)
     {
         var companyIds = companyId.Split(',');
-        return !companyIds.Any()
-            ? new()
-            : companyIds.Length > 1
-                ? await manager.GetAsync(
-                    new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.More, companyIds, year, quarter),
-                    new(page, limit))
-                : await manager.GetAsync(
-                    new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.More, companyId, year, quarter),
-                    new(page, limit));
+        return companyIds.Length > 1
+                ? await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.More, companyIds, year, quarter), new(page, limit))
+                : await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.More, companyId, year, quarter), new(page, limit));
     }
 
     [HttpGet("{companyId}/{year:int}")]
     public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> GetEqual(string companyId, int year, int page = 0, int limit = 0)
     {
         var companyIds = companyId.Split(',');
-        return !companyIds.Any()
-            ? new()
-            : companyIds.Length > 1
+        return companyIds.Length > 1
                 ? await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(companyIds, year), new(page, limit))
                 : await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(companyId, year), new(page, limit));
     }
@@ -58,8 +50,6 @@ public class ReportsController : ControllerBase
     public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> Get(string companyId, int year, int quarter)
     {
         var companyIds = companyId.Split(',');
-        if (!companyIds.Any())
-            return new();
         if (companyIds.Length == 1)
         {
             var result = await manager.GetAsync(companyId, year, (byte)quarter);

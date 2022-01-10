@@ -34,10 +34,10 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            entity = await handler.GetCreateHandlerAsync(entity);
-            await context.Set<TEntity>().AddAsync(entity);
-            await context.SaveChangesAsync();
-            await handler.SetPostProcessAsync(entity);
+            entity = await handler.GetCreateHandlerAsync(entity).ConfigureAwait(false);
+            await context.Set<TEntity>().AddAsync(entity).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            await handler.SetPostProcessAsync(entity).ConfigureAwait(false);
             logger.LogInformation(LogEvents.Create, "{info}. Entity: {name}", info, name);
             return (null, entity);
         }
@@ -60,16 +60,16 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 return (null, Array.Empty<TEntity>());
             }
 
-            entities = await handler.GetCreateRangeHandlerAsync(entities, comparer);
+            entities = await handler.GetCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
 
             var result = entities.ToArray();
             var count = result.Length;
 
             if (result.Any())
             {
-                await context.Set<TEntity>().AddRangeAsync(result);
-                count = await context.SaveChangesAsync();
-                await handler.SetPostProcessAsync(result);
+                await context.Set<TEntity>().AddRangeAsync(result).ConfigureAwait(false);
+                count = await context.SaveChangesAsync().ConfigureAwait(false);
+                await handler.SetPostProcessAsync(result).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.Create, "{info}. Entity: {name}. Created: {count}", info, name, count);
@@ -87,9 +87,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            entity = await handler.GetUpdateHandlerAsync(id, entity);
-            await context.SaveChangesAsync();
-            await handler.SetPostProcessAsync(entity);
+            entity = await handler.GetUpdateHandlerAsync(id, entity).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            await handler.SetPostProcessAsync(entity).ConfigureAwait(false);
             logger.LogInformation(LogEvents.Update, "{info}. Entity: {name}", info, name);
             return (null, entity);
         }
@@ -112,7 +112,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 return (null, Array.Empty<TEntity>());
             }
 
-            entities = await handler.GetUpdateRangeHandlerAsync(entities);
+            entities = await handler.GetUpdateRangeHandlerAsync(entities).ConfigureAwait(false);
 
             var result = entities.ToArray();
             var count = result.Length;
@@ -120,8 +120,8 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             if (result.Any())
             {
                 context.Set<TEntity>().UpdateRange(result);
-                count = await context.SaveChangesAsync();
-                await handler.SetPostProcessAsync(result);
+                count = await context.SaveChangesAsync().ConfigureAwait(false);
+                await handler.SetPostProcessAsync(result).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.Update, "{info}. Entity: {name}. Updated: {count}", info, name, count);
@@ -139,10 +139,10 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            entity = await handler.GetCreateHandlerAsync(entity);
-            await context.Set<TEntity>().AddAsync(entity);
-            await context.SaveChangesAsync();
-            await handler.SetPostProcessAsync(entity);
+            entity = await handler.GetCreateHandlerAsync(entity).ConfigureAwait(false);
+            await context.Set<TEntity>().AddAsync(entity).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            await handler.SetPostProcessAsync(entity).ConfigureAwait(false);
             logger.LogInformation(LogEvents.Create, "{info}. Entity: {name}", info, name);
             return (null, entity);
         }
@@ -150,11 +150,11 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         {
             try
             {
-                entity = await handler.GetUpdateHandlerAsync(id, entity);
+                entity = await handler.GetUpdateHandlerAsync(id, entity).ConfigureAwait(false);
                 context.Entry(entity).State = EntityState.Modified;
                 context.Set<TEntity>().Update(entity);
-                await context.SaveChangesAsync();
-                await handler.SetPostProcessAsync(entity);
+                await context.SaveChangesAsync().ConfigureAwait(false);
+                await handler.SetPostProcessAsync(entity).ConfigureAwait(false);
                 logger.LogInformation(LogEvents.Update, "{info}. Entity: {name}", info, name);
                 return (null, entity);
             }
@@ -178,18 +178,18 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 return (null, Array.Empty<TEntity>());
             }
 
-            var createEntities = await handler.GetCreateRangeHandlerAsync(entities, comparer);
+            var createEntities = await handler.GetCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
             var createResult = createEntities.ToArray();
 
             if (createResult.Any())
-                await context.Set<TEntity>().AddRangeAsync(createResult);
+                await context.Set<TEntity>().AddRangeAsync(createResult).ConfigureAwait(false);
 
             var updateEntities = entities.Except(createResult, comparer);
             var updateResult = updateEntities.ToArray();
 
             if (updateResult.Any())
             {
-                updateEntities = await handler.GetUpdateRangeHandlerAsync(updateResult);
+                updateEntities = await handler.GetUpdateRangeHandlerAsync(updateResult).ConfigureAwait(false);
                 updateResult = updateEntities.ToArray();
 
                 if (updateResult.Any())
@@ -200,8 +200,8 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (result.Any())
             {
-                await context.SaveChangesAsync();
-                await handler.SetPostProcessAsync(result);
+                await context.SaveChangesAsync().ConfigureAwait(false);
+                await handler.SetPostProcessAsync(result).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.CreateUpdate, "{info}. Entity: {name}. Created: {ccount}. Updated: {ucount}", info, name, createResult.Length, updateResult.Length);
@@ -227,18 +227,18 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 return (null, Array.Empty<TEntity>());
             }
 
-            var createEntities = await handler.GetCreateRangeHandlerAsync(entities, comparer);
+            var createEntities = await handler.GetCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
             var createResult = createEntities.ToArray();
 
             if (createResult.Any())
-                await context.Set<TEntity>().AddRangeAsync(createResult);
+                await context.Set<TEntity>().AddRangeAsync(createResult).ConfigureAwait(false);
 
             var updateEntities = entities.Except(createResult, comparer);
             var updateResult = updateEntities.ToArray();
 
             if (updateResult.Any())
             {
-                updateEntities = await handler.GetUpdateRangeHandlerAsync(updateResult);
+                updateEntities = await handler.GetUpdateRangeHandlerAsync(updateResult).ConfigureAwait(false);
                 updateResult = updateEntities.ToArray();
 
                 if (updateResult.Any())
@@ -247,7 +247,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             var processingResult = createResult.Concat(updateResult).ToArray();
 
-            var deleteEntities = await handler.GetDeleteRangeHandlerAsync(processingResult);
+            var deleteEntities = await handler.GetDeleteRangeHandlerAsync(processingResult).ConfigureAwait(false);
             var deleteResult = deleteEntities.ToArray();
 
             if (deleteResult.Any())
@@ -255,8 +255,8 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (processingResult.Any() || deleteResult.Any())
             {
-                await context.SaveChangesAsync();
-                await handler.SetPostProcessAsync(processingResult.Concat(deleteResult).ToArray());
+                await context.SaveChangesAsync().ConfigureAwait(false);
+                await handler.SetPostProcessAsync(processingResult.Concat(deleteResult).ToArray()).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.CreateUpdateDelete, "{info}. Entity: {name}. Created: {ccount}. Updated: {ucount}. Deleted: {dcount}", info, name, createResult.Length, updateResult.Length, deleteResult.Length);
@@ -270,14 +270,14 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         }
     }
 
-    public async Task<(string? error, TEntity? entity)> DeleteAsync(object[] id, string info)
+    public async Task<(string? error, TEntity? entity)> DeleteByIdAsync(object[] id, string info)
     {
         try
         {
-            var result = await handler.GetDeleteHandlerAsync(id);
+            var result = await handler.GetDeleteHandlerAsync(id).ConfigureAwait(false);
             context.Set<TEntity>().Remove(result);
-            await context.SaveChangesAsync();
-            await handler.SetPostProcessAsync(result);
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            await handler.SetPostProcessAsync(result).ConfigureAwait(false);
             logger.LogInformation(LogEvents.Remove, info);
             return (null, result);
         }
@@ -288,7 +288,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             return (message, null);
         }
     }
-    public async Task<(string? error, TEntity[] result)> DeleteAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+    public async Task<(string? error, TEntity[] result)> DeleteAsync(IEnumerable<TEntity> entities, string info)
     {
         try
         {
@@ -300,14 +300,14 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 return (null, Array.Empty<TEntity>());
             }
 
-            var deleteResult = await handler.GetExist(entities).ToArrayAsync();
+            var deleteResult = await handler.GetExist(entities).ToArrayAsync().ConfigureAwait(false);
 
             var count = 0;
             if (deleteResult.Any())
             {
                 context.Set<TEntity>().RemoveRange(deleteResult);
-                count = await context.SaveChangesAsync();
-                await handler.SetPostProcessAsync(deleteResult);
+                count = await context.SaveChangesAsync().ConfigureAwait(false);
+                await handler.SetPostProcessAsync(deleteResult).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.Remove, "{info}. Entity: {name}. Deleted: {count}", info, name, count);
@@ -323,8 +323,8 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
     public DbSet<TEntity> GetDbSet() => context.Set<TEntity>();
 
-    public async Task<TEntity?> FindAsync(params object[] parameters) => await context.Set<TEntity>().FindAsync(parameters);
-    public async Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().FirstOrDefaultAsync(predicate);
+    public async Task<TEntity?> FindAsync(params object[] parameters) => await context.Set<TEntity>().FindAsync(parameters).ConfigureAwait(false);
+    public async Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().FirstOrDefaultAsync(predicate).ConfigureAwait(false);
 
     public IQueryable<TEntity> GetQuery() => context.Set<TEntity>();
     public IQueryable<TEntity> GetQuery(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);
@@ -347,16 +347,16 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     public IQueryable<TEntity> GetPaginationQuery<TSelector1, TSelector2>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
         query.OrderBy(orderSelector1).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
 
-    public async Task<TEntity[]> GetSampleAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync();
+    public async Task<TEntity[]> GetSampleAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync().ConfigureAwait(false);
     public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, TResult>> selector) =>
-        await context.Set<TEntity>().AsNoTracking().Select(selector).ToArrayAsync();
+        await context.Set<TEntity>().AsNoTracking().Select(selector).ToArrayAsync().ConfigureAwait(false);
     public async Task<TResult[]> GetSampleAsync<TResult>(IQueryable<TEntity> query, Expression<Func<TEntity, TResult>> selector) => 
-        await query.AsNoTracking().Select(selector).ToArrayAsync();
+        await query.AsNoTracking().Select(selector).ToArrayAsync().ConfigureAwait(false);
     public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector) =>
-        await context.Set<TEntity>().AsNoTracking().Where(predicate).Select(selector).ToArrayAsync();
+        await context.Set<TEntity>().AsNoTracking().Where(predicate).Select(selector).ToArrayAsync().ConfigureAwait(false);
     public async Task<TEntity[]> GetSampleOrderedAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector) =>
-        await context.Set<TEntity>().AsNoTracking().Where(predicate).OrderBy(orderSelector).ToArrayAsync();
+        await context.Set<TEntity>().AsNoTracking().Where(predicate).OrderBy(orderSelector).ToArrayAsync().ConfigureAwait(false);
 
-    public async Task<int> GetCountAsync(IQueryable<TEntity> query) => await query.AsNoTracking().CountAsync();
-    public async Task<int> GetCountAsync() => await context.Set<TEntity>().AsNoTracking().CountAsync();
+    public async Task<int> GetCountAsync(IQueryable<TEntity> query) => await query.AsNoTracking().CountAsync().ConfigureAwait(false);
+    public async Task<int> GetCountAsync() => await context.Set<TEntity>().AsNoTracking().CountAsync().ConfigureAwait(false);
 }

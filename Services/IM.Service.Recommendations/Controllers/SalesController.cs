@@ -1,13 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace IM.Service.Recommendations.Controllers
+namespace IM.Service.Recommendations.Controllers;
+
+[ApiController, Route("api/[controller]")]
+public class SalesController : Controller
 {
-    [ApiController, Route("api/[controller]")]
-    public class SalesController : Controller
+    public IActionResult Index()
     {
-        public IActionResult Index()
-        {
-            return Ok();
-        }
+        return Ok();
     }
 }

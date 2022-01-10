@@ -23,7 +23,7 @@ public class RabbitSyncService : IRabbitActionService
     private async Task<bool> GetCompanyResultAsync(QueueActions action, string data)
     {
         if (action == QueueActions.Delete)
-            return (await companyRepository.DeleteAsync(new[] { data }, $"{nameof(GetCompanyResultAsync)}.{data}")).error is not null;
+            return (await companyRepository.DeleteByIdAsync(new[] { data }, $"{nameof(GetCompanyResultAsync)}.{data}")).error is not null;
 
         if (!RabbitHelper.TrySerialize(data, out CompanyDto? dto))
             return false;

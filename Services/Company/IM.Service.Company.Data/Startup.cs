@@ -55,10 +55,10 @@ namespace IM.Service.Company.Data
                 .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
                 .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
-            services.AddScoped<PriceParser>();
-            services.AddScoped<ReportParser>();
-            services.AddScoped<StockSplitParser>();
-            services.AddScoped<StockVolumeParser>();
+            services.AddScoped<PriceGrabber>();
+            services.AddScoped<ReportGrabber>();
+            services.AddScoped<StockSplitGrabber>();
+            services.AddScoped<StockVolumeGrabber>();
 
             services.AddScoped<PriceLoader>();
             services.AddScoped<ReportLoader>();

@@ -12,6 +12,7 @@ public class RabbitActionService : RabbitService
         new()
         {
             { QueueExchanges.Sync, new RabbitSyncService(scopeFactory) },
+            { QueueExchanges.Transfer, new RabbitTransferService(scopeFactory) },
             { QueueExchanges.Function, new RabbitFunctionService(scopeFactory) }
         })
     {

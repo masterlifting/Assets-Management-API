@@ -1,14 +1,5 @@
-namespace IM.Service.Company.Data.Models.Client.Price.MoexModels
-{
-    public class MoexHistoryPriceResultModel
-    {
-        public MoexHistoryPriceResultModel(MoexHistoryPriceData? data, string ticker)
-        {
-            Data = data;
-            Ticker = ticker;
-        }
+namespace IM.Service.Company.Data.Models.Client.Price.MoexModels;
 
-        public MoexHistoryPriceData? Data { get; }
-        public string Ticker { get; }
-    }
-}
+public record MoexHistoryPriceResultModel(MoexHistoryPriceData Data, string Ticker);
+public record MoexHistoryPriceData(History History);
+public record History(object[]?[] Data);

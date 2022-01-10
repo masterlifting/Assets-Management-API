@@ -5,3 +5,17 @@ delete from "Prices" where "Prices"."CompanyId" = 'GE' and "Prices"."Value" < 30
 delete from "Prices" where "Prices"."CompanyId" = 'SHW' and "Prices"."Value" > 400 and "Prices"."Date" > '2020-12-19'
 delete from "Prices" where "Prices"."CompanyId" = 'NEE' and "Prices"."Value" < 100 and "Date" < '2020-09-25'
 delete from "Prices" where "Prices"."CompanyId" = 'RTX' and "Prices"."Value" > 100
+
+select
+"Year"
+,"Quarter"
+,"Revenue"
+,"ProfitNet"
+,"ProfitGross"
+,"CashFlow"
+,"Asset"
+,"Turnover"
+,"ShareCapital"
+,"Obligation"
+,"LongTermDebt"
+from "Reports" where "CompanyId" = 'SNGS' and "Year" in (2018,2019) and "Quarter" in (2,4) order by "Year","Quarter"

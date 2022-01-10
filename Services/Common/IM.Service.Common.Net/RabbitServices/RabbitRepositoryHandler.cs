@@ -28,10 +28,10 @@ public abstract class RabbitRepositoryHandler : IRabbitRepositoryHandler
 
         return action switch
         {
-            QueueActions.Create => (await repository.CreateAsync(data, info)).error is null,
-            QueueActions.CreateUpdate => (await repository.CreateUpdateAsync(id, data, info)).error is null,
-            QueueActions.Update => (await repository.UpdateAsync(id, data, info)).error is null,
-            QueueActions.Delete => (await repository.DeleteAsync(id, info )).error is null,
+            QueueActions.Create => (await repository.CreateAsync(data, info).ConfigureAwait(false)).error is null,
+            QueueActions.CreateUpdate => (await repository.CreateUpdateAsync(id, data, info).ConfigureAwait(false)).error is null,
+            QueueActions.Update => (await repository.UpdateAsync(id, data, info).ConfigureAwait(false)).error is null,
+            QueueActions.Delete => (await repository.DeleteByIdAsync(id, info ).ConfigureAwait(false)).error is null,
             _ => true
         };
     }
@@ -50,11 +50,11 @@ public abstract class RabbitRepositoryHandler : IRabbitRepositoryHandler
 
         return action switch
         {
-            QueueActions.Create => (await repository.CreateAsync(data, comparer, info)).error is null,
-            QueueActions.CreateUpdate => (await repository.CreateUpdateAsync(data, comparer, info)).error is null,
-            QueueActions.CreateUpdateDelete => (await repository.CreateUpdateDeleteAsync(data, comparer, info)).error is null,
-            QueueActions.Update => (await repository.UpdateAsync(data, info)).error is null,
-            QueueActions.Delete => (await repository.DeleteAsync(data, comparer, info)).error is null,
+            QueueActions.Create => (await repository.CreateAsync(data, comparer, info).ConfigureAwait(false)).error is null,
+            QueueActions.CreateUpdate => (await repository.CreateUpdateAsync(data, comparer, info).ConfigureAwait(false)).error is null,
+            QueueActions.CreateUpdateDelete => (await repository.CreateUpdateDeleteAsync(data, comparer, info).ConfigureAwait(false)).error is null,
+            QueueActions.Update => (await repository.UpdateAsync(data, info).ConfigureAwait(false)).error is null,
+            QueueActions.Delete => (await repository.DeleteAsync(data, info).ConfigureAwait(false)).error is null,
             _ => true
         };
     }

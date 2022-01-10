@@ -352,6 +352,6 @@ public class RatingDtoManager
 
         var result = await analyzedEntityRepository.CreateUpdateAsync(data, new AnalyzedEntityComparer(), nameof(RecalculateAsync));
 
-        return result.error ?? $"task to recalculate rating for '{string.Join(";",companyIds)}' at {date.Value : yyyy-MM-dd} is running.";
+        return result.error ?? $"Recalculate rating for '{string.Join(";",companyIds)}' at {date.Value : yyyy-MM-dd} is running.";
     }
 }

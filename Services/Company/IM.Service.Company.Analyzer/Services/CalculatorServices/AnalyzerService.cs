@@ -1,19 +1,22 @@
-﻿using System;
+﻿using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess;
 using IM.Service.Company.Analyzer.DataAccess.Comparators;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 using IM.Service.Company.Analyzer.DataAccess.Repository;
+using IM.Service.Company.Analyzer.Settings;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.RabbitServices;
-using IM.Service.Common.Net.RabbitServices.Configuration;
-using IM.Service.Company.Analyzer.Settings;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using static IM.Service.Company.Analyzer.Enums;
 
 namespace IM.Service.Company.Analyzer.Services.CalculatorServices;
@@ -36,7 +39,7 @@ public class AnalyzerService
             return;
 
         var notComputedData = await repository.GetSampleAsync(x => x.StatusId == (byte) Statuses.NotComputed);
-        await repository.DeleteAsync(notComputedData, new AnalyzedEntityComparer(), nameof(AnalyzeAsync));
+        await repository.DeleteAsync(notComputedData, nameof(AnalyzeAsync));
 
         AnalyzedEntity[] computedData;
 
@@ -57,7 +60,7 @@ public class AnalyzerService
         }
 
         // Удаляю данные, по которым формировались расчеты т.к. они будут пересозданы все равно
-        await repository.DeleteAsync(readyData, new AnalyzedEntityComparer(), nameof(AnalyzeAsync));
+        await repository.DeleteAsync(readyData, nameof(AnalyzeAsync));
 
         // Беру данные, с которых начинались сравнения
         var computingStartData = computedData
@@ -114,12 +117,13 @@ public class AnalyzerService
     private async Task<AnalyzedEntity[]> CalculateDataAsync(IEnumerable<AnalyzedEntity> data)
     {
         var client = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<CompanyDataClient>();
+        var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<AnalyzerService>>();
 
         var calculatorData = new CalculatorData(client, data);
 
-        var priceCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(calculatorData.Prices));
-        var reportCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(calculatorData.Reports));
-        var coefficientCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(calculatorData.Reports, calculatorData.Prices));
+        var priceCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(logger, calculatorData.Prices));
+        var reportCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(logger, calculatorData.Reports));
+        var coefficientCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(logger, calculatorData.Reports, calculatorData.Prices));
 
         var result = await Task.WhenAll(priceCalculateTask, reportCalculateTask, coefficientCalculateTask);
 

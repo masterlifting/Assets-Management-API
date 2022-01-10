@@ -5,9 +5,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Common.Net;
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Company.Analyzer.Models.Calculator;
-
+using Microsoft.Extensions.Logging;
 using static IM.Service.Common.Net.CommonHelper;
 using static IM.Service.Company.Analyzer.Enums;
 
@@ -17,7 +18,7 @@ public static class CalculatorService
 {
     public static class DataComparator
     {
-        public static IEnumerable<AnalyzedEntity> GetComparedSample(in IEnumerable<PriceGetDto> dto) =>
+        public static IEnumerable<AnalyzedEntity> GetComparedSample(ILogger<AnalyzerService> logger, in IEnumerable<PriceGetDto> dto) =>
             dto
                 .GroupBy(x => x.Ticker)
                 .SelectMany(x =>
@@ -34,8 +35,9 @@ public static class CalculatorService
                         .ComputeSampleResults(companySample)
                         .ToImmutableDictionary(y => y.Id, z => z.Value);
 
-                    //check deviation test
-                    //var deviation = computedResults.Where(y => Math.Abs(y.Value) > 50).Select(y => y.Key).ToArray();
+                    //check deviation
+                    //foreach (var index in computedResults.Where(y => Math.Abs(y.Value) > 50).Select(y => y.Key))
+                    //    logger.LogWarning(LogEvents.Processing,"Deviation of price > 50%! '{ticker}' at '{date}'",companyOrderedData[index].Ticker, companyOrderedData[index].Date.ToShortDateString());
 
                     if (!computedResults.Any())
                         return companyOrderedData
@@ -74,7 +76,7 @@ public static class CalculatorService
 
                     return result;
                 });
-        public static IEnumerable<AnalyzedEntity> GetComparedSample(in IEnumerable<ReportGetDto> dto) =>
+        public static IEnumerable<AnalyzedEntity> GetComparedSample(ILogger<AnalyzerService> logger, in IEnumerable<ReportGetDto> dto) =>
             dto
                 .GroupBy(x => x.Ticker)
                 .SelectMany(x =>
@@ -100,6 +102,10 @@ public static class CalculatorService
                         .ToArray();
 
                     var computedResults = ComputeHelper.ComputeSamplesResults(companySamples);
+
+                    //check deviation
+                    foreach (var index in computedResults.Where(y => Math.Abs(y.Value) > 50).Select(y => y.Key))
+                        logger.LogWarning(LogEvents.Processing, "Deviation of report > 50%! '{ticker}' at Year: '{year}' Quarter: '{quarter}'", companyOrderedData[index].Ticker, companyOrderedData[index].Year, companyOrderedData[index].Quarter);
 
                     if (!computedResults.Any())
                         return companyOrderedData
@@ -134,7 +140,7 @@ public static class CalculatorService
 
                     return result;
                 });
-        public static IEnumerable<AnalyzedEntity> GetComparedSample(in IEnumerable<ReportGetDto> reportsDto, IEnumerable<PriceGetDto>? pricesDto) =>
+        public static IEnumerable<AnalyzedEntity> GetComparedSample(ILogger<AnalyzerService> logger, in IEnumerable<ReportGetDto> reportsDto, IEnumerable<PriceGetDto>? pricesDto) =>
             reportsDto
                 .GroupBy(x => x.Ticker)
                 .SelectMany(x =>
@@ -181,6 +187,10 @@ public static class CalculatorService
                         .ToArray();
 
                     var computedResults = ComputeHelper.ComputeSamplesResults(companySamples);
+
+                    //check deviation
+                    //foreach (var index in computedResults.Where(y => Math.Abs(y.Value) > 50).Select(y => y.Key))
+                    //    logger.LogWarning(LogEvents.Processing, "Deviation of coefficient > 50%! '{ticker}' at Year: '{year}' Quarter: '{quarter}'", companyOrderedData[index].Ticker, companyOrderedData[index].Year, companyOrderedData[index].Quarter);
 
                     if (!computedResults.Any())
                         return companyOrderedData

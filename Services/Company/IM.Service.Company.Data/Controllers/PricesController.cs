@@ -33,24 +33,16 @@ public class PricesController : ControllerBase
     public async Task<ResponseModel<PaginatedModel<PriceGetDto>>> Get(string companyId, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0)
     {
         var companyIds = companyId.Split(',');
-        return !companyIds.Any()
-            ? new()
-            : companyIds.Length > 1
-                ? await manager.GetAsync(
-                    new CompanyDataFilterByDate<Price>(HttpRequestFilterType.More, companyIds, year, month, day),
-                    new(page, limit))
-                : await manager.GetAsync(
-                    new CompanyDataFilterByDate<Price>(HttpRequestFilterType.More, companyId, year, month, day),
-                    new(page, limit));
+        return companyIds.Length > 1
+                ? await manager.GetAsync(new CompanyDataFilterByDate<Price>(HttpRequestFilterType.More, companyIds, year, month, day), new(page, limit))
+                : await manager.GetAsync(new CompanyDataFilterByDate<Price>(HttpRequestFilterType.More, companyId, year, month, day), new(page, limit));
     }
 
     [HttpGet("{companyId}/{year:int}")]
     public async Task<ResponseModel<PaginatedModel<PriceGetDto>>> GetEqual(string companyId, int year, int page = 0, int limit = 0)
     {
         var companyIds = companyId.Split(',');
-        return !companyIds.Any()
-            ? new()
-            : companyIds.Length > 1
+        return companyIds.Length > 1
                 ? await manager.GetAsync(new CompanyDataFilterByDate<Price>(companyIds, year), new(page, limit))
                 : await manager.GetAsync(new CompanyDataFilterByDate<Price>(companyId, year), new(page, limit));
     }
@@ -59,9 +51,7 @@ public class PricesController : ControllerBase
     public async Task<ResponseModel<PaginatedModel<PriceGetDto>>> GetEqual(string companyId, int year, int month, int page = 0, int limit = 0)
     {
         var companyIds = companyId.Split(',');
-        return !companyIds.Any()
-            ? new()
-            : companyIds.Length > 1
+        return companyIds.Length > 1
                 ? await manager.GetAsync(new CompanyDataFilterByDate<Price>(companyIds, year, month), new(page, limit))
                 : await manager.GetAsync(new CompanyDataFilterByDate<Price>(companyId, year, month), new(page, limit));
     }
@@ -70,8 +60,7 @@ public class PricesController : ControllerBase
     public async Task<ResponseModel<PaginatedModel<PriceGetDto>>> Get(string companyId, int year, int month, int day)
     {
         var companyIds = companyId.Split(',');
-        if (!companyIds.Any())
-            return new();
+        
         if (companyIds.Length == 1)
         {
             var result = await manager.GetAsync(companyId, new DateTime(year, month, day));

@@ -166,7 +166,7 @@ public class CompanyDtoManager
     {
         companyId = companyId.ToUpperInvariant().Trim();
 
-        var (error, company) = await companyRepository.DeleteAsync(new[] { companyId }, companyId);
+        var (error, company) = await companyRepository.DeleteByIdAsync(new[] { companyId }, companyId);
 
         if (error is not null)
             return new ResponseModel<string> { Errors = new[] { error } };

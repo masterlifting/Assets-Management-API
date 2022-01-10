@@ -23,7 +23,7 @@ public static class RabbitHelper
     }
 }
 
-internal class QueueComparer : IEqualityComparer<Queue>
+internal sealed class QueueComparer : IEqualityComparer<Queue>
 {
     public bool Equals(Queue? x, Queue? y) => x!.NameEnum == y!.NameEnum;
     public int GetHashCode(Queue obj) => obj.NameString.GetHashCode();

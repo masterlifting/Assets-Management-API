@@ -4,7 +4,6 @@ using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Company.Analyzer.Services.DtoServices;
 
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 using System.Threading.Tasks;
 using IM.Service.Common.Net;
 using IM.Service.Common.Net.RepositoryService.Filters;

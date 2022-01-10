@@ -22,7 +22,7 @@ public class TdAmeritradeClient
         tdAmeritradeSetting = options.Value.ClientSettings.TdAmeritrade;
     }
 
-    public async Task<TdAmeritradeLastPriceResultModel> GetLastPricesAsync(IEnumerable<string> tickers)
+    public async Task<TdAmeritradeLastPriceResultModel> GetCurrentPricesAsync(IEnumerable<string> tickers)
     {
         var tickerArray = tickers.ToArray();
 

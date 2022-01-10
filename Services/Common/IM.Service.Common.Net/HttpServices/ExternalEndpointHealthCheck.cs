@@ -15,7 +15,7 @@ namespace IM.Service.Common.Net.HttpServices
         public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
         {
             Ping ping = new();
-            var reply = await ping.SendPingAsync(host);
+            var reply = await ping.SendPingAsync(host).ConfigureAwait(false);
 
             return reply.Status != IPStatus.Success ? HealthCheckResult.Unhealthy() : HealthCheckResult.Healthy();
         }

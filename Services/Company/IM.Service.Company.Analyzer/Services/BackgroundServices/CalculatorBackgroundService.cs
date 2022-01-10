@@ -13,33 +13,27 @@ public class CalculatorBackgroundService : BackgroundService
 {
     private readonly ILogger<CalculatorBackgroundService> logger;
     private readonly AnalyzerService service;
-    private bool start = true;
+
     public CalculatorBackgroundService(ILogger<CalculatorBackgroundService> logger, AnalyzerService service)
     {
         this.logger = logger;
         this.service = service;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken cToken)
     {
-        var delay = new TimeSpan(0, 0, 30);
+        using PeriodicTimer timer = new(TimeSpan.FromSeconds(30));
 
-        while (start)
+        while (await timer.WaitForNextTickAsync(cToken))
         {
-            start = false;
-            await Task.Delay(delay, stoppingToken);
-
             try
             {
                 await service.AnalyzeAsync();
-                GC.Collect();
             }
             catch (Exception exception)
             {
-                logger.LogError(LogEvents.Processing, "{place}. Error: {exception}", nameof(ExecuteAsync), exception.Message);
+                logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(ExecuteAsync), exception.Message);
             }
-
-            start = true;
         }
     }
     public override Task StopAsync(CancellationToken stoppingToken)

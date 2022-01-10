@@ -14,13 +14,13 @@ public class RepositoryHandler<T, TContext> : IRepositoryHandler<T> where T : cl
 
     public virtual Task<T> GetCreateHandlerAsync(T entity) => Task.FromResult(entity);
     public virtual async Task<T> GetUpdateHandlerAsync(object[] id, T entity) =>
-        await context.Set<T>().FindAsync(id) is null
+        await context.Set<T>().FindAsync(id).ConfigureAwait(false) is null
             ? throw new SqlNullValueException(nameof(entity))
             : entity;
 
     public virtual async Task<T> GetDeleteHandlerAsync(params object[] id)
     {
-        var dbEntity = await context.Set<T>().FindAsync(id);
+        var dbEntity = await context.Set<T>().FindAsync(id).ConfigureAwait(false);
         return dbEntity ?? throw new SqlNullValueException(nameof(dbEntity));
     }
 
@@ -30,7 +30,7 @@ public class RepositoryHandler<T, TContext> : IRepositoryHandler<T> where T : cl
     {
         entities = entities.ToArray();
         var distinctEntities = entities.Distinct(comparer);
-        var existEntities = await GetExist(distinctEntities).ToArrayAsync();
+        var existEntities = await GetExist(distinctEntities).ToArrayAsync().ConfigureAwait(false);
         return entities.Except(existEntities, comparer);
     }
     public virtual Task<IEnumerable<T>> GetUpdateRangeHandlerAsync(IEnumerable<T> entities) => Task.FromResult(entities);

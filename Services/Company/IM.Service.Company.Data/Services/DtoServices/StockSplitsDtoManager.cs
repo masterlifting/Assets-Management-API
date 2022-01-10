@@ -187,7 +187,7 @@ public class StockSplitsDtoManager
 
         var info = $"Split of '{companyId}' delete at {date:yyyy MMMM dd}";
 
-        var (error, _) = await stockSplitRepository.DeleteAsync(new object[] { companyId, date }, info);
+        var (error, _) = await stockSplitRepository.DeleteByIdAsync(new object[] { companyId, date }, info);
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -198,6 +198,6 @@ public class StockSplitsDtoManager
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockSplits, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
-        return "Task to parse splits is running.";
+        return "Load stock splits is running.";
     }
 }

@@ -248,7 +248,7 @@ public class ReportsDtoManager
         companyId = companyId.ToUpperInvariant().Trim();
         var info = $"Report of '{companyId}' delete at {year} - {quarter}";
 
-        var (error, _) = await reportRepository.DeleteAsync(new object[]{ companyId, year, quarter } , info );
+        var (error, _) = await reportRepository.DeleteByIdAsync(new object[]{ companyId, year, quarter } , info );
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -259,6 +259,6 @@ public class ReportsDtoManager
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.CompanyReports, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
-        return "Task to parse reports is running.";
+        return "Load reports is running.";
     }
 }

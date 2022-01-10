@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using IM.Service.Common.Net.RabbitServices.Configuration;
@@ -19,6 +18,6 @@ public class RabbitService
                && Enum.TryParse(route[1], true, out QueueEntities entity)
                && Enum.TryParse(route[2], true, out QueueActions action)
                && actions.ContainsKey(exchange)
-               && await actions[exchange].GetActionResultAsync(entity, action, data);
+               && await actions[exchange].GetActionResultAsync(entity, action, data).ConfigureAwait(false);
     }
 }

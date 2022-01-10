@@ -34,7 +34,7 @@ public abstract class RestClient
     public async Task<ResponseModel<PaginatedModel<TGet>>> Get<TGet>(string controller, string? queryString, HttpPagination pagination, bool toCache = false) where TGet : class
     {
         if (toCache)
-            await semaphore.WaitAsync();
+            await semaphore.WaitAsync().ConfigureAwait(false);
 
         uriBuilder.Clear();
         uriBuilder.Append(baseUri);
@@ -61,16 +61,18 @@ public abstract class RestClient
         {
             if (toCache)
             {
-                response = await cache.GetOrCreateAsync(uri, async entry =>
-                {
-                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10);
-                    return await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri);
-                });
+                response = await cache
+                .GetOrCreateAsync(uri, async entry =>
+                    {
+                        entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10);
+                        return await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri).ConfigureAwait(false);
+                    })
+                .ConfigureAwait(false);
 
                 semaphore.Release();
             }
             else
-                response = await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri);
+                response = await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -104,7 +106,7 @@ public abstract class RestClient
 
         try
         {
-            response = await httpClient.PostAsJsonAsync(uri, model);
+            response = await httpClient.PostAsJsonAsync(uri, model).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -147,7 +149,7 @@ public abstract class RestClient
 
         try
         {
-            response = await httpClient.PutAsJsonAsync(uri, model);
+            response = await httpClient.PutAsJsonAsync(uri, model).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -184,7 +186,7 @@ public abstract class RestClient
 
         try
         {
-            response = await httpClient.DeleteAsync(uri);
+            response = await httpClient.DeleteAsync(uri).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

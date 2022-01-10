@@ -84,7 +84,7 @@ namespace IM.Service.Common.Net.RabbitServices
 
                 try
                 {
-                    await semaphore.WaitAsync();
+                    await semaphore.WaitAsync().ConfigureAwait(false);
 
                     queueName = ea.RoutingKey.Split('.')[0];
                     var exchange = Enum.Parse<QueueExchanges>(ea.Exchange, true);

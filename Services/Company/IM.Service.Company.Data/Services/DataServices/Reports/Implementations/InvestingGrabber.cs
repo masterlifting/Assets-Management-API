@@ -1,10 +1,10 @@
 using HtmlAgilityPack;
 
 using IM.Service.Common.Net;
+using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.Data.Clients.Report;
 using IM.Service.Company.Data.DataAccess.Entities;
-using IM.Service.Company.Data.Models.Data;
-using IM.Service.Company.Data.Services.DataServices.Reports.Interfaces;
+using IM.Service.Company.Data.DataAccess.Repository;
 
 using Microsoft.Extensions.Logging;
 
@@ -12,55 +12,64 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using IM.Service.Company.Data.Models.Data;
 
 namespace IM.Service.Company.Data.Services.DataServices.Reports.Implementations;
 
-public class InvestingParser : IReportParser
+public class InvestingGrabber : IDataGrabber
 {
-    private readonly ILogger<ReportParser> logger;
+    private readonly Repository<Report> repository;
+    private readonly ILogger<ReportGrabber> logger;
     private readonly InvestingParserHandler handler;
-    public InvestingParser(ILogger<ReportParser> logger, InvestingClient client)
+
+    public InvestingGrabber(Repository<Report> repository, ILogger<ReportGrabber> logger, InvestingClient client)
     {
+        this.repository = repository;
         this.logger = logger;
         handler = new(client);
     }
 
-    public async Task<Report[]> GetReportsAsync(string source, QuarterDataConfigModel config)
-    {
-        var result = Array.Empty<Report>();
+    public async Task GrabCurrentDataAsync(string source, DataConfigModel config) => 
+        await GrabHistoryDataAsync(source, config);
+    public async Task GrabCurrentDataAsync(string source, IEnumerable<DataConfigModel> configs) => 
+        await GrabHistoryDataAsync(source, configs);
 
+    public async Task GrabHistoryDataAsync(string source, DataConfigModel config)
+    {
         try
         {
             if (config.SourceValue is null)
-                throw new ArgumentNullException($"Source value for '{config.CompanyId}' is null");
+                throw new ArgumentNullException(config.CompanyId);
 
-            var site = await handler.LoadSiteAsync(config.SourceValue);
-            result = InvestingParserHandler.ParseReports(site, config.CompanyId, source);
+            var data = await handler.LoadSiteAsync(config.SourceValue);
+
+            var result = InvestingParserHandler.Parse(data, config.CompanyId, source);
+
+            var (error, _) = await repository.CreateUpdateAsync(result, new CompanyQuarterComparer<Report>(), "Investing history reports");
+
+            if (error is not null)
+                throw new Exception("Repository exception!");
+
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.Processing, "Report parser error: {error}", exception.InnerException?.Message ?? exception.Message);
+            logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(InvestingGrabber) + '.' + nameof(GrabCurrentDataAsync), exception.InnerException?.Message ?? exception.Message);
         }
 
-        return result;
     }
-    public async Task<Report[]> GetReportsAsync(string source, IEnumerable<QuarterDataConfigModel> config)
+    public async Task GrabHistoryDataAsync(string source, IEnumerable<DataConfigModel> configs)
     {
-        var _config = config.ToArray();
-        var result = new List<Report>(_config.Length * 5);
+        using PeriodicTimer timer = new(TimeSpan.FromSeconds(5));
 
-        foreach (var item in _config)
-        {
-            result.AddRange(await GetReportsAsync(source, item));
-            await Task.Delay(5000);
-        }
-
-        return result.ToArray();
+        foreach (var config in configs)
+            if (await timer.WaitForNextTickAsync())
+                await GrabHistoryDataAsync(source, config);
     }
 }
 
-internal class InvestingParserHandler
+internal sealed class InvestingParserHandler
 {
     private readonly InvestingClient client;
     public InvestingParserHandler(InvestingClient client) => this.client = client;
@@ -71,13 +80,13 @@ internal class InvestingParserHandler
             client.GetBalancePageAsync(sourceValue)
         );
 
-    internal static Report[] ParseReports(IReadOnlyList<HtmlDocument> site, string companyId, string sourceName)
+    internal static IEnumerable<Report> Parse(IReadOnlyList<HtmlDocument> site, string companyId, string sourceName)
     {
         var result = new Report[4];
         var culture = CultureInfo.CreateSpecificCulture("ru-RU");
 
         var financialPage = new FinancialPage(site[0], culture);
-        var balancePage = new BalancePage(site[1]);
+        var balancePage = new BalancePage(site[1], culture);
 
         for (var i = 0; i < result.Length; i++)
             result[i] = new()
@@ -105,11 +114,14 @@ internal class InvestingParserHandler
     private class FinancialPage
     {
         private readonly HtmlDocument page;
+        private readonly IFormatProvider culture;
+
         public FinancialPage(HtmlDocument? page, IFormatProvider culture)
         {
             this.page = page ?? throw new NullReferenceException("Loaded page is null");
+            this.culture = culture;
 
-            Dates = GetDates(culture);
+            Dates = GetDates();
             Revenues = GetFinancialData(0, "Общий доход");
             ProfitGross = GetFinancialData(0, "Валовая прибыль");
             ProfitNet = GetFinancialData(0, "Чистая прибыль");
@@ -157,12 +169,12 @@ internal class InvestingParserHandler
                 throw new NotSupportedException(error);
 
             for (var i = 0; i < values.Length; i++)
-                if (decimal.TryParse(values[i], out var value))
+                if (decimal.TryParse(values[i], NumberStyles.Currency, culture, out var value))
                     result[i] = value;
 
             return result;
         }
-        private List<DateTime> GetDates(IFormatProvider culture)
+        private List<DateTime> GetDates()
         {
             var result = new List<DateTime>(4);
             const string? error = "Financial page date parsing failed!";
@@ -184,9 +196,12 @@ internal class InvestingParserHandler
     private class BalancePage
     {
         private readonly HtmlDocument page;
-        public BalancePage(HtmlDocument? page)
+        private readonly IFormatProvider culture;
+
+        public BalancePage(HtmlDocument? page, IFormatProvider culture)
         {
             this.page = page ?? throw new NullReferenceException("Loaded page is null");
+            this.culture = culture;
 
             Turnovers = GetBalanceData("Итого оборотные активы");
             LongDebts = GetBalanceData("Общая долгосрочная задолженность по кредитам и займам");
@@ -218,7 +233,7 @@ internal class InvestingParserHandler
                 throw new NotSupportedException(error);
 
             for (var i = 0; i < balanceData.Length; i++)
-                if (decimal.TryParse(balanceData[i], out var value))
+                if (decimal.TryParse(balanceData[i], NumberStyles.Currency, culture, out var value))
                     result[i] = value;
 
             return result;

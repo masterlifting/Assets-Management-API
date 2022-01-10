@@ -1,24 +1,13 @@
-﻿using IM.Service.Common.Net;
-
-using IM.Service.Company.Data.Models.Data;
-
-using System;
-using Microsoft.Extensions.Logging;
+﻿using System;
+using IM.Service.Common.Net;
 
 namespace IM.Service.Company.Data.Services.DataServices.Reports;
 
 public static class ReportHelper
 {
-    public static bool IsMissingLastQuarter(ILogger<ReportLoader> logger, QuarterDataConfigModel lastReport)
+    public static bool IsMissingLastQuarter(int year, byte quarter)
     {
         var (controlYear, controlQuarter) = CommonHelper.QuarterHelper.SubtractQuarter(DateTime.UtcNow);
-
-        var isNew = controlYear > lastReport.Year || controlYear == lastReport.Year && controlQuarter > lastReport.Quarter;
-
-        if (isNew)
-            return isNew;
-
-        logger.LogInformation(LogEvents.Processing, "For '{companyId}' last report is actual.", lastReport.CompanyId);
-        return isNew;
+        return controlYear > year || controlYear == year && controlQuarter > quarter;
     }
 }

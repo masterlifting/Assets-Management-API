@@ -183,7 +183,7 @@ public class StockVolumesDtoManager
         companyId = companyId.ToUpperInvariant().Trim();
 
         var info = $"Stock volume of '{companyId}' delete at {date:yyyy MMMM dd}";
-        var (error, _) = await stockVolumeRepository.DeleteAsync(new object[] { companyId, date }, info);
+        var (error, _) = await stockVolumeRepository.DeleteByIdAsync(new object[] { companyId, date }, info);
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -194,6 +194,6 @@ public class StockVolumesDtoManager
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockVolumes, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
-        return "Task to parse stock volumes is running.";
+        return "Load stock volumes is running.";
     }
 }

@@ -2,47 +2,46 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace IM.Service.Common.Net.ParserServices
+namespace IM.Service.Common.Net.ParserServices;
+
+public class SettingsConverter<T> where T : class
 {
-    public class SettingsConverter<T> where T : class
+    private readonly Dictionary<string, string> environments;
+
+    public SettingsConverter(string environmentValue)
     {
-        private readonly Dictionary<string, string> environments;
-
-        public SettingsConverter(string environmentValue)
+        try
         {
-            try
-            {
-                environments = environmentValue
-                    .Split(';')
-                    .Select(x => x.Split('='))
-                    .ToDictionary(x => x[0], y => y[1]);
+            environments = environmentValue
+                .Split(';')
+                .Select(x => x.Split('='))
+                .ToDictionary(x => x[0], y => y[1]);
 
-                Model = Activator.CreateInstance<T>();
+            Model = Activator.CreateInstance<T>();
 
-                Convert(Model);
-            }
-            catch (Exception ex)
-            {
-                throw new KeyNotFoundException("SettingConverter error: " + ex.InnerException?.Message);
-            }
+            Convert(Model);
         }
-        private void Convert(T model)
+        catch (Exception ex)
         {
-            var modelProperties = typeof(T).GetProperties();
-
-            foreach (var propertyInfo in modelProperties)
-            {
-                string propName = string.Intern(propertyInfo.Name);
-
-                if (!environments.TryGetValue(propName, out var value)) 
-                    continue;
-                
-                var type = model.GetType();
-                var property = type.GetProperty(propName);
-
-                property?.SetValue(model, value);
-            }
+            throw new KeyNotFoundException("SettingConverter error: " + ex.InnerException?.Message);
         }
-        public T Model { get; }
     }
+    private void Convert(T model)
+    {
+        var modelProperties = typeof(T).GetProperties();
+
+        foreach (var propertyInfo in modelProperties)
+        {
+            var propName = string.Intern(propertyInfo.Name);
+
+            if (!environments.TryGetValue(propName, out var value)) 
+                continue;
+                
+            var type = model.GetType();
+            var property = type.GetProperty(propName);
+
+            property?.SetValue(model, value);
+        }
+    }
+    public T Model { get; }
 }
