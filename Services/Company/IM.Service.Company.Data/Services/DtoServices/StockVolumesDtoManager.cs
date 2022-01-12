@@ -38,8 +38,8 @@ public class StockVolumesDtoManager
 
     public async Task<ResponseModel<StockVolumeGetDto>> GetAsync(string companyId, DateTime date)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
-        var company = await companyRepository.FindAsync(companyId.ToUpperInvariant().Trim());
+        companyId = companyId.Trim().ToUpperInvariant();
+        var company = await companyRepository.FindAsync(companyId);
 
         if (company is null)
             return new() { Errors = new[] { $"'{companyId}' not found" } };
@@ -180,7 +180,7 @@ public class StockVolumesDtoManager
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
+        companyId = companyId.Trim().ToUpperInvariant();
 
         var info = $"Stock volume of '{companyId}' delete at {date:yyyy MMMM dd}";
         var (error, _) = await stockVolumeRepository.DeleteByIdAsync(new object[] { companyId, date }, info);
@@ -195,5 +195,12 @@ public class StockVolumesDtoManager
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockVolumes, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
         return "Load stock volumes is running.";
+    }
+    public string Load(string companyId)
+    {
+        companyId = companyId.Trim().ToUpperInvariant();
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockVolume, QueueActions.Call, companyId);
+        return $"Load stock volumes for '{companyId}' is running.";
     }
 }

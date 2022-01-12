@@ -60,17 +60,15 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
 
     public override Task SetPostProcessAsync(Price entity)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        var data = JsonSerializer.Serialize(new CompanyDateIdentityDto
+        {
+            CompanyId = entity.CompanyId,
+            Date = entity.Date
+        });
 
-        publisher.PublishTask(
-            QueueNames.CompanyAnalyzer
-            , QueueEntities.Coefficient
-            , QueueActions.CreateUpdate
-            , JsonSerializer.Serialize(new CompanyDateIdentityDto
-            {
-                CompanyId = entity.CompanyId,
-                Date = entity.Date
-            }));
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Price, QueueActions.CreateUpdate, data);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Coefficient, QueueActions.CreateUpdate, data);
 
         return Task.CompletedTask;
     }
@@ -92,12 +90,8 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
             .ToArray());
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
-
-        publisher.PublishTask(
-            QueueNames.CompanyAnalyzer
-            , QueueEntities.Coefficients
-            , QueueActions.CreateUpdate
-            , data);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Prices, QueueActions.CreateUpdate, data);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Coefficients, QueueActions.CreateUpdate, data);
 
         return Task.CompletedTask;
     }

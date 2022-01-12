@@ -5,6 +5,10 @@ delete from "Prices" where "Prices"."CompanyId" = 'GE' and "Prices"."Value" < 30
 delete from "Prices" where "Prices"."CompanyId" = 'SHW' and "Prices"."Value" > 400 and "Prices"."Date" > '2020-12-19'
 delete from "Prices" where "Prices"."CompanyId" = 'NEE' and "Prices"."Value" < 100 and "Date" < '2020-09-25'
 delete from "Prices" where "Prices"."CompanyId" = 'RTX' and "Prices"."Value" > 100
+update "Reports" set "ProfitGross" = null where "ProfitGross" = 0
+update "Reports" set "CashFlow" = null where "CashFlow" = 0
+update "Reports" set "Turnover" = null where "Turnover" = 0
+update "Reports" set "LongTermDebt" = null where "LongTermDebt" = 0
 
 select
 "Year"

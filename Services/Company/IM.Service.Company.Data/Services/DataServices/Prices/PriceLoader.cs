@@ -90,10 +90,10 @@ public class PriceLoader : IDataLoader<Price>
                 IsCurrent = last is not null && DateOnly.FromDateTime(last.Date) == ExchangeInfo.GetLastWorkDay(source.Name)
             };
 
-            await grabber.GrabCurrentPricesAsync(source.Name, config);
+            await grabber.GrabCurrentDataAsync(source.Name, config);
 
             if (!config.IsCurrent)
-                await grabber.GrabHistoryPricesAsync(source.Name, config);
+                await grabber.GrabHistoryDataAsync(source.Name, config);
         }
     }
     public async Task DataSetAsync()
@@ -129,8 +129,8 @@ y => y.CompanyId,
                     })
                 .ToArray();
 
-            await grabber.GrabCurrentPricesAsync(source.Key, configs);
-            await grabber.GrabHistoryPricesAsync(source.Key, configs.Where(x => !x.IsCurrent));
+            await grabber.GrabCurrentDataAsync(source.Key, configs);
+            await grabber.GrabHistoryDataAsync(source.Key, configs.Where(x => !x.IsCurrent));
         }
 
         logger.LogInformation(LogEvents.Processing, "Place: {place}. Is complete.", nameof(DataSetAsync));

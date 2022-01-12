@@ -89,9 +89,9 @@ public class StockSplitLoader : IDataLoader<StockSplit>
             };
 
             if (config.IsCurrent)
-                await grabber.GrabCurrentStockSplitsAsync(source.Name, config);
+                await grabber.GrabCurrentDataAsync(source.Name, config);
             else
-                await grabber.GrabHistoryStockSplitsAsync(source.Name, config);
+                await grabber.GrabHistoryDataAsync(source.Name, config);
         }
     }
     public async Task DataSetAsync()
@@ -122,8 +122,8 @@ public class StockSplitLoader : IDataLoader<StockSplit>
                     })
                 .ToArray();
 
-            await grabber.GrabCurrentStockSplitsAsync(source.Key, configs);
-            await grabber.GrabHistoryStockSplitsAsync(source.Key, configs.Where(x => !x.IsCurrent));
+            await grabber.GrabCurrentDataAsync(source.Key, configs);
+            await grabber.GrabHistoryDataAsync(source.Key, configs.Where(x => !x.IsCurrent));
         }
 
         logger.LogInformation(LogEvents.Processing, "Place: {place}. Is complete.", nameof(DataSetAsync));

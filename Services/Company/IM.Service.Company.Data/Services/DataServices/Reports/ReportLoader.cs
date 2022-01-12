@@ -92,7 +92,7 @@ public class ReportLoader : IDataLoader<Report>
                 IsCurrent = last is not null && IsMissingLastQuarter(last.Year,last.Quarter)
             };
 
-            await grabber.GrabHistoryReportsAsync(source.Name, config);
+            await grabber.GrabHistoryDataAsync(source.Name, config);
         }
     }
     public async Task DataSetAsync()
@@ -125,7 +125,7 @@ public class ReportLoader : IDataLoader<Report>
                     })
                 .ToArray();
 
-            await grabber.GrabHistoryReportsAsync(source.Key, configs.Where(x => !x.IsCurrent));
+            await grabber.GrabHistoryDataAsync(source.Key, configs.Where(x => !x.IsCurrent));
         }
 
         logger.LogInformation(LogEvents.Processing, "Place: {place}. Is complete.", nameof(DataSetAsync));

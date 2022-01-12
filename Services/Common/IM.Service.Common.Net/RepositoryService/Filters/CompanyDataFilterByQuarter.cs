@@ -19,33 +19,33 @@ public class CompanyDataFilterByQuarter<T> : DataFilterByQuarter<T> where T : cl
 
     public CompanyDataFilterByQuarter(string companyId, int year) : base(year)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
+        companyId = companyId.Trim().ToUpperInvariant();
         FilterExpression = Combine(x => companyId == x.CompanyId, QuarterExpression);
     }
     public CompanyDataFilterByQuarter(string companyId, int year, int quarter) : base(year, quarter)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
+        companyId = companyId.Trim().ToUpperInvariant();
         FilterExpression = Combine(x => companyId == x.CompanyId, QuarterExpression);
     }
     public CompanyDataFilterByQuarter(HttpRequestFilterType filterType, string companyId, int year, int quarter) : base(filterType, year, quarter)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
+        companyId = companyId.Trim().ToUpperInvariant();
         FilterExpression = Combine(x => companyId == x.CompanyId, QuarterExpression);
     }
 
     public CompanyDataFilterByQuarter(string[] companyIds, int year) : base(year)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.ToUpperInvariant()).ToArray();
+        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
         FilterExpression = Combine(x => companyIds.Contains(x.CompanyId), QuarterExpression);
     }
     public CompanyDataFilterByQuarter(string[] companyIds, int year, int quarter) : base(year, quarter)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.ToUpperInvariant()).ToArray();
+        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
         FilterExpression = Combine(x => companyIds.Contains(x.CompanyId), QuarterExpression);
     }
     public CompanyDataFilterByQuarter(HttpRequestFilterType filterType, string[] companyIds, int year, int quarter) : base(filterType, year, quarter)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.ToUpperInvariant()).ToArray();
+        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
         FilterExpression = Combine(x => companyIds.Contains(x.CompanyId), QuarterExpression);
     }
 }

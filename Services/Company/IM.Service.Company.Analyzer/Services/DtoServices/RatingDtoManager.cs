@@ -21,6 +21,7 @@ public class RatingDtoManager
     private readonly Repository<Rating> ratingRepository;
     private readonly Repository<DataAccess.Entities.Company> companyRepository;
     private readonly Repository<AnalyzedEntity> analyzedEntityRepository;
+    private const int resultRoundValue = 3;
 
     public RatingDtoManager(
         Repository<AnalyzedEntity> analyzedEntityRepository,
@@ -55,17 +56,18 @@ public class RatingDtoManager
             {
                 Company = company.Name,
                 Place = place,
-                Result = decimal.Round(rating.Result, 1),
-                ResultPrice = decimal.Round(rating.ResultPrice, 1),
-                ResultReport = decimal.Round(rating.ResultReport, 1),
-                ResultCoefficient = decimal.Round(rating.ResultCoefficient, 1),
+                Result =rating.Result.HasValue ? decimal.Round(rating.Result.Value, resultRoundValue) : null,
+                ResultPrice = rating.ResultPrice.HasValue ? decimal.Round(rating.ResultPrice.Value, resultRoundValue) : null,
+                ResultReport = rating.ResultReport.HasValue ? decimal.Round(rating.ResultReport.Value, resultRoundValue) : null,
+                ResultCoefficient = rating.ResultCoefficient.HasValue ? decimal.Round(rating.ResultCoefficient.Value, resultRoundValue) : null,
                 UpdateTime = rating.Date
             }
         };
     }
     public async Task<ResponseModel<RatingGetDto>> GetAsync(string companyId)
     {
-        var company = await companyRepository.FindAsync(companyId.ToUpperInvariant());
+        companyId = companyId.Trim().ToUpperInvariant();
+        var company = await companyRepository.FindAsync(companyId);
 
         if (company is null)
             return new()
@@ -97,10 +99,10 @@ public class RatingDtoManager
             {
                 Company = company.Name,
                 Place = places[result.Id],
-                Result = decimal.Round(result.Result, 1),
-                ResultPrice = decimal.Round(result.ResultPrice, 1),
-                ResultReport = decimal.Round(result.ResultReport, 1),
-                ResultCoefficient = decimal.Round(result.ResultCoefficient, 1),
+                Result = result.Result.HasValue ? decimal.Round(result.Result.Value, resultRoundValue) : null,
+                ResultPrice = result.ResultPrice.HasValue ? decimal.Round(result.ResultPrice.Value, resultRoundValue) : null,
+                ResultReport = result.ResultReport.HasValue ? decimal.Round(result.ResultReport.Value, resultRoundValue) : null,
+                ResultCoefficient = result.ResultCoefficient.HasValue ? decimal.Round(result.ResultCoefficient.Value, resultRoundValue) : null,
                 UpdateTime = result.Date
             }
         };
@@ -139,10 +141,10 @@ public class RatingDtoManager
                 {
                     Place = y.Place,
                     Company = x.Company,
-                    Result = decimal.Round(x.Result, 1),
-                    ResultPrice = decimal.Round(x.ResultPrice, 1),
-                    ResultReport = decimal.Round(x.ResultReport, 1),
-                    ResultCoefficient = decimal.Round(x.ResultCoefficient, 1),
+                    Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
+                    ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
+                    ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
+                    ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
                     UpdateTime = x.UpdateTime
                 })
             .ToArray();
@@ -191,10 +193,10 @@ public class RatingDtoManager
                 {
                     Place = y.Place,
                     Company = x.Company,
-                    Result = decimal.Round(x.Result, 1),
-                    ResultPrice = decimal.Round(x.ResultPrice, 1),
-                    ResultReport = decimal.Round(x.ResultReport, 1),
-                    ResultCoefficient = decimal.Round(x.ResultCoefficient, 1),
+                    Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
+                    ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
+                    ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
+                    ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
                     UpdateTime = x.UpdateTime
                 })
             .ToArray();
@@ -243,10 +245,10 @@ public class RatingDtoManager
                 {
                     Place = y.Place,
                     Company = x.Company,
-                    Result = decimal.Round(x.Result, 1),
-                    ResultPrice = decimal.Round(x.ResultPrice, 1),
-                    ResultReport = decimal.Round(x.ResultReport, 1),
-                    ResultCoefficient = decimal.Round(x.ResultCoefficient, 1),
+                    Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
+                    ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
+                    ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
+                    ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
                     UpdateTime = x.UpdateTime
                 })
             .ToArray();
@@ -295,15 +297,14 @@ public class RatingDtoManager
                 {
                     Place = y.Place,
                     Company = x.Company,
-                    Result = decimal.Round(x.Result, 1),
-                    ResultPrice = decimal.Round(x.ResultPrice, 1),
-                    ResultReport = decimal.Round(x.ResultReport, 1),
-                    ResultCoefficient = decimal.Round(x.ResultCoefficient, 1),
+                    Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
+                    ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
+                    ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
+                    ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
                     UpdateTime = x.UpdateTime
                 })
             .ToArray();
-
-
+        
         return new()
         {
             Data = new()
@@ -316,8 +317,9 @@ public class RatingDtoManager
 
     public async Task<string> RecalculateAsync(string companyId)
     {
-        var company = await companyRepository.FindAsync(companyId.ToLowerInvariant());
-        return company is null ? "company not found" : await RecalculateBaseAsync(new[] {company.Id});
+        companyId = companyId.Trim().ToUpperInvariant();
+        var company = await companyRepository.FindAsync(companyId);
+        return company is null ? $"'{companyId}' not found" : await RecalculateBaseAsync(new[] {company.Id});
     }
     public async Task<string> RecalculateAsync()
     {
@@ -340,7 +342,7 @@ public class RatingDtoManager
     private async Task<string> RecalculateBaseAsync(string[] companyIds, DateTime? date = null)
     {
         var types = Enum.GetValues<EntityTypes>();
-        date ??= new DateTime(2016, 1, 1);
+        date ??= new DateTime(2016, 1, resultRoundValue);
 
         var data = companyIds.SelectMany(x => types.Select(y => new AnalyzedEntity
         {

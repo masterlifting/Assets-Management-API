@@ -121,4 +121,6 @@ public class PricesController : ControllerBase
     
     [HttpGet("load/")]
     public string Load() => manager.Load();
+    [HttpGet("load/{companyId}")]
+    public string Load(string companyId) => manager.Load(companyId);
 }

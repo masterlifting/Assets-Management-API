@@ -44,7 +44,7 @@ public class PricesDtoManager
 
     public async Task<ResponseModel<PriceGetDto>> GetAsync(string companyId, DateTime date)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
+        companyId = companyId.Trim().ToUpperInvariant();
         var company = await companyRepository.FindAsync(companyId);
 
         if (company is null)
@@ -337,7 +337,7 @@ public class PricesDtoManager
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
+        companyId = companyId.Trim().ToUpperInvariant();
 
         var info = $"Price of '{companyId}' delete at {date:yyyy MMMM dd}";
         var (error, _) = await priceRepository.DeleteByIdAsync(new object[] { companyId, date }, info);
@@ -352,5 +352,12 @@ public class PricesDtoManager
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData,QueueEntities.Prices,QueueActions.Call, DateTime.UtcNow.ToShortDateString());
         return "Load prices is running.";
+    }
+    public string Load(string companyId)
+    {
+        companyId = companyId.Trim().ToUpperInvariant();
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Price, QueueActions.Call, companyId);
+        return $"Load prices for '{companyId}' is running.";
     }
 }

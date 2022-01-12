@@ -36,8 +36,12 @@ public static class CalculatorService
                         .ToImmutableDictionary(y => y.Id, z => z.Value);
 
                     //check deviation
-                    //foreach (var index in computedResults.Where(y => Math.Abs(y.Value) > 50).Select(y => y.Key))
-                    //    logger.LogWarning(LogEvents.Processing,"Deviation of price > 50%! '{ticker}' at '{date}'",companyOrderedData[index].Ticker, companyOrderedData[index].Date.ToShortDateString());
+                    var deviation = computedResults
+                        .Where(y => y.Value.HasValue && Math.Abs(y.Value.Value) > 50)
+                        .Select(y => y.Key)
+                        .ToArray();
+                    foreach (var index in deviation)
+                        logger.LogWarning(LogEvents.Processing, "Deviation of price > 50%! '{ticker}' at '{date}'", companyOrderedData[index].Ticker, companyOrderedData[index].Date.ToShortDateString());
 
                     if (!computedResults.Any())
                         return companyOrderedData
@@ -46,8 +50,7 @@ public static class CalculatorService
                                 CompanyId = x.Key,
                                 Date = price.Date,
                                 AnalyzedEntityTypeId = (byte)EntityTypes.Price,
-                                StatusId = (byte)Statuses.NotComputed,
-                                Result = 0
+                                StatusId = (byte)Statuses.NotComputed
                             });
 
                     var result = companyOrderedData
@@ -60,19 +63,14 @@ public static class CalculatorService
                                     CompanyId = x.Key,
                                     Date = price.Date,
                                     AnalyzedEntityTypeId = (byte)EntityTypes.Price,
-                                    StatusId = isComputed
-                                        ? (byte)Statuses.Computed
-                                        : (byte)Statuses.NotComputed,
-                                    Result = isComputed
-                                        ? computedResults[index]
-                                        : 0
+                                    StatusId = isComputed ? (byte)Statuses.Computed : (byte)Statuses.NotComputed,
+                                    Result = isComputed ? computedResults[index] : null
                                 };
                             })
                             .ToImmutableArray();
 
                     var startIndex = computedResults.OrderBy(y => y.Key).First().Key;
                     result[startIndex].StatusId = (byte)Statuses.NotComputed;
-                    result[startIndex].Result = -1;
 
                     return result;
                 });
@@ -89,23 +87,27 @@ public static class CalculatorService
                     var companySamples = companyOrderedData
                         .Select((report, index) => new Sample[]
                             {
-                                new ()  { Id = index, CompareType = CompareTypes.Asc, Value = report.Revenue ?? 0 }
-                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.ProfitNet ?? 0 }
-                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.ProfitGross ?? 0 }
-                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.Asset ?? 0 }
-                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.Turnover ?? 0 }
-                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.ShareCapital ?? 0 }
-                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.CashFlow ?? 0 }
-                                ,new () { Id = index, CompareType = CompareTypes.Desc, Value = report.Obligation ?? 0 }
-                                ,new () { Id = index, CompareType = CompareTypes.Desc, Value = report.LongTermDebt ?? 0 }
+                                new ()  { Id = index, CompareType = CompareTypes.Asc, Value = report.Revenue }
+                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.ProfitNet }
+                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.ProfitGross }
+                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.Asset }
+                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.Turnover }
+                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.ShareCapital }
+                                ,new () { Id = index, CompareType = CompareTypes.Asc, Value = report.CashFlow }
+                                ,new () { Id = index, CompareType = CompareTypes.Desc, Value = report.Obligation }
+                                ,new () { Id = index, CompareType = CompareTypes.Desc, Value = report.LongTermDebt }
                             })
                         .ToArray();
 
                     var computedResults = ComputeHelper.ComputeSamplesResults(companySamples);
 
                     //check deviation
-                    foreach (var index in computedResults.Where(y => Math.Abs(y.Value) > 50).Select(y => y.Key))
-                        logger.LogWarning(LogEvents.Processing, "Deviation of report > 50%! '{ticker}' at Year: '{year}' Quarter: '{quarter}'", companyOrderedData[index].Ticker, companyOrderedData[index].Year, companyOrderedData[index].Quarter);
+                    var deviation = computedResults
+                        .Where(y => y.Value.HasValue && Math.Abs(y.Value.Value) > 100)
+                        .Select(y => y.Key)
+                        .ToArray();
+                    foreach (var index in deviation)
+                        logger.LogWarning(LogEvents.Processing, "Deviation of report > 100%! '{ticker}' at Year: '{year}' Quarter: '{quarter}'", companyOrderedData[index].Ticker, companyOrderedData[index].Year, companyOrderedData[index].Quarter);
 
                     if (!computedResults.Any())
                         return companyOrderedData
@@ -114,8 +116,7 @@ public static class CalculatorService
                                 CompanyId = x.Key,
                                 Date = QuarterHelper.ToDateTime(report.Year, report.Quarter),
                                 AnalyzedEntityTypeId = (byte)EntityTypes.Report,
-                                StatusId = (byte)Statuses.NotComputed,
-                                Result = 0
+                                StatusId = (byte)Statuses.NotComputed
                             });
 
                     var result = companyOrderedData
@@ -129,19 +130,23 @@ public static class CalculatorService
                                     Date = QuarterHelper.ToDateTime(report.Year, report.Quarter),
                                     AnalyzedEntityTypeId = (byte)EntityTypes.Report,
                                     StatusId = isComputed ? (byte)Statuses.Computed : (byte)Statuses.NotComputed,
-                                    Result = isComputed ? computedResults[index] : 0
+                                    Result = isComputed ? computedResults[index] : null
                                 };
                             })
                             .ToImmutableArray();
 
                     var startIndex = computedResults.OrderBy(y => y.Key).First().Key;
                     result[startIndex].StatusId = (byte)Statuses.NotComputed;
-                    result[startIndex].Result = -1;
 
                     return result;
                 });
-        public static IEnumerable<AnalyzedEntity> GetComparedSample(ILogger<AnalyzerService> logger, in IEnumerable<ReportGetDto> reportsDto, IEnumerable<PriceGetDto>? pricesDto) =>
-            reportsDto
+        public static IEnumerable<AnalyzedEntity> GetComparedSample(ILogger<AnalyzerService> logger, in IEnumerable<ReportGetDto> reportsDto, IEnumerable<PriceGetDto>? pricesDto)
+        {
+            var prices = pricesDto?
+                .GroupBy(x => x.Ticker)
+                .ToImmutableDictionary(x => x.Key);
+            
+            return reportsDto
                 .GroupBy(x => x.Ticker)
                 .SelectMany(x =>
                 {
@@ -159,10 +164,12 @@ public static class CalculatorService
                             var firstDate = new DateTime(report.Year, firstMonth, 1);
                             var lastDate = new DateTime(report.Year, lastMonth, 28);
 
-                            var price = pricesDto?
-                                .Where(price => price.Date >= firstDate && price.Date <= lastDate)
-                                .OrderBy(price => price.Date)
-                                .LastOrDefault();
+                            var price = prices != null && prices.ContainsKey(x.Key)
+                                ? prices[x.Key].LastOrDefault(p => p.Date >= firstDate && p.Date <= lastDate)
+                                : null;
+
+                            if (price is null)
+                                return Array.Empty<Sample>();
 
                             try
                             {
@@ -170,13 +177,13 @@ public static class CalculatorService
 
                                 return new Sample[]
                                 {
-                                        new() {Id = index, CompareType = CompareTypes.Desc, Value = coefficient.Pe},
-                                        new() {Id = index, CompareType = CompareTypes.Desc, Value = coefficient.Pb},
-                                        new() {Id = index, CompareType = CompareTypes.Desc, Value = coefficient.DebtLoad},
-                                        new() {Id = index, CompareType = CompareTypes.Asc, Value = coefficient.Profitability},
-                                        new() {Id = index, CompareType = CompareTypes.Asc, Value = coefficient.Roa},
-                                        new() {Id = index, CompareType = CompareTypes.Asc, Value = coefficient.Roe},
-                                        new() {Id = index, CompareType = CompareTypes.Asc, Value = coefficient.Eps}
+                                    new() {Id = index, CompareType = CompareTypes.Desc, Value = coefficient.Pe},
+                                    new() {Id = index, CompareType = CompareTypes.Desc, Value = coefficient.Pb},
+                                    new() {Id = index, CompareType = CompareTypes.Desc, Value = coefficient.DebtLoad},
+                                    new() {Id = index, CompareType = CompareTypes.Asc, Value = coefficient.Profitability},
+                                    new() {Id = index, CompareType = CompareTypes.Asc, Value = coefficient.Roa},
+                                    new() {Id = index, CompareType = CompareTypes.Asc, Value = coefficient.Roe},
+                                    new() {Id = index, CompareType = CompareTypes.Asc, Value = coefficient.Eps}
                                 };
                             }
                             catch
@@ -189,8 +196,12 @@ public static class CalculatorService
                     var computedResults = ComputeHelper.ComputeSamplesResults(companySamples);
 
                     //check deviation
-                    //foreach (var index in computedResults.Where(y => Math.Abs(y.Value) > 50).Select(y => y.Key))
-                    //    logger.LogWarning(LogEvents.Processing, "Deviation of coefficient > 50%! '{ticker}' at Year: '{year}' Quarter: '{quarter}'", companyOrderedData[index].Ticker, companyOrderedData[index].Year, companyOrderedData[index].Quarter);
+                    var deviation = computedResults
+                        .Where(y => y.Value.HasValue && Math.Abs(y.Value.Value) > 100)
+                        .Select(y => y.Key)
+                        .ToArray();
+                    foreach (var index in deviation)
+                        logger.LogWarning(LogEvents.Processing, "Deviation of coefficient > 100%! '{ticker}' at Year: '{year}' Quarter: '{quarter}'", companyOrderedData[index].Ticker, companyOrderedData[index].Year, companyOrderedData[index].Quarter);
 
                     if (!computedResults.Any())
                         return companyOrderedData
@@ -198,12 +209,11 @@ public static class CalculatorService
                             {
                                 CompanyId = x.Key,
                                 Date = QuarterHelper.ToDateTime(report.Year, report.Quarter),
-                                AnalyzedEntityTypeId = (byte)EntityTypes.Coefficient,
-                                StatusId = (byte)Statuses.NotComputed,
-                                Result = 0
+                                AnalyzedEntityTypeId = (byte) EntityTypes.Coefficient,
+                                StatusId = (byte) Statuses.NotComputed
                             });
 
-                    var comparedResult = companyOrderedData
+                    var result = companyOrderedData
                         .Select((report, index) =>
                         {
                             var isComputed = computedResults.ContainsKey(index);
@@ -212,34 +222,40 @@ public static class CalculatorService
                             {
                                 CompanyId = x.Key,
                                 Date = QuarterHelper.ToDateTime(report.Year, report.Quarter),
-                                AnalyzedEntityTypeId = (byte)EntityTypes.Coefficient,
-                                StatusId = isComputed ? (byte)Statuses.Computed : (byte)Statuses.NotComputed,
-                                Result = isComputed ? computedResults[index] : 0
+                                AnalyzedEntityTypeId = (byte) EntityTypes.Coefficient,
+                                StatusId = isComputed ? (byte) Statuses.Computed : (byte) Statuses.NotComputed,
+                                Result = isComputed ? computedResults[index] : null
                             };
                         })
                         .ToImmutableArray();
 
                     var startIndex = computedResults.OrderBy(y => y.Key).First().Key;
-                    comparedResult[startIndex].StatusId = (byte)Statuses.NotComputed;
-                    comparedResult[startIndex].Result = -1;
+                    result[startIndex].StatusId = (byte) Statuses.NotComputed;
 
-                    return comparedResult;
+                    return result;
                 });
+        }
     }
     public static class RatingHelper
     {
         public static Task<Rating> GetRatingAsync(string companyId, IEnumerable<AnalyzedEntity> data) =>
             Task.Run(() =>
             {
-                var taskResultPrice = Task.Run(() => data
-                        .Where(x => x.AnalyzedEntityTypeId == (byte)EntityTypes.Price)
-                        .Sum(x => x.Result));
-                var taskResultReport = Task.Run(() => data
-                        .Where(x => x.AnalyzedEntityTypeId == (byte)EntityTypes.Report)
-                        .Sum(x => x.Result));
-                var taskResultCoefficient = Task.Run(() => data
-                        .Where(x => x.AnalyzedEntityTypeId == (byte)EntityTypes.Coefficient)
-                        .Sum(x => x.Result));
+                var taskResultPrice = Task.Run(() =>
+                {
+                    var _data = data.Where(x => x.AnalyzedEntityTypeId == (byte)EntityTypes.Price).ToArray();
+                    return _data.Any() ? _data.Sum(x => x.Result) : null;
+                });
+                var taskResultReport = Task.Run(() =>
+                {
+                    var _data = data.Where(x => x.AnalyzedEntityTypeId == (byte)EntityTypes.Report).ToArray();
+                    return _data.Any() ? _data.Sum(x => x.Result) : null;
+                });
+                var taskResultCoefficient = Task.Run(() =>
+                {
+                    var _data = data.Where(x => x.AnalyzedEntityTypeId == (byte)EntityTypes.Coefficient).ToArray();
+                    return _data.Any() ? _data.Sum(x => x.Result) : null;
+                });
 
                 Task.WhenAll(taskResultPrice, taskResultReport, taskResultCoefficient);
 
@@ -268,11 +284,11 @@ public static class CalculatorService
         /// <param name="price"></param>
         /// <returns></returns>
         /// <exception cref="ArithmeticException"></exception>
-        public static Coefficient ComputeCoefficient(ReportGetDto report, PriceGetDto? price)
+        public static Coefficient ComputeCoefficient(ReportGetDto report, PriceGetDto price)
         {
             try
             {
-                if (report.Multiplier <= 0 || price?.StockVolume is null or <= 0)
+                if (report.Multiplier <= 0 || price.StockVolume is null or <= 0)
                     throw new ArgumentException($"{nameof(report.Multiplier)} or {nameof(price.StockVolume)} is incorrect");
 
                 var profitNet = report.ProfitNet ?? throw new ArgumentNullException($"{nameof(report.ProfitNet)} is null");
@@ -307,12 +323,34 @@ public static class CalculatorService
         public static Sample[] ComputeSampleResults(in Sample[] sample)
         {
             var cleanedSample = sample
-                .Where(x => x.Value != 0)
+                .Where(x => x.Value.HasValue)
                 .ToArray();
 
-            return cleanedSample.Length >= 2
-                ? ComputeValues(cleanedSample)
-                : Array.Empty<Sample>();
+            return cleanedSample.Length >= 2 ? ComputeValues(cleanedSample) : Array.Empty<Sample>();
+
+            static Sample[] ComputeValues(in Sample[] sample)
+            {
+                var result = new Sample[sample.Length];
+                result[0] = new Sample
+                {
+                    Id = sample[0].Id,
+                    CompareType = sample[0].CompareType,
+                    Value = null
+                };
+
+                for (var i = 1; i < sample.Length; i++)
+                    result[i] = new Sample
+                    {
+                        Id = sample[i].Id,
+                        CompareType = sample[i].CompareType,
+                        Value = ComputeDeviationPercent(sample[i - 1].Value!.Value, sample[i].Value!.Value, sample[i].CompareType)
+                    };
+
+                return result;
+            }
+
+            static decimal ComputeDeviationPercent(decimal previousValue, decimal nextValue, CompareTypes compareTypes) =>
+                (nextValue - previousValue) / Math.Abs(previousValue) * (short)compareTypes;
         }
 
         /// <summary>
@@ -320,12 +358,12 @@ public static class CalculatorService
         /// </summary>
         /// <param name="samples"></param>
         /// <returns></returns>
-        public static IDictionary<int, decimal> ComputeSamplesResults(in Sample[][] samples)
+        public static IDictionary<int, decimal?> ComputeSamplesResults(in Sample[][] samples)
         {
             var _samples = samples.Where(x => x.Any()).ToArray();
 
             if (!_samples.Any())
-                return new Dictionary<int, decimal>();
+                return new Dictionary<int, decimal?>();
 
             var values = new Sample[_samples.Length];
             var rows = new Sample[_samples[0].Length][];
@@ -346,47 +384,24 @@ public static class CalculatorService
             return rows
                 .SelectMany(row => row)
                 .GroupBy(row => row.Id)
-                .ToImmutableDictionary(group => group.Key, group => ComputeAverageResult(group
-                    .Select(row => row.Value)
-                    .ToArray()));
+                .ToImmutableDictionary(
+                    group => group.Key,
+                    group => ComputeAverageResult(group.Select(row => row.Value).ToArray()));
         }
 
         /// <summary>
-        /// Compute average result. Depends on value witout zero.
+        /// Compute average result. Depends on value without null.
         /// </summary>
         /// <param name="sample"></param>
         /// <returns></returns>
-        public static decimal ComputeAverageResult(in decimal[] sample)
+        public static decimal? ComputeAverageResult(in decimal?[] sample)
         {
             if (!sample.Any())
-                return 0;
+                return null;
 
-            var zeroDeviationCount = sample.Count(x => x != 0);
-            var deviationCoefficient = (decimal)zeroDeviationCount / sample.Length;
-            return sample.Average() * deviationCoefficient;
+            var values = sample.Where(x => x is not null).ToArray();
+
+            return values.Length != 0 ? values.Average() : null;
         }
-
-        private static Sample[] ComputeValues(in Sample[] sample)
-        {
-            var result = new Sample[sample.Length];
-            result[0] = new Sample
-            {
-                Id = sample[0].Id,
-                CompareType = sample[0].CompareType,
-                Value = 0
-            };
-
-            for (var i = 1; i < sample.Length; i++)
-                result[i] = new Sample
-                {
-                    Id = sample[i].Id,
-                    CompareType = sample[i].CompareType,
-                    Value = ComputeDeviationPercent(sample[i - 1].Value, sample[i].Value, sample[i].CompareType)
-                };
-
-            return result;
-        }
-        private static decimal ComputeDeviationPercent(decimal previousValue, decimal nextValue, CompareTypes compareTypes) =>
-            (nextValue - previousValue) / Math.Abs(previousValue) * (short)compareTypes;
     }
 }

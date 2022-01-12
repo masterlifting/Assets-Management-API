@@ -38,7 +38,7 @@ public class AnalyzerService
         if (!await SetStatusAsync(Statuses.Processing, readyData, repository))
             return;
 
-        var notComputedData = await repository.GetSampleAsync(x => x.StatusId == (byte) Statuses.NotComputed);
+        var notComputedData = await repository.GetSampleAsync(x => x.StatusId == (byte)Statuses.NotComputed);
         await repository.DeleteAsync(notComputedData, nameof(AnalyzeAsync));
 
         AnalyzedEntity[] computedData;
@@ -64,7 +64,7 @@ public class AnalyzerService
 
         // Беру данные, с которых начинались сравнения
         var computingStartData = computedData
-            .Where(x => x.StatusId == (byte)Statuses.NotComputed && x.Result == -1)
+            .Where(x => x.StatusId == (byte)Statuses.NotComputed)
             .ToArray();
 
         // Перевожу их в статус - Вычесленные
@@ -73,14 +73,20 @@ public class AnalyzerService
                      y => new { y.CompanyId, y.AnalyzedEntityTypeId, y.Date },
                      (x, _) => x))
         {
-            item.Result = 0;
+            item.Result = null;
             item.StatusId = (byte)Statuses.Computed;
         }
 
         // Ищу по ним совпадения в БД
-        var companyIds = computingStartData.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
-        var typeIds = computingStartData.Select(x => x.AnalyzedEntityTypeId).Distinct();
-        var dates = computingStartData.Select(x => x.Date).Distinct();
+        var companyIds = computingStartData
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x.Key);
+        var typeIds = computingStartData
+            .GroupBy(x => x.AnalyzedEntityTypeId)
+            .Select(x => x.Key);
+        var dates = computingStartData
+            .GroupBy(x => x.Date)
+            .Select(x => x.Key);
 
         var dbStartData = await repository.GetQuery(x =>
                 companyIds.Contains(x.CompanyId)
@@ -121,19 +127,31 @@ public class AnalyzerService
 
         var calculatorData = new CalculatorData(client, data);
 
-        var priceCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(logger, calculatorData.Prices));
-        var reportCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(logger, calculatorData.Reports));
-        var coefficientCalculateTask = Task.Run(() => CalculatorService.DataComparator.GetComparedSample(logger, calculatorData.Reports, calculatorData.Prices));
+        List<Task<IEnumerable<AnalyzedEntity>>> tasks = new(calculatorData.Types.Count());
 
-        var result = await Task.WhenAll(priceCalculateTask, reportCalculateTask, coefficientCalculateTask);
+        foreach (var type in calculatorData.Types)
+            switch (type)
+            {
+                case EntityTypes.Price:
+                    tasks.Add(Task.Run(() => CalculatorService.DataComparator.GetComparedSample(logger, calculatorData.Prices)));
+                    break;
+                case EntityTypes.Report:
+                    tasks.Add(Task.Run(() => CalculatorService.DataComparator.GetComparedSample(logger, calculatorData.Reports)));
+                    break;
+                case EntityTypes.Coefficient:
+                    tasks.Add(Task.Run(() => CalculatorService.DataComparator.GetComparedSample(logger, calculatorData.Reports, calculatorData.Prices)));
+                    break;
+            }
+
+        var result = await Task.WhenAll(tasks);
 
         return result.SelectMany(x => x).ToArray();
     }
     private Task SetRatingAsync()
     {
-        var options = scopeFactory.CreateScope().ServiceProvider.GetRequiredService< IOptions < ServiceSettings > > ();
+        var options = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<IOptions<ServiceSettings>>();
         var rabbitConnectionString = options.Value.ConnectionStrings.Mq;
-        
+
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Ratings, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
 

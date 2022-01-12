@@ -38,8 +38,8 @@ public class StockSplitsDtoManager
 
     public async Task<ResponseModel<StockSplitGetDto>> GetAsync(string companyId, DateTime date)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
-        var company = await companyRepository.FindAsync(companyId.ToUpperInvariant().Trim());
+        companyId = companyId.Trim().ToUpperInvariant();
+        var company = await companyRepository.FindAsync(companyId);
 
         if (company is null)
             return new() { Errors = new[] { $"'{companyId}' not found" } };
@@ -183,7 +183,7 @@ public class StockSplitsDtoManager
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
+        companyId = companyId.Trim().ToUpperInvariant();
 
         var info = $"Split of '{companyId}' delete at {date:yyyy MMMM dd}";
 
@@ -199,5 +199,12 @@ public class StockSplitsDtoManager
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockSplits, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
         return "Load stock splits is running.";
+    }
+    public string Load(string companyId)
+    {
+        companyId = companyId.Trim().ToUpperInvariant();
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockSplit, QueueActions.Call, companyId);
+        return $"Load stock splits for '{companyId}' is running.";
     }
 }

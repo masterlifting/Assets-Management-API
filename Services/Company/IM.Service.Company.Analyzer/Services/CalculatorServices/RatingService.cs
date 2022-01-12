@@ -27,7 +27,7 @@ public class RatingService
         List<Task<Rating>> ratingTasks = new(companyIds.Length);
         foreach (var companyId in companyIds)
         {
-            var data = await analyzedEntityRepository.GetSampleAsync(x => x.CompanyId == companyId && x.StatusId == (byte)Enums.Statuses.Computed);
+            var data = await analyzedEntityRepository.GetSampleAsync(x => x.CompanyId == companyId && x.StatusId == (byte)Enums.Statuses.Computed && x.Result.HasValue);
             ratingTasks.Add(CalculatorService.RatingHelper.GetRatingAsync(companyId, data));
         }
 

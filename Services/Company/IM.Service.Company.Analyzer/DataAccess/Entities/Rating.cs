@@ -11,7 +11,7 @@ public class Rating : ICompanyDateIdentity
     public int Id { get; init; }
     
     [Column(TypeName = "Decimal(18,4)")]
-    public decimal Result { get; set; }
+    public decimal? Result { get; set; }
 
     public string CompanyId { get; init; } = null!;
     public Company Company { get; init; } = null!;
@@ -19,9 +19,9 @@ public class Rating : ICompanyDateIdentity
     public DateTime Date { get; set; } = DateTime.UtcNow;
 
     [Column(TypeName = "Decimal(18,4)")]
-    public decimal ResultPrice { get; set; }
+    public decimal? ResultPrice { get; set; }
     [Column(TypeName = "Decimal(18,4)")]
-    public decimal ResultReport { get; set; }
+    public decimal? ResultReport { get; set; }
     [Column(TypeName = "Decimal(18,4)")]
-    public decimal ResultCoefficient { get; set; }
+    public decimal? ResultCoefficient { get; set; }
 }

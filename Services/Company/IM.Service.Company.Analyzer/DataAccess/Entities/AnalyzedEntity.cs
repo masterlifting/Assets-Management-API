@@ -22,5 +22,5 @@ public class AnalyzedEntity : ICompanyDateIdentity
 
   
     [Column(TypeName = "Decimal(18,4)")]
-    public decimal Result { get; set; }
+    public decimal? Result { get; set; }
 }

@@ -1,14 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
-using IM.Service.Common.Net.Models.Dto.Http;
+﻿using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
 using IM.Service.Company.Analyzer.Clients;
 using IM.Service.Company.Analyzer.DataAccess.Entities;
 
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+using static  IM.Service.Company.Analyzer.Enums;
 using static IM.Service.Common.Net.CommonEnums;
 using static IM.Service.Common.Net.CommonHelper;
 using static IM.Service.Common.Net.HttpServices.QueryStringBuilder;
@@ -17,14 +17,13 @@ namespace IM.Service.Company.Analyzer.Services.CalculatorServices;
 
 public class CalculatorData
 {
-    private readonly SemaphoreSlim semaphore = new(1, 1);
-
     private readonly CompanyDataClient client;
-    private readonly Dictionary<DateTime, IEnumerable<string>> priceRequestData;
-    private readonly Dictionary<DateTime, IEnumerable<string>> reportRequestData;
+    private readonly Dictionary<DateOnly, IEnumerable<string>> priceRequestData;
+    private readonly Dictionary<DateOnly, IEnumerable<string>> reportRequestData;
 
     public IEnumerable<ReportGetDto> Reports { get; }
     public IEnumerable<PriceGetDto> Prices { get; }
+    public IEnumerable<EntityTypes> Types { get; }
 
     public CalculatorData(CompanyDataClient client, IEnumerable<AnalyzedEntity> data)
     {
@@ -33,10 +32,12 @@ public class CalculatorData
 
         priceRequestData = new(_data.Length);
         reportRequestData = new(_data.Length);
+        
+        List<EntityTypes> types = new(Enum.GetValues<EntityTypes>().Length);
 
         foreach (var item in _data.GroupBy(x => x.Date).OrderBy(x => x.Key))
         {
-            var date = item.Key.AddMonths(-6);
+            var date = DateOnly.FromDateTime(item.Key.AddMonths(-6));
 
             foreach (var entityType in item.GroupBy(x => x.AnalyzedEntityTypeId))
             {
@@ -46,23 +47,27 @@ public class CalculatorData
 
                 switch (entityType.Key)
                 {
-                    case (byte)Enums.EntityTypes.Price:
+                    case (byte)EntityTypes.Price:
                         {
                             if (priceRequestData.ContainsKey(date))
                                 priceRequestData[date] = priceRequestData[date].Concat(companyIds.Except(priceRequestData[date]));
                             else
                                 priceRequestData.Add(date, companyIds);
+
+                            types.Add(EntityTypes.Price);
                         }
                         break;
-                    case (byte)Enums.EntityTypes.Report:
+                    case (byte)EntityTypes.Report:
                         {
                             if (reportRequestData.ContainsKey(date))
                                 reportRequestData[date] = reportRequestData[date].Concat(companyIds.Except(reportRequestData[date]));
                             else
                                 reportRequestData.Add(date, companyIds);
+
+                            types.Add(EntityTypes.Report);
                         }
                         break;
-                    case (byte)Enums.EntityTypes.Coefficient:
+                    case (byte)EntityTypes.Coefficient:
                         {
                             if (priceRequestData.ContainsKey(date))
                                 priceRequestData[date] = priceRequestData[date].Concat(companyIds.Except(priceRequestData[date]));
@@ -73,14 +78,23 @@ public class CalculatorData
                                 reportRequestData[date] = reportRequestData[date].Concat(companyIds.Except(reportRequestData[date]));
                             else
                                 reportRequestData.Add(date, companyIds);
+
+                            types.Add(EntityTypes.Coefficient);
                         }
                         break;
                 }
             }
         }
 
-        Prices = GetPricesAsync().GetAwaiter().GetResult();
-        Reports = GetReportsAsync().GetAwaiter().GetResult();
+        Types = types;
+
+        var priceTask = GetPricesAsync();
+        var reportTask = GetReportsAsync();
+
+        Task.WhenAll(priceTask,reportTask).GetAwaiter().GetResult();
+
+        Prices = priceTask.Result;
+        Reports = reportTask.Result;
     }
 
     private async Task<PriceGetDto[]> GetPricesAsync()

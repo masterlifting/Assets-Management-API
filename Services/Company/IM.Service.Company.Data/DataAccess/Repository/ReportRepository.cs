@@ -13,7 +13,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using IM.Service.Common.Net.RabbitServices.Configuration;
 
-using static  IM.Service.Common.Net.CommonHelper;
+using static IM.Service.Common.Net.CommonHelper;
 
 namespace IM.Service.Company.Data.DataAccess.Repository;
 
@@ -72,17 +72,15 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
 
     public override Task SetPostProcessAsync(Report entity)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        var data = JsonSerializer.Serialize(new CompanyDateIdentityDto
+        {
+            CompanyId = entity.CompanyId,
+            Date = QuarterHelper.ToDateTime(entity.Year, entity.Quarter)
+        });
 
-       publisher.PublishTask(
-            QueueNames.CompanyAnalyzer
-            , QueueEntities.Coefficient
-            , QueueActions.CreateUpdate
-            , JsonSerializer.Serialize(new CompanyDateIdentityDto
-            {
-                CompanyId = entity.CompanyId,
-                Date = QuarterHelper.ToDateTime(entity.Year, entity.Quarter)
-            }));
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.CompanyReport, QueueActions.CreateUpdate, data);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Coefficient, QueueActions.CreateUpdate, data);
 
         return Task.CompletedTask;
     }
@@ -105,12 +103,8 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
             .ToArray());
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
-
-       publisher.PublishTask(
-            QueueNames.CompanyAnalyzer
-            , QueueEntities.Coefficients
-            , QueueActions.CreateUpdate
-            , data);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.CompanyReports, QueueActions.CreateUpdate, data);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Coefficients, QueueActions.CreateUpdate, data);
 
         return Task.CompletedTask;
     }

@@ -38,8 +38,8 @@ public class ReportsDtoManager
 
     public async Task<ResponseModel<ReportGetDto>> GetAsync(string companyId, int year, byte quarter)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
-        var company = await companyRepository.FindAsync(companyId.ToUpperInvariant().Trim());
+        companyId = companyId.Trim().ToUpperInvariant();
+        var company = await companyRepository.FindAsync(companyId);
 
         if (company is null)
             return new() { Errors = new[] { $"'{companyId}' not found" } };
@@ -245,7 +245,7 @@ public class ReportsDtoManager
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, int year, byte quarter)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
+        companyId = companyId.Trim().ToUpperInvariant();
         var info = $"Report of '{companyId}' delete at {year} - {quarter}";
 
         var (error, _) = await reportRepository.DeleteByIdAsync(new object[]{ companyId, year, quarter } , info );
@@ -260,5 +260,12 @@ public class ReportsDtoManager
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.CompanyReports, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
         return "Load reports is running.";
+    }
+    public string Load(string companyId)
+    {
+        companyId = companyId.Trim().ToUpperInvariant();
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.CompanyData, QueueEntities.CompanyReport, QueueActions.Call, companyId);
+        return $"Load reports for '{companyId}' is running.";
     }
 }

@@ -89,9 +89,9 @@ public class StockVolumeLoader : IDataLoader<StockVolume>
             };
 
             if (config.IsCurrent)
-                await grabber.GrabCurrentStockVolumesAsync(source.Name, config);
+                await grabber.GrabCurrentDataAsync(source.Name, config);
             else
-                await grabber.GrabHistoryStockVolumesAsync(source.Name, config);
+                await grabber.GrabHistoryDataAsync(source.Name, config);
         }
     }
     public async Task DataSetAsync()
@@ -123,7 +123,7 @@ public class StockVolumeLoader : IDataLoader<StockVolume>
                     })
                 .ToArray();
 
-            await grabber.GrabHistoryStockVolumesAsync(source.Key, configs.Where(x => !x.IsCurrent));
+            await grabber.GrabHistoryDataAsync(source.Key, configs.Where(x => !x.IsCurrent));
         }
     }
 }
