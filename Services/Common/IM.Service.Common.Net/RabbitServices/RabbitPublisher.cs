@@ -19,7 +19,7 @@ public class RabbitPublisher
     {
         var currentExchange = QueueConfiguration.Exchanges.FirstOrDefault(x => x.NameEnum == exchangeName);
 
-        exchange = currentExchange ?? throw new NullReferenceException(nameof(exchangeName));
+        exchange = currentExchange ?? throw new NullReferenceException(exchangeName.ToString());
 
         var mqConnection = new SettingsConverter<ConnectionModel>(connectionString).Model;
 
@@ -71,12 +71,12 @@ public class RabbitPublisher
         var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
 
         if (currentQueue is null)
-            throw new NullReferenceException($"{nameof(queue)} is null");
+            throw new NullReferenceException(queue.ToString());
 
         var queueParams = currentQueue.Entities.FirstOrDefault(x => x.NameEnum == entity && x.Actions.Contains(action));
 
         if (queueParams is null)
-            throw new NullReferenceException($"{nameof(queueParams)} is null");
+            throw new NullReferenceException(nameof(QueueEntity));
 
         channel.BasicPublish(
             exchange.NameString
@@ -89,12 +89,12 @@ public class RabbitPublisher
         var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
 
         if (currentQueue is null)
-            throw new NullReferenceException($"{nameof(queue)} is null");
+            throw new NullReferenceException(queue.ToString());
 
         var queueParams = currentQueue.Entities.FirstOrDefault(x => x.NameEnum == entity && x.Actions.Contains(action));
 
         if (queueParams is null)
-            throw new NullReferenceException($"{nameof(queueParams)} is null");
+            throw new NullReferenceException(nameof(QueueEntity));
 
         foreach (var item in data)
             channel.BasicPublish(

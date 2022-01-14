@@ -18,7 +18,7 @@ public class CompanyRepository : RepositoryHandler<Entities.Company, DatabaseCon
         var dbEntity = await context.Companies.FindAsync(id);
 
         if (dbEntity is null)
-            throw new SqlNullValueException(nameof(dbEntity));
+            throw new SqlNullValueException(entity.Id);
 
         dbEntity.Name = entity.Name;
         dbEntity.CompanySourceTypes = entity.CompanySourceTypes;

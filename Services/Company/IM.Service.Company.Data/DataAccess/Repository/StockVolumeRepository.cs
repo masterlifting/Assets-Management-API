@@ -32,7 +32,7 @@ public class StockVolumeRepository : RepositoryHandler<StockVolume, DatabaseCont
         var existEntities = await GetExist(new[] { entity }).ToArrayAsync();
 
         return existEntities.Any()
-            ? throw new ConstraintException($"Sotock volume with value: {entity.Value} is already. ")
+            ? throw new ConstraintException($"'{entity.Value}' for '{entity.CompanyId}' is already.")
             : entity;
     }
     public override async Task<IEnumerable<StockVolume>> GetUpdateRangeHandlerAsync(IEnumerable<StockVolume> entities)
@@ -114,8 +114,12 @@ public class StockVolumeRepository : RepositoryHandler<StockVolume, DatabaseCont
     {
         entities = entities.ToArray();
 
-        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
-        var values = entities.Select(x => x.Value).Distinct();
+        var companyIds = entities
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x.Key);
+        var values = entities
+            .GroupBy(x => x.Value)
+            .Select(x => x.Key);
 
         return context.StockVolumes.Where(x => companyIds.Contains(x.CompanyId) && values.Contains(x.Value));
     }

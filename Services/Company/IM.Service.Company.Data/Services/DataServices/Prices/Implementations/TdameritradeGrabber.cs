@@ -43,11 +43,7 @@ public class TdameritradeGrabber : IDataGrabber
 
             result = result.Where(x => x.Date.Date == DateTime.UtcNow.Date).ToArray();
 
-            var (error, _) = await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Tdameritrade current prices");
-
-            if (error is not null)
-                throw new Exception("Repository exception!");
-
+            await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Tdameritrade current prices");
         }
         catch (Exception exception)
         {
@@ -64,11 +60,7 @@ public class TdameritradeGrabber : IDataGrabber
 
             result = result.Where(x => x.Date.Date == DateTime.UtcNow.Date).ToArray();
 
-            var (error, _) = await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Tdameritrade current prices");
-
-            if (error is not null)
-                throw new Exception("Repository exception!");
-
+            await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Tdameritrade current prices");
         }
         catch (Exception exception)
         {
@@ -87,10 +79,7 @@ public class TdameritradeGrabber : IDataGrabber
 
             var result = PriceMapper.Map(source, data);
 
-            var (error, _) = await repository.CreateAsync(result, new CompanyDateComparer<Price>(), "Tdameritrade history prices");
-
-            if (error is not null)
-                throw new Exception("Repository exception!");
+            await repository.CreateAsync(result, new CompanyDateComparer<Price>(), "Tdameritrade history prices");
         }
         catch (Exception exception)
         {

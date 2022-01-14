@@ -87,84 +87,113 @@ public class CompanyDtoManager
 
     public async Task<ResponseModel<string>> CreateAsync(CompanyPostDto model)
     {
-        var company = new DataAccess.Entities.Company
+        var entity = new DataAccess.Entities.Company
         {
-            Id = model.Id,
+            Id = string.Intern(model.Id.Trim().ToUpperInvariant()),
             Name = model.Name,
             IndustryId = model.IndustryId,
             Description = model.Description
         };
 
-        var (error, createdCompany) = await companyRepository.CreateAsync(company, model.Name);
+        var (error, createdEntity) = await companyRepository.CreateAsync(entity, entity.Name);
 
         if (error is not null)
             return new ResponseModel<string> { Errors = new[] { error } };
 
         rabbitService.CreateCompany(new CompanyPostDto
         {
-            Id = createdCompany!.Id,
-            Name = createdCompany.Name,
+            Id = createdEntity!.Id,
+            Name = createdEntity.Name,
             DataSources = model.DataSources
         });
 
-        return new() { Data = $"'{createdCompany.Name}' was created" };
+        return new() { Data = $"'{createdEntity.Name}' was created" };
     }
     public async Task<ResponseModel<string>> CreateAsync(IEnumerable<CompanyPostDto> models)
     {
-        var array = models.ToArray();
+        var dtos = models.ToArray();
 
-        if (!array.Any())
+        if (!dtos.Any())
             return new() { Errors = new[] { "company data for creating not found" } };
 
-        var ctxEntities = array.Select(x => new DataAccess.Entities.Company
+        var entities = dtos.Select(x => new DataAccess.Entities.Company
         {
-            Id = x.Id.ToUpperInvariant(),
+            Id = string.Intern(x.Id.ToUpperInvariant().Trim()),
             Name = x.Name,
             IndustryId = x.IndustryId,
             Description = x.Description
         }).ToArray();
 
-        var (error, result) = await companyRepository.CreateAsync(ctxEntities, new CompanyComparer<DataAccess.Entities.Company>(), "Companies");
+        var (error, createdEntities) = await companyRepository.CreateAsync(entities, new CompanyComparer<DataAccess.Entities.Company>(), nameof(CreateAsync));
 
         if (error is not null)
             return new() { Errors = new[] { error } };
 
-        rabbitService.CreateCompany(result.Join(array, x => x.Id, y => y.Id, (x, y) => new CompanyPostDto
+        rabbitService.CreateCompany(createdEntities.Join(dtos, x => x.Id, y => string.Intern(y.Id.Trim().ToUpperInvariant()), (x, y) => new CompanyPostDto
         {
             Id = x.Id,
             Name = x.Name,
             DataSources = y.DataSources,
         }));
 
-        return new() { Data = $"Companies count: {result.Length} was successed" };
+        return new() { Data = $"Companies count: {createdEntities.Length} was successed" };
     }
     public async Task<ResponseModel<string>> UpdateAsync(string companyId, CompanyPutDto model)
     {
-        var company = new DataAccess.Entities.Company
+        var entity = new DataAccess.Entities.Company
         {
-            Id = companyId.ToUpperInvariant().Trim(),
+            Id = string.Intern(companyId.ToUpperInvariant().Trim()),
             Name = model.Name,
             IndustryId = model.IndustryId,
             Description = model.Description
         };
 
-        var (error, updatedCompany) = await companyRepository.UpdateAsync(new[] { company.Id }, company, company.Name);
+        var (error, updatedEntity) = await companyRepository.UpdateAsync(new[] { entity.Id }, entity, entity.Name);
 
         if (error is not null)
             return new ResponseModel<string> { Errors = new[] { error } };
 
-        rabbitService.UpdateCompany(new()
+        rabbitService.UpdateCompany(new CompanyPostDto
         {
-            Id = updatedCompany!.Id,
-            Name = updatedCompany.Name,
+            Id = updatedEntity!.Id,
+            Name = updatedEntity.Name,
             DataSources = model.DataSources,
         });
 
-        return new ResponseModel<string> { Data = $"'{updatedCompany.Name}' was updated" };
+        return new ResponseModel<string> { Data = $"'{updatedEntity.Name}' was updated" };
+    }
+    public async Task<ResponseModel<string>> UpdateAsync(IEnumerable<CompanyPostDto> models)
+    {
+        var dtos = models.ToArray();
+
+        if (!dtos.Any())
+            return new() { Errors = new[] { "company data for creating not found" } };
+
+        var entities = dtos.Select(x => new DataAccess.Entities.Company
+        {
+            Id = string.Intern(x.Id.ToUpperInvariant().Trim()),
+            Name = x.Name,
+            IndustryId = x.IndustryId,
+            Description = x.Description
+        }).ToArray();
+
+        var (error, updatedEntities) = await companyRepository.UpdateAsync(entities, nameof(UpdateAsync));
+
+        if (error is not null)
+            return new() { Errors = new[] { error } };
+
+        rabbitService.UpdateCompany(updatedEntities.Join(dtos, x => x.Id, y => string.Intern(y.Id.Trim().ToUpperInvariant()), (x, y) => new CompanyPostDto
+        {
+            Id = x.Id,
+            Name = x.Name,
+            DataSources = y.DataSources,
+        }));
+
+        return new() { Data = $"Companies count: {updatedEntities.Length} was updated" };
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId)
     {
-        companyId = companyId.ToUpperInvariant().Trim();
+        companyId = string.Intern(companyId.ToUpperInvariant().Trim());
 
         var (error, company) = await companyRepository.DeleteByIdAsync(new[] { companyId }, companyId);
 

@@ -1,0 +1,171 @@
+﻿using DataSetter.Clients;
+using DataSetter.DataAccess.Company;
+using DataSetter.DataAccess.CompanyData;
+using DataSetter.Models.Dto;
+
+using IM.Service.Common.Net.Models.Dto.Http;
+using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
+using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
+
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace DataSetter.Controllers;
+
+[ApiController, Route("[controller]")]
+public class PaviamsController : ControllerBase
+{
+    private readonly CompanyClient companyClient;
+    private readonly CompanyDataClient dataClient;
+    private readonly CompanyDatabaseContext companyContext;
+    private readonly CompanyDataDatabaseContext companyDataContext;
+
+
+    public PaviamsController(
+        CompanyClient companyClient
+        , CompanyDataClient dataClient
+        , CompanyDatabaseContext companyContext
+        , CompanyDataDatabaseContext companyDataContext)
+    {
+        this.companyClient = companyClient;
+        this.dataClient = dataClient;
+        this.companyContext = companyContext;
+        this.companyDataContext = companyDataContext;
+    }
+
+    [HttpGet("companies/")]
+    public async Task<ResponseModel<string>> SetCompanies()
+    {
+        var companies = await companyContext.Companies.Select(x => new CompanyPostDto
+        {
+            Id = x.Id,
+            Name = x.Name,
+            IndustryId = x.IndustryId,
+            Description = x.Description
+        })
+        .ToArrayAsync();
+
+        return await companyClient.Post("companies/collection", companies);
+    }
+    [HttpGet("prices/")]
+    public async Task<ResponseModel<string>> SetPrices()
+    {
+        List<string> errors = new();
+
+        var companyIds = companyDataContext.Companies.Select(x => x.Id).ToArray();
+
+        foreach (var companyId in companyIds)
+        {
+            var prices = companyDataContext.Prices.Where(x => x.CompanyId == companyId).Select(x => new PricePostDto
+            {
+                CompanyId = x.CompanyId,
+                Date = x.Date,
+                Value = x.Value,
+                SourceType = x.SourceType
+            });
+
+            var result = await dataClient.Post("prices/collection", prices);
+
+            if (result.Errors.Any())
+                errors.AddRange(result.Errors);
+        }
+
+        return new()
+        {
+            Errors = errors.ToArray()
+        };
+    }
+    [HttpGet("reports/")]
+    public async Task<ResponseModel<string>> SetReports()
+    {
+        List<string> errors = new();
+
+        var companyIds = companyDataContext.Companies.Select(x => x.Id).ToArray();
+
+        foreach (var companyId in companyIds)
+        {
+            var prices = companyDataContext.Reports.Where(x => x.CompanyId == companyId).Select(x => new ReportPostDto()
+            {
+                CompanyId = x.CompanyId,
+                SourceType = x.SourceType,
+                Year = x.Year,
+                Quarter = x.Quarter,
+                Multiplier = x.Multiplier,
+                Asset = x.Asset,
+                CashFlow = x.CashFlow,
+                LongTermDebt = x.LongTermDebt,
+                Obligation = x.Obligation,
+                ProfitGross = x.ProfitGross,
+                ProfitNet = x.ProfitNet,
+                Revenue = x.Revenue,
+                ShareCapital = x.ShareCapital,
+                Turnover = x.Turnover
+            });
+
+            var result = await dataClient.Post("reports/collection", prices);
+
+            if (result.Errors.Any())
+                errors.AddRange(result.Errors);
+        }
+
+        return new()
+        {
+            Errors = errors.ToArray()
+        };
+    }
+    [HttpGet("stocksplits/")]
+    public async Task<ResponseModel<string>> SetStockSplits()
+    {
+        var stockSplits = await companyDataContext.StockSplits.Select(x => new StockSplitPostDto
+        {
+            CompanyId = x.CompanyId,
+            Date = x.Date,
+            SourceType = x.SourceType,
+            Value = x.Value
+        })
+         .ToArrayAsync();
+
+        return await dataClient.Post("stocksplits/collection", stockSplits);
+    }
+    [HttpGet("stockvolumes/")]
+    public async Task<ResponseModel<string>> SetStockVolumes()
+    {
+        var stockVolumes = await companyDataContext.StockVolumes.Select(x => new StockVolumePostDto
+            {
+                CompanyId = x.CompanyId,
+                Date = x.Date,
+                SourceType = x.SourceType,
+                Value = x.Value
+            })
+            .ToArrayAsync();
+
+        return await dataClient.Post("stockvolumes/collection", stockVolumes);
+    }
+    [HttpGet("companies_s/")]
+    public async Task<ResponseModel<string>> SetCompaniesWithSources()
+    {
+        var companies = await companyContext.Companies.ToArrayAsync();
+        var companySourceTypes = await companyDataContext.CompanySourceTypes.ToArrayAsync();
+        var dtoCompanies = companies.Join(companySourceTypes.GroupBy(x => x.CompanyId),
+            x => x.Id,
+            y => y.Key,
+            (x, y) => new CompanyPostDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                IndustryId = x.IndustryId,
+                Description = x.Description,
+                DataSources = y.Select(z => new EntityTypeDto
+                {
+                    Id = z.SourceTypeId,
+                    Value = z.Value
+                })
+            });
+
+        return await companyClient.Put("companies/collection", dtoCompanies);
+    }
+}

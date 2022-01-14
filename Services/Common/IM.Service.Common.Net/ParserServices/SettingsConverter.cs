@@ -21,9 +21,9 @@ public class SettingsConverter<T> where T : class
 
             Convert(Model);
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            throw new KeyNotFoundException("SettingConverter error: " + ex.InnerException?.Message);
+            throw new KeyNotFoundException("SettingConverter error: " + exception.Message);
         }
     }
     private void Convert(T model)

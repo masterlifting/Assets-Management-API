@@ -30,7 +30,9 @@ public class CompaniesController : ControllerBase
 
     [HttpPut("{companyId}")]
     public async Task<ResponseModel<string>> Put(string companyId, CompanyPutDto model) => await manager.UpdateAsync(companyId, model);
-        
+    [HttpPut("collection/")]
+    public async Task<ResponseModel<string>> Put(IEnumerable<CompanyPostDto> models) => await manager.UpdateAsync(models);
+
     [HttpDelete("{companyId}")]
     public async Task<ResponseModel<string>> Delete(string companyId) => await manager.DeleteAsync(companyId);
 

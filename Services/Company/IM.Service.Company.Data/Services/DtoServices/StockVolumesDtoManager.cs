@@ -126,15 +126,15 @@ public class StockVolumesDtoManager
 
     public async Task<ResponseModel<string>> CreateAsync(StockVolumePostDto model)
     {
-        var ctxEntity = new StockVolume
+        var entity = new StockVolume
         {
-            CompanyId = model.CompanyId,
+            CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             SourceType = model.SourceType,
             Date = model.Date.Date,
             Value = model.Value
         };
-        var message = $"Stock volume of '{model.CompanyId}' create at {model.Date:yyyy MMMM dd}";
-        var (error, _) = await stockVolumeRepository.CreateAsync(ctxEntity, message);
+        var message = $"Stock volume of '{entity.CompanyId}' create at {entity.Date:yyyy MMMM dd}";
+        var (error, _) = await stockVolumeRepository.CreateAsync(entity, message);
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -142,17 +142,17 @@ public class StockVolumesDtoManager
     }
     public async Task<ResponseModel<string>> CreateAsync(IEnumerable<StockVolumePostDto> models)
     {
-        var stockVolumes = models.ToArray();
+        var entities = models.ToArray();
 
-        if (!stockVolumes.Any())
+        if (!entities.Any())
             return new() { Errors = new[] { "Stock volume data for creating not found" } };
 
-        var ctxEntities = stockVolumes.GroupBy(x => x.Date.Date).Select(x => new StockVolume
+        var ctxEntities = entities.Select(x => new StockVolume
         {
-            CompanyId = x.Last().CompanyId,
-            SourceType = x.Last().SourceType,
-            Date = x.Last().Date.Date,
-            Value = x.Last().Value
+            CompanyId = string.Intern(x.CompanyId.Trim().ToUpperInvariant()),
+            SourceType = x.SourceType,
+            Date = x.Date,
+            Value = x.Value
         });
 
         var (error, result) = await stockVolumeRepository.CreateAsync(ctxEntities, new CompanyDateComparer<StockVolume>(), "Stock volumes");
@@ -165,13 +165,13 @@ public class StockVolumesDtoManager
     {
         var entity = new StockVolume
         {
-            CompanyId = model.CompanyId,
+            CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             SourceType = model.SourceType,
             Date = model.Date,
             Value = model.Value
         };
 
-        var info = $"Stock volume of '{model.CompanyId}' update at {model.Date:yyyy MMMM dd}";
+        var info = $"Stock volume of '{entity.CompanyId}' update at {entity.Date:yyyy MMMM dd}";
         var (error, _) = await stockVolumeRepository.UpdateAsync(new object[] { entity.CompanyId, entity.Date }, entity, info);
 
         return error is not null
@@ -180,7 +180,7 @@ public class StockVolumesDtoManager
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
+        companyId = string.Intern(companyId.Trim().ToUpperInvariant());
 
         var info = $"Stock volume of '{companyId}' delete at {date:yyyy MMMM dd}";
         var (error, _) = await stockVolumeRepository.DeleteByIdAsync(new object[] { companyId, date }, info);

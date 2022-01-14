@@ -126,17 +126,17 @@ public class StockSplitsDtoManager
 
     public async Task<ResponseModel<string>> CreateAsync(StockSplitPostDto model)
     {
-        var ctxEntity = new StockSplit
+        var entity = new StockSplit
         {
-            CompanyId = model.CompanyId,
+            CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             SourceType = model.SourceType,
             Date = model.Date.Date,
             Value = model.Value
         };
 
-        var message = $"Split of '{model.CompanyId}' create at {model.Date:yyyy MMMM dd}";
+        var message = $"Split of '{entity.CompanyId}' create at {entity.Date:yyyy MMMM dd}";
 
-        var (error, _) = await stockSplitRepository.CreateAsync(ctxEntity, message);
+        var (error, _) = await stockSplitRepository.CreateAsync(entity, message);
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -149,15 +149,15 @@ public class StockSplitsDtoManager
         if (!stockSplits.Any())
             return new() { Errors = new[] { "Split data for creating not found" } };
 
-        var ctxEntities = stockSplits.GroupBy(x => x.Date.Date).Select(x => new StockSplit
+        var entities = stockSplits.Select(x => new StockSplit
         {
-            CompanyId = x.Last().CompanyId,
-            SourceType = x.Last().SourceType,
-            Date = x.Last().Date.Date,
-            Value = x.Last().Value
+            CompanyId = string.Intern(x.CompanyId.Trim().ToUpperInvariant()),
+            SourceType = x.SourceType,
+            Date = x.Date,
+            Value = x.Value
         });
 
-        var (error, result) = await stockSplitRepository.CreateAsync(ctxEntities, new CompanyDateComparer<StockSplit>(), "Stock splits");
+        var (error, result) = await stockSplitRepository.CreateAsync(entities, new CompanyDateComparer<StockSplit>(), "Stock splits");
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -167,13 +167,13 @@ public class StockSplitsDtoManager
     {
         var entity = new StockSplit
         {
-            CompanyId = model.CompanyId,
+            CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             SourceType = model.SourceType,
             Date = model.Date,
             Value = model.Value
         };
 
-        var info = $"Split of '{model.CompanyId}' update at {model.Date:yyyy MMMM dd}";
+        var info = $"Split of '{entity.CompanyId}' update at {entity.Date:yyyy MMMM dd}";
 
         var (error, _) = await stockSplitRepository.UpdateAsync(new object[] { entity.CompanyId, entity.Date }, entity, info);
 
@@ -183,7 +183,7 @@ public class StockSplitsDtoManager
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
+        companyId = string.Intern(companyId.Trim().ToUpperInvariant());
 
         var info = $"Split of '{companyId}' delete at {date:yyyy MMMM dd}";
 

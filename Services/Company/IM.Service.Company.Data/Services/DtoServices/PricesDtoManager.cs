@@ -282,15 +282,16 @@ public class PricesDtoManager
 
     public async Task<ResponseModel<string>> CreateAsync(PricePostDto model)
     {
-        var ctxEntity = new Price
+        var entity = new Price
         {
-            CompanyId = model.CompanyId,
+            CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             SourceType = model.SourceType,
             Date = model.Date.Date,
             Value = model.Value
         };
-        var message = $"Price of '{model.CompanyId}' create at {model.Date:yyyy MMMM dd}";
-        var (error, _) = await priceRepository.CreateAsync(ctxEntity, message);
+
+        var message = $"Price of '{entity.CompanyId}' create at {entity.Date:yyyy MMMM dd}";
+        var (error, _) = await priceRepository.CreateAsync(entity, message);
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -303,15 +304,15 @@ public class PricesDtoManager
         if (!prices.Any())
             return new() { Errors = new[] { "Price data for creating not found" } };
 
-        var ctxEntities = prices.GroupBy(x => x.Date.Date).Select(x => new Price
+        var entities = prices.Select(x => new Price
         {
-            CompanyId = x.Last().CompanyId,
-            SourceType = x.Last().SourceType,
-            Date = x.Last().Date.Date,
-            Value = x.Last().Value
+            CompanyId = string.Intern(x.CompanyId.Trim().ToUpperInvariant()),
+            SourceType = x.SourceType,
+            Date = x.Date,
+            Value = x.Value
         });
 
-        var (error, result) = await priceRepository.CreateAsync(ctxEntities, new CompanyDateComparer<Price>(), "Prices");
+        var (error, result) = await priceRepository.CreateAsync(entities, new CompanyDateComparer<Price>(), "Prices");
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -321,13 +322,13 @@ public class PricesDtoManager
     {
         var entity = new Price
         {
-            CompanyId = model.CompanyId,
+            CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             SourceType = model.SourceType,
             Date = model.Date,
             Value = model.Value
         };
 
-        var info = $"Price of '{model.CompanyId}' update at {model.Date:yyyy MMMM dd}";
+        var info = $"Price of '{entity.CompanyId}' update at {entity.Date:yyyy MMMM dd}";
 
         var (error, _) = await priceRepository.UpdateAsync(new object[] { entity.CompanyId, entity.Date }, entity, info);
 
@@ -337,7 +338,7 @@ public class PricesDtoManager
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
+        companyId = string.Intern(companyId.Trim().ToUpperInvariant());
 
         var info = $"Price of '{companyId}' delete at {date:yyyy MMMM dd}";
         var (error, _) = await priceRepository.DeleteByIdAsync(new object[] { companyId, date }, info);

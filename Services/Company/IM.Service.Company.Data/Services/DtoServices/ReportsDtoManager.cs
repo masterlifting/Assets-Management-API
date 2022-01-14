@@ -158,9 +158,9 @@ public class ReportsDtoManager
 
     public async Task<ResponseModel<string>> CreateAsync(ReportPostDto model)
     {
-        var ctxEntity = new Report
+        var entity = new Report
         {
-            CompanyId = model.CompanyId,
+            CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             Year = model.Year,
             Quarter = model.Quarter,
             SourceType = model.SourceType,
@@ -176,9 +176,9 @@ public class ReportsDtoManager
             Turnover = model.Turnover
         };
 
-        var message = $"Report of '{model.CompanyId}' create at {model.Year} - {model.Quarter}";
+        var message = $"Report of '{entity.CompanyId}' create at {entity.Year} - {entity.Quarter}";
 
-        var (error, _) = await reportRepository.CreateAsync(ctxEntity, message);
+        var (error, _) = await reportRepository.CreateAsync(entity, message);
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -191,25 +191,25 @@ public class ReportsDtoManager
         if (!reports.Any())
             return new() { Errors = new[] { "Report data for creating not found" } };
 
-        var ctxEntities = reports.GroupBy(x => (x.Year, x.Quarter)).Select(x => new Report
+        var entities = reports.Select(x => new Report
         {
-            CompanyId = x.Last().CompanyId,
-            Year = x.Last().Year,
-            Quarter = x.Last().Quarter,
-            SourceType = x.Last().SourceType,
-            Multiplier = x.Last().Multiplier,
-            Asset = x.Last().Asset,
-            CashFlow = x.Last().CashFlow,
-            LongTermDebt = x.Last().LongTermDebt,
-            Obligation = x.Last().Obligation,
-            ProfitGross = x.Last().ProfitGross,
-            ProfitNet = x.Last().ProfitNet,
-            Revenue = x.Last().Revenue,
-            ShareCapital = x.Last().ShareCapital,
-            Turnover = x.Last().Turnover
+            CompanyId = string.Intern(x.CompanyId.Trim().ToUpperInvariant()),
+            Year = x.Year,
+            Quarter = x.Quarter,
+            SourceType = x.SourceType,
+            Multiplier = x.Multiplier,
+            Asset = x.Asset,
+            CashFlow = x.CashFlow,
+            LongTermDebt = x.LongTermDebt,
+            Obligation = x.Obligation,
+            ProfitGross = x.ProfitGross,
+            ProfitNet = x.ProfitNet,
+            Revenue = x.Revenue,
+            ShareCapital = x.ShareCapital,
+            Turnover = x.Turnover
         });
 
-        var (error, result) = await reportRepository.CreateAsync(ctxEntities, new CompanyQuarterComparer<Report>(), "Reports");
+        var (error, result) = await reportRepository.CreateAsync(entities, new CompanyQuarterComparer<Report>(), "Reports");
 
         return error is not null
             ? new() { Errors = new[] { error } }
@@ -219,7 +219,7 @@ public class ReportsDtoManager
     {
         var entity = new Report
         {
-            CompanyId = model.CompanyId,
+            CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             Year = model.Year,
             Quarter = model.Quarter,
             SourceType = model.SourceType,
@@ -235,7 +235,7 @@ public class ReportsDtoManager
             Turnover = model.Turnover
         };
 
-        var info = $"Report of '{model.CompanyId}' update at {model.Year} - {model.Quarter}";
+        var info = $"Report of '{model.CompanyId}' update at {entity.Year} - {entity.Quarter}";
 
         var (error, _) = await reportRepository.UpdateAsync(new object[] { entity.CompanyId, entity.Year, entity.Quarter }, entity, info );
 
@@ -245,7 +245,8 @@ public class ReportsDtoManager
     }
     public async Task<ResponseModel<string>> DeleteAsync(string companyId, int year, byte quarter)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
+        companyId = string.Intern(companyId.Trim().ToUpperInvariant());
+
         var info = $"Report of '{companyId}' delete at {year} - {quarter}";
 
         var (error, _) = await reportRepository.DeleteByIdAsync(new object[]{ companyId, year, quarter } , info );

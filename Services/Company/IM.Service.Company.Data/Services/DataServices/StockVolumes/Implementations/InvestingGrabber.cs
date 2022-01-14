@@ -44,10 +44,7 @@ public class InvestingGrabber : IDataGrabber
             var site = await handler.LoadDataAsync(config.SourceValue);
             var result = InvestingParserHandler.Parse(site, config.CompanyId, source);
 
-            var (error, _) = await repository.CreateUpdateAsync(result, new CompanyDateComparer<StockVolume>(), "Investing history stock volumes");
-
-            if (error is not null)
-                throw new Exception("Repository exception!");
+            await repository.CreateAsync(result, "Investing history stock volumes");
         }
         catch (Exception exception)
         {
@@ -71,21 +68,17 @@ internal class InvestingParserHandler
 
     internal async Task<HtmlDocument> LoadDataAsync(string sourceValue) => await client.GetMainPageAsync(sourceValue);
 
-    internal static IEnumerable<StockVolume> Parse(HtmlDocument site, string companyId, string sourceName)
+    internal static StockVolume Parse(HtmlDocument site, string companyId, string sourceName)
     {
-        var result = new StockVolume[4];
         var mainPage = new MainPage(site);
 
-        for (var i = 0; i < result.Length; i++)
-            result[i] = new()
-            {
-                CompanyId = companyId,
-                SourceType = sourceName,
-                Date = DateTime.UtcNow,
-                Value = mainPage.StockVolume
-            };
-
-        return result;
+        return new StockVolume
+        {
+            CompanyId = companyId,
+            SourceType = sourceName,
+            Date = DateTime.UtcNow,
+            Value = mainPage.StockVolume
+        };
     }
 
     private class MainPage

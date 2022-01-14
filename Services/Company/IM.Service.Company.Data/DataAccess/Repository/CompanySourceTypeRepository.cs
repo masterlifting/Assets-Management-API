@@ -86,9 +86,15 @@ public class CompanySourceTypeRepository : RepositoryHandler<CompanySourceType, 
     {
         entities = entities.ToArray();
         
-        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
-        var typeIds = entities.Select(x => x.SourceTypeId).Distinct();
-        var values = entities.Select(x => x.Value).Distinct();
+        var companyIds = entities
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x.Key);
+        var typeIds = entities
+            .GroupBy(x => x.SourceTypeId)
+            .Select(x => x.Key);
+        var values = entities
+            .GroupBy(x => x.Value)
+            .Select(x => x.Key);
 
         return context.CompanySourceTypes
             .Where(x =>

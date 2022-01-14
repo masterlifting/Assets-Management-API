@@ -95,12 +95,17 @@ public class AnalyzerService
             .ToArrayAsync();
 
         // Устанавливаю им результаты, которые были на момент расчета
-        foreach (var (item, dbResult) in computedData.Join(dbStartData,
-                     x => new { x.CompanyId, x.AnalyzedEntityTypeId, x.Date },
-                     y => new { y.CompanyId, y.AnalyzedEntityTypeId, y.Date },
-                    (x, y) => (x, y.Result)))
+        foreach (var (computed, oldResult) in computedData
+                     .Join(computingStartData,
+                         x => (x.CompanyId, x.AnalyzedEntityTypeId, x.Date),
+                         y => (y.CompanyId, y.AnalyzedEntityTypeId, y.Date),
+                         (x, _) => x)
+                     .Join(dbStartData,
+                         x => (x.CompanyId, x.AnalyzedEntityTypeId, x.Date),
+                         y => (y.CompanyId, y.AnalyzedEntityTypeId, y.Date),
+                         (x, y) => (x, y.Result)))
         {
-            item.Result = dbResult;
+            computed.Result = oldResult;
         }
 
         // Сохраняю расчитанные данные

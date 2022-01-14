@@ -47,11 +47,7 @@ public class InvestingGrabber : IDataGrabber
 
             var result = InvestingParserHandler.Parse(data, config.CompanyId, source);
 
-            var (error, _) = await repository.CreateUpdateAsync(result, new CompanyQuarterComparer<Report>(), "Investing history reports");
-
-            if (error is not null)
-                throw new Exception("Repository exception!");
-
+            await repository.CreateUpdateAsync(result, new CompanyQuarterComparer<Report>(), "Investing history reports");
         }
         catch (Exception exception)
         {

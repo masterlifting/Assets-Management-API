@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Company.DataAccess;
 
-public sealed class DatabaseContext : DbContext
+public class DatabaseContext : DbContext
 {
     public DbSet<Entities.Company> Companies { get; set; } = null!;
     public DbSet<Industry> Industries { get; set; } = null!;

@@ -14,7 +14,7 @@ public class CompanyRepository : RepositoryHandler<Entities.Company, DatabaseCon
     private readonly DatabaseContext context;
     public CompanyRepository(DatabaseContext context) : base(context) => this.context = context;
 
-    public override async Task<IEnumerable<Entities.Company>> GetCreateRangeHandlerAsync(IEnumerable<Entities.Company> entities, IEqualityComparer<Entities.Company> comparer)
+    public override async Task<IEnumerable<Entities.Company>> GetUpdateRangeHandlerAsync(IEnumerable<Entities.Company> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();

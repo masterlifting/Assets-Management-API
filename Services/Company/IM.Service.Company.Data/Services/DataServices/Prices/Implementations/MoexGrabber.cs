@@ -43,10 +43,7 @@ public class MoexGrabber : IDataGrabber
 
             result = result.Where(x => x.Date.Date == DateTime.UtcNow.Date).ToArray();
 
-            var (error, _) = await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Moex current prices");
-            
-            if (error is not null)
-                throw new Exception("Repository exception!");
+            await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Moex current prices");
         }
         catch (Exception exception)
         {
@@ -63,10 +60,7 @@ public class MoexGrabber : IDataGrabber
 
             result = result.Where(x => x.Date.Date == DateTime.UtcNow.Date).ToArray();
 
-            var (error, _) = await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Moex current prices");
-
-            if (error is not null)
-                throw new Exception("Repository exception!");
+            await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Moex current prices");
         }
         catch (Exception exception)
         {
@@ -85,11 +79,7 @@ public class MoexGrabber : IDataGrabber
 
             var result = PriceMapper.Map(source, data);
             
-            var (error,_) = await repository.CreateAsync(result, new CompanyDateComparer<Price>(), "Moex history prices");
-            
-            if (error is not null)
-                throw new Exception("Repository exception!");
-
+            await repository.CreateAsync(result, new CompanyDateComparer<Price>(), "Moex history prices");
         }
         catch (Exception exception)
         {

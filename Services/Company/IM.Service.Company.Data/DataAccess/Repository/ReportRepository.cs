@@ -113,9 +113,15 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
     {
         entities = entities.ToArray();
 
-        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
-        var years = entities.Select(x => x.Year).Distinct();
-        var quarters = entities.Select(x => x.Quarter).Distinct();
+        var companyIds = entities
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x.Key);
+        var years = entities
+            .GroupBy(x => x.Year)
+            .Select(x => x.Key);
+        var quarters = entities
+            .GroupBy(x => x.Quarter)
+            .Select(x => x.Key);
 
         return context.Reports
             .Where(x =>

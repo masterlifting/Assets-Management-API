@@ -1,8 +1,11 @@
 using DataSetter.Clients;
+using DataSetter.DataAccess.Company;
+using DataSetter.DataAccess.CompanyData;
 using DataSetter.Settings;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -10,8 +13,6 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
-using DataSetter.DataAccess;
-using Microsoft.EntityFrameworkCore;
 
 namespace DataSetter
 {
@@ -26,11 +27,10 @@ namespace DataSetter
             
             services.AddMemoryCache();
 
-            services.AddDbContext<InvestmentManagerContext>(provider =>
-            {
-                provider.UseLazyLoadingProxies();
-                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Paviams"]);
-            });
+            services.AddDbContext<CompanyDatabaseContext>(provider =>
+                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Company"]));
+            services.AddDbContext<CompanyDataDatabaseContext>(provider =>
+                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:CompanyData"]));
 
             services.AddControllers();
 

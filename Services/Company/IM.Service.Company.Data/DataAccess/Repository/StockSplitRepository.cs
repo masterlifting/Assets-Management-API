@@ -105,8 +105,12 @@ public class StockSplitRepository : RepositoryHandler<StockSplit, DatabaseContex
     {
         entities = entities.ToArray();
 
-        var companyIds = entities.Select(x => x.CompanyId.ToUpperInvariant()).Distinct();
-        var dates = entities.Select(x => x.Date).Distinct();
+        var companyIds = entities
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x.Key);
+        var dates = entities
+            .GroupBy(x => x.Date)
+            .Select(x => x.Key);
 
         return context.StockSplits.Where(x => companyIds.Contains(x.CompanyId) && dates.Contains(x.Date));
     }

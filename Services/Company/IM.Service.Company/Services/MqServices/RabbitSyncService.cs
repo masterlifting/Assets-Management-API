@@ -91,6 +91,39 @@ public class RabbitSyncService
         publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Company, QueueActions.Update, companyData);
         publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Company, QueueActions.Update, companyAnalyzer);
     }
+    public void UpdateCompany(IEnumerable<CompanyPostDto> companies)
+    {
+        companies = companies.ToArray();
+
+        if (!companies.Any())
+            return;
+
+        var companyAnalyzerData = JsonSerializer.Serialize(companies
+            .Select(x => new CompanyDto
+            {
+                Id = x.Id,
+                Name = x.Name
+            })
+            .ToArray());
+
+        var companyDataData = JsonSerializer.Serialize(companies
+            .Select(x => new CompanyDto
+            {
+                Id = x.Id,
+                Name = x.Name,
+                Sources = x.DataSources
+            })
+            .ToArray());
+
+        var companyQueues = new Dictionary<QueueNames, string>
+        {
+            {QueueNames.CompanyData,companyDataData },
+            {QueueNames.CompanyAnalyzer,companyAnalyzerData }
+        };
+
+        foreach (var (queue, data) in companyQueues)
+            publisher.PublishTask(queue, QueueEntities.Companies, QueueActions.Update, data);
+    }
     public void DeleteCompany(string companyId) => publisher.PublishTask(new[]
         {
             QueueNames.CompanyData,
