@@ -1,15 +1,13 @@
-﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
+﻿using IM.Service.Common.Net.Models.Dto;
 
-namespace DataSetter.Models.Dto
+namespace DataSetter.Models.Dto;
+
+public record CompanyGetDto
 {
-    public record CompanyGetDto
-    {
-        public string Ticker { get; init; } = null!;
-        public string Name { get; init; } = null!;
-        public string Industry { get; init; } = null!;
-        public string Sector { get; init; } = null!;
-        public string? Description { get; init; }
-        public EntityTypeDto[]? DataSources { get; init; }
-        public EntityTypeDto[]? Brokers { get; init; }
-    }
+    public string Ticker { get; init; } = null!;
+    public string Name { get; init; } = null!;
+    public string Industry { get; init; } = null!;
+    public string Sector { get; init; } = null!;
+    public string? Description { get; init; }
+    public EntityTypeGetDto[]? Sources { get; init; }
 }

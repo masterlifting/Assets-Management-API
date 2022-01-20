@@ -1,9 +1,8 @@
 ﻿using DataSetter.Settings.Client;
 
-namespace DataSetter.Settings
+namespace DataSetter.Settings;
+
+public class ServiceSettings
 {
-    public class ServiceSettings
-    {
-        public ClientSettings ClientSettings { get; set; } = null!;
-    }
+    public ClientSettings ClientSettings { get; set; } = null!;
 }

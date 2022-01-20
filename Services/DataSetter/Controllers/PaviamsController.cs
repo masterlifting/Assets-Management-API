@@ -3,9 +3,9 @@ using DataSetter.DataAccess.Company;
 using DataSetter.DataAccess.CompanyData;
 using DataSetter.Models.Dto;
 
+using IM.Service.Common.Net.Models.Dto;
 using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
-using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -19,20 +19,17 @@ namespace DataSetter.Controllers;
 [ApiController, Route("[controller]")]
 public class PaviamsController : ControllerBase
 {
-    private readonly CompanyClient companyClient;
-    private readonly CompanyDataClient dataClient;
+    private readonly CompanyDataClient companyDataClient;
     private readonly CompanyDatabaseContext companyContext;
     private readonly CompanyDataDatabaseContext companyDataContext;
 
 
     public PaviamsController(
-        CompanyClient companyClient
-        , CompanyDataClient dataClient
+        CompanyDataClient companyDataClient
         , CompanyDatabaseContext companyContext
         , CompanyDataDatabaseContext companyDataContext)
     {
-        this.companyClient = companyClient;
-        this.dataClient = dataClient;
+        this.companyDataClient = companyDataClient;
         this.companyContext = companyContext;
         this.companyDataContext = companyDataContext;
     }
@@ -49,7 +46,7 @@ public class PaviamsController : ControllerBase
         })
         .ToArrayAsync();
 
-        return await companyClient.Post("companies/collection", companies);
+        return await companyDataClient.Post("companies/collection", companies);
     }
     [HttpGet("prices/")]
     public async Task<ResponseModel<string>> SetPrices()
@@ -68,7 +65,7 @@ public class PaviamsController : ControllerBase
                 SourceType = x.SourceType
             });
 
-            var result = await dataClient.Post("prices/collection", prices);
+            var result = await companyDataClient.Post("prices/collection", prices);
 
             if (result.Errors.Any())
                 errors.AddRange(result.Errors);
@@ -106,7 +103,7 @@ public class PaviamsController : ControllerBase
                 Turnover = x.Turnover
             });
 
-            var result = await dataClient.Post("reports/collection", prices);
+            var result = await companyDataClient.Post("reports/collection", prices);
 
             if (result.Errors.Any())
                 errors.AddRange(result.Errors);
@@ -129,7 +126,7 @@ public class PaviamsController : ControllerBase
         })
          .ToArrayAsync();
 
-        return await dataClient.Post("stocksplits/collection", stockSplits);
+        return await companyDataClient.Post("stocksplits/collection", stockSplits);
     }
     [HttpGet("stockvolumes/")]
     public async Task<ResponseModel<string>> SetStockVolumes()
@@ -143,7 +140,7 @@ public class PaviamsController : ControllerBase
             })
             .ToArrayAsync();
 
-        return await dataClient.Post("stockvolumes/collection", stockVolumes);
+        return await companyDataClient.Post("stockvolumes/collection", stockVolumes);
     }
     [HttpGet("companies_s/")]
     public async Task<ResponseModel<string>> SetCompaniesWithSources()
@@ -159,13 +156,9 @@ public class PaviamsController : ControllerBase
                 Name = x.Name,
                 IndustryId = x.IndustryId,
                 Description = x.Description,
-                DataSources = y.Select(z => new EntityTypeDto
-                {
-                    Id = z.SourceTypeId,
-                    Value = z.Value
-                })
+                Sources = y.Select(z => new EntityTypePostDto(z.SourceTypeId,z.Value))
             });
 
-        return await companyClient.Put("companies/collection", dtoCompanies);
+        return await companyDataClient.Put("companies/collection", dtoCompanies);
     }
 }

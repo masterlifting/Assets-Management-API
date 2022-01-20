@@ -14,47 +14,43 @@ using Polly;
 
 using System;
 
-namespace DataSetter
+namespace DataSetter;
+
+public class Startup
 {
-    public class Startup
+    public Startup(IConfiguration configuration) => Configuration = configuration;
+    private IConfiguration Configuration { get; }
+
+    public void ConfigureServices(IServiceCollection services)
     {
-        public Startup(IConfiguration configuration) => Configuration = configuration;
-        private IConfiguration Configuration { get; }
-
-        public void ConfigureServices(IServiceCollection services)
-        {
-            services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
+        services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
             
-            services.AddMemoryCache();
+        services.AddMemoryCache();
 
-            services.AddDbContext<CompanyDatabaseContext>(provider =>
-                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Company"]));
-            services.AddDbContext<CompanyDataDatabaseContext>(provider =>
-                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:CompanyData"]));
+        services.AddDbContext<CompanyDatabaseContext>(provider =>
+            provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Company"]));
+        services.AddDbContext<CompanyDataDatabaseContext>(provider =>
+            provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:CompanyData"]));
 
-            services.AddControllers();
+        services.AddControllers();
 
-            services.AddHttpClient<CompanyClient>()
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
-            services.AddHttpClient<CompanyDataClient>()
-                .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
-                .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
-        }
+        services.AddHttpClient<CompanyDataClient>()
+            .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
+            .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
+    }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseDeveloperExceptionPage();
         }
+
+        app.UseRouting();
+
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+        });
     }
 }
