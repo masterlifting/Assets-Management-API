@@ -53,7 +53,6 @@ public class InvestingGrabber : IDataGrabber
         {
             logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(InvestingGrabber) + '.' + nameof(GrabCurrentDataAsync), exception.InnerException?.Message ?? exception.Message);
         }
-
     }
     public async Task GrabHistoryDataAsync(string source, IEnumerable<DataConfigModel> configs)
     {

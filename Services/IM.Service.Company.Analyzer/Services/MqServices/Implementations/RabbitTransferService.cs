@@ -20,8 +20,8 @@ public class RabbitTransferService : RabbitRepositoryHandler, IRabbitActionServi
 
     public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data) => entity switch
         {
-            QueueEntities.CompanyReport => await SetAnalyzedEntityAsync(EntityTypes.Report, action, data),
-            QueueEntities.CompanyReports => await SetAnalyzedEntitiesAsync(EntityTypes.Report, action, data),
+            QueueEntities.Report => await SetAnalyzedEntityAsync(EntityTypes.Report, action, data),
+            QueueEntities.Reports => await SetAnalyzedEntitiesAsync(EntityTypes.Report, action, data),
             
             QueueEntities.Price => await SetAnalyzedEntityAsync(EntityTypes.Price, action, data),
             QueueEntities.Prices => await SetAnalyzedEntitiesAsync(EntityTypes.Price, action, data),

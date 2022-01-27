@@ -1,4 +1,4 @@
-﻿using IM.Service.Broker.Data.Models.Dto;
+﻿using IM.Service.Broker.Data.Models.Dto.Http;
 using IM.Service.Broker.Data.Services.DtoServices;
 using IM.Service.Common.Net.Models.Dto.Http;
 

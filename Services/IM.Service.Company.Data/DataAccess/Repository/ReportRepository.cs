@@ -81,7 +81,7 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
         });
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
-        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.CompanyReport, QueueActions.CreateUpdate, data);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Report, QueueActions.CreateUpdate, data);
         publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Coefficient, QueueActions.CreateUpdate, data);
 
         return Task.CompletedTask;
@@ -105,7 +105,7 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
             .ToArray());
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
-        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.CompanyReports, QueueActions.CreateUpdate, data);
+        publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Reports, QueueActions.CreateUpdate, data);
         publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Coefficients, QueueActions.CreateUpdate, data);
 
         return Task.CompletedTask;

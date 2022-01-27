@@ -117,7 +117,7 @@ public class CompanySourceRepository : RepositoryHandler<CompanySource, Database
                 }
             case (byte)Sources.Investing:
                 {
-                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.CompanyReport, QueueActions.Call, companyId);
+                    publisher.PublishTask(QueueNames.CompanyData, QueueEntities.Report, QueueActions.Call, companyId);
                     publisher.PublishTask(QueueNames.CompanyData, QueueEntities.StockVolume, QueueActions.Call, companyId);
                     break;
                 }

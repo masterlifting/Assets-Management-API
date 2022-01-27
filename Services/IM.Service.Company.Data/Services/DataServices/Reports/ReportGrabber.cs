@@ -7,8 +7,6 @@ using Microsoft.Extensions.Logging;
 
 using System;
 
-using static IM.Service.Company.Data.Enums;
-
 namespace IM.Service.Company.Data.Services.DataServices.Reports;
 
 public class ReportGrabber : DataGrabber

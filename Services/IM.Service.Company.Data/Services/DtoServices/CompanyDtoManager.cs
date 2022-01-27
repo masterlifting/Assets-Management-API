@@ -78,7 +78,7 @@ public class CompanyDtoManager
         {
 
             var sourcesQuery = sourceRepository.GetQuery().Join(paginatedResult, x => x.CompanyId, y => y.Id, (x, y) => x);
-            var sources = await sourceRepository.GetSampleAsync(sourcesQuery, x => new { x.CompanyId, x.Company.Name, x.Value });
+            var sources = await sourceRepository.GetSampleAsync(sourcesQuery, x => new { x.CompanyId, x.Source.Name, x.Value });
             var sourceDictionary = sources.GroupBy(x => x.CompanyId).ToDictionary(x => x.Key);
 
             foreach (var company in companies)

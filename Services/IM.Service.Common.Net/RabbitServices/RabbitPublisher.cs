@@ -59,7 +59,7 @@ public class RabbitPublisher
         var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
 
         if (currentQueue is null)
-            throw new NullReferenceException(queue.ToString());
+            return;
 
         var queueParams = currentQueue.Entities.FirstOrDefault(x => x.NameEnum == entity && x.Actions.Contains(action));
 

@@ -1,5 +1,5 @@
 ﻿using IM.Service.Broker.Data.DataAccess.Repository;
-using IM.Service.Broker.Data.Models.Dto;
+using IM.Service.Broker.Data.Models.Dto.Http;
 using IM.Service.Common.Net.HttpServices;
 using IM.Service.Common.Net.Models.Dto.Http;
 

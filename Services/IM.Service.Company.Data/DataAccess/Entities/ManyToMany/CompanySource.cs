@@ -1,4 +1,6 @@
-﻿namespace IM.Service.Company.Data.DataAccess.Entities.ManyToMany;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace IM.Service.Company.Data.DataAccess.Entities.ManyToMany;
 
 public class CompanySource
 {
@@ -10,5 +12,6 @@ public class CompanySource
     public virtual Sources Source { get; set; } = null!;
     public byte SourceId { get; set; }
 
+    [StringLength(300, MinimumLength = 2)]
     public string? Value { get; set; }
 }

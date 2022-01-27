@@ -13,4 +13,5 @@ public class Account
     public int BrokerUserId { get; set; }
 
     public IEnumerable<Transaction>? Transactions { get; set; }
+    public IEnumerable<Report>? Reports { get; set; }
 }

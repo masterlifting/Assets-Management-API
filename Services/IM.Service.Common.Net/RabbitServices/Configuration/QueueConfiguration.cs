@@ -102,7 +102,7 @@ public static class QueueConfiguration
                 {
                     Entities = new[]
                     {
-                        new QueueEntity(QueueEntities.CompanyReport)
+                        new QueueEntity(QueueEntities.Report)
                         {
                             Actions = new[]
                             {
@@ -110,7 +110,7 @@ public static class QueueConfiguration
                                 QueueActions.CreateUpdate
                             }
                         },
-                        new QueueEntity(QueueEntities.CompanyReports)
+                        new QueueEntity(QueueEntities.Reports)
                         {
                             Actions = new[]
                             {
@@ -198,14 +198,14 @@ public static class QueueConfiguration
                                 QueueActions.Call
                             }
                         },
-                        new QueueEntity(QueueEntities.CompanyReport)
+                        new QueueEntity(QueueEntities.Report)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Call
                             }
                         },
-                        new QueueEntity(QueueEntities.CompanyReports)
+                        new QueueEntity(QueueEntities.Reports)
                         {
                             Actions = new[]
                             {
@@ -234,6 +234,26 @@ public static class QueueConfiguration
                             }
                         },
                         new QueueEntity(QueueEntities.StockVolumes)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Call
+                            }
+                        }
+                    }
+                },
+                new Queue(QueueNames.BrokerData)
+                {
+                    Entities = new[]
+                    {
+                        new QueueEntity(QueueEntities.Report)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Call
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Reports)
                         {
                             Actions = new[]
                             {
@@ -285,8 +305,8 @@ public enum QueueEntities
 {
     Company,
     Companies,
-    CompanyReport,
-    CompanyReports,
+    Report,
+    Reports,
     StockSplit,
     StockSplits,
     StockVolume,
