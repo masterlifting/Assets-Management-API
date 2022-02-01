@@ -1,19 +1,15 @@
 ﻿using System.Collections.Generic;
-using IM.Service.Broker.Data.DataAccess.Entities;
-
-using Microsoft.AspNetCore.Http;
-
-using System.IO;
 using System.Text.RegularExpressions;
+
 using static IM.Service.Broker.Data.Enums;
 
 namespace IM.Service.Broker.Data.Services.DataServices.Reports;
 
 public static class ReportHelper
 {
-    public static Brokers? GetBroker(string fileName)
+    public static bool TryGetBroker(string fileName, out Brokers result)
     {
-        Brokers? result = null;
+        result = Brokers.Default;
 
         foreach (var (pattern, broker) in brokerMatcher)
         {
@@ -26,9 +22,9 @@ public static class ReportHelper
             break;
         }
 
-        return result;
+        return result != Brokers.Default;
     }
-    
+
     private static readonly Dictionary<string, Brokers> brokerMatcher = new()
     {
         { "^B_k-(.+)_ALL(.+).xls$", Brokers.Bcs }

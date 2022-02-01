@@ -4,14 +4,21 @@ using IM.Service.Broker.Data.Services.DataServices.Reports.Implementations;
 
 using Microsoft.Extensions.Logging;
 
+using static IM.Service.Broker.Data.Enums;
+
 namespace IM.Service.Broker.Data.Services.DataServices.Reports;
 
 public class ReportGrabber : DataGrabber
 {
-    public ReportGrabber(Repository<Report> reportRepository, Repository<Transaction> transactionRepository, Repository<Stock> stockRepository, ILogger<ReportGrabber> logger)
+    public ReportGrabber(
+        Repository<Report> reportRepository, 
+        Repository<Stock> stockRepository,
+        Repository<Transaction> transactionRepository,
+        Repository<Account> accountRepository,
+        ILogger<ReportGrabber> logger)
         : base(new()
         {
-            { (byte)Enums.Brokers.Bcs, new BcsGrabber(reportRepository, transactionRepository, stockRepository, logger) }
+            { Brokers.Bcs, new BcsGrabber(reportRepository, stockRepository, transactionRepository, accountRepository, logger) }
         })
     {
     }

@@ -5,6 +5,6 @@ namespace IM.Service.Broker.Data.DataAccess.Comparators;
 
 public class TransactionComparer : IEqualityComparer<Transaction>
 {
-    public bool Equals(Transaction? x, Transaction? y) => x!.Identifier == y!.Identifier;
-    public int GetHashCode(Transaction obj) => obj.Identifier!.GetHashCode();
+    public bool Equals(Transaction? x, Transaction? y) => x!.IdentifierId == y!.IdentifierId;
+    public int GetHashCode(Transaction obj) => obj.IdentifierId.GetHashCode();
 }

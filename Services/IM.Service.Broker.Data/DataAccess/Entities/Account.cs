@@ -1,17 +1,21 @@
-﻿using System.Collections.Generic;
-using IM.Service.Broker.Data.DataAccess.Entities.ManyToMany;
+﻿using System;
+using System.Collections.Generic;
 
 namespace IM.Service.Broker.Data.DataAccess.Entities;
 
 public class Account
 {
-    public int Id { get; set; }
+    public int Id { get; init; }
 
-    public string Name { get; set; } = null!;
-
-    public BrokerUser BrokerUser { get; set; } = null!;
-    public int BrokerUserId { get; set; }
+    public string Name { get; init; } = null!;
+    public DateOnly Date { get; init; }
 
     public IEnumerable<Transaction>? Transactions { get; set; }
     public IEnumerable<Report>? Reports { get; set; }
+
+    public Broker Broker { get; set; } = null!;
+    public byte BrokerId { get; init; }
+
+    public User User { get; set; } = null!;
+    public string UserId { get; init; } = null!;
 }

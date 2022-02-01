@@ -1,5 +1,4 @@
 ﻿using IM.Service.Broker.Data.DataAccess.Entities;
-using IM.Service.Broker.Data.DataAccess.Entities.ManyToMany;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -12,16 +11,13 @@ public sealed class DatabaseContext : DbContext
     public DbSet<Company> Companies { get; set; } = null!;
     public DbSet<Currency> Currencies { get; set; } = null!;
     public DbSet<Exchange> Exchanges { get; set; } = null!;
+    public DbSet<Identifier> Identifiers { get; set; } = null!;
     public DbSet<Report> Reports { get; set; } = null!;
     public DbSet<Stock> Stocks { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;
     public DbSet<TransactionAction> TransactionActions { get; set; } = null!;
     public DbSet<TransactionActionType> TransactionActionTypes { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
-
-    public DbSet<BrokerExchange> BrokerExchanges { get; set; } = null!;
-    public DbSet<BrokerUser> BrokerUsers { get; set; } = null!;
-    public DbSet<CompanyExchange> CompanyExchanges { get; set; } = null!;
 
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
     {
@@ -32,8 +28,8 @@ public sealed class DatabaseContext : DbContext
     {
         modelBuilder.UseSerialColumns();
 
-        modelBuilder.Entity<Stock>().HasIndex(x => x.Isin);
-        modelBuilder.Entity<Report>().HasKey(x => new { x.AccountId, x.FileName });
+        modelBuilder.Entity<Report>().HasKey(x => new { x.AccountId, FileName = x.Name });
+        modelBuilder.Entity<Account>().HasIndex(x => new {x.Name, x.BrokerId, x.UserId}).IsUnique();
 
         modelBuilder.Entity<Entities.Broker>().HasData(
             new() { Id = (byte)Enums.Brokers.Bcs, Name = nameof(Enums.Brokers.Bcs).ToLowerInvariant() }

@@ -6,10 +6,13 @@ public class Report
 {
     public Account Account { get; init; } = null!;
     public int AccountId { get; init; }
-    public string FileName { get; init; } = null!;
-    
-    public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
 
-    public string FileContentType { get; set; } = null!;
-    public byte[] FilePayload { get; set; } = null!;
+    public string Name { get; init; } = null!;
+    
+    public DateOnly DateStart { get; init; }
+    public DateOnly DateEnd { get; init; }
+
+    public string ContentType { get; set; } = null!;
+    public string Extention { get; set; } = null!;
+    public byte[] Payload { get; set; } = null!;
 }

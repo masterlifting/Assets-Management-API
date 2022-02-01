@@ -4,21 +4,25 @@ public static class Enums
 {
     public enum Brokers : byte
     {
+        Default = 0,
         Bcs = 1,
         Tinkoff = 2
     }
     public enum Exchanges : byte
     {
+        Default = 0,
         Spb = 1,
         Moex = 2
     }
     public enum TransactionActionTypes : byte
     {
+        Default = 0,
         Приход = 1,
         Расход = 2
     }
     public enum TransactionActions : byte
     {
+        Default = 0,
         Пополнение_счета = 1,
         Продажа_валюты = 2,
         Продажа_акции = 3,
@@ -37,6 +41,7 @@ public static class Enums
 
     public enum Currencies : byte
     {
+        Default = 0,
         Rub = 1,
         Usd = 2,
         Eur = 3

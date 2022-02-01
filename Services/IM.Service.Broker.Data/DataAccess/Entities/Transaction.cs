@@ -6,19 +6,21 @@ public class Transaction
 {
     public long Id { get; set; }
 
+    public Identifier Identifier { get; set; } = null!;
+    public int IdentifierId { get; set; }
+
     public DateTime DateTime { get; set; }
 
     public decimal Cost { get; set; }
     public decimal Value { get; set; }
     
-    public string? Identifier { get; set; }
     public string? Info { get; set; }
 
     public Account Account { get; set; } = null!;
     public int AccountId { get; set; }
 
     public Stock? Stock { get; set; }
-    public int? StockId { get; set; }
+    public string? StockIsin { get; set; }
 
     public TransactionAction TransactionAction { get; set; } = null!;
     public byte TransactionActionId { get; set; }

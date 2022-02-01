@@ -1,6 +1,5 @@
 using IM.Service.Broker.Data.DataAccess;
 using IM.Service.Broker.Data.DataAccess.Entities;
-using IM.Service.Broker.Data.DataAccess.Entities.ManyToMany;
 using IM.Service.Broker.Data.DataAccess.Repository;
 using IM.Service.Broker.Data.Services.BackgroundServices;
 using IM.Service.Broker.Data.Services.DataServices.Reports;
@@ -8,6 +7,7 @@ using IM.Service.Broker.Data.Services.DtoServices;
 using IM.Service.Broker.Data.Services.MqServices;
 using IM.Service.Broker.Data.Settings;
 using IM.Service.Common.Net.RepositoryService;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -38,7 +38,6 @@ public class Startup
         services.AddScoped<IRepositoryHandler<Account>, AccountRepository>();
         services.AddScoped<IRepositoryHandler<Company>, CompanyRepository>();
         services.AddScoped<IRepositoryHandler<DataAccess.Entities.Broker>, BrokerRepository>();
-        services.AddScoped<IRepositoryHandler<BrokerUser>, BrokerUserRepository>();
         services.AddScoped<IRepositoryHandler<TransactionAction>, TransactionActionRepository>();
         services.AddScoped<IRepositoryHandler<Transaction>, TransactionRepository>();
         services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();

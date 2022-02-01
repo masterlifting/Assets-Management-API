@@ -1,19 +1,18 @@
 ﻿using System.Collections.Generic;
-using IM.Service.Broker.Data.DataAccess.Entities.ManyToMany;
+using System.ComponentModel.DataAnnotations;
 
 namespace IM.Service.Broker.Data.DataAccess.Entities;
 
 public class Stock
 {
-    public int Id { get; set; }
+    [Key]
+    public string Isin { get; init; } = null!;
 
-    public string Isin { get; set; } = null!;
-    public string Ticker { get; set; } = null!;
+    public Company Company { get; set; } = null!;
+    public string CompanyId { get; set; } = null!;
 
-    public decimal Lot { get; set; }
-
-    public CompanyExchange CompanyExchange { get; set; } = null!;
-    public int CompanyExchangeId { get; set; }
+    public Exchange Exchange { get; set; } = null!;
+    public byte ExchangeId { get; set; }
 
     public IEnumerable<Transaction>? Transactions { get; set; }
 }
