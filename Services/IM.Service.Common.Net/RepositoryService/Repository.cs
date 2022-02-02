@@ -321,7 +321,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     public DbSet<TEntity> GetDbSet() => context.Set<TEntity>();
 
     public async Task<TEntity?> FindAsync(params object[] parameters) => await context.Set<TEntity>().FindAsync(parameters).ConfigureAwait(false);
-    public async Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().FirstOrDefaultAsync(predicate).ConfigureAwait(false);
+    public async Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().FirstOrDefaultAsync(predicate).ConfigureAwait(false);
 
     public IQueryable<TEntity> GetQuery() => context.Set<TEntity>();
     public IQueryable<TEntity> GetQuery(Expression<Func<TEntity, bool>> predicate) => context.Set<TEntity>().Where(predicate);

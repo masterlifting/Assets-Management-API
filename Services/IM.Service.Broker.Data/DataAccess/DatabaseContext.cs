@@ -28,7 +28,7 @@ public sealed class DatabaseContext : DbContext
     {
         modelBuilder.UseSerialColumns();
 
-        modelBuilder.Entity<Report>().HasKey(x => new { x.AccountId, FileName = x.Name });
+        modelBuilder.Entity<Report>().HasKey(x => new { x.AccountId, x.Name });
         modelBuilder.Entity<Account>().HasIndex(x => new {x.Name, x.BrokerId, x.UserId}).IsUnique();
 
         modelBuilder.Entity<Entities.Broker>().HasData(

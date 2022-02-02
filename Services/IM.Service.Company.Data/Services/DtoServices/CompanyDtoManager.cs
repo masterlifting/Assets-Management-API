@@ -1,9 +1,12 @@
 ﻿using IM.Service.Common.Net.HttpServices;
+using IM.Service.Common.Net.Models.Dto;
 using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Common.Net.RepositoryService.Comparators;
+using IM.Service.Company.Data.DataAccess.Comparators;
+using IM.Service.Company.Data.DataAccess.Entities.ManyToMany;
 using IM.Service.Company.Data.DataAccess.Repository;
 using IM.Service.Company.Data.Models.Dto;
 using IM.Service.Company.Data.Settings;
@@ -16,9 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.Models.Dto;
-using IM.Service.Company.Data.DataAccess.Comparators;
-using IM.Service.Company.Data.DataAccess.Entities.ManyToMany;
 
 namespace IM.Service.Company.Data.Services.DtoServices;
 
@@ -39,8 +39,8 @@ public class CompanyDtoManager
 
     public async Task<ResponseModel<CompanyGetDto>> GetAsync(string companyId)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
-        var company = await repository.FindAsync(companyId);
+        var company = await repository.FindAsync(companyId.Trim().ToUpperInvariant()) 
+                      ?? await repository.FindAsync(x => x.Name.Contains(companyId)); //TO DELETE
 
         return company is null
             ? new() { Errors = new[] { $"'{companyId}' not found" } }

@@ -17,8 +17,8 @@ public class ReportDtoManager
 
     public string Load(IFormFileCollection files, string userId)
     {
-        if (files.Count > 12)
-            return "Max files length: 12";
+        //if (files.Count > 12)
+        //    return "Max files length: 12";
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         foreach (var file in files)
