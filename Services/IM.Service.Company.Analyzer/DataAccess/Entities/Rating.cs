@@ -16,7 +16,8 @@ public class Rating : ICompanyDateIdentity
     public string CompanyId { get; init; } = null!;
     public Company Company { get; init; } = null!;
 
-    public DateTime Date { get; set; } = DateTime.UtcNow;
+    public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);
+    public TimeOnly Time { get; set; } = TimeOnly.FromDateTime(DateTime.UtcNow);
 
     [Column(TypeName = "Decimal(18,4)")]
     public decimal? ResultPrice { get; set; }

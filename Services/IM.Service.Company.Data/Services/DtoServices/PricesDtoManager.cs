@@ -42,7 +42,7 @@ public class PricesDtoManager
         this.stockVolumeRepository = stockVolumeRepository;
     }
 
-    public async Task<ResponseModel<PriceGetDto>> GetAsync(string companyId, DateTime date)
+    public async Task<ResponseModel<PriceGetDto>> GetAsync(string companyId, DateOnly date)
     {
         companyId = companyId.Trim().ToUpperInvariant();
         var company = await companyRepository.FindAsync(companyId);
@@ -286,7 +286,7 @@ public class PricesDtoManager
         {
             CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             SourceType = model.SourceType,
-            Date = model.Date.Date,
+            Date = model.Date,
             Value = model.Value
         };
 

@@ -63,7 +63,7 @@ public class PricesController : ControllerBase
         
         if (companyIds.Length == 1)
         {
-            var result = await manager.GetAsync(companyId, new DateTime(year, month, day));
+            var result = await manager.GetAsync(companyId, new DateOnly(year, month, day));
             return result.Errors.Any()
                 ? new() { Errors = result.Errors }
                 : new() { Data = new() { Count = 1, Items = new[] { result.Data! } } };
@@ -72,7 +72,7 @@ public class PricesController : ControllerBase
         List<ResponseModel<PriceGetDto>> results = new(companyIds.Length);
 
         foreach (var id in companyIds)
-            results.Add(await manager.GetAsync(id, new DateTime(year, month, day)));
+            results.Add(await manager.GetAsync(id, new DateOnly(year, month, day)));
 
         var resultWithoutErrors = results.Where(x => !x.Errors.Any()).ToArray();
         return new()
@@ -110,7 +110,7 @@ public class PricesController : ControllerBase
         await manager.UpdateAsync(new PricePostDto
         {
             CompanyId = companyId,
-            Date = new DateTime(year, month, day),
+            Date = new DateOnly(year, month, day),
             SourceType = model.SourceType,
             Value = model.Value
         });

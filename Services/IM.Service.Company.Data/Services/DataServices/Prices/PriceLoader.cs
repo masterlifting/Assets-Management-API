@@ -37,14 +37,14 @@ public class PriceLoader : IDataLoader<Price>
 
     public async Task<Price?> GetLastDataAsync(string companyId)
     {
-        var prices = await priceRepository.GetSampleAsync(x => x.CompanyId == companyId && x.Date >= DateTime.UtcNow.AddMonths(-1));
+        var prices = await priceRepository.GetSampleAsync(x => x.CompanyId == companyId && x.Date >= DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-1));
         return prices
             .OrderBy(x => x.Date)
             .LastOrDefault();
     }
     public async Task<Price[]> GetLastDataAsync()
     {
-        var prices = await priceRepository.GetSampleAsync(x => x.Date >= DateTime.UtcNow.AddMonths(-1));
+        var prices = await priceRepository.GetSampleAsync(x => x.Date >= DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-1));
         return prices
             .GroupBy(x => x.CompanyId)
             .Select(x =>
@@ -87,7 +87,7 @@ public class PriceLoader : IDataLoader<Price>
             {
                 CompanyId = company.Id,
                 SourceValue = source.Value,
-                IsCurrent = last is not null && DateOnly.FromDateTime(last.Date) == ExchangeInfo.GetLastWorkDay(source.Name)
+                IsCurrent = last is not null && last.Date == ExchangeInfo.GetLastWorkDay(source.Name)
             };
 
             await grabber.GrabCurrentDataAsync(source.Name, config);
@@ -125,7 +125,7 @@ y => y.CompanyId,
                         SourceValue = x.SourceValue,
                         IsCurrent = 
                             lastsDictionary.ContainsKey(x.CompanyId) 
-                            && DateOnly.FromDateTime(lastsDictionary[x.CompanyId].Date) == ExchangeInfo.GetLastWorkDay(source.Key)
+                            && lastsDictionary[x.CompanyId] == ExchangeInfo.GetLastWorkDay(source.Key)
                     })
                 .ToArray();
 

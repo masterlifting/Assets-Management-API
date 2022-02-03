@@ -130,7 +130,7 @@ public class StockVolumesDtoManager
         {
             CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             SourceType = model.SourceType,
-            Date = model.Date.Date,
+            Date = model.Date,
             Value = model.Value
         };
         var message = $"Stock volume of '{entity.CompanyId}' create at {entity.Date:yyyy MMMM dd}";
@@ -179,7 +179,7 @@ public class StockVolumesDtoManager
             ? new() { Errors = new[] { error } }
             : new() { Data = info + " success" };
     }
-    public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
+    public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateOnly date)
     {
         companyId = string.Intern(companyId.Trim().ToUpperInvariant());
 

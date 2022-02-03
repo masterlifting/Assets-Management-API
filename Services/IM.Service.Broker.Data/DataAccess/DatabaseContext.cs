@@ -11,7 +11,6 @@ public sealed class DatabaseContext : DbContext
     public DbSet<Company> Companies { get; set; } = null!;
     public DbSet<Currency> Currencies { get; set; } = null!;
     public DbSet<Exchange> Exchanges { get; set; } = null!;
-    public DbSet<Identifier> Identifiers { get; set; } = null!;
     public DbSet<Report> Reports { get; set; } = null!;
     public DbSet<Stock> Stocks { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;

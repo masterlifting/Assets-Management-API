@@ -3,6 +3,7 @@ using System;
 using IM.Service.Company.Data.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,10 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace IM.Service.Company.Data.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20220203112403_MigrateToDateOnly")]
+    partial class MigrateToDateOnly
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -47,7 +49,7 @@ namespace IM.Service.Company.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Companies", (string)null);
+                    b.ToTable("Companies");
                 });
 
             modelBuilder.Entity("IM.Service.Company.Data.DataAccess.Entities.Industry", b =>
@@ -77,7 +79,7 @@ namespace IM.Service.Company.Data.Migrations
 
                     b.HasIndex("SectorId");
 
-                    b.ToTable("Industries", (string)null);
+                    b.ToTable("Industries");
 
                     b.HasData(
                         new
@@ -278,7 +280,7 @@ namespace IM.Service.Company.Data.Migrations
 
                     b.HasIndex("SourceId");
 
-                    b.ToTable("CompanySources", (string)null);
+                    b.ToTable("CompanySources");
                 });
 
             modelBuilder.Entity("IM.Service.Company.Data.DataAccess.Entities.Price", b =>
@@ -299,7 +301,7 @@ namespace IM.Service.Company.Data.Migrations
 
                     b.HasKey("CompanyId", "Date");
 
-                    b.ToTable("Prices", (string)null);
+                    b.ToTable("Prices");
                 });
 
             modelBuilder.Entity("IM.Service.Company.Data.DataAccess.Entities.Report", b =>
@@ -350,7 +352,7 @@ namespace IM.Service.Company.Data.Migrations
 
                     b.HasKey("CompanyId", "Year", "Quarter");
 
-                    b.ToTable("Reports", (string)null);
+                    b.ToTable("Reports");
                 });
 
             modelBuilder.Entity("IM.Service.Company.Data.DataAccess.Entities.Sector", b =>
@@ -375,7 +377,7 @@ namespace IM.Service.Company.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Sectors", (string)null);
+                    b.ToTable("Sectors");
 
                     b.HasData(
                         new
@@ -457,7 +459,7 @@ namespace IM.Service.Company.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Sources", (string)null);
+                    b.ToTable("Sources");
 
                     b.HasData(
                         new
@@ -504,7 +506,7 @@ namespace IM.Service.Company.Data.Migrations
 
                     b.HasKey("CompanyId", "Date");
 
-                    b.ToTable("StockSplits", (string)null);
+                    b.ToTable("StockSplits");
                 });
 
             modelBuilder.Entity("IM.Service.Company.Data.DataAccess.Entities.StockVolume", b =>
@@ -525,7 +527,7 @@ namespace IM.Service.Company.Data.Migrations
 
                     b.HasKey("CompanyId", "Date");
 
-                    b.ToTable("StockVolumes", (string)null);
+                    b.ToTable("StockVolumes");
                 });
 
             modelBuilder.Entity("IM.Service.Company.Data.DataAccess.Entities.Company", b =>

@@ -114,7 +114,7 @@ public static class CalculatorService
                             .Select(report => new AnalyzedEntity
                             {
                                 CompanyId = x.Key,
-                                Date = QuarterHelper.ToDateTime(report.Year, report.Quarter),
+                                Date = QuarterHelper.ToDate(report.Year, report.Quarter),
                                 AnalyzedEntityTypeId = (byte)EntityTypes.Report,
                                 StatusId = (byte)Statuses.NotComputed
                             });
@@ -127,7 +127,7 @@ public static class CalculatorService
                                 return new AnalyzedEntity
                                 {
                                     CompanyId = x.Key,
-                                    Date = QuarterHelper.ToDateTime(report.Year, report.Quarter),
+                                    Date = QuarterHelper.ToDate(report.Year, report.Quarter),
                                     AnalyzedEntityTypeId = (byte)EntityTypes.Report,
                                     StatusId = isComputed ? (byte)Statuses.Computed : (byte)Statuses.NotComputed,
                                     Result = isComputed ? computedResults[index] : null
@@ -161,8 +161,8 @@ public static class CalculatorService
                             var firstMonth = QuarterHelper.GetFirstMonth(report.Quarter);
                             var lastMonth = QuarterHelper.GetLastMonth(report.Quarter);
 
-                            var firstDate = new DateTime(report.Year, firstMonth, 1);
-                            var lastDate = new DateTime(report.Year, lastMonth, 28);
+                            var firstDate = new DateOnly(report.Year, firstMonth, 1);
+                            var lastDate = new DateOnly(report.Year, lastMonth, 28);
 
                             var price = prices != null && prices.ContainsKey(x.Key)
                                 ? prices[x.Key].LastOrDefault(p => p.Date >= firstDate && p.Date <= lastDate)
@@ -208,7 +208,7 @@ public static class CalculatorService
                             .Select(report => new AnalyzedEntity
                             {
                                 CompanyId = x.Key,
-                                Date = QuarterHelper.ToDateTime(report.Year, report.Quarter),
+                                Date = QuarterHelper.ToDate(report.Year, report.Quarter),
                                 AnalyzedEntityTypeId = (byte) EntityTypes.Coefficient,
                                 StatusId = (byte) Statuses.NotComputed
                             });
@@ -221,7 +221,7 @@ public static class CalculatorService
                             return new AnalyzedEntity
                             {
                                 CompanyId = x.Key,
-                                Date = QuarterHelper.ToDateTime(report.Year, report.Quarter),
+                                Date = QuarterHelper.ToDate(report.Year, report.Quarter),
                                 AnalyzedEntityTypeId = (byte) EntityTypes.Coefficient,
                                 StatusId = isComputed ? (byte) Statuses.Computed : (byte) Statuses.NotComputed,
                                 Result = isComputed ? computedResults[index] : null

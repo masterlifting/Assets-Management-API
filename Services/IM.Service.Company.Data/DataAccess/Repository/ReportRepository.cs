@@ -77,7 +77,7 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
         var data = JsonSerializer.Serialize(new CompanyDateIdentityDto
         {
             CompanyId = entity.CompanyId,
-            Date = QuarterHelper.ToDateTime(entity.Year, entity.Quarter)
+            Date = QuarterHelper.ToDate(entity.Year, entity.Quarter)
         });
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
@@ -100,7 +100,7 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
             .Select(x => new CompanyDateIdentityDto
             {
                 CompanyId = x.CompanyId,
-                Date = QuarterHelper.ToDateTime(x.Year, x.Quarter)
+                Date = QuarterHelper.ToDate(x.Year, x.Quarter)
             })
             .ToArray());
 

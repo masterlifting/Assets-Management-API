@@ -24,6 +24,7 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
+using IM.Service.Common.Net.HttpServices.JsonConvertors;
 
 namespace IM.Service.Company.Data;
 
@@ -44,7 +45,11 @@ public class Startup
             provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
         });
 
-        services.AddControllers();
+        services.AddControllers().AddJsonOptions(x =>
+            {
+                x.JsonSerializerOptions.Converters.Add(new TimeOnlyConverter());
+                x.JsonSerializerOptions.Converters.Add(new DateOnlyConverter());
+            });
 
         services.AddHttpClient<TdAmeritradeClient>()
             .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))

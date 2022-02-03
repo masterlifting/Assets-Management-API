@@ -36,14 +36,14 @@ public class StockVolumeLoader : IDataLoader<StockVolume>
 
     public async Task<StockVolume?> GetLastDataAsync(string companyId)
     {
-        var stockVolumes = await stockVolumeRepository.GetSampleAsync(x => x.CompanyId == companyId && x.Date >= DateTime.UtcNow.AddMonths(-1));
+        var stockVolumes = await stockVolumeRepository.GetSampleAsync(x => x.CompanyId == companyId && x.Date >= DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-1));
         return stockVolumes
             .OrderBy(x => x.Date)
             .LastOrDefault();
     }
     public async Task<StockVolume[]> GetLastDataAsync()
     {
-        var stockVolumes = await stockVolumeRepository.GetSampleAsync(x => x.Date >= DateTime.UtcNow.AddMonths(-1));
+        var stockVolumes = await stockVolumeRepository.GetSampleAsync(x => x.Date >= DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-1));
         return stockVolumes
             .GroupBy(x => x.CompanyId)
             .Select(x =>
@@ -86,7 +86,7 @@ public class StockVolumeLoader : IDataLoader<StockVolume>
             {
                 CompanyId = company.Id,
                 SourceValue = source.Value,
-                IsCurrent = last is not null && last.Date.Date == DateTime.UtcNow.Date
+                IsCurrent = last is not null && last.Date == DateOnly.FromDateTime(DateTime.UtcNow)
             };
 
             if (config.IsCurrent)
@@ -120,7 +120,7 @@ public class StockVolumeLoader : IDataLoader<StockVolume>
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
                         IsCurrent = lastsDictionary.ContainsKey(x.CompanyId) &&
-                                    lastsDictionary[x.CompanyId].Date == DateTime.UtcNow.Date
+                                    lastsDictionary[x.CompanyId] == DateOnly.FromDateTime(DateTime.UtcNow)
                     })
                 .ToArray();
 

@@ -36,14 +36,14 @@ public class StockSplitLoader : IDataLoader<StockSplit>
 
     public async Task<StockSplit?> GetLastDataAsync(string companyId)
     {
-        var stockSplits = await stockSplitRepository.GetSampleAsync(x => x.CompanyId == companyId && x.Date >= DateTime.UtcNow.AddMonths(-1));
+        var stockSplits = await stockSplitRepository.GetSampleAsync(x => x.CompanyId == companyId && x.Date >= DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-1));
         return stockSplits
             .OrderBy(x => x.Date)
             .LastOrDefault();
     }
     public async Task<StockSplit[]> GetLastDataAsync()
     {
-        var stockSplits = await stockSplitRepository.GetSampleAsync(x => x.Date >= DateTime.UtcNow.AddMonths(-1));
+        var stockSplits = await stockSplitRepository.GetSampleAsync(x => x.Date >= DateOnly.FromDateTime(DateTime.UtcNow).AddMonths(-1));
         return stockSplits
             .GroupBy(x => x.CompanyId)
             .Select(x =>
@@ -86,7 +86,7 @@ public class StockSplitLoader : IDataLoader<StockSplit>
             {
                 CompanyId = company.Id,
                 SourceValue = source.Value,
-                IsCurrent = last is not null && last.Date.Date == DateTime.UtcNow.Date
+                IsCurrent = last is not null && last.Date == DateOnly.FromDateTime(DateTime.UtcNow)
             };
 
             if (config.IsCurrent)
@@ -119,7 +119,7 @@ public class StockSplitLoader : IDataLoader<StockSplit>
                     {
                         CompanyId = x.CompanyId,
                         SourceValue = x.SourceValue,
-                        IsCurrent = lastsDictionary.ContainsKey(x.CompanyId) && lastsDictionary[x.CompanyId].Date == DateTime.UtcNow.Date
+                        IsCurrent = lastsDictionary.ContainsKey(x.CompanyId) && lastsDictionary[x.CompanyId] == DateOnly.FromDateTime(DateTime.UtcNow)
                     })
                 .ToArray();
 

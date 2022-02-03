@@ -13,6 +13,5 @@ public class Report
     public DateOnly DateEnd { get; init; }
 
     public string ContentType { get; set; } = null!;
-    public string Extention { get; set; } = null!;
     public byte[] Payload { get; set; } = null!;
 }

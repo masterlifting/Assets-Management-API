@@ -15,7 +15,7 @@ public static class RabbitHelper
 
         try
         {
-            entity = JsonSerializer.Deserialize<T>(data);
+            entity = JsonSerializer.Deserialize<T>(data, CommonHelper.JsonHelper.Options);
             return true;
         }
         catch

@@ -60,7 +60,8 @@ public class RatingDtoManager
                 ResultPrice = rating.ResultPrice.HasValue ? decimal.Round(rating.ResultPrice.Value, resultRoundValue) : null,
                 ResultReport = rating.ResultReport.HasValue ? decimal.Round(rating.ResultReport.Value, resultRoundValue) : null,
                 ResultCoefficient = rating.ResultCoefficient.HasValue ? decimal.Round(rating.ResultCoefficient.Value, resultRoundValue) : null,
-                UpdateTime = rating.Date
+                UpdateTime = new DateTime(rating.Date.Year,rating.Date.Month,rating.Date.Day,rating.Time.Hour,rating.Time.Minute,rating.Time.Second)
+
             }
         };
     }
@@ -103,7 +104,7 @@ public class RatingDtoManager
                 ResultPrice = result.ResultPrice.HasValue ? decimal.Round(result.ResultPrice.Value, resultRoundValue) : null,
                 ResultReport = result.ResultReport.HasValue ? decimal.Round(result.ResultReport.Value, resultRoundValue) : null,
                 ResultCoefficient = result.ResultCoefficient.HasValue ? decimal.Round(result.ResultCoefficient.Value, resultRoundValue) : null,
-                UpdateTime = result.Date
+                UpdateTime = new DateTime(result.Date.Year, result.Date.Month, result.Date.Day, result.Time.Hour, result.Time.Minute, result.Time.Second)
             }
         };
     }
@@ -130,7 +131,7 @@ public class RatingDtoManager
                     x.ResultPrice,
                     x.ResultReport,
                     x.ResultCoefficient,
-                    UpdateTime = x.Date
+                    UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
                 })
             .ToArrayAsync();
 
@@ -182,7 +183,7 @@ public class RatingDtoManager
                     x.ResultPrice,
                     x.ResultReport,
                     x.ResultCoefficient,
-                    UpdateTime = x.Date
+                    UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
                 })
             .ToArrayAsync();
 
@@ -234,7 +235,7 @@ public class RatingDtoManager
                     x.ResultPrice,
                     x.ResultReport,
                     x.ResultCoefficient,
-                    UpdateTime = x.Date
+                    UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
                 })
             .ToArrayAsync();
 
@@ -286,7 +287,7 @@ public class RatingDtoManager
                     x.ResultPrice,
                     x.ResultReport,
                     x.ResultCoefficient,
-                    UpdateTime = x.Date
+                    UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
                 })
             .ToArrayAsync();
 
@@ -337,12 +338,12 @@ public class RatingDtoManager
             ? await companyRepository.GetSampleAsync(x => x.Id)
             : await companyRepository.GetSampleAsync(x => filter.CompanyId != null ? filter.CompanyId == x.Id : filter.CompanyIds.Contains(x.Id), x => x.Id);
         
-        return await RecalculateBaseAsync(ids, new DateTime(filter.Year, filter.Month, filter.Day));
+        return await RecalculateBaseAsync(ids, new DateOnly(filter.Year, filter.Month, filter.Day));
     }
-    private async Task<string> RecalculateBaseAsync(string[] companyIds, DateTime? date = null)
+    private async Task<string> RecalculateBaseAsync(string[] companyIds, DateOnly? date = null)
     {
         var types = Enum.GetValues<EntityTypes>();
-        date ??= new DateTime(2016, 1, resultRoundValue);
+        date ??= new DateOnly(2016, 1, resultRoundValue);
 
         var data = companyIds.SelectMany(x => types.Select(y => new AnalyzedEntity
         {

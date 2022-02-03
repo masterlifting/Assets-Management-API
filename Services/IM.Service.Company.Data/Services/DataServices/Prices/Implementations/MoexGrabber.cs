@@ -41,7 +41,7 @@ public class MoexGrabber : IDataGrabber
 
             var result = PriceMapper.Map(source, data, new[] { config.CompanyId });
 
-            result = result.Where(x => x.Date.Date == DateTime.UtcNow.Date).ToArray();
+            result = result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
 
             await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Moex current prices");
         }
@@ -58,7 +58,7 @@ public class MoexGrabber : IDataGrabber
 
             var result = PriceMapper.Map(source, data, configs.Select(x => x.CompanyId));
 
-            result = result.Where(x => x.Date.Date == DateTime.UtcNow.Date).ToArray();
+            result = result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
 
             await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Moex current prices");
         }

@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
-using static IM.Service.Company.Data.Enums;
-
 namespace IM.Service.Company.Data.Services.DataServices.Prices;
 
 public static class PriceHelper
@@ -20,7 +18,7 @@ public static class PriceHelper
                 ? Array.Empty<Price>()
                 : clientResult.Data.Select(x => new Price
                 {
-                    Date = DateTimeOffset.FromUnixTimeMilliseconds(x.Value.regularMarketTradeTimeInLong).DateTime.Date,
+                    Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Value.regularMarketTradeTimeInLong).DateTime),
                     Value = x.Value.lastPrice,
                     CompanyId = x.Key,
                     SourceType = source
@@ -30,7 +28,7 @@ public static class PriceHelper
             ? Array.Empty<Price>()
             : clientResult.Data.candles.Select(x => new Price
             {
-                Date = DateTimeOffset.FromUnixTimeMilliseconds(x.datetime).DateTime.Date,
+                Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.datetime).DateTime),
                 Value = x.high,
                 CompanyId = clientResult.Ticker,
                 SourceType = source
@@ -57,11 +55,11 @@ public static class PriceHelper
             var result = new Price[tickersData.Length];
 
             for (var i = 0; i < tickersData.Length; i++)
-                if (DateTime.TryParse(tickersData[i].Date, out var date)
+                if (DateOnly.TryParse(tickersData[i].Date, out var date)
                     && decimal.TryParse(tickersData[i].Price, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var price))
                     result[i] = new()
                     {
-                        Date = date.Date,
+                        Date = date,
                         Value = price,
                         CompanyId = tickersData[i].Ticker,
                         SourceType = source
@@ -82,12 +80,12 @@ public static class PriceHelper
                 var priceObject = data?[8];
                 var dateObject = data?[1];
 
-                if ((DateTime.TryParse(dateObject?.ToString(), out var date)
+                if ((DateOnly.TryParse(dateObject?.ToString(), out var date)
                      && decimal.TryParse(priceObject?.ToString(), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var price)))
                     result.Add(new()
                     {
                         CompanyId = ticker,
-                        Date = date.Date,
+                        Date = date,
                         Value = price,
                         SourceType = source
                     });

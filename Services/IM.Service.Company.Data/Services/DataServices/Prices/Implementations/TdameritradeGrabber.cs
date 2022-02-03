@@ -41,7 +41,7 @@ public class TdameritradeGrabber : IDataGrabber
 
             var result = PriceMapper.Map(source, data);
 
-            result = result.Where(x => x.Date.Date == DateTime.UtcNow.Date).ToArray();
+            result = result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
 
             await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Tdameritrade current prices");
         }
@@ -58,7 +58,7 @@ public class TdameritradeGrabber : IDataGrabber
 
             var result = PriceMapper.Map(source, data);
 
-            result = result.Where(x => x.Date.Date == DateTime.UtcNow.Date).ToArray();
+            result = result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
 
             await repository.CreateUpdateAsync(result, new CompanyDateComparer<Price>(), "Tdameritrade current prices");
         }

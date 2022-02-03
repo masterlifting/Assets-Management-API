@@ -37,7 +37,7 @@ public class CalculatorData
 
         foreach (var item in _data.GroupBy(x => x.Date).OrderBy(x => x.Key))
         {
-            var date = DateOnly.FromDateTime(item.Key.AddMonths(-6));
+            var date = item.Key.AddMonths(-6);
 
             foreach (var entityType in item.GroupBy(x => x.AnalyzedEntityTypeId))
             {

@@ -93,15 +93,11 @@ public class CompanySourceRepository : RepositoryHandler<CompanySource, Database
         var sourceIds = entities
             .GroupBy(x => x.SourceId)
             .Select(x => x.Key);
-        var values = entities
-            .GroupBy(x => x.Value)
-            .Select(x => x.Key);
 
         return context.CompanySources
             .Where(x =>
                 companyIds.Contains(x.CompanyId)
-                && sourceIds.Contains(x.SourceId)
-                && values.Contains(x.Value));
+                && sourceIds.Contains(x.SourceId));
     }
 
     private static void SetQueueTask(byte sourceId, string companyId, RabbitPublisher publisher)

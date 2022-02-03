@@ -6,9 +6,6 @@ public class Transaction
 {
     public long Id { get; set; }
 
-    public Identifier Identifier { get; set; } = null!;
-    public int IdentifierId { get; set; }
-
     public DateTime DateTime { get; set; }
 
     public decimal Cost { get; set; }

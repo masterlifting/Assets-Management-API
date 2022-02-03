@@ -8,7 +8,7 @@ public class Account
     public int Id { get; init; }
 
     public string Name { get; init; } = null!;
-    public DateOnly Date { get; init; }
+    public DateOnly Date { get; init; } = DateOnly.FromDateTime(DateTime.UtcNow);
 
     public IEnumerable<Transaction>? Transactions { get; set; }
     public IEnumerable<Report>? Reports { get; set; }

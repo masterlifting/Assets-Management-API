@@ -1,7 +1,6 @@
 using HtmlAgilityPack;
 
 using IM.Service.Common.Net;
-using IM.Service.Common.Net.RepositoryService.Comparators;
 using IM.Service.Company.Data.Clients.Report;
 using IM.Service.Company.Data.DataAccess.Entities;
 using IM.Service.Company.Data.DataAccess.Repository;
@@ -76,7 +75,7 @@ internal class InvestingParserHandler
         {
             CompanyId = companyId,
             SourceType = sourceName,
-            Date = DateTime.UtcNow,
+            Date = DateOnly.FromDateTime(DateTime.UtcNow),
             Value = mainPage.StockVolume
         };
     }

@@ -7,7 +7,7 @@ public static class ReportHelper
 {
     public static bool IsMissingLastQuarter(int year, byte quarter)
     {
-        var (controlYear, controlQuarter) = CommonHelper.QuarterHelper.SubtractQuarter(DateTime.UtcNow);
+        var (controlYear, controlQuarter) = CommonHelper.QuarterHelper.SubtractQuarter(DateOnly.FromDateTime(DateTime.UtcNow));
         return controlYear > year || controlYear == year && controlQuarter > quarter;
     }
 }

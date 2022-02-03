@@ -6,6 +6,7 @@ using IM.Service.Broker.Data.Services.DataServices.Reports;
 using IM.Service.Broker.Data.Services.DtoServices;
 using IM.Service.Broker.Data.Services.MqServices;
 using IM.Service.Broker.Data.Settings;
+using IM.Service.Common.Net.HttpServices.JsonConvertors;
 using IM.Service.Common.Net.RepositoryService;
 
 using Microsoft.AspNetCore.Builder;
@@ -31,7 +32,11 @@ public class Startup
         services.AddDbContext<DatabaseContext>(x =>
             x.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]));
 
-        services.AddControllers();
+        services.AddControllers().AddJsonOptions(x =>
+        {
+            x.JsonSerializerOptions.Converters.Add(new TimeOnlyConverter());
+            x.JsonSerializerOptions.Converters.Add(new DateOnlyConverter());
+        });
 
         services.AddScoped(typeof(Repository<>));
         services.AddScoped<IRepositoryHandler<User>, UserRepository>();

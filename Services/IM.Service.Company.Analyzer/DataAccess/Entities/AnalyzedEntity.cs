@@ -10,8 +10,7 @@ public class AnalyzedEntity : ICompanyDateIdentity
     public Company Company { get; init; } = null!;
     public string CompanyId { get; init; } = null!;
     
-    [Column(TypeName = "Date")]
-    public DateTime Date { get; set; }
+    public DateOnly Date { get; set; }
     
     public AnalyzedEntityType EntityType { get; init; } = null!;
     public byte AnalyzedEntityTypeId { get; init; }

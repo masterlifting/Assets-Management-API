@@ -1,12 +1,15 @@
 ﻿using IM.Service.Common.Net.Models.Dto.Http;
 
+using Microsoft.Extensions.Caching.Memory;
+
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
+
+using static IM.Service.Common.Net.CommonHelper;
 
 namespace IM.Service.Common.Net.HttpServices;
 
@@ -65,14 +68,14 @@ public abstract class RestClient
                 .GetOrCreateAsync(uri, async entry =>
                     {
                         entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10);
-                        return await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri).ConfigureAwait(false);
+                        return await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri, JsonHelper.Options).ConfigureAwait(false);
                     })
                 .ConfigureAwait(false);
 
                 semaphore.Release();
             }
             else
-                response = await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri).ConfigureAwait(false);
+                response = await httpClient.GetFromJsonAsync<ResponseModel<PaginatedModel<TGet>>?>(uri, JsonHelper.Options).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -106,7 +109,7 @@ public abstract class RestClient
 
         try
         {
-            response = await httpClient.PostAsJsonAsync(uri, model).ConfigureAwait(false);
+            response = await httpClient.PostAsJsonAsync(uri, model, JsonHelper.Options).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -149,7 +152,7 @@ public abstract class RestClient
 
         try
         {
-            response = await httpClient.PutAsJsonAsync(uri, model).ConfigureAwait(false);
+            response = await httpClient.PutAsJsonAsync(uri, model, JsonHelper.Options).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

@@ -34,7 +34,8 @@ public class RatingRepository : RepositoryHandler<Rating, DatabaseContext>
             Old.ResultPrice = New.ResultPrice;
             Old.ResultCoefficient = New.ResultCoefficient;
             Old.ResultReport = New.ResultReport;
-            Old.Date = DateTime.UtcNow;
+            Old.Date = DateOnly.FromDateTime(DateTime.UtcNow);
+            Old.Time = TimeOnly.FromDateTime(DateTime.UtcNow);
         }
 
         return result.Select(x => x.Old).ToArray();

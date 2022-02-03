@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Text.Json;
+using IM.Service.Common.Net.HttpServices.JsonConvertors;
 
 namespace IM.Service.Common.Net;
 
@@ -6,7 +8,7 @@ public static class CommonHelper
 {
     public static class QuarterHelper
     {
-        public static DateTime ToDateTime(int year, byte quarter) => new(year, GetLastMonth(quarter), 28);
+        public static DateOnly ToDate(int year, byte quarter) => new(year, GetLastMonth(quarter), 28);
         public static byte GetQuarter(int month) => month switch
         {
             >= 1 and < 4 => 1,
@@ -33,7 +35,7 @@ public static class CommonHelper
             _ => throw new NotSupportedException()
         };
 
-        public static (int year, byte quarter) SubtractQuarter(DateTime date)
+        public static (int year, byte quarter) SubtractQuarter(DateOnly date)
         {
             var (year, quarter) = (date.Year, GetQuarter(date.Month));
 
@@ -58,6 +60,17 @@ public static class CommonHelper
                 quarter--;
 
             return (year, quarter);
+        }
+    }
+    public static class JsonHelper
+    {
+        public static JsonSerializerOptions Options { get; }
+
+        static JsonHelper()
+        {
+            Options = new(JsonSerializerDefaults.Web);
+            Options.Converters.Add(new DateOnlyConverter());
+            Options.Converters.Add(new TimeOnlyConverter());
         }
     }
 }

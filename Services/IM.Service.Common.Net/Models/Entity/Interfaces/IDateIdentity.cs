@@ -4,5 +4,5 @@ namespace IM.Service.Common.Net.Models.Entity.Interfaces;
 
 public interface IDateIdentity
 {
-    DateTime Date { get; set; }
+    DateOnly Date { get; set; }
 }

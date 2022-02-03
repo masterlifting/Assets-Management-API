@@ -4,14 +4,12 @@ namespace IM.Service.Company.Data.DataAccess.Entities.ManyToMany;
 
 public class CompanySource
 {
-    public int Id { get; set; }
-    
     public virtual Company Company { get; set; } = null!;
-    public string CompanyId { get; set; } = null!;
+    public string CompanyId { get; init; } = null!;
 
     public virtual Sources Source { get; set; } = null!;
-    public byte SourceId { get; set; }
+    public byte SourceId { get; init; }
 
-    [StringLength(300, MinimumLength = 2)]
+    [StringLength(300, MinimumLength = 1)]
     public string? Value { get; set; }
 }

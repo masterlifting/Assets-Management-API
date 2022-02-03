@@ -109,13 +109,13 @@ public class StockVolumesController : ControllerBase
         await manager.UpdateAsync(new StockVolumePostDto
         {
             CompanyId = companyId,
-            Date = new DateTime(year, month, day),
+            Date = new DateOnly(year, month, day),
             SourceType = model.SourceType,
             Value = model.Value
         });
     [HttpDelete("{companyId}/{year:int}/{month:int}/{day:int}")]
     public async Task<ResponseModel<string>> Delete(string companyId, int year, int month, int day) =>
-        await manager.DeleteAsync(companyId, new DateTime(year, month, day));
+        await manager.DeleteAsync(companyId, new DateOnly(year, month, day));
 
     [HttpGet("load/")]
     public string Load() => manager.Load();

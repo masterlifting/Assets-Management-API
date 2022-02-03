@@ -19,16 +19,24 @@ public class DatabaseContext : DbContext
     public DbSet<StockSplit> StockSplits { get; set; } = null!;
     public DbSet<StockVolume> StockVolumes { get; set; } = null!;
 
-    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
-    {
-        //Database.EnsureDeleted();
-        //Database.EnsureCreated();
-    }
+    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.UseSerialColumns();
         modelBuilder.Entity<Entities.Company>().HasIndex(x => x.Name).IsUnique();
+        modelBuilder.Entity<Industry>().HasIndex(x => x.Name).IsUnique();
+        modelBuilder.Entity<Sector>().HasIndex(x => x.Name).IsUnique();
+
+        modelBuilder.Entity<CompanySource>().HasKey(x => new {x.CompanyId, x.SourceId});
+        modelBuilder.Entity<CompanySource>()
+            .HasOne(x => x.Company)
+            .WithMany(x => x.CompanySources)
+            .HasForeignKey(x => x.CompanyId);
+        modelBuilder.Entity<CompanySource>()
+            .HasOne(x => x.Source)
+            .WithMany(x => x.CompanySources)
+            .HasForeignKey(x => x.SourceId);
 
         modelBuilder.Entity<Price>().HasKey(x => new {x.CompanyId, x.Date });
         modelBuilder.Entity<StockSplit>().HasKey(x => new {x.CompanyId, x.Date });

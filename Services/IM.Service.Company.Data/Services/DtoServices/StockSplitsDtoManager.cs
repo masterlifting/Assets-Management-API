@@ -130,7 +130,7 @@ public class StockSplitsDtoManager
         {
             CompanyId = string.Intern(model.CompanyId.Trim().ToUpperInvariant()),
             SourceType = model.SourceType,
-            Date = model.Date.Date,
+            Date = model.Date,
             Value = model.Value
         };
 
@@ -182,7 +182,7 @@ public class StockSplitsDtoManager
             ? new() { Errors = new[] { error } }
             : new() { Data = info + " success" };
     }
-    public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateTime date)
+    public async Task<ResponseModel<string>> DeleteAsync(string companyId, DateOnly date)
     {
         companyId = string.Intern(companyId.Trim().ToUpperInvariant());
 
