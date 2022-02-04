@@ -67,11 +67,11 @@ public class StockSplitRepository : RepositoryHandler<StockSplit, DatabaseContex
             QueueNames.CompanyAnalyzer
             , QueueEntities.Price
             , QueueActions.CreateUpdate
-            , JsonSerializer.Serialize(new CompanyDateIdentityDto
+            , new CompanyDateIdentityDto
             {
                 CompanyId = entity.CompanyId,
                 Date = entity.Date
-            }));
+            });
 
         return Task.CompletedTask;
     }
@@ -80,7 +80,7 @@ public class StockSplitRepository : RepositoryHandler<StockSplit, DatabaseContex
         if (!entities.Any())
             return Task.CompletedTask;
 
-        var data = JsonSerializer.Serialize(entities
+        var data = entities
             .GroupBy(x => x.CompanyId)
             .Select(x => x
                 .OrderBy(y => y.Date)
@@ -90,7 +90,7 @@ public class StockSplitRepository : RepositoryHandler<StockSplit, DatabaseContex
                 CompanyId = x.CompanyId,
                 Date = x.Date
             })
-            .ToArray());
+            .ToArray();
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
 

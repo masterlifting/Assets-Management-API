@@ -74,11 +74,11 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
 
     public override Task SetPostProcessAsync(RepositoryActions action, Report entity)
     {
-        var data = JsonSerializer.Serialize(new CompanyDateIdentityDto
+        var data = new CompanyDateIdentityDto
         {
             CompanyId = entity.CompanyId,
             Date = QuarterHelper.ToDate(entity.Year, entity.Quarter)
-        });
+        };
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
         publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Report, QueueActions.CreateUpdate, data);
@@ -91,7 +91,7 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
         if (!entities.Any())
             return Task.CompletedTask;
 
-        var data = JsonSerializer.Serialize(entities
+        var data = entities
             .GroupBy(x => x.CompanyId)
             .Select(x => x
                 .OrderBy(y => y.Year)
@@ -102,7 +102,7 @@ public class ReportRepository : RepositoryHandler<Report, DatabaseContext>
                 CompanyId = x.CompanyId,
                 Date = QuarterHelper.ToDate(x.Year, x.Quarter)
             })
-            .ToArray());
+            .ToArray();
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
         publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Reports, QueueActions.CreateUpdate, data);

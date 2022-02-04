@@ -73,12 +73,6 @@ public class CompanyRepository : RepositoryHandler<Entities.Company, DatabaseCon
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
 
-        var data = JsonSerializer.Serialize(new CompanyDto
-        {
-            Id = entity.Id,
-            Name = entity.Name
-        });
-
         publisher.PublishTask(new[]
              {
                  QueueNames.CompanyAnalyzer,
@@ -88,20 +82,17 @@ public class CompanyRepository : RepositoryHandler<Entities.Company, DatabaseCon
              },
             QueueEntities.Company,
             RabbitHelper.GetQueueAction(action),
-            data);
+            new CompanyDto
+            {
+                Id = entity.Id,
+                Name = entity.Name
+            });
 
         return Task.CompletedTask;
     }
     public override Task SetPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Entities.Company> entities)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
-
-        var data = JsonSerializer.Serialize(entities.Select(x => new CompanyDto
-        {
-            Id = x.Id,
-            Name = x.Name
-        }));
-
         publisher.PublishTask(new[]
             {
                 QueueNames.CompanyAnalyzer,
@@ -111,7 +102,11 @@ public class CompanyRepository : RepositoryHandler<Entities.Company, DatabaseCon
             },
             QueueEntities.Company,
             RabbitHelper.GetQueueAction(action),
-            data);
+            entities.Select(x => new CompanyDto
+            {
+                Id = x.Id,
+                Name = x.Name
+            }));
 
         return Task.CompletedTask;
     }

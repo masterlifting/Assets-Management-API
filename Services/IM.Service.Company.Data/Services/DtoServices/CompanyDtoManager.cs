@@ -39,7 +39,7 @@ public class CompanyDtoManager
 
     public async Task<ResponseModel<CompanyGetDto>> GetAsync(string companyId)
     {
-        var company = await repository.FindAsync(companyId.Trim().ToUpperInvariant()) 
+        var company = await repository.FindAsync(companyId.Trim().ToUpperInvariant())
                       ?? await repository.FindAsync(x => x.Name.Contains(companyId)); //TO DELETE
 
         return company is null
@@ -273,13 +273,13 @@ public class CompanyDtoManager
         if (!companies.Any())
             return "Data for sync not found";
 
-        var prepareData = companies.Select(x => new CompanyDto
-        {
-            Id = x.Item1,
-            Name = x.Item2
-        });
-
-        var data = JsonSerializer.Serialize(prepareData);
+        var data = companies
+            .Select(x => new CompanyDto
+            {
+                Id = x.Item1,
+                Name = x.Item2
+            })
+            .ToArray();
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
 

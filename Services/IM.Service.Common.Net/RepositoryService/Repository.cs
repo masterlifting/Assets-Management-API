@@ -20,6 +20,8 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     private readonly ILogger<Repository<TEntity, TContext>> logger;
     private readonly string entityName;
 
+    private static string GetExceptionMessage(Exception exception) => exception.InnerException?.Message ?? exception.Message;
+
     protected Repository(
         ILogger<Repository<TEntity
         , TContext>> logger
@@ -45,8 +47,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.Create, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, exception.InnerException?.Message);
-            return (exception.InnerException?.Message, null);
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.Create, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, message);
+            return (message, null);
         }
     }
     public async Task<(string? error, TEntity[] result)> CreateAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
@@ -78,8 +81,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.Create, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, exception.InnerException?.Message);
-            return (exception.InnerException?.Message, Array.Empty<TEntity>());
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.Create, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, message);
+            return (message, Array.Empty<TEntity>());
         }
     }
 
@@ -95,8 +99,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.Update, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, exception.InnerException?.Message);
-            return (exception.InnerException?.Message, null);
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.Update, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, message);
+            return (message, null);
         }
     }
     public async Task<(string? error, TEntity[] result)> UpdateAsync(IEnumerable<TEntity> entities, string info)
@@ -128,8 +133,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.Update, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, exception.InnerException?.Message);
-            return (exception.InnerException?.Message, Array.Empty<TEntity>());
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.Update, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, message);
+            return (message, Array.Empty<TEntity>());
         }
     }
 
@@ -144,7 +150,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             logger.LogInformation(LogEvents.Create, "Info: {info}. Entity: {name}", info, entityName);
             return (null, entity);
         }
-        catch (Exception exception)
+        catch
         {
             try
             {
@@ -153,13 +159,14 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 context.Set<TEntity>().Update(entity);
                 await context.SaveChangesAsync().ConfigureAwait(false);
                 await handler.SetPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
-                logger.LogInformation(LogEvents.Update, "Info: {info}. Entity: {name}. TryCreateInfo: {createdError}", info, entityName, exception.InnerException?.Message);
+                logger.LogInformation(LogEvents.Update, "Info: {info}. Entity: {name}", info, entityName);
                 return (null, entity);
             }
-            catch (Exception updateException)
+            catch (Exception exception)
             {
-                logger.LogError(LogEvents.Update, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, updateException.Message);
-                return (updateException.Message, null);
+                var message = GetExceptionMessage(exception);
+                logger.LogError(LogEvents.Update, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, message);
+                return (message, null);
             }
         }
     }
@@ -206,8 +213,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.CreateUpdate, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, exception.InnerException?.Message);
-            return (exception.InnerException?.Message, Array.Empty<TEntity>());
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.CreateUpdate, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, message);
+            return (message, Array.Empty<TEntity>());
         }
     }
 
@@ -264,8 +272,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.CreateUpdateDelete, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, exception.InnerException?.Message);
-            return (exception.InnerException?.Message, Array.Empty<TEntity>());
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.CreateUpdateDelete, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, message);
+            return (message, Array.Empty<TEntity>());
         }
     }
 
@@ -282,8 +291,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.Delete, "Info: {info}: Error: {exception}", info, exception.InnerException?.Message);
-            return (exception.InnerException?.Message, null);
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.Delete, "Info: {info}: Error: {exception}", info, message);
+            return (message, null);
         }
     }
     public async Task<(string? error, TEntity[] result)> DeleteAsync(IEnumerable<TEntity> entities, string info)
@@ -313,8 +323,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.Delete, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, exception.InnerException?.Message);
-            return (exception.InnerException?.Message, Array.Empty<TEntity>());
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.Delete, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, message);
+            return (message, Array.Empty<TEntity>());
         }
     }
 

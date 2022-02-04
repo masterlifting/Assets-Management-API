@@ -61,11 +61,11 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
 
     public override Task SetPostProcessAsync(RepositoryActions action, Price entity)
     {
-        var data = JsonSerializer.Serialize(new CompanyDateIdentityDto
+        var data = new CompanyDateIdentityDto
         {
             CompanyId = entity.CompanyId,
             Date = entity.Date
-        });
+        };
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
         publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Price, QueueActions.CreateUpdate, data);
@@ -78,7 +78,7 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
         if (!entities.Any())
             return Task.CompletedTask;
 
-        var data = JsonSerializer.Serialize(entities
+        var data = entities
             .GroupBy(x => x.CompanyId)
             .Select(x => x
                 .OrderBy(y => y.Date)
@@ -88,7 +88,7 @@ public class PriceRepository : RepositoryHandler<Price, DatabaseContext>
                 CompanyId = x.CompanyId,
                 Date = x.Date
             })
-            .ToArray());
+            .ToArray();
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
         publisher.PublishTask(QueueNames.CompanyAnalyzer, QueueEntities.Prices, QueueActions.CreateUpdate, data);

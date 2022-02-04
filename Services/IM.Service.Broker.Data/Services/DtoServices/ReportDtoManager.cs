@@ -27,10 +27,7 @@ public class ReportDtoManager
             using var stream = file.OpenReadStream();
             var _ = stream.Read(payload, 0, (int)file.Length);
 
-            var report = new ReportFileDto(file.FileName, file.ContentType, payload, userId);
-
-            var data = JsonSerializer.Serialize(report);
-
+            var data = new ReportFileDto(file.FileName, file.ContentType, payload, userId);
             publisher.PublishTask(QueueNames.BrokerData, QueueEntities.Report, QueueActions.Call, data);
         }
 

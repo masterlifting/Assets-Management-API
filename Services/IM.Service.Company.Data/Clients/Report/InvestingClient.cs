@@ -24,7 +24,7 @@ public class InvestingClient
     }
 
     public async Task<HtmlDocument> GetMainPageAsync(string value) =>
-        await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}");
+        await  GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}");
     public async Task<HtmlDocument> GetFinancialPageAsync(string value) =>
         await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}-{settings.Financial}");
     public async Task<HtmlDocument> GetBalancePageAsync(string value) =>
