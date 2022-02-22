@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using static IM.Service.Common.Net.RepositoryService.Filters.DataFilterSetter;
-using static IM.Service.Common.Net.CommonEnums;
+using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Common.Net.HttpServices;
 

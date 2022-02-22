@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using static IM.Service.Common.Net.CommonHelper;
+using static IM.Service.Common.Net.Helper;
 
 namespace IM.Service.Common.Net.HttpServices;
 

@@ -11,7 +11,7 @@ public static class QueueConfiguration
         {
             Queues = new[]
             {
-                new Queue(QueueNames.CompanyAnalyzer)
+                new Queue(QueueNames.MarketAnalyzer)
                 {
                     Entities = new[]
                     {
@@ -38,34 +38,7 @@ public static class QueueConfiguration
                         }
                     }
                 },
-                new Queue(QueueNames.BrokerData)
-                {
-                    Entities = new[]
-                    {
-                        new QueueEntity(QueueEntities.Company)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate,
-                                QueueActions.Update,
-                                QueueActions.Delete
-                            }
-                        },
-                        new QueueEntity(QueueEntities.Companies)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate,
-                                QueueActions.CreateUpdateDelete,
-                                QueueActions.Update,
-                                QueueActions.Delete
-                            }
-                        }
-                    }
-                },
-                new Queue(QueueNames.BrokerSummary)
+                new Queue(QueueNames.PortfolioData)
                 {
                     Entities = new[]
                     {
@@ -98,7 +71,7 @@ public static class QueueConfiguration
         {
             Queues = new[]
             {
-                new Queue(QueueNames.CompanyAnalyzer)
+                new Queue(QueueNames.MarketAnalyzer)
                 {
                     Entities = new[]
                     {
@@ -151,28 +124,6 @@ public static class QueueConfiguration
                             }
                         }
                     }
-                },
-                new Queue(QueueNames.BrokerSummary)
-                {
-                    Entities = new[]
-                    {
-                        new QueueEntity(QueueEntities.Transaction)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate
-                            }
-                        },
-                        new QueueEntity(QueueEntities.Transactions)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate
-                            }
-                        }
-                    }
                 }
             }
         },
@@ -180,7 +131,7 @@ public static class QueueConfiguration
         {
             Queues = new[]
             {
-                new Queue(QueueNames.CompanyData)
+                new Queue(QueueNames.MarketData)
                 {
                     Entities = new[]
                     {
@@ -242,7 +193,7 @@ public static class QueueConfiguration
                         }
                     }
                 },
-                new Queue(QueueNames.BrokerData)
+                new Queue(QueueNames.PortfolioData)
                 {
                     Entities = new[]
                     {
@@ -262,7 +213,7 @@ public static class QueueConfiguration
                         }
                     }
                 },
-                new Queue(QueueNames.CompanyAnalyzer)
+                new Queue(QueueNames.MarketAnalyzer)
                 {
                     Entities = new[]
                     {
@@ -289,10 +240,9 @@ public static class QueueConfiguration
 
 public enum QueueNames
 {
-    CompanyData,
-    CompanyAnalyzer,
-    BrokerData,
-    BrokerSummary,
+    MarketData,
+    MarketAnalyzer,
+    PortfolioData,
     Recommendation
 }
 public enum QueueExchanges

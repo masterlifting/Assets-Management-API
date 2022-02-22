@@ -47,7 +47,7 @@ public class RabbitPublisher
 
     public void PublishTask<T>(IEnumerable<QueueNames> queues, QueueEntities entity, QueueActions action, T data) where T : class
     {
-        var _data = data is string stringData ? stringData : JsonSerializer.Serialize(data, CommonHelper.JsonHelper.Options);
+        var _data = data is string stringData ? stringData : JsonSerializer.Serialize(data, Helper.JsonHelper.Options);
 
         foreach (var queue in exchange.Queues.Join(queues, x => x.NameEnum, y => y, (x, _) => x))
             foreach (var routingKey in queue.Entities.Where(x => x.NameEnum == entity && x.Actions.Contains(action)))
@@ -59,7 +59,7 @@ public class RabbitPublisher
     }
     public void PublishTask<T>(QueueNames queue, QueueEntities entity, QueueActions action, T data) where T : class
     {
-        var _data = data is string stringData ? stringData : JsonSerializer.Serialize(data, CommonHelper.JsonHelper.Options);
+        var _data = data is string stringData ? stringData : JsonSerializer.Serialize(data, Helper.JsonHelper.Options);
 
         var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
 

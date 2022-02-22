@@ -21,7 +21,7 @@ public class RabbitBackgroundService : BackgroundService
     public RabbitBackgroundService(ILogger<RabbitSubscriber> logger, IServiceProvider services, IOptions<ServiceSettings> options)
     {
         var targetExchanges = new[] { QueueExchanges.Sync, QueueExchanges.Function };
-        var targetQueues = new[] { QueueNames.CompanyAnalyzer };
+        var targetQueues = new[] { QueueNames.MarketAnalyzer };
         subscriber = new RabbitSubscriber(logger, options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
         scope = services.CreateScope();
     }

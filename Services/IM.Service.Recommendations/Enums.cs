@@ -1,7 +1,6 @@
-﻿namespace IM.Service.Recommendations
+﻿namespace IM.Service.Recommendations;
+
+public static class Enums
 {
-    public static class Enums
-    {
         
-    }
 }

@@ -16,53 +16,52 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace IM.Service.Recommendations
+namespace IM.Service.Recommendations;
+
+public class Startup
 {
-    public class Startup
+    public Startup(IConfiguration configuration) => Configuration = configuration;
+    private IConfiguration Configuration { get; }
+
+    public void ConfigureServices(IServiceCollection services)
     {
-        public Startup(IConfiguration configuration) => Configuration = configuration;
-        private IConfiguration Configuration { get; }
+        services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
 
-        public void ConfigureServices(IServiceCollection services)
+        services.AddMemoryCache();
+
+        services.AddDbContext<DatabaseContext>(provider =>
         {
-            services.Configure<ServiceSettings>(Configuration.GetSection(nameof(ServiceSettings)));
+            provider.UseLazyLoadingProxies();
+            provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
+            provider.EnableSensitiveDataLogging();
+        });
 
-            services.AddMemoryCache();
+        services.AddControllers();
 
-            services.AddDbContext<DatabaseContext>(provider =>
-            {
-                provider.UseLazyLoadingProxies();
-                provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
-                provider.EnableSensitiveDataLogging();
-            });
+        services.AddHttpClient<CompanyAnalyzerClient>();
 
-            services.AddControllers();
+        services.AddScoped<PurchaseDtoAggregator>();
+        services.AddScoped<SaleDtoAggregator>();
 
-            services.AddHttpClient<CompanyAnalyzerClient>();
+        services.AddScoped<IRepositoryHandler<Company>, CompanyRepository>();
+        services.AddScoped(typeof(Repository<>));
 
-            services.AddScoped<PurchaseDtoAggregator>();
-            services.AddScoped<SaleDtoAggregator>();
+        services.AddScoped<RabbitActionService>();
+        services.AddHostedService<RabbitBackgroundService>();
+    }
 
-            services.AddScoped<IRepositoryHandler<Company>, CompanyRepository>();
-            services.AddScoped(typeof(Repository<>));
-
-            services.AddScoped<RabbitActionService>();
-            services.AddHostedService<RabbitBackgroundService>();
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
+        {
+            app.UseDeveloperExceptionPage();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        app.UseRouting();
+
+        app.UseEndpoints(endpoints =>
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
-        }
+            endpoints.MapControllers();
+        });
     }
 }

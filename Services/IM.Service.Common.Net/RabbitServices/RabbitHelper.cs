@@ -3,7 +3,8 @@ using IM.Service.Common.Net.RabbitServices.Configuration;
 
 using System.Collections.Generic;
 using System.Text.Json;
-using static IM.Service.Common.Net.CommonEnums;
+using static IM.Service.Common.Net.Enums;
+using static IM.Service.Common.Net.Helper;
 
 namespace IM.Service.Common.Net.RabbitServices;
 
@@ -15,7 +16,7 @@ public static class RabbitHelper
 
         try
         {
-            entity = JsonSerializer.Deserialize<T>(data, CommonHelper.JsonHelper.Options);
+            entity = JsonSerializer.Deserialize<T>(data, JsonHelper.Options);
             return true;
         }
         catch
@@ -31,7 +32,7 @@ public static class RabbitHelper
         RepositoryActions.CreateUpdateDelete => QueueActions.CreateUpdateDelete,
         RepositoryActions.Update => QueueActions.Update,
         RepositoryActions.Delete => QueueActions.Delete,
-        _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
+        _ => throw new ArgumentOutOfRangeException(nameof(action), action, nameof(GetQueueAction))
     };
 }
 

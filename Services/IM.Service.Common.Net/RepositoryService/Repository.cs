@@ -9,7 +9,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-using static IM.Service.Common.Net.CommonEnums;
+using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Common.Net.RepositoryService;
 

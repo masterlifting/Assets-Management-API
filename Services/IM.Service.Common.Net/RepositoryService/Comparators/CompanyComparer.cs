@@ -8,6 +8,6 @@ namespace IM.Service.Common.Net.RepositoryService.Comparators;
 
 public class CompanyComparer<T> : IEqualityComparer<T> where T : Company
 {
-    public bool Equals(T? x, T? y) => string.Equals(x!.Name, y!.Name, StringComparison.InvariantCultureIgnoreCase);
-    public int GetHashCode(T obj) => obj.Name.GetHashCode();
+    public bool Equals(T? x, T? y) => string.Equals(x!.Id, y!.Id, StringComparison.OrdinalIgnoreCase);
+    public int GetHashCode(T obj) => obj.Id.GetHashCode();
 }

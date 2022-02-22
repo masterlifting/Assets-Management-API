@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 using IM.Service.Common.Net.Models.Entity.CompanyServices.Interfaces;
 
-using static IM.Service.Common.Net.CommonEnums;
+using static IM.Service.Common.Net.Enums;
 
 
 namespace IM.Service.Common.Net.RepositoryService.Filters;

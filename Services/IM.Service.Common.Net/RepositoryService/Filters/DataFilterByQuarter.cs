@@ -3,7 +3,7 @@
 using System;
 using System.Linq.Expressions;
 
-using static IM.Service.Common.Net.CommonEnums;
+using static IM.Service.Common.Net.Enums;
 using static IM.Service.Common.Net.RepositoryService.Filters.DataFilterSetter;
 
 namespace IM.Service.Common.Net.RepositoryService.Filters;

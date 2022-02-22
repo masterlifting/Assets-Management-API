@@ -15,7 +15,7 @@ public class RepositoryHandler<T, TContext> : IRepositoryHandler<T> where T : cl
     public virtual Task<T> GetCreateHandlerAsync(T entity) => Task.FromResult(entity);
     public virtual async Task<T> GetUpdateHandlerAsync(object[] id, T entity) =>
         await context.Set<T>().FindAsync(id).ConfigureAwait(false) is null
-            ? throw new SqlNullValueException(nameof(GetCreateHandlerAsync))
+            ? throw new SqlNullValueException(nameof(GetUpdateHandlerAsync))
             : entity;
 
     public virtual async Task<T> GetDeleteHandlerAsync(params object[] id)
@@ -24,7 +24,7 @@ public class RepositoryHandler<T, TContext> : IRepositoryHandler<T> where T : cl
         return dbEntity ?? throw new SqlNullValueException(nameof(GetDeleteHandlerAsync));
     }
 
-    public virtual Task SetPostProcessAsync(CommonEnums.RepositoryActions action, T entity) => Task.CompletedTask;
+    public virtual Task SetPostProcessAsync(Enums.RepositoryActions action, T entity) => Task.CompletedTask;
 
     public virtual async Task<IEnumerable<T>> GetCreateRangeHandlerAsync(IEnumerable<T> entities, IEqualityComparer<T> comparer)
     {
@@ -35,7 +35,7 @@ public class RepositoryHandler<T, TContext> : IRepositoryHandler<T> where T : cl
     }
     public virtual Task<IEnumerable<T>> GetUpdateRangeHandlerAsync(IEnumerable<T> entities) => Task.FromResult(entities);
     public virtual Task<IEnumerable<T>> GetDeleteRangeHandlerAsync(IEnumerable<T> entities) => Task.FromResult(entities);
-    public virtual Task SetPostProcessAsync(CommonEnums.RepositoryActions action, IReadOnlyCollection<T> entities) => Task.CompletedTask;
+    public virtual Task SetPostProcessAsync(Enums.RepositoryActions action, IReadOnlyCollection<T> entities) => Task.CompletedTask;
 
     public virtual IQueryable<T> GetExist(IEnumerable<T> entities) => context.Set<T>();
 }
