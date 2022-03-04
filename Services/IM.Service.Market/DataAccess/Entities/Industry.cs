@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace IM.Service.Market.DataAccess.Entities;
 
-public class Industry : CommonEntityType
+public class Industry : Catalog
 {
     public virtual IEnumerable<Company>? Companies { get; set; }
 

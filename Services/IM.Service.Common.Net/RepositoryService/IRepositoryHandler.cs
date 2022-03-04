@@ -9,7 +9,9 @@ public interface IRepositoryHandler<T> where T : class
 {
     Task<T> GetCreateHandlerAsync(T entity);
     Task<T> GetUpdateHandlerAsync(object[] id, T entity);
+    Task<T> GetUpdateHandlerAsync(T entity);
     Task<T> GetDeleteHandlerAsync(params object[] id);
+    Task<T> GetDeleteHandlerAsync(T entity);
     Task SetPostProcessAsync(RepositoryActions action, T entity);
 
     Task<IEnumerable<T>> GetCreateRangeHandlerAsync(IEnumerable<T> entities, IEqualityComparer<T> comparer);

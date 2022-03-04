@@ -4,9 +4,13 @@ using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Common.Net.RepositoryService.Filters;
 
-public static class DataFilterSetter
+public static class FilterSetter
 {
     public static int SetDay(int day) => day > 31 ? 31 : day <= 0 ? 1 : day;
+    public static int SetMonth(int month)
+    {
+        return month > 12 ? 12 : month <= 0 ? 1 : month;
+    }
     public static int SetMonth(int month, HttpRequestFilterType filter)
     {
         var targetMonth = filter == HttpRequestFilterType.More && DateTime.UtcNow.Day == 1

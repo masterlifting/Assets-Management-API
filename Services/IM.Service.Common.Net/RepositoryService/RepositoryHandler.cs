@@ -13,14 +13,24 @@ public class RepositoryHandler<T, TContext> : IRepositoryHandler<T> where T : cl
     protected RepositoryHandler(TContext context) => this.context = context;
 
     public virtual Task<T> GetCreateHandlerAsync(T entity) => Task.FromResult(entity);
+    
     public virtual async Task<T> GetUpdateHandlerAsync(object[] id, T entity) =>
         await context.Set<T>().FindAsync(id).ConfigureAwait(false) is null
+            ? throw new SqlNullValueException(nameof(GetUpdateHandlerAsync))
+            : entity;
+    public virtual async Task<T> GetUpdateHandlerAsync(T entity) =>
+        await context.Set<T>().FindAsync(entity).ConfigureAwait(false) is null
             ? throw new SqlNullValueException(nameof(GetUpdateHandlerAsync))
             : entity;
 
     public virtual async Task<T> GetDeleteHandlerAsync(params object[] id)
     {
         var dbEntity = await context.Set<T>().FindAsync(id).ConfigureAwait(false);
+        return dbEntity ?? throw new SqlNullValueException(nameof(GetDeleteHandlerAsync));
+    }
+    public virtual async Task<T> GetDeleteHandlerAsync(T entity)
+    {
+        var dbEntity = await context.Set<T>().FindAsync(entity).ConfigureAwait(false);
         return dbEntity ?? throw new SqlNullValueException(nameof(GetDeleteHandlerAsync));
     }
 

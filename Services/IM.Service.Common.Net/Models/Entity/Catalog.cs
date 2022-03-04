@@ -1,12 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using Microsoft.EntityFrameworkCore;
 
-using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IM.Service.Common.Net.Models.Entity;
 
 [Index(nameof(Name), IsUnique = true)]
-public abstract class CommonEntityType
+public abstract class Catalog
 {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public byte Id { get; init; }

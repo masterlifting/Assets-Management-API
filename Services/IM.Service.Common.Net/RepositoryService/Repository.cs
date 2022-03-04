@@ -104,6 +104,24 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             return (message, null);
         }
     }
+    public async Task<(string? error, TEntity? result)> UpdateAsync(TEntity entity, string info)
+    {
+        try
+        {
+            entity = await handler.GetUpdateHandlerAsync(entity).ConfigureAwait(false);
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            await handler.SetPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
+            logger.LogInformation(LogEvents.Update, "Info: {info}. Entity: {name}", info, entityName);
+            return (null, entity);
+        }
+        catch (Exception exception)
+        {
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.Update, "Info: {info}. Entity: {name}. Error: {exception}", info, entityName, message);
+            return (message, null);
+        }
+
+    }
     public async Task<(string? error, TEntity[] result)> UpdateAsync(IEnumerable<TEntity> entities, string info)
     {
         try
@@ -283,6 +301,24 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         try
         {
             var result = await handler.GetDeleteHandlerAsync(id).ConfigureAwait(false);
+            context.Set<TEntity>().Remove(result);
+            await context.SaveChangesAsync().ConfigureAwait(false);
+            await handler.SetPostProcessAsync(RepositoryActions.Delete, result);
+            logger.LogInformation(LogEvents.Delete, "Info: {info}. Entity: {name}", info, entityName);
+            return (null, result);
+        }
+        catch (Exception exception)
+        {
+            var message = GetExceptionMessage(exception);
+            logger.LogError(LogEvents.Delete, "Info: {info}: Error: {exception}", info, message);
+            return (message, null);
+        }
+    }
+    public async Task<(string? error, TEntity? result)> DeleteAsync(TEntity entity, string info)
+    {
+        try
+        {
+            var result = await handler.GetDeleteHandlerAsync(entity).ConfigureAwait(false);
             context.Set<TEntity>().Remove(result);
             await context.SaveChangesAsync().ConfigureAwait(false);
             await handler.SetPostProcessAsync(RepositoryActions.Delete, result);

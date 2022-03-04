@@ -51,13 +51,13 @@ public class RabbitFunctionService : IRabbitActionService
                         await reportLoader.DataSetAsync();
                         break;
                     }
-                case QueueEntities.StockSplit:
+                case QueueEntities.Split:
                     {
                         var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockSplitLoader>();
                         await reportLoader.DataSetAsync(companyId);
                         break;
                     }
-                case QueueEntities.StockSplits:
+                case QueueEntities.Splits:
                     {
                         var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockSplitLoader>();
                         await reportLoader.DataSetAsync();

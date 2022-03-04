@@ -17,6 +17,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IM.Service.Market", "Servic
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IM.Service.Portfolio", "Services\IM.Service.Portfolio\IM.Service.Portfolio.csproj", "{86FEE4AE-1618-4E9F-89DE-21CD6109C3E5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IM.Service.Data", "Services\IM.Service.Data\IM.Service.Data.csproj", "{CE3AB8B8-00ED-418E-AA52-2B99B3FC5688}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{86FEE4AE-1618-4E9F-89DE-21CD6109C3E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{86FEE4AE-1618-4E9F-89DE-21CD6109C3E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{86FEE4AE-1618-4E9F-89DE-21CD6109C3E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE3AB8B8-00ED-418E-AA52-2B99B3FC5688}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE3AB8B8-00ED-418E-AA52-2B99B3FC5688}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE3AB8B8-00ED-418E-AA52-2B99B3FC5688}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE3AB8B8-00ED-418E-AA52-2B99B3FC5688}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

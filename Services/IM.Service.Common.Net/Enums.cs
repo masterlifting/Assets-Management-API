@@ -46,18 +46,7 @@ public static class Enums
         Equal = 1,
         More = 2
     }
-    public enum FilterDateEqualType
-    {
-        Year,
-        YearMonth,
-        YearMonthDay
-    }
-    public enum FilterQuarterEqualType
-    {
-        Year,
-        YearQuarter
-    }
-}
+  }
 public static class LogEvents
 {
     public static EventId Read = new(2000, "read");

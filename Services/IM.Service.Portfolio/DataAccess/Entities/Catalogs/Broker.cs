@@ -5,7 +5,7 @@ using IM.Service.Portfolio.DataAccess.Entities.ManyToMany;
 
 namespace IM.Service.Portfolio.DataAccess.Entities.Catalogs;
 
-public class Broker : CommonEntityType
+public class Broker : Catalog
 {
     public virtual IEnumerable<Account>? Accounts { get; set; }
              

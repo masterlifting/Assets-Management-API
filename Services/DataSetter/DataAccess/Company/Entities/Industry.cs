@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace DataSetter.DataAccess.Company.Entities;
 
-public class Industry : CommonEntityType
+public class Industry : Catalog
 {
     public virtual IEnumerable<Company>? Companies { get; set; }
 

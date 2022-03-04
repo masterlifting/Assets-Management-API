@@ -163,14 +163,14 @@ public static class QueueConfiguration
                                 QueueActions.Call
                             }
                         },
-                        new QueueEntity(QueueEntities.StockSplit)
+                        new QueueEntity(QueueEntities.Split)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Call
                             }
                         },
-                        new QueueEntity(QueueEntities.StockSplits)
+                        new QueueEntity(QueueEntities.Splits)
                         {
                             Actions = new[]
                             {
@@ -257,8 +257,8 @@ public enum QueueEntities
     Companies,
     Report,
     Reports,
-    StockSplit,
-    StockSplits,
+    Split,
+    Splits,
     StockVolume,
     StockVolumes,
     Price,

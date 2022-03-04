@@ -5,7 +5,7 @@ using IM.Service.Portfolio.DataAccess.Entities.ManyToMany;
 
 namespace IM.Service.Portfolio.DataAccess.Entities.Catalogs;
 
-public class Exchange : CommonEntityType
+public class Exchange : Catalog
 {
     public virtual IEnumerable<Deal>? Deals { get; set; }
     public virtual IEnumerable<Event>? Events { get; set; }

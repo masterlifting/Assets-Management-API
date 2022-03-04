@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq.Expressions;
 using System.Text.Json;
 using IM.Service.Common.Net.HttpServices.JsonConvertors;
 
@@ -71,6 +72,16 @@ public static class Helper
             Options = new(JsonSerializerDefaults.Web);
             Options.Converters.Add(new DateOnlyConverter());
             Options.Converters.Add(new TimeOnlyConverter());
+        }
+    }
+
+    public static class ExpressionHelper
+    {
+        public static Expression<Func<T, bool>> Combine<T>(Expression<Func<T, bool>> firstExpression, Expression<Func<T, bool>> secondExpression)
+        {
+            var invokedExpression = Expression.Invoke(secondExpression, firstExpression.Parameters);
+            var combinedExpression = Expression.AndAlso(firstExpression.Body, invokedExpression);
+            return Expression.Lambda<Func<T, bool>>(combinedExpression, firstExpression.Parameters);
         }
     }
 }

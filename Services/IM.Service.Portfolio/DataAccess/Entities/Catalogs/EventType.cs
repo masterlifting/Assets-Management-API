@@ -3,7 +3,7 @@ using IM.Service.Common.Net.Models.Entity;
 
 namespace IM.Service.Portfolio.DataAccess.Entities.Catalogs;
 
-public class EventType : CommonEntityType
+public class EventType : Catalog
 {
     public virtual IEnumerable<Event>? Events { get; set; }
     
