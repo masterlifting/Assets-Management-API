@@ -259,14 +259,14 @@ public class ReportsDtoManager
     public string Load()
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Reports, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Reports, QueueActions.Get, DateTime.UtcNow.ToShortDateString());
         return "Load reports is running...";
     }
     public string Load(string companyId)
     {
         companyId = companyId.Trim().ToUpperInvariant();
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Report, QueueActions.Call, companyId);
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Report, QueueActions.Get, companyId);
         return $"Load reports for '{companyId}' is running...";
     }
 }

@@ -193,14 +193,14 @@ public class StockVolumesDtoManager
     public string Load()
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.StockVolumes, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Floats, QueueActions.Get, DateTime.UtcNow.ToShortDateString());
         return "Load stock volumes is running...";
     }
     public string Load(string companyId)
     {
         companyId = companyId.Trim().ToUpperInvariant();
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.StockVolume, QueueActions.Call, companyId);
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Float, QueueActions.Get, companyId);
         return $"Load stock volumes for '{companyId}' is running...";
     }
 }

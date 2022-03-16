@@ -1,5 +1,4 @@
-﻿
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace IM.Service.Common.Net.RabbitServices.Configuration;
 
@@ -139,56 +138,64 @@ public static class QueueConfiguration
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get,
+                                QueueActions.Compute
                             }
                         },
                         new QueueEntity(QueueEntities.Prices)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get,
+                                QueueActions.Compute
                             }
                         },
                         new QueueEntity(QueueEntities.Report)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get,
+                                QueueActions.Compute
                             }
                         },
                         new QueueEntity(QueueEntities.Reports)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get,
+                                QueueActions.Compute
                             }
                         },
                         new QueueEntity(QueueEntities.Split)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get,
+                                QueueActions.Compute
                             }
                         },
                         new QueueEntity(QueueEntities.Splits)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get,
+                                QueueActions.Compute
                             }
                         },
-                        new QueueEntity(QueueEntities.StockVolume)
+                        new QueueEntity(QueueEntities.Float)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get,
+                                QueueActions.Compute
                             }
                         },
-                        new QueueEntity(QueueEntities.StockVolumes)
+                        new QueueEntity(QueueEntities.Floats)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get,
+                                QueueActions.Compute
                             }
                         }
                     }
@@ -201,14 +208,14 @@ public static class QueueConfiguration
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get
                             }
                         },
                         new QueueEntity(QueueEntities.Reports)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get
                             }
                         }
                     }
@@ -221,14 +228,14 @@ public static class QueueConfiguration
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get
                             }
                         },
                         new QueueEntity(QueueEntities.Ratings)
                         {
                             Actions = new[]
                             {
-                                QueueActions.Call
+                                QueueActions.Get
                             }
                         }
                     }
@@ -241,7 +248,7 @@ public static class QueueConfiguration
 public enum QueueNames
 {
     MarketData,
-    MarketAnalyzer,
+    MarketAnalyzer, //todo: to delete
     PortfolioData,
     Recommendation
 }
@@ -255,12 +262,14 @@ public enum QueueEntities
 {
     Company,
     Companies,
+    CompanySource,
+    CompanySources,
     Report,
     Reports,
     Split,
     Splits,
-    StockVolume,
-    StockVolumes,
+    Float,
+    Floats,
     Price,
     Prices,
     Rating,
@@ -277,5 +286,7 @@ public enum QueueActions
     CreateUpdateDelete,
     Update,
     Delete,
-    Call
+    Get,
+    Set,
+    Compute
 }

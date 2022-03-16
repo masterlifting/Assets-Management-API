@@ -16,7 +16,9 @@ namespace IM.Service.Common.Net.RepositoryService;
 public class Repository<TEntity, TContext> where TEntity : class where TContext : DbContext
 {
     private readonly TContext context;
-    private readonly IRepositoryHandler<TEntity> handler;
+    //private readonly IRepositoryHandler<TEntity> handler;
+    public IRepositoryHandler<TEntity> handler { get; }
+
     private readonly ILogger<Repository<TEntity, TContext>> logger;
     private readonly string entityName;
 

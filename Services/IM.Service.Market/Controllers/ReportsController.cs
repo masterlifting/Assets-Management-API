@@ -80,7 +80,7 @@ public class ReportsController : ControllerBase
 
     [HttpGet("{year:int}/{quarter:int}")]
     public async Task<ResponseModel<PaginatedModel<ReportGetDto>>> GetEqual(int year, int quarter, int page = 0, int limit = 0) =>
-        await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(year, quarter), new(page, limit));
+        await manager.GetAsync(new CompanyDataFilterByQuarter<Report>(HttpRequestFilterType.Equal, year, quarter), new(page, limit));
 
 
     [HttpPost]

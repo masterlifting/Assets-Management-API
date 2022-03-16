@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using IM.Service.Common.Net.Models.Entity.CompanyServices.Interfaces;
 
 using static IM.Service.Common.Net.Enums;
+using static IM.Service.Common.Net.Helper.ExpressionHelper;
 
 
 namespace IM.Service.Common.Net.RepositoryService.Filters;

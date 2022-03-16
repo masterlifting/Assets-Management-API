@@ -351,14 +351,14 @@ public class PricesDtoManager
     public string Load()
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData,QueueEntities.Prices,QueueActions.Call, DateTime.UtcNow.ToShortDateString());
+        publisher.PublishTask(QueueNames.MarketData,QueueEntities.Prices,QueueActions.Get, DateTime.UtcNow.ToShortDateString());
         return "Load prices is running...";
     }
     public string Load(string companyId)
     {
         companyId = companyId.Trim().ToUpperInvariant();
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, QueueActions.Call, companyId);
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, QueueActions.Get, companyId);
         return $"Load prices for '{companyId}' is running...";
     }
 }

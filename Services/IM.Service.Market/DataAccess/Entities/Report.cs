@@ -8,6 +8,6 @@ public class Report : ReportBody, ICompanyQuarterIdentity
     public virtual Company Company { get; init; } = null!;
     public string CompanyId { get; init; } = null!;
 
-    public int Year { get; init; }
-    public byte Quarter { get; init; }
+    public int Year { get; set; }
+    public byte Quarter { get; set; }
 }

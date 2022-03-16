@@ -197,14 +197,14 @@ public class StockSplitsDtoManager
     public string Load()
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Splits, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Splits, QueueActions.Get, DateTime.UtcNow.ToShortDateString());
         return "Load stock splits is running...";
     }
     public string Load(string companyId)
     {
         companyId = companyId.Trim().ToUpperInvariant();
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Split, QueueActions.Call, companyId);
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Split, QueueActions.Get, companyId);
         return $"Load stock splits for '{companyId}' is running...";
     }
 }

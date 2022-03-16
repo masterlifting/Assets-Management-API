@@ -20,7 +20,7 @@ public class RabbitFunctionService : IRabbitActionService
 
     public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string companyId)
     {
-        if (action != QueueActions.Call)
+        if (action != QueueActions.Get)
             return true;
 
         try
@@ -63,13 +63,13 @@ public class RabbitFunctionService : IRabbitActionService
                         await reportLoader.DataSetAsync();
                         break;
                     }
-                case QueueEntities.StockVolume:
+                case QueueEntities.Float:
                     {
                         var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockVolumeLoader>();
                         await reportLoader.DataSetAsync(companyId);
                         break;
                     }
-                case QueueEntities.StockVolumes:
+                case QueueEntities.Floats:
                     {
                         var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<StockVolumeLoader>();
                         await reportLoader.DataSetAsync();
@@ -82,7 +82,7 @@ public class RabbitFunctionService : IRabbitActionService
         catch (Exception exception)
         {
             var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<RabbitFunctionService>>();
-            logger.LogError(LogEvents.Call, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), action, exception.Message);
+            logger.LogError(LogEvents.Function, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), action, exception.Message);
             return false;
         }
     }

@@ -56,7 +56,7 @@ public static class LogEvents
     public static EventId CreateUpdate = new(2012, "create or update");
     public static EventId CreateUpdateDelete = new(2234, "create or update and delete");
 
-    public static EventId Call = new(3001, "call function");
+    public static EventId Function = new(3001, "call function");
     public static EventId Sync = new(3002, "data synchronization");
     public static EventId Transfer = new(3003, "data transfer");
 

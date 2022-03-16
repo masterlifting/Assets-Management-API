@@ -106,13 +106,13 @@ public class CompanySourceRepository : RepositoryHandler<CompanySource, Database
                     break;
             case (byte)Enums.Sources.Moex or (byte)Enums.Sources.Tdameritrade:
                 {
-                    publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, QueueActions.Call, companyId);
+                    publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, QueueActions.Get, companyId);
                     break;
                 }
             case (byte)Enums.Sources.Investing:
                 {
-                    publisher.PublishTask(QueueNames.MarketData, QueueEntities.Report, QueueActions.Call, companyId);
-                    publisher.PublishTask(QueueNames.MarketData, QueueEntities.StockVolume, QueueActions.Call, companyId);
+                    publisher.PublishTask(QueueNames.MarketData, QueueEntities.Report, QueueActions.Get, companyId);
+                    publisher.PublishTask(QueueNames.MarketData, QueueEntities.Float, QueueActions.Get, companyId);
                     break;
                 }
         }

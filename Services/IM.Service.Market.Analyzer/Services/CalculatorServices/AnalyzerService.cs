@@ -159,7 +159,7 @@ public class AnalyzerService
         var rabbitConnectionString = options.Value.ConnectionStrings.Mq;
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketAnalyzer, QueueEntities.Ratings, QueueActions.Call, DateTime.UtcNow.ToShortDateString());
+        publisher.PublishTask(QueueNames.MarketAnalyzer, QueueEntities.Ratings, QueueActions.Get, DateTime.UtcNow.ToShortDateString());
 
         return Task.CompletedTask;
     }

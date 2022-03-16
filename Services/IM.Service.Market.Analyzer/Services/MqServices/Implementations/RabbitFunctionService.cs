@@ -17,7 +17,7 @@ public class RabbitFunctionService : IRabbitActionService
 
     public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string info)
     {
-        if (action != QueueActions.Call)
+        if (action != QueueActions.Get)
             return true;
 
         try
@@ -37,7 +37,7 @@ public class RabbitFunctionService : IRabbitActionService
         catch (Exception exception)
         {
             var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<RabbitFunctionService>>();
-            logger.LogError(LogEvents.Call, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), action, exception.Message);
+            logger.LogError(LogEvents.Function, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), action, exception.Message);
             return false;
         }
     }
