@@ -1,21 +1,20 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace IM.Service.Common.Net.Attributes
+namespace IM.Service.Common.Net.Attributes;
+
+public class NotZeroAttribute : ValidationAttribute
 {
-    public class NotZeroAttribute : ValidationAttribute
+    private readonly string property;
+    public NotZeroAttribute(string property) => this.property = property;
+
+    public override bool IsValid(object? value)
     {
-        private readonly string property;
-        public NotZeroAttribute(string property) => this.property = property;
+        var stringValue = value?.ToString();
 
-        public override bool IsValid(object? value)
-        {
-            var stringValue = value?.ToString();
+        var isParse = decimal.TryParse(stringValue, out var result);
 
-            var isParse = decimal.TryParse(stringValue, out var result);
+        ErrorMessage = $"The '{property}' must be greater than 0";
 
-            ErrorMessage = $"The '{property}' must be greater than 0";
-
-            return isParse && result > 0;
-        }
+        return isParse && result > 0;
     }
 }

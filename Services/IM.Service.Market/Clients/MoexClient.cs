@@ -1,32 +1,25 @@
 using IM.Service.Common.Net.Models.Dto.Http;
-using IM.Service.Market.Models.Client;
+using IM.Service.Market.Models.Clients;
 using IM.Service.Market.Settings;
-
 using Microsoft.Extensions.Options;
-
-using System;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Threading.Tasks;
 
 namespace IM.Service.Market.Clients;
 
 public class MoexClient
 {
     private readonly HttpClient httpClient;
-    private readonly HostModel moexSetting;
+    private readonly HostModel settings;
 
 
     public MoexClient(HttpClient httpClient, IOptions<ServiceSettings> options)
     {
         this.httpClient = httpClient;
-        moexSetting = options.Value.ClientSettings.Moex;
+        settings = options.Value.ClientSettings.Moex;
     }
 
     public async Task<MoexCurrentPriceResultModel> GetCurrentPricesAsync()
     {
-        var url = $"https://{moexSetting.Host}/iss/engines/stock/markets/shares/boards/TQBR/securities.json";
+        var url = $"{settings.Schema}://{settings.Host}/iss/engines/stock/markets/shares/boards/TQBR/securities.json";
         var data = await httpClient.GetFromJsonAsync<MoexCurrentPriceData>(url);
 
         return data?.Marketdata is null 
@@ -35,7 +28,7 @@ public class MoexClient
     }
     public async Task<MoexHistoryPriceResultModel> GetHistoryPricesAsync(string ticker, DateTime date)
     {
-        var urlFunc = (int start) => $"https://{moexSetting.Host}/iss/history/engines/stock/markets/shares/boards/tqbr/securities/{ticker}/candles.json?from={date.Year}-{date.Month}-{date.Day}&interval=24&start={start}";
+        var urlFunc = (int start) => $"{settings.Schema}://{settings.Host}/iss/history/engines/stock/markets/shares/boards/tqbr/securities/{ticker}/candles.json?from={date.Year}-{date.Month}-{date.Day}&interval=24&start={start}";
         var firstData = await httpClient.GetFromJsonAsync<MoexHistoryPriceData>(urlFunc(0));
 
         if (firstData?.History is null)

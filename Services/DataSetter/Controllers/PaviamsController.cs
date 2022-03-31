@@ -1,11 +1,9 @@
 ﻿using DataSetter.Clients;
 using DataSetter.DataAccess.Company;
 using DataSetter.DataAccess.CompanyData;
-using DataSetter.Models.Dto;
 
-using IM.Service.Common.Net.Models.Dto;
 using IM.Service.Common.Net.Models.Dto.Http;
-using IM.Service.Common.Net.Models.Dto.Http.CompanyServices;
+using IM.Service.Market.Models.Api.Http;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
+using CompanyPostDto = DataSetter.Models.Dto.CompanyPostDto;
 
 namespace DataSetter.Controllers;
 
@@ -62,7 +62,7 @@ public class PaviamsController : ControllerBase
                 CompanyId = x.CompanyId,
                 Date = x.Date,
                 Value = x.Value,
-                SourceType = x.SourceType
+                //SourceType = x.SourceType
             });
 
             var result = await companyDataClient.Post("prices/collection", prices);
@@ -88,7 +88,7 @@ public class PaviamsController : ControllerBase
             var prices = companyDataContext.Reports.Where(x => x.CompanyId == companyId).Select(x => new ReportPostDto()
             {
                 CompanyId = x.CompanyId,
-                SourceType = x.SourceType,
+                //SourceType = x.SourceType,
                 Year = x.Year,
                 Quarter = x.Quarter,
                 Multiplier = x.Multiplier,
@@ -117,11 +117,11 @@ public class PaviamsController : ControllerBase
     [HttpGet("stocksplits/")]
     public async Task<ResponseModel<string>> SetStockSplits()
     {
-        var stockSplits = await companyDataContext.StockSplits.Select(x => new StockSplitPostDto
+        var stockSplits = await companyDataContext.StockSplits.Select(x => new SplitPostDto
         {
             CompanyId = x.CompanyId,
             Date = x.Date,
-            SourceType = x.SourceType,
+            //SourceType = x.SourceType,
             Value = x.Value
         })
          .ToArrayAsync();
@@ -131,11 +131,11 @@ public class PaviamsController : ControllerBase
     [HttpGet("stockvolumes/")]
     public async Task<ResponseModel<string>> SetStockVolumes()
     {
-        var stockVolumes = await companyDataContext.StockVolumes.Select(x => new StockVolumePostDto
+        var stockVolumes = await companyDataContext.StockVolumes.Select(x => new FloatPostDto
             {
                 CompanyId = x.CompanyId,
                 Date = x.Date,
-                SourceType = x.SourceType,
+                //SourceType = x.SourceType,
                 Value = x.Value
             })
             .ToArrayAsync();

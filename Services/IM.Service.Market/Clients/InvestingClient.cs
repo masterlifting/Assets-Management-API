@@ -1,11 +1,7 @@
-﻿using Microsoft.Extensions.Options;
-
-using System;
-using System.Net.Http;
-using System.Threading.Tasks;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
+using IM.Service.Market.Models.Settings;
 using IM.Service.Market.Settings;
-using IM.Service.Market.Settings.Client;
+using Microsoft.Extensions.Options;
 
 namespace IM.Service.Market.Clients;
 
@@ -24,13 +20,13 @@ public class InvestingClient
     }
 
     public async Task<HtmlDocument> GetMainPageAsync(string value) =>
-        await  GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}");
+        await  GetHtmlDocumentAsync($"{settings.Schema}://{settings.Host}/{settings.Path}/{value}");
     public async Task<HtmlDocument> GetFinancialPageAsync(string value) =>
-        await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}-{settings.Financial}");
+        await GetHtmlDocumentAsync($"{settings.Schema}://{settings.Host}/{settings.Path}/{value}-{settings.Financial}");
     public async Task<HtmlDocument> GetBalancePageAsync(string value) =>
-        await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}-{settings.Balance}");
+        await GetHtmlDocumentAsync($"{settings.Schema}://{settings.Host}/{settings.Path}/{value}-{settings.Balance}");
     public async Task<HtmlDocument> GetDividendPageAsync(string value) =>
-        await GetHtmlDocumentAsync($"https://{settings.Host}/{settings.Path}/{value}-{settings.Dividends}");
+        await GetHtmlDocumentAsync($"{settings.Schema}://{settings.Host}/{settings.Path}/{value}-{settings.Dividends}");
 
     private async Task<HtmlDocument> GetHtmlDocumentAsync(string uri)
     {

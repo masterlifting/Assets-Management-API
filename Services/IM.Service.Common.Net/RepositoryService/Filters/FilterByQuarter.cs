@@ -14,17 +14,17 @@ public abstract class FilterByQuarter<T> : IFilter<T> where T : class, IQuarterI
     public byte Quarter { get; }
     public Expression<Func<T, bool>> Expression { get; set; }
 
-    public FilterByQuarter()
+    protected FilterByQuarter()
     {
         Expression = x => true;
     }
-    public FilterByQuarter(int year)
+    protected FilterByQuarter(int year)
     {
         Year = SetYear(year);
 
         Expression = x => x.Year == Year;
     }
-    public FilterByQuarter(HttpRequestFilterType filterType, int year, int quarter)
+    protected FilterByQuarter(HttpRequestFilterType filterType, int year, int quarter)
     {
         Year = SetYear(year);
         Quarter = SetQuarter(quarter);

@@ -1,12 +1,12 @@
-﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
-using IM.Service.Common.Net.RabbitServices;
+﻿using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Recommendations.DataAccess;
 using IM.Service.Recommendations.DataAccess.Entities;
 using IM.Service.Recommendations.DataAccess.Repository;
 
 using System.Threading.Tasks;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+using IM.Service.Recommendations.Models.Dto;
 
 namespace IM.Service.Recommendations.Services.MqServices.Implementations;
 

@@ -15,11 +15,11 @@ public abstract class FilterByDate<T> : IFilter<T> where T : class, IDateIdentit
     public int Day { get; }
     public Expression<Func<T, bool>> Expression { get; set; }
 
-    public FilterByDate()
+    protected FilterByDate()
     {
         Expression = x => true;
     }
-    public FilterByDate(int year)
+    protected FilterByDate(int year)
     {
         Year = SetYear(year);
         Month = 1;
@@ -27,7 +27,7 @@ public abstract class FilterByDate<T> : IFilter<T> where T : class, IDateIdentit
 
         Expression = x => x.Date.Year == Year;
     }
-    public FilterByDate(int year, int month)
+    protected FilterByDate(int year, int month)
     {
         Year = SetYear(year);
         Month = SetMonth(month);
@@ -35,7 +35,7 @@ public abstract class FilterByDate<T> : IFilter<T> where T : class, IDateIdentit
 
         Expression = x => x.Date.Year == Year && x.Date.Month == Month;
     }
-    public FilterByDate(HttpRequestFilterType filterType, int year, int month, int day)
+    protected FilterByDate(HttpRequestFilterType filterType, int year, int month, int day)
     {
         Year = SetYear(year);
         Month = SetMonth(month, filterType);

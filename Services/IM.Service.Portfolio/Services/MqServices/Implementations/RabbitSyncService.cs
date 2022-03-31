@@ -1,5 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Dto.Mq.CompanyServices;
-using IM.Service.Common.Net.RabbitServices;
+﻿using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Portfolio.Clients;
 using IM.Service.Portfolio.DataAccess.Entities;
@@ -10,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-
+using IM.Service.Portfolio.Models.Dto.Mq;
 using static IM.Service.Common.Net.Enums;
 using static IM.Service.Portfolio.Enums;
 
@@ -33,7 +32,7 @@ public class RabbitSyncService : RabbitRepositoryHandler, IRabbitActionService
         if (!RabbitHelper.TrySerialize(data, out CompanyDto? dto))
             return false;
 
-        if (!Enum.TryParse<Countries>(dto!.Country, true, out var country))
+        if (!Enum.TryParse<Countries>(dto!.CountryId.ToString(), true, out var country))
             return false;
 
         var client = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<MoexClient>();
@@ -74,7 +73,7 @@ public class RabbitSyncService : RabbitRepositoryHandler, IRabbitActionService
         if (!RabbitHelper.TrySerialize(data, out CompanyDto[]? dtos))
             return false;
 
-        dtos = dtos!.Where(x => Enum.TryParse<Countries>(x.Country, true, out _)).ToArray();
+        dtos = dtos!.Where(x => Enum.TryParse<Countries>(x.CountryId.ToString(), true, out _)).ToArray();
 
         if (!dtos.Any())
             return false;
@@ -83,17 +82,12 @@ public class RabbitSyncService : RabbitRepositoryHandler, IRabbitActionService
         var underlyingAssetRepo = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<UnderlyingAsset>>();
         var derivativeRepo = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Derivative>>();
 
-        foreach (var item in dtos.GroupBy(x => x.Country))
+        foreach (var item in dtos.GroupBy(x => x.CountryId))
         {
-            var country = Enum.Parse<Countries>(item.Key);
+            var country = Enum.Parse<Countries>(item.Key.ToString());
             var tickers = item.Select(x => x).ToArray();
             if(country != Countries.Rus)
-                tickers = tickers.Select(x => new CompanyDto
-                {
-                    Id = $"{x.Id}-RM",
-                    Name = x.Name,
-                    Country = item.Key
-                })
+                tickers = tickers.Select(x => new CompanyDto($"{x.Id}-RM",item.Key, x.Name))
                 .ToArray();
 
             var response = await client.GetIsinsAsync(country);
