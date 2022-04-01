@@ -9,7 +9,6 @@ using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Api.Http;
 using IM.Service.Market.Services.Background;
 using IM.Service.Market.Services.Calculations;
-using IM.Service.Market.Services.DataLoaders;
 using IM.Service.Market.Services.DataLoaders.Floats;
 using IM.Service.Market.Services.DataLoaders.Prices;
 using IM.Service.Market.Services.DataLoaders.Reports;
@@ -21,6 +20,7 @@ using IM.Service.Market.Services.RestApi.Common.Interfaces;
 using IM.Service.Market.Services.RestApi.Mappers;
 using IM.Service.Market.Services.RestApi.Mappers.Interfaces;
 using IM.Service.Market.Settings;
+
 using Microsoft.EntityFrameworkCore;
 
 using Polly;
@@ -92,10 +92,10 @@ public class Startup
         //services.AddScoped<RestApiWrite<Dividend, DividendPostDto>>();
         //services.AddScoped<RestApiWrite<Coefficient, CoefficientPostDto>>();
 
-        services.AddScoped<IDataLoader, PriceLoader>();
-        services.AddScoped<IDataLoader, ReportLoader>();
-        services.AddScoped<IDataLoader, FloatLoader>();
-        services.AddScoped<IDataLoader, SplitLoader>();
+        services.AddTransient<PriceLoader>();
+        services.AddTransient<ReportLoader>();
+        services.AddTransient<FloatLoader>();
+        services.AddTransient<SplitLoader>();
 
         services.AddTransient<CoefficientService>();
         services.AddTransient<PriceService>();
@@ -112,6 +112,7 @@ public class Startup
         services.AddScoped<IRepositoryHandler<Split>, SplitRepositoryHandler>(); 
         services.AddScoped<IRepositoryHandler<Dividend>, DividendRepositoryHandler>();
         services.AddScoped<IRepositoryHandler<Coefficient>, CoefficientRepositoryHandler>();
+        services.AddScoped<IRepositoryHandler<Rating>, RatingRepositoryHandler>();
 
         services.AddSingleton<RabbitActionService>();
         services.AddHostedService<RabbitBackgroundService>();

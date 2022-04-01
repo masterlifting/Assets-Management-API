@@ -1,14 +1,12 @@
-﻿using System.Runtime.Serialization;
-
-using IM.Service.Common.Net;
-using IM.Service.Common.Net.Models.Entity.Interfaces;
+﻿using IM.Service.Common.Net;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Domain.Entities.Interfaces;
-using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Services.Calculations;
-using IM.Service.Market.Services.DataLoaders;
+using IM.Service.Market.Services.DataLoaders.Floats;
+using IM.Service.Market.Services.DataLoaders.Prices;
+using IM.Service.Market.Services.DataLoaders.Reports;
+using IM.Service.Market.Services.DataLoaders.Splits;
 
 namespace IM.Service.Market.Services.Mq.Actions;
 
@@ -29,10 +27,24 @@ public class RabbitFunctions : IRabbitActionService
                     {
                         var loadTask = entity switch
                         {
-                            QueueEntities.CompanySource => LoadDataAsync(data, false),
-                            QueueEntities.CompanySources => LoadDataAsync(data, true),
-                            QueueEntities.Float => LoadDataAsync<Float>(data, false),
-                            QueueEntities.Floats => LoadDataAsync<Float>(data, true),
+                            QueueEntities.CompanySource => Task.WhenAll(
+                                serviceProvider.GetRequiredService<PriceLoader>().LoadDataAsync(data),
+                                serviceProvider.GetRequiredService<ReportLoader>().LoadDataAsync(data),
+                                serviceProvider.GetRequiredService<FloatLoader>().LoadDataAsync(data),
+                                serviceProvider.GetRequiredService<SplitLoader>().LoadDataAsync(data)),
+                            QueueEntities.CompanySources => Task.WhenAll(
+                                serviceProvider.GetRequiredService<PriceLoader>().LoadRangeDataAsync(data),
+                                serviceProvider.GetRequiredService<ReportLoader>().LoadRangeDataAsync(data),
+                                serviceProvider.GetRequiredService<FloatLoader>().LoadRangeDataAsync(data),
+                                serviceProvider.GetRequiredService<SplitLoader>().LoadRangeDataAsync(data)),
+                            QueueEntities.Price => serviceProvider.GetRequiredService<PriceLoader>().LoadDataAsync(data),
+                            QueueEntities.Prices => serviceProvider.GetRequiredService<PriceLoader>().LoadRangeDataAsync(data),
+                            QueueEntities.Report => serviceProvider.GetRequiredService<ReportLoader>().LoadDataAsync(data),
+                            QueueEntities.Reports => serviceProvider.GetRequiredService<ReportLoader>().LoadRangeDataAsync(data),
+                            QueueEntities.Float => serviceProvider.GetRequiredService<FloatLoader>().LoadDataAsync(data),
+                            QueueEntities.Floats => serviceProvider.GetRequiredService<FloatLoader>().LoadRangeDataAsync(data),
+                            QueueEntities.Split => serviceProvider.GetRequiredService<SplitLoader>().LoadDataAsync(data),
+                            QueueEntities.Splits => serviceProvider.GetRequiredService<SplitLoader>().LoadRangeDataAsync(data),
                             _ => Task.CompletedTask
                         };
 
@@ -68,60 +80,5 @@ public class RabbitFunctions : IRabbitActionService
             logger.LogError(LogEvents.Function, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), action, exception.Message);
             return false;
         }
-    }
-
-    private Task LoadDataAsync(string data, bool isCollection)
-    {
-        var serviceProvider = scopeFactory.CreateScope().ServiceProvider;
-
-        var priceLoader = serviceProvider.GetRequiredService<DataLoader<Price>>();
-        var reportLoader = serviceProvider.GetRequiredService<DataLoader<Report>>();
-        var floatLoader = serviceProvider.GetRequiredService<DataLoader<Float>>();
-        var splitLoader = serviceProvider.GetRequiredService<DataLoader<Split>>();
-
-        return isCollection
-            ? RabbitHelper.TrySerialize(data, out CompanySource[]? companySources)
-                ? SetDataAsync1(companySources!)
-                : SetDataAsync3()
-            : RabbitHelper.TrySerialize(data, out CompanySource? companySource)
-                ? SetDataAsync2(companySource!)
-                : throw new SerializationException(nameof(CompanySource));
-
-        async Task SetDataAsync1(CompanySource[] css)
-        {
-            await Task.WhenAll(
-                priceLoader.DataSetAsync(css),
-                reportLoader.DataSetAsync(css),
-                floatLoader.DataSetAsync(css),
-                splitLoader.DataSetAsync(css));
-        }
-        async Task SetDataAsync2(CompanySource cs)
-        {
-            await Task.WhenAll(
-                priceLoader.DataSetAsync(cs),
-                reportLoader.DataSetAsync(cs),
-                floatLoader.DataSetAsync(cs),
-                splitLoader.DataSetAsync(cs));
-        }
-        async Task SetDataAsync3()
-        {
-            await Task.WhenAll(
-                priceLoader.DataSetAsync(),
-                reportLoader.DataSetAsync(),
-                floatLoader.DataSetAsync(),
-                splitLoader.DataSetAsync());
-        }
-    }
-    private Task LoadDataAsync<T>(string data, bool isCollection) where T : class, IDataIdentity, IPeriod
-    {
-        var loader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<DataLoader<T>>();
-
-        return isCollection
-            ? RabbitHelper.TrySerialize(data, out CompanySource[]? entities)
-                ? loader.DataSetAsync(entities!)
-                : throw new SerializationException(typeof(T).Name)
-            : RabbitHelper.TrySerialize(data, out CompanySource? entity)
-                    ? loader.DataSetAsync(entity!)
-                    : throw new SerializationException(typeof(T).Name);
     }
 }

@@ -1,7 +1,6 @@
 using IM.Service.Market.Clients;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Services.DataLoaders.Prices.Implementations;
 
 namespace IM.Service.Market.Services.DataLoaders.Prices;
@@ -12,10 +11,9 @@ public class PriceLoader : DataLoader<Price>
     public PriceLoader(
         ILogger<DataLoader<Price>> logger, 
         Repository<Price> repository, 
-        Repository<CompanySource> companySourceRepo,
         MoexClient moexClient,
         TdAmeritradeClient tdAmeritradeClient) 
-        : base(logger, repository , companySourceRepo, new Dictionary<byte, IDataGrabber>
+        : base(logger, repository , new Dictionary<byte, IDataGrabber>
         {
             { (byte)Enums.Sources.Moex, new MoexGrabber(repository, logger, moexClient) },
             { (byte)Enums.Sources.Tdameritrade, new TdameritradeGrabber(repository, logger, tdAmeritradeClient) }

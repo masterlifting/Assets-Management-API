@@ -16,7 +16,9 @@ public class DateControllerBaseLevel6<TEntity, TPost, TGet> : DateControllerBase
         RestApiRead<TEntity, TGet> apiRead) : base(apiWrite, apiRead) => this.apiWrite = apiWrite;
 
     [HttpGet("load/")]
-    public string Load() => apiWrite.Load();
+    public Task<string> Load() => apiWrite.LoadAsync();
     [HttpGet("load/{companyId}")]
-    public string Load(string companyId) => apiWrite.Load(companyId);
+    public Task<string> Load(string companyId) => apiWrite.LoadAsync(companyId);
+    [HttpGet("load/{companyId}/{sourceId:int}")]
+    public Task<string> Load(string companyId, int sourceId) => apiWrite.LoadAsync(companyId,(byte)sourceId);
 }

@@ -27,7 +27,10 @@ public class DatabaseContext : DbContext
 
     public DbSet<Rating> Rating { get; set; } = null!;
 
-    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options) { }
+    public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
+    {
+        Database.EnsureCreated();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

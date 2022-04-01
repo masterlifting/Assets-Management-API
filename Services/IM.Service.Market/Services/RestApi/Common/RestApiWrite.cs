@@ -4,6 +4,7 @@ using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Interfaces;
+using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Services.RestApi.Mappers.Interfaces;
 using IM.Service.Market.Settings;
 using Microsoft.Extensions.Options;
@@ -13,12 +14,13 @@ namespace IM.Service.Market.Services.RestApi.Common;
 public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : class, IDataIdentity, IPeriod
 {
     private readonly Repository<TEntity> repository;
+    private readonly Repository<CompanySource> companySourceRepo;
     private readonly IMapperWrite<TEntity, TPost> mapper;
     private readonly string rabbitConnectionString;
 
     private readonly Dictionary<string, (QueueEntities single, QueueEntities multiply)> sources;
 
-    protected RestApiWrite(IOptions<ServiceSettings> options, Repository<TEntity> repository, IMapperWrite<TEntity, TPost> mapper)
+    public RestApiWrite(IOptions<ServiceSettings> options, Repository<CompanySource> companySourceRepo, Repository<TEntity> repository, IMapperWrite<TEntity, TPost> mapper)
     {
         sources = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -29,6 +31,7 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
         };
         
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.companySourceRepo = companySourceRepo;
         this.mapper = mapper;
         this.repository = repository;
     }
@@ -65,7 +68,7 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
     }
 
 
-    public string Load()
+    public async Task<string> LoadAsync()
     {
         var entityName = typeof(TEntity).Name;
 
@@ -74,11 +77,13 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
         if (!isSource)
             return $"{entityName} for load not found";
 
+        var companySources = await companySourceRepo.GetSampleAsync(x => x);
+
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, sources[entityName].multiply, QueueActions.Get, DateTime.UtcNow.ToShortDateString());
+        publisher.PublishTask(QueueNames.MarketData, sources[entityName].multiply, QueueActions.Get, companySources);
         return $"Task for load data of {entityName} is starting...";
     }
-    public string Load(string companyId)
+    public  async Task<string> LoadAsync(string companyId)
     {
         var entityName = typeof(TEntity).Name;
 
@@ -88,8 +93,32 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
             return $"{entityName} for load not found";
 
         companyId = companyId.Trim().ToUpperInvariant();
+        var companySources = await companySourceRepo.GetSampleAsync(x => x.CompanyId == companyId);
+
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, sources[entityName].single, QueueActions.Get, companyId);
+        publisher.PublishTask(QueueNames.MarketData, sources[entityName].multiply, QueueActions.Get, companySources);
         return $"Task for load data of {entityName}.{companyId}  is starting...";
+    }
+    public async Task<string> LoadAsync(string companyId, byte sourceId)
+    {
+        var entityName = typeof(TEntity).Name;
+
+        var isSource = sources.ContainsKey(entityName);
+
+        if (!isSource)
+            return $"{entityName} for load not found";
+
+        companyId = companyId.Trim().ToUpperInvariant();
+        var companySource = await companySourceRepo
+            .FindAsync(x => 
+                x.CompanyId == companyId
+                && x.SourceId == sourceId);
+
+        if (companySource?.Value is null)
+            return $"{entityName} source for load not found";
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.MarketData, sources[entityName].single, QueueActions.Get, companySource);
+        return $"Task for load data of {entityName}.{companyId}.{companySource.Value}  is starting...";
     }
 }

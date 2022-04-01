@@ -13,7 +13,7 @@ public class RestApiRead<TEntity, TGet> where TGet : class where TEntity : class
     private readonly IRestQueryService<TEntity> queryService;
     private readonly IMapperRead<TEntity, TGet> mapper;
 
-    protected RestApiRead(IRestQueryService<TEntity> queryService, IMapperRead<TEntity, TGet> mapper)
+    public RestApiRead(IRestQueryService<TEntity> queryService, IMapperRead<TEntity, TGet> mapper)
     {
         this.queryService = queryService;
         this.mapper = mapper;
