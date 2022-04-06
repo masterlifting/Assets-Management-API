@@ -39,10 +39,10 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            entity = await handler.GetCreateHandlerAsync(entity).ConfigureAwait(false);
+            entity = await handler.RunCreateHandlerAsync(entity).ConfigureAwait(false);
             await context.Set<TEntity>().AddAsync(entity).ConfigureAwait(false);
             await context.SaveChangesAsync().ConfigureAwait(false);
-            await handler.SetPostProcessAsync(RepositoryActions.Create, entity).ConfigureAwait(false);
+            await handler.RunPostProcessAsync(RepositoryActions.Create, entity).ConfigureAwait(false);
             logger.LogInformation(LogEvents.Create, "Info: {info}. Entity: {name}", info, entityName);
             return (null, entity);
         }
@@ -65,7 +65,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 return (null, Array.Empty<TEntity>());
             }
 
-            entities = await handler.GetCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
+            entities = await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
 
             var result = entities.ToArray();
             var count = result.Length;
@@ -74,7 +74,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             {
                 await context.Set<TEntity>().AddRangeAsync(result).ConfigureAwait(false);
                 count = await context.SaveChangesAsync().ConfigureAwait(false);
-                await handler.SetPostProcessAsync(RepositoryActions.Create, result).ConfigureAwait(false);
+                await handler.RunPostProcessAsync(RepositoryActions.Create, result).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.Create, "Info: {info}. Entity: {name}. Created: {count}", info, entityName, count);
@@ -92,9 +92,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            entity = await handler.GetUpdateHandlerAsync(id, entity).ConfigureAwait(false);
+            entity = await handler.RunUpdateHandlerAsync(id, entity).ConfigureAwait(false);
             await context.SaveChangesAsync().ConfigureAwait(false);
-            await handler.SetPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
+            await handler.RunPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
             logger.LogInformation(LogEvents.Update, "Info: {info}. Entity: {name}", info, entityName);
             return (null, entity);
         }
@@ -109,9 +109,9 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            entity = await handler.GetUpdateHandlerAsync(entity).ConfigureAwait(false);
+            entity = await handler.RunUpdateHandlerAsync(entity).ConfigureAwait(false);
             await context.SaveChangesAsync().ConfigureAwait(false);
-            await handler.SetPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
+            await handler.RunPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
             logger.LogInformation(LogEvents.Update, "Info: {info}. Entity: {name}", info, entityName);
             return (null, entity);
         }
@@ -135,7 +135,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 return (null, Array.Empty<TEntity>());
             }
 
-            entities = await handler.GetUpdateRangeHandlerAsync(entities).ConfigureAwait(false);
+            entities = await handler.RunUpdateRangeHandlerAsync(entities).ConfigureAwait(false);
 
             var result = entities.ToArray();
             var count = result.Length;
@@ -144,7 +144,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             {
                 context.Set<TEntity>().UpdateRange(result);
                 count = await context.SaveChangesAsync().ConfigureAwait(false);
-                await handler.SetPostProcessAsync(RepositoryActions.Update, result).ConfigureAwait(false);
+                await handler.RunPostProcessAsync(RepositoryActions.Update, result).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.Update, "Info: {info}. Entity: {name}. Updated: {count}", info, entityName, count);
@@ -162,10 +162,10 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            entity = await handler.GetCreateHandlerAsync(entity).ConfigureAwait(false);
+            entity = await handler.RunCreateHandlerAsync(entity).ConfigureAwait(false);
             await context.Set<TEntity>().AddAsync(entity).ConfigureAwait(false);
             await context.SaveChangesAsync().ConfigureAwait(false);
-            await handler.SetPostProcessAsync(RepositoryActions.Create, entity).ConfigureAwait(false);
+            await handler.RunPostProcessAsync(RepositoryActions.Create, entity).ConfigureAwait(false);
             logger.LogInformation(LogEvents.Create, "Info: {info}. Entity: {name}", info, entityName);
             return (null, entity);
         }
@@ -173,11 +173,11 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         {
             try
             {
-                entity = await handler.GetUpdateHandlerAsync(id, entity).ConfigureAwait(false);
+                entity = await handler.RunUpdateHandlerAsync(id, entity).ConfigureAwait(false);
                 context.Entry(entity).State = EntityState.Modified;
                 context.Set<TEntity>().Update(entity);
                 await context.SaveChangesAsync().ConfigureAwait(false);
-                await handler.SetPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
+                await handler.RunPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
                 logger.LogInformation(LogEvents.Update, "Info: {info}. Entity: {name}", info, entityName);
                 return (null, entity);
             }
@@ -201,7 +201,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 return (null, Array.Empty<TEntity>());
             }
 
-            var createEntities = await handler.GetCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
+            var createEntities = await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
             var createResult = createEntities.ToArray();
 
             if (createResult.Any())
@@ -212,7 +212,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (updateResult.Any())
             {
-                updateEntities = await handler.GetUpdateRangeHandlerAsync(updateResult).ConfigureAwait(false);
+                updateEntities = await handler.RunUpdateRangeHandlerAsync(updateResult).ConfigureAwait(false);
                 updateResult = updateEntities.ToArray();
 
                 if (updateResult.Any())
@@ -224,7 +224,11 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             if (result.Any())
             {
                 await context.SaveChangesAsync().ConfigureAwait(false);
-                await handler.SetPostProcessAsync(RepositoryActions.CreateUpdate, result).ConfigureAwait(false);
+                
+                if(createResult.Any())
+                    await handler.RunPostProcessAsync(RepositoryActions.Create, createResult).ConfigureAwait(false);
+                if (updateResult.Any())
+                    await handler.RunPostProcessAsync(RepositoryActions.Create, updateResult).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.CreateUpdate, "Info: {info}. Entity: {name}. Created: {ccount}. Updated: {ucount}", info, entityName, createResult.Length, updateResult.Length);
@@ -250,7 +254,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 return (null, Array.Empty<TEntity>());
             }
 
-            var createEntities = await handler.GetCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
+            var createEntities = await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
             var createResult = createEntities.ToArray();
 
             if (createResult.Any())
@@ -261,7 +265,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             if (updateResult.Any())
             {
-                updateEntities = await handler.GetUpdateRangeHandlerAsync(updateResult).ConfigureAwait(false);
+                updateEntities = await handler.RunUpdateRangeHandlerAsync(updateResult).ConfigureAwait(false);
                 updateResult = updateEntities.ToArray();
 
                 if (updateResult.Any())
@@ -270,7 +274,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
             var processingResult = createResult.Concat(updateResult).ToArray();
 
-            var deleteEntities = await handler.GetDeleteRangeHandlerAsync(processingResult).ConfigureAwait(false);
+            var deleteEntities = await handler.RunDeleteRangeHandlerAsync(processingResult).ConfigureAwait(false);
             var deleteResult = deleteEntities.ToArray();
 
             if (deleteResult.Any())
@@ -280,10 +284,12 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             {
                 await context.SaveChangesAsync().ConfigureAwait(false);
 
-                if (processingResult.Any())
-                    await handler.SetPostProcessAsync(RepositoryActions.CreateUpdate, processingResult).ConfigureAwait(false);
+                if (createResult.Any())
+                    await handler.RunPostProcessAsync(RepositoryActions.Create, createResult).ConfigureAwait(false);
+                if(updateResult.Any())
+                    await handler.RunPostProcessAsync(RepositoryActions.Create, updateResult).ConfigureAwait(false);
                 if (deleteResult.Any())
-                    await handler.SetPostProcessAsync(RepositoryActions.Delete, deleteResult).ConfigureAwait(false);
+                    await handler.RunPostProcessAsync(RepositoryActions.Delete, deleteResult).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.CreateUpdateDelete, "Info: {info}. Entity: {name}. Created: {ccount}. Updated: {ucount}. Deleted: {dcount}", info, entityName, createResult.Length, updateResult.Length, deleteResult.Length);
@@ -301,10 +307,10 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            var result = await handler.GetDeleteHandlerAsync(id).ConfigureAwait(false);
+            var result = await handler.RunDeleteHandlerAsync(id).ConfigureAwait(false);
             context.Set<TEntity>().Remove(result);
             await context.SaveChangesAsync().ConfigureAwait(false);
-            await handler.SetPostProcessAsync(RepositoryActions.Delete, result);
+            await handler.RunPostProcessAsync(RepositoryActions.Delete, result);
             logger.LogInformation(LogEvents.Delete, "Info: {info}. Entity: {name}", info, entityName);
             return (null, result);
         }
@@ -319,10 +325,10 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
     {
         try
         {
-            var result = await handler.GetDeleteHandlerAsync(entity).ConfigureAwait(false);
+            var result = await handler.RunDeleteHandlerAsync(entity).ConfigureAwait(false);
             context.Set<TEntity>().Remove(result);
             await context.SaveChangesAsync().ConfigureAwait(false);
-            await handler.SetPostProcessAsync(RepositoryActions.Delete, result);
+            await handler.RunPostProcessAsync(RepositoryActions.Delete, result);
             logger.LogInformation(LogEvents.Delete, "Info: {info}. Entity: {name}", info, entityName);
             return (null, result);
         }
@@ -352,7 +358,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             {
                 context.Set<TEntity>().RemoveRange(deleteResult);
                 count = await context.SaveChangesAsync().ConfigureAwait(false);
-                await handler.SetPostProcessAsync(RepositoryActions.Delete, deleteResult);
+                await handler.RunPostProcessAsync(RepositoryActions.Delete, deleteResult);
             }
 
             logger.LogInformation(LogEvents.Delete, "Info: {info}. Entity: {name}. Deleted: {count}", info, entityName, count);

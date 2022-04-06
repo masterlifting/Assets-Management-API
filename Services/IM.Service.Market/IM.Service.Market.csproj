@@ -15,6 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Services\DataLoaders\Dividends\Implementations\" />
     <Folder Include="Services\DataLoaders\Splits\Implementations\" />
   </ItemGroup>
 

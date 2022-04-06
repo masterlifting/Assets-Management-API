@@ -22,7 +22,7 @@ public class RatingBackgroundService : BackgroundService
         {
             try
             {
-                await service.RunRatingAsync();
+                await service.RunRatingComparisionsAsync();
             }
             catch (Exception exception)
             {

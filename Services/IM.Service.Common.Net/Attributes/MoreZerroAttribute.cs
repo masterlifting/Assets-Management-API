@@ -2,10 +2,10 @@
 
 namespace IM.Service.Common.Net.Attributes;
 
-public class NotZeroAttribute : ValidationAttribute
+public class MoreZeroAttribute : ValidationAttribute
 {
     private readonly string property;
-    public NotZeroAttribute(string property) => this.property = property;
+    public MoreZeroAttribute(string property) => this.property = property;
 
     public override bool IsValid(object? value)
     {

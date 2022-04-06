@@ -10,14 +10,14 @@ public record PriceGetDto
     public decimal Value { get; init; }
     public decimal ValueTrue { get; init; }
 }
-public class PricePostDto : PricePutDto
+public record PricePostDto : PricePutDto
 {
     public string CompanyId { get; init; } = null!;
     public byte SourceId { get; init; }
-    public DateOnly Date { get; set; }
+    public DateOnly Date { get; init; }
 }
-public class PricePutDto
+public record PricePutDto
 {
-    [NotZero(nameof(Value))]
-    public decimal Value { get; set; }
+    [MoreZero(nameof(Value))]
+    public decimal Value { get; init; }
 }

@@ -12,40 +12,40 @@ public class RepositoryHandler<T, TContext> : IRepositoryHandler<T> where T : cl
     private readonly TContext context;
     protected RepositoryHandler(TContext context) => this.context = context;
 
-    public virtual Task<T> GetCreateHandlerAsync(T entity) => Task.FromResult(entity);
+    public virtual Task<T> RunCreateHandlerAsync(T entity) => Task.FromResult(entity);
     
-    public virtual async Task<T> GetUpdateHandlerAsync(object[] id, T entity) =>
+    public virtual async Task<T> RunUpdateHandlerAsync(object[] id, T entity) =>
         await context.Set<T>().FindAsync(id).ConfigureAwait(false) is null
-            ? throw new SqlNullValueException(nameof(GetUpdateHandlerAsync))
+            ? throw new SqlNullValueException(nameof(RunUpdateHandlerAsync))
             : entity;
-    public virtual async Task<T> GetUpdateHandlerAsync(T entity) =>
+    public virtual async Task<T> RunUpdateHandlerAsync(T entity) =>
         await context.Set<T>().FindAsync(entity).ConfigureAwait(false) is null
-            ? throw new SqlNullValueException(nameof(GetUpdateHandlerAsync))
+            ? throw new SqlNullValueException(nameof(RunUpdateHandlerAsync))
             : entity;
 
-    public virtual async Task<T> GetDeleteHandlerAsync(params object[] id)
+    public virtual async Task<T> RunDeleteHandlerAsync(params object[] id)
     {
         var dbEntity = await context.Set<T>().FindAsync(id).ConfigureAwait(false);
-        return dbEntity ?? throw new SqlNullValueException(nameof(GetDeleteHandlerAsync));
+        return dbEntity ?? throw new SqlNullValueException(nameof(RunDeleteHandlerAsync));
     }
-    public virtual async Task<T> GetDeleteHandlerAsync(T entity)
+    public virtual async Task<T> RunDeleteHandlerAsync(T entity)
     {
         var dbEntity = await context.Set<T>().FindAsync(entity).ConfigureAwait(false);
-        return dbEntity ?? throw new SqlNullValueException(nameof(GetDeleteHandlerAsync));
+        return dbEntity ?? throw new SqlNullValueException(nameof(RunDeleteHandlerAsync));
     }
 
-    public virtual Task SetPostProcessAsync(Enums.RepositoryActions action, T entity) => Task.CompletedTask;
+    public virtual Task RunPostProcessAsync(Enums.RepositoryActions action, T entity) => Task.CompletedTask;
 
-    public virtual async Task<IEnumerable<T>> GetCreateRangeHandlerAsync(IEnumerable<T> entities, IEqualityComparer<T> comparer)
+    public virtual async Task<IEnumerable<T>> RunCreateRangeHandlerAsync(IEnumerable<T> entities, IEqualityComparer<T> comparer)
     {
         entities = entities.ToArray();
         var distinctEntities = entities.Distinct(comparer);
         var existEntities = await GetExist(distinctEntities).ToArrayAsync().ConfigureAwait(false);
         return entities.Except(existEntities, comparer);
     }
-    public virtual Task<IEnumerable<T>> GetUpdateRangeHandlerAsync(IEnumerable<T> entities) => Task.FromResult(entities);
-    public virtual Task<IEnumerable<T>> GetDeleteRangeHandlerAsync(IEnumerable<T> entities) => Task.FromResult(entities);
-    public virtual Task SetPostProcessAsync(Enums.RepositoryActions action, IReadOnlyCollection<T> entities) => Task.CompletedTask;
+    public virtual Task<IEnumerable<T>> RunUpdateRangeHandlerAsync(IEnumerable<T> entities) => Task.FromResult(entities);
+    public virtual Task<IEnumerable<T>> RunDeleteRangeHandlerAsync(IEnumerable<T> entities) => Task.FromResult(entities);
+    public virtual Task RunPostProcessAsync(Enums.RepositoryActions action, IReadOnlyCollection<T> entities) => Task.CompletedTask;
 
     public virtual IQueryable<T> GetExist(IEnumerable<T> entities) => context.Set<T>();
 }

@@ -6,6 +6,7 @@ using IM.Service.Market.Clients;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
+using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.DataLoaders.Floats.Implementations;
 
@@ -65,7 +66,7 @@ internal class InvestingParserHandler
         return new Float
         {
             CompanyId = companyId,
-            SourceId = (byte)Enums.Sources.Investing,
+            SourceId = (byte)Sources.Investing,
             Date = DateOnly.FromDateTime(DateTime.UtcNow),
             Value = mainPage.StockVolume
         };

@@ -17,10 +17,11 @@ public static class Enums
     }
     public enum Statuses : byte
     {
-        Ready = 1,
-        Processing = 2,
-        Computed = 3,
-        NotComputed = 4,
-        Error = 5
+        New = 1,
+        Ready = 2,
+        Computing = 3,
+        Computed = 4,
+        NotComputed = 5,
+        Error = 6
     }
 }

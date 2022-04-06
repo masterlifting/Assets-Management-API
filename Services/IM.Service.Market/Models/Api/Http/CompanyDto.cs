@@ -16,9 +16,9 @@ public record CompanyPutDto
 {
     [StringLength(100, MinimumLength = 2)]
     public string Name { get; init; } = null!;
-    [NotZero(nameof(IndustryId))]
+    [MoreZero(nameof(IndustryId))]
     public byte IndustryId { get; init; }
-    [NotZero(nameof(CountryId))]
+    [MoreZero(nameof(CountryId))]
     public byte CountryId { get; init; }
     public string? Description { get; init; }
 }

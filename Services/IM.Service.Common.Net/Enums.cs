@@ -36,8 +36,6 @@ public static class Enums
     public enum RepositoryActions 
     {
         Create,
-        CreateUpdate,
-        CreateUpdateDelete,
         Update,
         Delete
     }

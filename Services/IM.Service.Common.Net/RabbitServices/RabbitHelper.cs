@@ -3,7 +3,7 @@ using IM.Service.Common.Net.RabbitServices.Configuration;
 
 using System.Collections.Generic;
 using System.Text.Json;
-using static IM.Service.Common.Net.Enums;
+
 using static IM.Service.Common.Net.Helper;
 
 namespace IM.Service.Common.Net.RabbitServices;
@@ -24,15 +24,12 @@ public static class RabbitHelper
             return false;
         }
     }
-
-    public static QueueActions GetQueueAction(RepositoryActions action) => action switch
+    public static QueueActions GetQueueAction(Enums.RepositoryActions action) => action switch
     {
-        RepositoryActions.Create => QueueActions.Create,
-        RepositoryActions.CreateUpdate => QueueActions.CreateUpdate,
-        RepositoryActions.CreateUpdateDelete => QueueActions.CreateUpdateDelete,
-        RepositoryActions.Update => QueueActions.Update,
-        RepositoryActions.Delete => QueueActions.Delete,
-        _ => throw new ArgumentOutOfRangeException(nameof(action), action, nameof(GetQueueAction))
+        Enums.RepositoryActions.Create => QueueActions.Create,
+        Enums.RepositoryActions.Update => QueueActions.Update,
+        Enums.RepositoryActions.Delete => QueueActions.Delete,
+        _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
     };
 }
 

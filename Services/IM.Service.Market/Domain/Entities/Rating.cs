@@ -13,7 +13,7 @@ public class Rating : ICompanyIdentity, IDateIdentity
     [Column(TypeName = "Decimal(18,4)")]
     public decimal? Result { get; init; }
 
-    public Company Company { get; init; } = null!;
+    public virtual Company Company { get; init; } = null!;
     public string CompanyId { get; set; } = null!;
 
     public DateOnly Date { get; set; } = DateOnly.FromDateTime(DateTime.UtcNow);

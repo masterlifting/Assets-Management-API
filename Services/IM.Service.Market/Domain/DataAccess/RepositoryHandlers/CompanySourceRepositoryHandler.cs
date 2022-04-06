@@ -4,6 +4,7 @@ using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Settings;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -22,7 +23,7 @@ public class CompanySourceRepositoryHandler : RepositoryHandler<CompanySource, D
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<IEnumerable<CompanySource>> GetUpdateRangeHandlerAsync(IEnumerable<CompanySource> entities)
+    public override async Task<IEnumerable<CompanySource>> RunUpdateRangeHandlerAsync(IEnumerable<CompanySource> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
@@ -39,7 +40,7 @@ public class CompanySourceRepositoryHandler : RepositoryHandler<CompanySource, D
 
         return result.Select(x => x.Old);
     }
-    public override async Task<IEnumerable<CompanySource>> GetDeleteRangeHandlerAsync(IEnumerable<CompanySource> entities)
+    public override async Task<IEnumerable<CompanySource>> RunDeleteRangeHandlerAsync(IEnumerable<CompanySource> entities)
     {
         var comparer = new CompanySourceComparer();
         var result = new List<CompanySource>();
@@ -53,7 +54,7 @@ public class CompanySourceRepositoryHandler : RepositoryHandler<CompanySource, D
         return result;
     }
 
-    public override Task SetPostProcessAsync(RepositoryActions action, CompanySource entity)
+    public override Task RunPostProcessAsync(RepositoryActions action, CompanySource entity)
     {
         if (entity.Value is null || action == RepositoryActions.Delete)
             return Task.CompletedTask;
@@ -63,7 +64,7 @@ public class CompanySourceRepositoryHandler : RepositoryHandler<CompanySource, D
 
         return Task.CompletedTask;
     }
-    public override Task SetPostProcessAsync(RepositoryActions action, IReadOnlyCollection<CompanySource> entities)
+    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<CompanySource> entities)
     {
         if (action == RepositoryActions.Delete)
             return Task.CompletedTask;

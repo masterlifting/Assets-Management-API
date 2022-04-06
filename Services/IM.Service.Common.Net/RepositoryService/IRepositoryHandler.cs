@@ -7,17 +7,18 @@ namespace IM.Service.Common.Net.RepositoryService;
 
 public interface IRepositoryHandler<T> where T : class
 {
-    Task<T> GetCreateHandlerAsync(T entity);
-    Task<T> GetUpdateHandlerAsync(object[] id, T entity);
-    Task<T> GetUpdateHandlerAsync(T entity);
-    Task<T> GetDeleteHandlerAsync(params object[] id);
-    Task<T> GetDeleteHandlerAsync(T entity);
-    Task SetPostProcessAsync(RepositoryActions action, T entity);
+    Task<T> RunCreateHandlerAsync(T entity);
+    Task<T> RunUpdateHandlerAsync(object[] id, T entity);
+    Task<T> RunUpdateHandlerAsync(T entity);
+    Task<T> RunDeleteHandlerAsync(params object[] id);
+    Task<T> RunDeleteHandlerAsync(T entity);
 
-    Task<IEnumerable<T>> GetCreateRangeHandlerAsync(IEnumerable<T> entities, IEqualityComparer<T> comparer);
-    Task<IEnumerable<T>> GetUpdateRangeHandlerAsync(IEnumerable<T> entities);
-    Task<IEnumerable<T>> GetDeleteRangeHandlerAsync(IEnumerable<T> entities);
-    Task SetPostProcessAsync(RepositoryActions action, IReadOnlyCollection<T> entities);
+    Task<IEnumerable<T>> RunCreateRangeHandlerAsync(IEnumerable<T> entities, IEqualityComparer<T> comparer);
+    Task<IEnumerable<T>> RunUpdateRangeHandlerAsync(IEnumerable<T> entities);
+    Task<IEnumerable<T>> RunDeleteRangeHandlerAsync(IEnumerable<T> entities);
+    
+    Task RunPostProcessAsync(RepositoryActions action, T entity);
+    Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<T> entities);
 
     IQueryable<T> GetExist(IEnumerable<T> entities);
 }

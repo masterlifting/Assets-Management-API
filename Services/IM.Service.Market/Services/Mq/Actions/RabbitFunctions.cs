@@ -3,10 +3,13 @@ using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Services.Calculations;
+using IM.Service.Market.Services.DataLoaders.Dividends;
 using IM.Service.Market.Services.DataLoaders.Floats;
 using IM.Service.Market.Services.DataLoaders.Prices;
 using IM.Service.Market.Services.DataLoaders.Reports;
 using IM.Service.Market.Services.DataLoaders.Splits;
+
+using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.Mq.Actions;
 
@@ -17,67 +20,75 @@ public class RabbitFunctions : IRabbitActionService
 
     public async Task<bool> GetActionResultAsync(QueueEntities entity, QueueActions action, string data)
     {
-        var serviceProvider = scopeFactory.CreateScope().ServiceProvider;
-
         try
         {
-            switch (action)
+            var serviceProvider = scopeFactory.CreateScope().ServiceProvider;
+            var task = action switch
             {
-                case QueueActions.Get:
-                    {
-                        var loadTask = entity switch
-                        {
-                            QueueEntities.CompanySource => Task.WhenAll(
-                                serviceProvider.GetRequiredService<PriceLoader>().LoadDataAsync(data),
-                                serviceProvider.GetRequiredService<ReportLoader>().LoadDataAsync(data),
-                                serviceProvider.GetRequiredService<FloatLoader>().LoadDataAsync(data),
-                                serviceProvider.GetRequiredService<SplitLoader>().LoadDataAsync(data)),
-                            QueueEntities.CompanySources => Task.WhenAll(
-                                serviceProvider.GetRequiredService<PriceLoader>().LoadRangeDataAsync(data),
-                                serviceProvider.GetRequiredService<ReportLoader>().LoadRangeDataAsync(data),
-                                serviceProvider.GetRequiredService<FloatLoader>().LoadRangeDataAsync(data),
-                                serviceProvider.GetRequiredService<SplitLoader>().LoadRangeDataAsync(data)),
-                            QueueEntities.Price => serviceProvider.GetRequiredService<PriceLoader>().LoadDataAsync(data),
-                            QueueEntities.Prices => serviceProvider.GetRequiredService<PriceLoader>().LoadRangeDataAsync(data),
-                            QueueEntities.Report => serviceProvider.GetRequiredService<ReportLoader>().LoadDataAsync(data),
-                            QueueEntities.Reports => serviceProvider.GetRequiredService<ReportLoader>().LoadRangeDataAsync(data),
-                            QueueEntities.Float => serviceProvider.GetRequiredService<FloatLoader>().LoadDataAsync(data),
-                            QueueEntities.Floats => serviceProvider.GetRequiredService<FloatLoader>().LoadRangeDataAsync(data),
-                            QueueEntities.Split => serviceProvider.GetRequiredService<SplitLoader>().LoadDataAsync(data),
-                            QueueEntities.Splits => serviceProvider.GetRequiredService<SplitLoader>().LoadRangeDataAsync(data),
-                            _ => Task.CompletedTask
-                        };
+                QueueActions.Create or QueueActions.Update or QueueActions.Delete => entity switch
+                {
+                    QueueEntities.Price => Task.WhenAll(
+                        serviceProvider.GetRequiredService<CoefficientService>().SetCoefficientAsync<Price>(data, action),
+                        serviceProvider.GetRequiredService<PriceService>().SetValueTrueAsync<Price>(data, action)),
+                    QueueEntities.Prices => Task.WhenAll(
+                        serviceProvider.GetRequiredService<CoefficientService>().SetCoefficientRangeAsync<Price>(data, action),
+                        serviceProvider.GetRequiredService<PriceService>().SetValueTrueRangeAsync<Price>(data, action)),
+                    QueueEntities.Report => serviceProvider.GetRequiredService<CoefficientService>().SetCoefficientAsync<Report>(data, action),
+                    QueueEntities.Reports => serviceProvider.GetRequiredService<CoefficientService>().SetCoefficientRangeAsync<Report>(data, action),
+                    QueueEntities.Float => serviceProvider.GetRequiredService<CoefficientService>().SetCoefficientAsync<Float>(data, action),
+                    QueueEntities.Floats => serviceProvider.GetRequiredService<CoefficientService>().SetCoefficientRangeAsync<Float>(data, action),
+                    QueueEntities.Split => serviceProvider.GetRequiredService<PriceService>().SetValueTrueAsync<Split>(data, action),
+                    QueueEntities.Splits => serviceProvider.GetRequiredService<PriceService>().SetValueTrueRangeAsync<Split>(data, action),
+                    _ => Task.CompletedTask
+                },
+                QueueActions.Get => entity switch
+                {
+                    QueueEntities.CompanySource => Task.WhenAll(
+                        serviceProvider.GetRequiredService<PriceLoader>().LoadDataAsync(data),
+                        serviceProvider.GetRequiredService<ReportLoader>().LoadDataAsync(data),
+                        serviceProvider.GetRequiredService<FloatLoader>().LoadDataAsync(data),
+                        serviceProvider.GetRequiredService<SplitLoader>().LoadDataAsync(data),
+                        serviceProvider.GetRequiredService<DividendLoader>().LoadDataAsync(data)),
+                    QueueEntities.CompanySources => Task.WhenAll(
+                        serviceProvider.GetRequiredService<PriceLoader>().LoadDataRangeAsync(data),
+                        serviceProvider.GetRequiredService<ReportLoader>().LoadDataRangeAsync(data),
+                        serviceProvider.GetRequiredService<FloatLoader>().LoadDataRangeAsync(data),
+                        serviceProvider.GetRequiredService<SplitLoader>().LoadDataRangeAsync(data),
+                        serviceProvider.GetRequiredService<DividendLoader>().LoadDataRangeAsync(data)),
+                    QueueEntities.Price => serviceProvider.GetRequiredService<PriceLoader>().LoadDataAsync(data),
+                    QueueEntities.Prices => serviceProvider.GetRequiredService<PriceLoader>().LoadDataRangeAsync(data),
+                    QueueEntities.Report => serviceProvider.GetRequiredService<ReportLoader>().LoadDataAsync(data),
+                    QueueEntities.Reports => serviceProvider.GetRequiredService<ReportLoader>().LoadDataRangeAsync(data),
+                    QueueEntities.Float => serviceProvider.GetRequiredService<FloatLoader>().LoadDataAsync(data),
+                    QueueEntities.Floats => serviceProvider.GetRequiredService<FloatLoader>().LoadDataRangeAsync(data),
+                    QueueEntities.Split => serviceProvider.GetRequiredService<SplitLoader>().LoadDataAsync(data),
+                    QueueEntities.Splits => serviceProvider.GetRequiredService<SplitLoader>().LoadDataRangeAsync(data),
+                    QueueEntities.Dividend => serviceProvider.GetRequiredService<DividendLoader>().LoadDataAsync(data),
+                    QueueEntities.Dividends => serviceProvider.GetRequiredService<DividendLoader>().LoadDataRangeAsync(data),
+                    _ => Task.CompletedTask
+                },
+                QueueActions.Set => entity switch
+                {
+                    QueueEntities.Report => serviceProvider.GetRequiredService<ReportService>().SetStatusAsync(data,(byte)Statuses.Ready),
+                    QueueEntities.Reports => serviceProvider.GetRequiredService<ReportService>().SetStatusRangeAsync(data, (byte)Statuses.Ready),
+                    _ => Task.CompletedTask
+                },
+                QueueActions.Compute => entity switch
+                {
+                    QueueEntities.Ratings => serviceProvider.GetRequiredService<RatingCalculator>().ComputeRatingAsync(),
+                    _ => Task.CompletedTask
+                },
+                _ => Task.CompletedTask
+            };
 
-                        await loadTask;
-                        break;
-                    }
-                case QueueActions.Compute:
-                    {
-                        var computeTask = entity switch
-                        {
-                            QueueEntities.Report => serviceProvider.GetRequiredService<CoefficientService>().SetAsync<Report>(data),
-                            QueueEntities.Reports => serviceProvider.GetRequiredService<CoefficientService>().SetRangeAsync<Report>(data),
-                            QueueEntities.Float => serviceProvider.GetRequiredService<CoefficientService>().SetAsync<Float>(data),
-                            QueueEntities.Floats => serviceProvider.GetRequiredService<CoefficientService>().SetRangeAsync<Float>(data),
-                            QueueEntities.Price => serviceProvider.GetRequiredService<CoefficientService>().SetAsync<Price>(data),
-                            QueueEntities.Prices => serviceProvider.GetRequiredService<CoefficientService>().SetRangeAsync<Price>(data),
-                            QueueEntities.Split => serviceProvider.GetRequiredService<PriceService>().SetValueTrueAsync(data),
-                            QueueEntities.Splits => serviceProvider.GetRequiredService<PriceService>().SetValueTrueRangeAsync(data),
-                            QueueEntities.Ratings => serviceProvider.GetRequiredService<RatingCalculator>().SetRatingAsync(),
-                            _ => Task.CompletedTask
-                        };
 
-                        await computeTask;
-                        break;
-                    }
-            }
-
+            await task;
             return true;
         }
         catch (Exception exception)
         {
             var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<RabbitFunctions>>();
-            logger.LogError(LogEvents.Function, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), action, exception.Message);
+            logger.LogError(LogEvents.Function, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), action, exception.InnerException?.Message ?? exception.Message);
             return false;
         }
     }

@@ -10,34 +10,7 @@ public static class QueueConfiguration
         {
             Queues = new[]
             {
-                new Queue(QueueNames.MarketAnalyzer)
-                {
-                    Entities = new[]
-                    {
-                        new QueueEntity(QueueEntities.Company)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate,
-                                QueueActions.Update,
-                                QueueActions.Delete
-                            }
-                        },
-                        new QueueEntity(QueueEntities.Companies)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate,
-                                QueueActions.CreateUpdateDelete,
-                                QueueActions.Update,
-                                QueueActions.Delete
-                            }
-                        }
-                    }
-                },
-                new Queue(QueueNames.PortfolioData)
+                new Queue(QueueNames.Portfolio)
                 {
                     Entities = new[]
                     {
@@ -66,66 +39,7 @@ public static class QueueConfiguration
                 }
             }
         },
-        new QueueExchange (QueueExchanges.Transfer)
-        {
-            Queues = new[]
-            {
-                new Queue(QueueNames.MarketAnalyzer)
-                {
-                    Entities = new[]
-                    {
-                        new QueueEntity(QueueEntities.Report)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate
-                            }
-                        },
-                        new QueueEntity(QueueEntities.Reports)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate
-                            }
-                        },
-                        new QueueEntity(QueueEntities.Price)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate
-                            }
-                        },
-                        new QueueEntity(QueueEntities.Prices)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate
-                            }
-                        },
-                        new QueueEntity(QueueEntities.Coefficient)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate
-                            }
-                        },
-                        new QueueEntity(QueueEntities.Coefficients)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Create,
-                                QueueActions.CreateUpdate
-                            }
-                        }
-                    }
-                }
-            }
-        },
+        new QueueExchange (QueueExchanges.Transfer),
         new QueueExchange (QueueExchanges.Function)
         {
             Queues = new[]
@@ -200,7 +114,7 @@ public static class QueueConfiguration
                         }
                     }
                 },
-                new Queue(QueueNames.PortfolioData)
+                new Queue(QueueNames.Portfolio)
                 {
                     Entities = new[]
                     {
@@ -220,26 +134,6 @@ public static class QueueConfiguration
                         }
                     }
                 },
-                new Queue(QueueNames.MarketAnalyzer)
-                {
-                    Entities = new[]
-                    {
-                        new QueueEntity(QueueEntities.Rating)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Get
-                            }
-                        },
-                        new QueueEntity(QueueEntities.Ratings)
-                        {
-                            Actions = new[]
-                            {
-                                QueueActions.Get
-                            }
-                        }
-                    }
-                }
             }
         }
     };
@@ -248,8 +142,7 @@ public static class QueueConfiguration
 public enum QueueNames
 {
     MarketData,
-    MarketAnalyzer, //todo: to delete
-    PortfolioData,
+    Portfolio,
     Recommendation
 }
 public enum QueueExchanges
@@ -272,6 +165,8 @@ public enum QueueEntities
     Floats,
     Price,
     Prices,
+    Dividend,
+    Dividends,
     Rating,
     Ratings,
     Coefficient,

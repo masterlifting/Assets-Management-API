@@ -9,14 +9,14 @@ public record SplitGetDto
     public DateOnly Date { get; init; }
     public int Value { get; init; }
 }
-public class SplitPostDto : SplitPutDto
+public record SplitPostDto : SplitPutDto
 {
     public string CompanyId { get; init; } = null!;
     public byte SourceId { get; init; }
-    public DateOnly Date { get; set; }
+    public DateOnly Date { get; init; }
 }
-public class SplitPutDto
+public record SplitPutDto
 {
-    [NotZero(nameof(Value))]
-    public int Value { get; set; }
+    [MoreZero(nameof(Value))]
+    public int Value { get; init; }
 }

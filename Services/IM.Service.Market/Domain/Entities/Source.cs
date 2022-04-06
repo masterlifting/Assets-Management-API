@@ -11,4 +11,6 @@ public class Source : Catalog
     public virtual IEnumerable<Report>? Reports { get; init; }
     public virtual IEnumerable<Coefficient>? Coefficients { get; init; }
     public virtual IEnumerable<Dividend>? Dividends { get; init; }
+    public virtual IEnumerable<Float>? Floats { get; init; }
+    public virtual IEnumerable<Split>? Splits { get; init; }
 }

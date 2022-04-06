@@ -4,6 +4,7 @@ using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Settings;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -21,7 +22,7 @@ public class SplitRepositoryHandler : RepositoryHandler<Split, DatabaseContext>
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<IEnumerable<Split>> GetUpdateRangeHandlerAsync(IEnumerable<Split> entities)
+    public override async Task<IEnumerable<Split>> RunUpdateRangeHandlerAsync(IEnumerable<Split> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
@@ -38,7 +39,7 @@ public class SplitRepositoryHandler : RepositoryHandler<Split, DatabaseContext>
 
         return result.Select(x => x.Old).ToArray();
     }
-    public override async Task<IEnumerable<Split>> GetDeleteRangeHandlerAsync(IEnumerable<Split> entities)
+    public override async Task<IEnumerable<Split>> RunDeleteRangeHandlerAsync(IEnumerable<Split> entities)
     {
         var comparer = new DataDateComparer<Split>();
         var result = new List<Split>();
@@ -52,11 +53,11 @@ public class SplitRepositoryHandler : RepositoryHandler<Split, DatabaseContext>
         return result;
     }
 
-    public override Task SetPostProcessAsync(RepositoryActions action, Split entity)
+    public override Task RunPostProcessAsync(RepositoryActions action, Split entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
 
-        if (action != RepositoryActions.Delete)
+        if (action is RepositoryActions.Create)
         {
             var companySource = context.CompanySources.Find(entity.CompanyId, entity.SourceId);
             
@@ -68,11 +69,11 @@ public class SplitRepositoryHandler : RepositoryHandler<Split, DatabaseContext>
 
         return Task.CompletedTask;
     }
-    public override Task SetPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Split> entities)
+    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Split> entities)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
 
-        if (action != RepositoryActions.Delete)
+        if (action is RepositoryActions.Create)
         {
             var companyIds = entities.Select(x => x.CompanyId).Distinct();
             var sourceIds = entities.Select(x => x.SourceId).Distinct();

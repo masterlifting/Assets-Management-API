@@ -16,13 +16,13 @@ public class Company
     public virtual Industry Industry { get; set; } = null!;
     public byte IndustryId { get; set; }
 
-    public Country Country { get; set; } = null!;
+    public virtual Country Country { get; set; } = null!;
     public byte CountryId { get; set; }
     
     [StringLength(300)]
     public string? Description { get; set; }
 
-    public Rating? Rating { get; set; }
+    public virtual Rating? Rating { get; set; }
 
     public virtual IEnumerable<CompanySource>? CompanySources { get; set; }
 

@@ -1,9 +1,12 @@
-﻿using System.Collections.Immutable;
-using IM.Service.Market.Domain.DataAccess;
+﻿using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Models.Services.Calculations.Rating;
+
 using Microsoft.EntityFrameworkCore;
+
+using System.Collections.Immutable;
+
 using static IM.Service.Common.Net.Enums;
 using static IM.Service.Market.Enums;
 
@@ -14,18 +17,18 @@ public class RatingCalculator
     private readonly IServiceScopeFactory scopeFactory;
     public RatingCalculator(IServiceScopeFactory scopeFactory) => this.scopeFactory = scopeFactory;
 
-    public async Task SetRatingAsync()
+    public async Task ComputeRatingAsync()
     {
         var companyRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Company>>();
         var ratingRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Rating>>();
 
         var companies = await companyRepository.GetSampleAsync(x => ValueTuple.Create(x.Id, x.CountryId));
-        var ratingTasks = companies.Select(x => GetRatingAsync(x.Item1, x.Item2));
+        var ratingTasks = companies.Select(x => ComputeAsync(x.Item1, x.Item2));
         var ratings = await Task.WhenAll(ratingTasks);
 
-        await ratingRepository.CreateUpdateDeleteAsync(ratings, new RatingComparer(), nameof(SetRatingAsync));
+        await ratingRepository.CreateUpdateDeleteAsync(ratings, new RatingComparer(), nameof(ComputeRatingAsync));
     }
-    private Task<Rating> GetRatingAsync(string companyId, byte countryId) =>
+    private Task<Rating> ComputeAsync(string companyId, byte countryId) =>
         Task.Run(async () =>
         {
             var taskResultPrice = Task.Run(() =>

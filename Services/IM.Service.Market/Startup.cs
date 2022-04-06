@@ -9,6 +9,7 @@ using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Api.Http;
 using IM.Service.Market.Services.Background;
 using IM.Service.Market.Services.Calculations;
+using IM.Service.Market.Services.DataLoaders.Dividends;
 using IM.Service.Market.Services.DataLoaders.Floats;
 using IM.Service.Market.Services.DataLoaders.Prices;
 using IM.Service.Market.Services.DataLoaders.Reports;
@@ -61,12 +62,12 @@ public class Startup
             .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
         services.AddScoped<IMapperRead<Report, ReportGetDto>, MapperReport>();
-        services.AddScoped<IMapperRead<Price, PriceGetDto>, MapperPrice>();
-        services.AddScoped<IMapperRead<Float, FloatGetDto>, MapperFloat>();
-        services.AddScoped<IMapperRead<Split, SplitGetDto>, MapperSplit>();
         services.AddScoped<IMapperWrite<Report, ReportPostDto>, MapperReport>();
+        services.AddScoped<IMapperRead<Price, PriceGetDto>, MapperPrice>();
         services.AddScoped<IMapperWrite<Price, PricePostDto>, MapperPrice>();
+        services.AddScoped<IMapperRead<Float, FloatGetDto>, MapperFloat>();
         services.AddScoped<IMapperWrite<Float, FloatPostDto>, MapperFloat>();
+        services.AddScoped<IMapperRead<Split, SplitGetDto>, MapperSplit>();
         services.AddScoped<IMapperWrite<Split, SplitPostDto>, MapperSplit>();
 
         services.AddScoped<IRestQueryService<Coefficient>, RestQueryQuarterService<Coefficient>>();
@@ -80,15 +81,15 @@ public class Startup
         services.AddScoped<CompanySourceRestApi>();
         services.AddScoped<RatingRestApi>();
         services.AddScoped<RestApiRead<Report, ReportGetDto>>();
+        services.AddScoped<RestApiWrite<Report, ReportPostDto>>();
         services.AddScoped<RestApiRead<Price, PriceGetDto>>();
+        services.AddScoped<RestApiWrite<Price, PricePostDto>>();
         services.AddScoped<RestApiRead<Float, FloatGetDto>>();
+        services.AddScoped<RestApiWrite<Float, FloatPostDto>>();
         services.AddScoped<RestApiRead<Split, SplitGetDto>>();
+        services.AddScoped<RestApiWrite<Split, SplitPostDto>>();
         //services.AddScoped<RestApiRead<Dividend, DividendGetDto>>();
         //services.AddScoped<RestApiRead<Coefficient, CoefficientGetDto>>();
-        services.AddScoped<RestApiWrite<Report, ReportPostDto>>();
-        services.AddScoped<RestApiWrite<Price, PricePostDto>>();
-        services.AddScoped<RestApiWrite<Float, FloatPostDto>>();
-        services.AddScoped<RestApiWrite<Split, SplitPostDto>>();
         //services.AddScoped<RestApiWrite<Dividend, DividendPostDto>>();
         //services.AddScoped<RestApiWrite<Coefficient, CoefficientPostDto>>();
 
@@ -96,10 +97,13 @@ public class Startup
         services.AddTransient<ReportLoader>();
         services.AddTransient<FloatLoader>();
         services.AddTransient<SplitLoader>();
+        services.AddTransient<DividendLoader>();
 
         services.AddTransient<CoefficientService>();
         services.AddTransient<PriceService>();
+        services.AddTransient<ReportService>();
         services.AddTransient<RatingCalculator>();
+        services.AddTransient<RatingComparator>();
 
         services.AddScoped(typeof(Repository<>));
         services.AddScoped<IRepositoryHandler<Company>, CompanyRepositoryHandler>();
@@ -116,7 +120,6 @@ public class Startup
 
         services.AddSingleton<RabbitActionService>();
         services.AddHostedService<RabbitBackgroundService>();
-        services.AddSingleton<RatingComparator>();
         services.AddHostedService<RatingBackgroundService>();
     }
 

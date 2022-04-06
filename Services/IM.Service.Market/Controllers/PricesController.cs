@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Mvc;
 namespace IM.Service.Market.Controllers;
 
 [ApiController, Route("[controller]")]
-public class PricesController : DateControllerBaseLevel8<Price, PricePostDto, PricePostDto>
+public class PricesController : DateControllerBaseLevel8<Price, PricePostDto, PriceGetDto>
 {
-    public PricesController(RestApiWrite<Price, PricePostDto> apiWrite, RestApiRead<Price, PricePostDto> apiRead)
+    public PricesController(RestApiWrite<Price, PricePostDto> apiWrite, RestApiRead<Price, PriceGetDto> apiRead)
         : base(apiWrite, apiRead)
     {
     }

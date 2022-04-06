@@ -81,9 +81,10 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.MarketData, sources[entityName].multiply, QueueActions.Get, companySources);
+
         return $"Task for load data of {entityName} is starting...";
     }
-    public  async Task<string> LoadAsync(string companyId)
+    public async Task<string> LoadAsync(string companyId)
     {
         var entityName = typeof(TEntity).Name;
 
@@ -97,6 +98,7 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.MarketData, sources[entityName].multiply, QueueActions.Get, companySources);
+
         return $"Task for load data of {entityName}.{companyId}  is starting...";
     }
     public async Task<string> LoadAsync(string companyId, byte sourceId)
@@ -119,6 +121,7 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.MarketData, sources[entityName].single, QueueActions.Get, companySource);
+
         return $"Task for load data of {entityName}.{companyId}.{companySource.Value}  is starting...";
     }
 }

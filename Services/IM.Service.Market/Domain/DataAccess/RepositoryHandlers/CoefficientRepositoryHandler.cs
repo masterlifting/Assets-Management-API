@@ -11,7 +11,7 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient, Datab
     private readonly DatabaseContext context;
     public CoefficientRepositoryHandler(DatabaseContext context) : base(context) => this.context = context;
 
-    public override async Task<IEnumerable<Coefficient>> GetUpdateRangeHandlerAsync(IEnumerable<Coefficient> entities)
+    public override async Task<IEnumerable<Coefficient>> RunUpdateRangeHandlerAsync(IEnumerable<Coefficient> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
@@ -39,7 +39,7 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient, Datab
 
         return result.Select(x => x.Old);
     }
-    public override async Task<IEnumerable<Coefficient>> GetDeleteRangeHandlerAsync(IEnumerable<Coefficient> entities)
+    public override async Task<IEnumerable<Coefficient>> RunDeleteRangeHandlerAsync(IEnumerable<Coefficient> entities)
     {
         var comparer = new DataQuarterComparer<Coefficient>();
         var result = new List<Coefficient>();

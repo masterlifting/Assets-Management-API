@@ -25,7 +25,7 @@ public class ReportDtoManager
             var _ = stream.Read(payload, 0, (int)file.Length);
 
             var data = new ReportFileDto(file.FileName, file.ContentType, payload, userId);
-            publisher.PublishTask(QueueNames.PortfolioData, QueueEntities.Report, QueueActions.Get, data);
+            publisher.PublishTask(QueueNames.Portfolio, QueueEntities.Report, QueueActions.Get, data);
         }
 
         return $"Load files (count: {files.Count}) is running...";

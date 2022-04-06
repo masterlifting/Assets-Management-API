@@ -17,7 +17,7 @@ public class RatingComparator
     private readonly IServiceScopeFactory scopeFactory;
     public RatingComparator(IServiceScopeFactory scopeFactory) => this.scopeFactory = scopeFactory;
 
-    public async Task RunRatingAsync()
+    public async Task RunRatingComparisionsAsync()
     {
         var tasks = await Task.WhenAll(
             UpdateRatingAsync<Price>(),
@@ -38,7 +38,7 @@ public class RatingComparator
         if (!readyData.Any())
             return false;
 
-        if (!await ChangeStatusAsync(Statuses.Processing, readyData, repository))
+        if (!await ChangeStatusAsync((byte)Statuses.Computing, readyData, repository))
             return false;
 
         IEnumerable<T> computedData;
@@ -49,7 +49,7 @@ public class RatingComparator
         }
         catch
         {
-            await ChangeStatusAsync(Statuses.Error, readyData, repository);
+            await ChangeStatusAsync((byte)Statuses.Error, readyData, repository);
             return false;
         }
 
@@ -57,12 +57,12 @@ public class RatingComparator
 
         return error is null;
     }
-    private async Task<bool> ChangeStatusAsync<T>(Statuses status, T[] entities, Repository<T> repository) where T : class, IRating
+    private async Task<bool> ChangeStatusAsync<T>(byte statusId, T[] entities, Repository<T> repository) where T : class, IRating
     {
         foreach (var item in entities)
-            item.StatusId = (byte)status;
+            item.StatusId = statusId;
 
-        var (error, _) = await repository.UpdateAsync(entities, nameof(ChangeStatusAsync) + " to " + status);
+        var (error, _) = await repository.UpdateAsync(entities, nameof(ChangeStatusAsync) + " to " + statusId);
 
         return error is null;
     }

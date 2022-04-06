@@ -10,7 +10,7 @@ public class SectorRepositoryHandler : RepositoryHandler<Sector, DatabaseContext
     private readonly DatabaseContext context;
     public SectorRepositoryHandler(DatabaseContext context) : base(context) => this.context = context;
 
-    public override async Task<IEnumerable<Sector>> GetUpdateRangeHandlerAsync(IEnumerable<Sector> entities)
+    public override async Task<IEnumerable<Sector>> RunUpdateRangeHandlerAsync(IEnumerable<Sector> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
@@ -30,7 +30,7 @@ public class SectorRepositoryHandler : RepositoryHandler<Sector, DatabaseContext
 
         return result.Select(x => x.Old).ToArray();
     }
-    public override async Task<IEnumerable<Sector>> GetDeleteRangeHandlerAsync(IEnumerable<Sector> entities)
+    public override async Task<IEnumerable<Sector>> RunDeleteRangeHandlerAsync(IEnumerable<Sector> entities)
     {
         var comparer = new SectorComparer();
         var result = new List<Sector>();

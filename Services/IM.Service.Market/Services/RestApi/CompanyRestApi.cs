@@ -151,7 +151,7 @@ public class CompanyRestApi
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
 
-        foreach (var queue in new[] { QueueNames.MarketAnalyzer, QueueNames.Recommendation, QueueNames.PortfolioData })
+        foreach (var queue in new[] { QueueNames.Recommendation, QueueNames.Portfolio })
             publisher.PublishTask(queue, QueueEntities.Companies, QueueActions.CreateUpdateDelete, data);
 
         return "Task of sync is running...";

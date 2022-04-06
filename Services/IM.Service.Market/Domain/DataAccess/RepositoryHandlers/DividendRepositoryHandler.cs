@@ -10,7 +10,7 @@ public class DividendRepositoryHandler : RepositoryHandler<Dividend, DatabaseCon
     private readonly DatabaseContext context;
     public DividendRepositoryHandler(DatabaseContext context) : base(context) => this.context = context;
 
-    public override async Task<IEnumerable<Dividend>> GetUpdateRangeHandlerAsync(IEnumerable<Dividend> entities)
+    public override async Task<IEnumerable<Dividend>> RunUpdateRangeHandlerAsync(IEnumerable<Dividend> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
@@ -34,7 +34,7 @@ public class DividendRepositoryHandler : RepositoryHandler<Dividend, DatabaseCon
 
         return result.Select(x => x.Old);
     }
-    public override async Task<IEnumerable<Dividend>> GetDeleteRangeHandlerAsync(IEnumerable<Dividend> entities)
+    public override async Task<IEnumerable<Dividend>> RunDeleteRangeHandlerAsync(IEnumerable<Dividend> entities)
     {
         var comparer = new DataDateComparer<Dividend>();
         var result = new List<Dividend>();

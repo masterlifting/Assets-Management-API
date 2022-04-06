@@ -10,7 +10,7 @@ public class IndustryRepositoryHandler : RepositoryHandler<Industry, DatabaseCon
     private readonly DatabaseContext context;
     public IndustryRepositoryHandler(DatabaseContext context) : base(context) => this.context = context;
 
-    public override async Task<IEnumerable<Industry>> GetUpdateRangeHandlerAsync(IEnumerable<Industry> entities)
+    public override async Task<IEnumerable<Industry>> RunUpdateRangeHandlerAsync(IEnumerable<Industry> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
@@ -31,7 +31,7 @@ public class IndustryRepositoryHandler : RepositoryHandler<Industry, DatabaseCon
 
         return result.Select(x => x.Old).ToArray();
     }
-    public override async Task<IEnumerable<Industry>> GetDeleteRangeHandlerAsync(IEnumerable<Industry> entities)
+    public override async Task<IEnumerable<Industry>> RunDeleteRangeHandlerAsync(IEnumerable<Industry> entities)
     {
         var comparer = new IndustryComparer();
         var result = new List<Industry>();

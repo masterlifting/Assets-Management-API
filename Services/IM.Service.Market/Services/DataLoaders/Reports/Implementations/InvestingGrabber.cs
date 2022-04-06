@@ -7,6 +7,7 @@ using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
+using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.DataLoaders.Reports.Implementations;
 
@@ -79,9 +80,11 @@ internal sealed class InvestingParserHandler
             result.Add(new()
             {
                 CompanyId = companyId,
+                SourceId = (byte)Sources.Investing,
                 Year = financialPage.Dates[i].Year,
                 Quarter = Helper.QuarterHelper.GetQuarter(financialPage.Dates[i].Month),
-                SourceId = (byte)Enums.Sources.Investing,
+                StatusId = (byte)Statuses.New,
+
                 Multiplier = 1_000_000,
 
                 Turnover = balancePage.Turnovers[i],

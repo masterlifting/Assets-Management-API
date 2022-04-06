@@ -36,7 +36,7 @@ public class DataLoader<TEntity> where TEntity : class, IDataIdentity, IPeriod
         RabbitHelper.TrySerialize(data, out CompanySource? entity)
             ? DataSetAsync(entity!)
             : throw new SerializationException(typeof(TEntity).Name);
-    public Task LoadRangeDataAsync(string data) =>
+    public Task LoadDataRangeAsync(string data) =>
         RabbitHelper.TrySerialize(data, out CompanySource[]? entities)
             ? DataSetAsync(entities!)
             : throw new SerializationException(typeof(TEntity).Name);

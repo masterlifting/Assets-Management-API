@@ -22,7 +22,7 @@ public class FloatRepositoryHandler : RepositoryHandler<Float, DatabaseContext>
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<Float> GetCreateHandlerAsync(Float entity)
+    public override async Task<Float> RunCreateHandlerAsync(Float entity)
     {
         var existEntities = await GetExist(new[] { entity }).ToArrayAsync();
 
@@ -30,7 +30,7 @@ public class FloatRepositoryHandler : RepositoryHandler<Float, DatabaseContext>
             ? throw new ConstraintException($"{nameof(entity.Value)}: '{entity.Value}' for '{entity.CompanyId}' is already.")
             : entity;
     }
-    public override async Task<IEnumerable<Float>> GetUpdateRangeHandlerAsync(IEnumerable<Float> entities)
+    public override async Task<IEnumerable<Float>> RunUpdateRangeHandlerAsync(IEnumerable<Float> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
@@ -50,7 +50,7 @@ public class FloatRepositoryHandler : RepositoryHandler<Float, DatabaseContext>
 
         return result.Select(x => x.Old).ToArray();
     }
-    public override async Task<IEnumerable<Float>> GetDeleteRangeHandlerAsync(IEnumerable<Float> entities)
+    public override async Task<IEnumerable<Float>> RunDeleteRangeHandlerAsync(IEnumerable<Float> entities)
     {
         var comparer = new FloatComparer();
         var result = new List<Float>();
@@ -64,16 +64,18 @@ public class FloatRepositoryHandler : RepositoryHandler<Float, DatabaseContext>
         return result;
     }
 
-    public override Task SetPostProcessAsync(RepositoryActions action, Float entity)
+    public override Task RunPostProcessAsync(RepositoryActions action, Float entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.MarketData, QueueEntities.Float, RabbitHelper.GetQueueAction(action), entity);
+
         return Task.CompletedTask;
     }
-    public override Task SetPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Float> entities)
+    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Float> entities)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.MarketData, QueueEntities.Floats, RabbitHelper.GetQueueAction(action), entities);
+
         return Task.CompletedTask;
     }
 

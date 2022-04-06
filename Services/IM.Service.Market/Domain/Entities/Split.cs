@@ -8,7 +8,7 @@ public class Split : IDateIdentity, IDataIdentity
     public virtual Company Company { get; init; } = null!;
     public string CompanyId { get; set; } = null!;
 
-    public Source Source { get; init; } = null!;
+    public virtual Source Source { get; init; } = null!;
     public byte SourceId { get; set; }
 
     public DateOnly Date { get; set; }

@@ -8,17 +8,17 @@ public record FloatGetDto
     public string Source { get; init; } = null!;
     public DateOnly Date { get; init; }
     public long Value { get; init; }
-    public long? ValueFree { get; set; }
+    public long? ValueFree { get; init; }
 }
-public class FloatPostDto : FloatPutDto
+public record FloatPostDto : FloatPutDto
 {
     public string CompanyId { get; init; } = null!;
     public byte SourceId { get; init; }
-    public DateOnly Date { get; set; }
+    public DateOnly Date { get; init; }
 }
-public class FloatPutDto
+public record FloatPutDto
 {
-    [NotZero(nameof(Value))]
-    public long Value { get; set; }
-    public long? ValueFree { get; set; }
+    [MoreZero(nameof(Value))]
+    public long Value { get; init; }
+    public long? ValueFree { get; init; }
 }

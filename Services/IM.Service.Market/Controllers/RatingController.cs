@@ -15,19 +15,27 @@ public class RatingController : ControllerBase
     private readonly RatingRestApi api;
     public RatingController(RatingRestApi api) => this.api = api;
 
+    [HttpGet]
+    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> Get(int page = 0, int limit = 0) => await api.GetAsync(new HttpPagination(page, limit));
+
     [HttpGet("{companyId}")]
     public async Task<ResponseModel<RatingGetDto>> GetByCompany(string companyId) => await api.GetAsync(companyId);
+    
     [HttpGet("{place:int}")]
     public async Task<ResponseModel<RatingGetDto>> GetByPlace(int place) => await api.GetAsync(place);
+    
     [HttpGet("price/")]
     public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetPriceResultOrdered(int page = 0, int limit = 0) =>
         await api.GetPriceResultOrderedAsync(new HttpPagination(page, limit));
+    
     [HttpGet("report/")]
     public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetReportResultOrdered(int page = 0, int limit = 0) =>
         await api.GetReportResultOrderedAsync(new HttpPagination(page, limit));
+    
     [HttpGet("coefficient/")]
     public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetCoefficientResultOrdered(int page = 0, int limit = 0) =>
         await api.GetCoefficientResultOrderedAsync(new HttpPagination(page, limit));
+    
     [HttpGet("dividend/")]
     public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetDividendResultOrdered(int page = 0, int limit = 0) =>
         await api.GetDividendResultOrderedAsync(new HttpPagination(page, limit));

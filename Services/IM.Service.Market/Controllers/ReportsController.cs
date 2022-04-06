@@ -11,5 +11,7 @@ namespace IM.Service.Market.Controllers;
 public class ReportsController : QuarterControllerBaseLevel8<Report, ReportPostDto, ReportGetDto>
 {
     public ReportsController( RestApiWrite<Report, ReportPostDto> apiWrite, RestApiRead<Report, ReportGetDto> apiRead) 
-        : base(apiWrite, apiRead){}
+        : base(apiWrite, apiRead)
+    {
+    }
 }

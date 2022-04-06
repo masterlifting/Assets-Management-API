@@ -1,11 +1,14 @@
-﻿using System.Globalization;
-using IM.Service.Common.Net;
+﻿using IM.Service.Common.Net;
 using IM.Service.Market.Clients;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Clients;
+
+using System.Globalization;
+
+using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.DataLoaders.Prices.Implementations;
 
@@ -113,10 +116,11 @@ public class MoexGrabber : IDataGrabber
                 && decimal.TryParse(tickersData[i].Price, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var price))
                 result[i] = new()
                 {
-                    Date = date,
-                    Value = price,
                     CompanyId = tickersData[i].Ticker,
-                    SourceId = (byte)Enums.Sources.Moex
+                    SourceId = (byte)Sources.Moex,
+                    Date = date,
+                    StatusId = (byte)Statuses.New,
+                    Value = price,
                 };
 
         return result;
@@ -139,9 +143,10 @@ public class MoexGrabber : IDataGrabber
                 result.Add(new()
                 {
                     CompanyId = ticker,
+                    SourceId = (byte)Sources.Moex,
                     Date = date,
-                    Value = price,
-                    SourceId = (byte)Enums.Sources.Moex
+                    StatusId = (byte)Statuses.New,
+                    Value = price
                 });
         }
 

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using IM.Service.Market.Domain.Entities.Catalogs;
 using IM.Service.Market.Domain.Entities.Interfaces;
+using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Domain.Entities;
 
@@ -11,7 +12,7 @@ public class Report : IQuarterIdentity, IRating
     public virtual Company Company { get; init; } = null!;
     public string CompanyId { get; set; } = null!;
 
-    public Source Source { get; init; } = null!;
+    public virtual Source Source { get; init; } = null!;
     public byte SourceId { get; set; }
 
     [Range(1900, 3000)]
@@ -24,7 +25,7 @@ public class Report : IQuarterIdentity, IRating
     [Range(1, int.MaxValue)]
     public int Multiplier { get; set; }
 
-    public Currency Currency { get; set; } = null!;
+    public virtual Currency Currency { get; set; } = null!;
     [Range(1, byte.MaxValue)]
     public byte CurrencyId { get; set; }
 
@@ -57,9 +58,9 @@ public class Report : IQuarterIdentity, IRating
     public decimal? LongTermDebt { get; set; }
 
 
-    public Status Status { get; set; } = null!;
+    public virtual Status Status { get; set; } = null!;
     [Range(1, byte.MaxValue)]
-    public byte StatusId { get; set; } = (byte)Enums.Statuses.Ready;
+    public byte StatusId { get; set; } = (byte)Statuses.New;
     [Column(TypeName = "Decimal(18,4)")]
     public decimal? Result { get; set; }
 }

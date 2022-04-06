@@ -22,7 +22,7 @@ public class CompanyRepositoryHandler : RepositoryHandler<Company, DatabaseConte
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<IEnumerable<Company>> GetUpdateRangeHandlerAsync(IEnumerable<Company> entities)
+    public override async Task<IEnumerable<Company>> RunUpdateRangeHandlerAsync(IEnumerable<Company> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
@@ -44,30 +44,30 @@ public class CompanyRepositoryHandler : RepositoryHandler<Company, DatabaseConte
 
         return result.Select(x => x.Old);
     }
-    public override async Task<IEnumerable<Company>> GetDeleteRangeHandlerAsync(IEnumerable<Company> entities)
+    public override async Task<IEnumerable<Company>> RunDeleteRangeHandlerAsync(IEnumerable<Company> entities)
     {
         var comparer = new CompanyComparer();
         var ctxEntities = await context.Companies.ToArrayAsync();
         return ctxEntities.Except(entities, comparer);
     }
 
-    public override Task SetPostProcessAsync(RepositoryActions action, Company entity)
+    public override Task RunPostProcessAsync(RepositoryActions action, Company entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
 
         publisher.PublishTask(
-            new[] { QueueNames.Recommendation, QueueNames.PortfolioData },
+            new[] { QueueNames.Recommendation, QueueNames.Portfolio },
             QueueEntities.Company,
             RabbitHelper.GetQueueAction(action),
             new CompanyDto(entity.Id, entity.CountryId, entity.Name));
 
         return Task.CompletedTask;
     }
-    public override Task SetPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Company> entities)
+    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Company> entities)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
         publisher.PublishTask(
-            new[] { QueueNames.Recommendation, QueueNames.PortfolioData },
+            new[] { QueueNames.Recommendation, QueueNames.Portfolio },
             QueueEntities.Companies,
             RabbitHelper.GetQueueAction(action),
             entities.Select(x => new CompanyDto(x.Id, x.CountryId, x.Name)));

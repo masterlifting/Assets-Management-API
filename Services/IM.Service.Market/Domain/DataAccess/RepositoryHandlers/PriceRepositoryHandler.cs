@@ -4,10 +4,12 @@ using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Settings;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 using static IM.Service.Common.Net.Enums;
+using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
@@ -22,7 +24,7 @@ public class PriceRepositoryHandler : RepositoryHandler<Price, DatabaseContext>
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<IEnumerable<Price>> GetUpdateRangeHandlerAsync(IEnumerable<Price> entities)
+    public override async Task<IEnumerable<Price>> RunUpdateRangeHandlerAsync(IEnumerable<Price> entities)
     {
         entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
@@ -47,7 +49,7 @@ public class PriceRepositoryHandler : RepositoryHandler<Price, DatabaseContext>
 
         return result.Select(x => x.Old);
     }
-    public override async Task<IEnumerable<Price>> GetDeleteRangeHandlerAsync(IEnumerable<Price> entities)
+    public override async Task<IEnumerable<Price>> RunDeleteRangeHandlerAsync(IEnumerable<Price> entities)
     {
         var comparer = new DataDateComparer<Price>();
         var result = new List<Price>();
@@ -61,16 +63,28 @@ public class PriceRepositoryHandler : RepositoryHandler<Price, DatabaseContext>
         return result;
     }
 
-    public override Task SetPostProcessAsync(RepositoryActions action, Price entity)
+    public override Task RunPostProcessAsync(RepositoryActions action, Price entity)
     {
+        if (action is RepositoryActions.Update && entity.StatusId is not (byte)Statuses.New)
+            return Task.CompletedTask;
+
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
         publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, RabbitHelper.GetQueueAction(action), entity);
+
         return Task.CompletedTask;
     }
-    public override Task SetPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Price> entities)
+    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Price> entities)
     {
+        if (action is RepositoryActions.Update && !entities.Any(x => x.StatusId is (byte)Statuses.New))
+            return Task.CompletedTask;
+
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Prices, RabbitHelper.GetQueueAction(action), entities);
+
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Prices, RabbitHelper.GetQueueAction(action),
+            action is RepositoryActions.Update
+                ? entities.Where(x => x.StatusId is (byte) Statuses.New)
+                : entities);
+
         return Task.CompletedTask;
     }
 
@@ -89,9 +103,9 @@ public class PriceRepositoryHandler : RepositoryHandler<Price, DatabaseContext>
             .Select(x => x.Key);
 
         return context.Prices
-            .Where(x => 
-                companyIds.Contains(x.CompanyId) 
-                && sourceIds.Contains(x.SourceId) 
+            .Where(x =>
+                companyIds.Contains(x.CompanyId)
+                && sourceIds.Contains(x.SourceId)
                 && dates.Contains(x.Date));
     }
 }

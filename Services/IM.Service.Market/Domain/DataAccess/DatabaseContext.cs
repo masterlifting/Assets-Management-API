@@ -29,7 +29,8 @@ public class DatabaseContext : DbContext
 
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
     {
-        Database.EnsureCreated();
+        //Database.EnsureDeleted();
+        //Database.EnsureCreated();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,15 +51,19 @@ public class DatabaseContext : DbContext
             .WithMany(x => x.CompanySources)
             .HasForeignKey(x => x.SourceId);
 
-        modelBuilder.Entity<Price>().HasKey(x => new {x.CompanyId, x.Date });
-        modelBuilder.Entity<Split>().HasKey(x => new {x.CompanyId, x.Date });
-        modelBuilder.Entity<Float>().HasKey(x => new {x.CompanyId, x.Date });
-        modelBuilder.Entity<Report>().HasKey(x => new {x.CompanyId, x.Year, x.Quarter });
+        modelBuilder.Entity<Price>().HasKey(x => new {x.CompanyId, x.SourceId, x.Date });
+        modelBuilder.Entity<Split>().HasKey(x => new {x.CompanyId, x.SourceId, x.Date });
+        modelBuilder.Entity<Float>().HasKey(x => new {x.CompanyId, x.SourceId, x.Date });
+        modelBuilder.Entity<Dividend>().HasKey(x => new { x.CompanyId, x.SourceId, x.Date });
+        modelBuilder.Entity<Report>().HasKey(x => new {x.CompanyId, x.SourceId, x.Year, x.Quarter });
+        modelBuilder.Entity<Coefficient>().HasKey(x => new { x.CompanyId, x.SourceId, x.Year, x.Quarter });
 
         modelBuilder.Entity<Price>().HasOne(x => x.Company).WithMany(x => x.Prices).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Split>().HasOne(x => x.Company).WithMany(x => x.Splits).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Float>().HasOne(x => x.Company).WithMany(x => x.Floats).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Dividend>().HasOne(x => x.Company).WithMany(x => x.Dividends).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Report>().HasOne(x => x.Company).WithMany(x => x.Reports).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<Coefficient>().HasOne(x => x.Company).WithMany(x => x.Coefficients).OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Source>().HasData(
             new() { Id = (byte)Enums.Sources.Moex, Name = nameof(Enums.Sources.Moex), Description = "Data from Moscow Exchange" },
@@ -74,7 +79,7 @@ public class DatabaseContext : DbContext
 
         modelBuilder.Entity<Status>().HasData(
             new() { Id = (byte)Enums.Statuses.Ready, Name = nameof(Enums.Statuses.Ready), Description = "ready to compute" }
-            , new() { Id = (byte)Enums.Statuses.Processing, Name = nameof(Enums.Statuses.Processing), Description = "computing in process" }
+            , new() { Id = (byte)Enums.Statuses.Computing, Name = nameof(Enums.Statuses.Computing), Description = "computing in process" }
             , new() { Id = (byte)Enums.Statuses.Computed, Name = nameof(Enums.Statuses.Computed), Description = "computing was completed" }
             , new() { Id = (byte)Enums.Statuses.NotComputed, Name = nameof(Enums.Statuses.NotComputed), Description = "computing was not done" }
             , new() { Id = (byte)Enums.Statuses.Error, Name = nameof(Enums.Statuses.Error), Description = "error" });
