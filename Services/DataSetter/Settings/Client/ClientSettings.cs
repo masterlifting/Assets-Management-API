@@ -4,5 +4,5 @@ namespace DataSetter.Settings.Client;
 
 public class ClientSettings
 {
-    public HostModel CompanyData { get; set; } = null!;
+    public HostModel Market { get; set; } = null!;
 }

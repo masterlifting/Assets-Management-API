@@ -72,10 +72,21 @@ public class DatabaseContext : DbContext
             new() { Id = (byte)Enums.Sources.Tdameritrade, Name = nameof(Enums.Sources.Tdameritrade), Description = "Data from Tdameritrade.com" },
             new() { Id = (byte)Enums.Sources.Investing, Name = nameof(Enums.Sources.Investing), Description = "Data from Investing.com" });
 
+        modelBuilder.Entity<Country>().HasData(
+            new() { Id = (byte)CommonEnums.Countries.Rus, Name = nameof(CommonEnums.Countries.Rus), Description = "The Russian Federation" },
+            new() { Id = (byte)CommonEnums.Countries.Usa, Name = nameof(CommonEnums.Countries.Usa), Description = "Соединенные Штаты Америки" },
+            new() { Id = (byte)CommonEnums.Countries.Chn, Name = nameof(CommonEnums.Countries.Chn), Description = "Chinese People's Republic" },
+            new() { Id = (byte)CommonEnums.Countries.Deu, Name = nameof(CommonEnums.Countries.Deu), Description = "Deutschland" },
+            new() { Id = (byte)CommonEnums.Countries.Gbr, Name = nameof(CommonEnums.Countries.Gbr), Description = "Great Britain" });
+
         modelBuilder.Entity<Currency>().HasData(
             new() { Id = (byte)CommonEnums.Currencies.Rub, Name = "₽", Description = nameof(CommonEnums.Currencies.Rub) },
             new() { Id = (byte)CommonEnums.Currencies.Usd, Name = "$", Description = nameof(CommonEnums.Currencies.Usd) },
-            new() { Id = (byte)CommonEnums.Currencies.Eur, Name = "€", Description = nameof(CommonEnums.Currencies.Eur) });
+            new() { Id = (byte)CommonEnums.Currencies.Eur, Name = "€", Description = nameof(CommonEnums.Currencies.Eur) },
+            new() { Id = (byte)CommonEnums.Currencies.Gbp, Name = "£", Description = nameof(CommonEnums.Currencies.Gbp) },
+            new() { Id = (byte)CommonEnums.Currencies.Chy, Name = "¥", Description = nameof(CommonEnums.Currencies.Chy) },
+            new() { Id = (byte)CommonEnums.Currencies.Btc, Name = "₿", Description = nameof(CommonEnums.Currencies.Btc) },
+            new() { Id = (byte)CommonEnums.Currencies.Eth, Name = "Ξ", Description = nameof(CommonEnums.Currencies.Eth) });
 
         modelBuilder.Entity<Status>().HasData(
             new() { Id = (byte)Enums.Statuses.Ready, Name = nameof(Enums.Statuses.Ready), Description = "ready to compute" }

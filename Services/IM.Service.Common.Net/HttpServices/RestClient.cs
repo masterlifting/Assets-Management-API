@@ -8,12 +8,12 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.Mvc;
 using static IM.Service.Common.Net.Helper;
 
 namespace IM.Service.Common.Net.HttpServices;
 
-public abstract class RestClient
+public abstract class RestClient : ControllerBase
 {
     private readonly IMemoryCache cache;
     private readonly HttpClient httpClient;
@@ -94,7 +94,7 @@ public abstract class RestClient
             Errors = new[] { "get response is null" }
         };
     }
-    public async Task<ResponseModel<string>> Post<TPost>(string controller, TPost model) where TPost : class
+    public async Task<IActionResult> Post<TPost>(string controller, TPost model) where TPost : class
     {
         uriBuilder.Clear();
         uriBuilder.Append(baseUri);
@@ -105,39 +105,28 @@ public abstract class RestClient
         var uri = uriBuilder.ToString();
 
         HttpResponseMessage? response = null;
-        ResponseModel<string>? result = null;
+        string? error = null;
 
         try
         {
             response = await httpClient.PostAsJsonAsync(uri, model, JsonHelper.Options).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            result = new()
-            {
-                Errors = new[] { ex.Message }
-            };
+            error = exception.Message;
         }
 
         uriBuilder.Clear();
 
-        result = result is null
+        return error is null
             ? response is not null
                 ? response.IsSuccessStatusCode
-                    ? new() { Data = "post response is success" }
-                    : new()
-                    {
-                        Errors = new[]
-                        {
-                            response.ToString()
-                        }
-                    }
-                : new() { Errors = new[] { "post response is null" } }
-            : new() { Errors = new[] { "post response failed" } };
-
-        return result;
+                    ? Ok(model)
+                    : BadRequest(response.ToString())
+                : NotFound("response is null" )
+            : BadRequest( error );
     }
-    public async Task<ResponseModel<string>> Put<TPost>(string controller, TPost model, params object[] parameters) where TPost : class
+    public async Task<IActionResult> Put<TPost>(string controller, TPost model, params object[] parameters) where TPost : class
     {
         uriBuilder.Clear();
         uriBuilder.Append(baseUri);
@@ -148,33 +137,28 @@ public abstract class RestClient
         var uri = GetUriByQueryParams(parameters);
 
         HttpResponseMessage? response = null;
-        ResponseModel<string>? result = null;
+        string? error = null;
 
         try
         {
             response = await httpClient.PutAsJsonAsync(uri, model, JsonHelper.Options).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            result = new()
-            {
-                Errors = new[] { ex.Message }
-            };
+            error = exception.Message;
         }
 
         uriBuilder.Clear();
 
-        result = result is null
+        return error is null
             ? response is not null
                 ? response.IsSuccessStatusCode
-                    ? new() { Data = "put response is success" }
-                    : new() { Errors = new[] { response.ToString() } }
-                : new() { Errors = new[] { "put response is null" } }
-            : new() { Errors = new[] { "put response failed" } };
-
-        return result;
+                    ? Ok(model)
+                    : BadRequest(response.ToString())
+                : NotFound("response is null")
+            : BadRequest(error);
     }
-    public async Task<ResponseModel<string>> Delete(string controller, params object[] parameters)
+    public async Task<IActionResult> Delete(string controller, params object[] parameters)
     {
         uriBuilder.Clear();
         uriBuilder.Append(baseUri);
@@ -185,31 +169,26 @@ public abstract class RestClient
         var uri = GetUriByQueryParams(parameters);
 
         HttpResponseMessage? response = null;
-        ResponseModel<string>? result = null;
+        string? error = null;
 
         try
         {
             response = await httpClient.DeleteAsync(uri).ConfigureAwait(false);
         }
-        catch (Exception ex)
+        catch (Exception exception)
         {
-            result = new()
-            {
-                Errors = new[] { ex.Message }
-            };
+            error = exception.Message;
         }
 
         uriBuilder.Clear();
 
-        result = result is null
+        return error is null
             ? response is not null
                 ? response.IsSuccessStatusCode
-                    ? new() { Data = "delete response is success" }
-                    : new() { Errors = new[] { response.ToString() } }
-                : new() { Errors = new[] { "delete response is null" } }
-            : new() { Errors = new[] { "delete response failed" } };
-
-        return result;
+                    ? Ok(parameters)
+                    : BadRequest(response.ToString())
+                : NotFound("response is null")
+            : BadRequest(error);
     }
 
     private string GetUriByQueryParams(params object[] parameters)

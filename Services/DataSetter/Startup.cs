@@ -1,7 +1,8 @@
 using DataSetter.Clients;
-using DataSetter.DataAccess.Company;
-using DataSetter.DataAccess.CompanyData;
+using DataSetter.DataAccess;
 using DataSetter.Settings;
+
+using IM.Service.Common.Net.HttpServices.JsonConvertors;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,7 +14,6 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
-using IM.Service.Common.Net.HttpServices.JsonConvertors;
 
 namespace DataSetter;
 
@@ -28,10 +28,11 @@ public class Startup
             
         services.AddMemoryCache();
 
-        services.AddDbContext<CompanyDatabaseContext>(provider =>
-            provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Company"]));
-        services.AddDbContext<CompanyDataDatabaseContext>(provider =>
-            provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:CompanyData"]));
+        services.AddDbContext<CompanyDataContext>(provider =>
+        {
+            provider.UseLazyLoadingProxies();
+            provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Paviams"]);
+        });
 
         services.AddControllers().AddJsonOptions(x =>
         {
@@ -39,7 +40,7 @@ public class Startup
             x.JsonSerializerOptions.Converters.Add(new DateOnlyConverter());
         });
 
-        services.AddHttpClient<CompanyDataClient>()
+        services.AddHttpClient<MarketClient>()
             .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
             .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
     }

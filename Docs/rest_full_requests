@@ -111,12 +111,129 @@
 			]
 		},
 		{
-			"name": "Recomendation",
+			"name": "Recomendations",
 			"item": []
 		},
 		{
-			"name": "Company Data",
+			"name": "Market",
 			"item": [
+				{
+					"name": "Companies",
+					"item": [
+						{
+							"name": "GET",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:1001/companies/",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "1001",
+									"path": [
+										"companies",
+										""
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "SYNC",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:1001/companies/sync",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "1001",
+									"path": [
+										"companies",
+										"sync"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "POST",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"Id\":\"OGN\",\r\n    \"Name\": \"Organon & Co.\",\r\n    \"IndustryId\": 10,\r\n    \"Sources\":[\r\n        {\r\n            \"Id\": 3,\r\n            \"Value\":\"OGN\"\r\n        },\r\n        {\r\n            \"Id\": 4,\r\n            \"Value\":\"organon-co\"\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:1001/companies",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "1001",
+									"path": [
+										"companies"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Rating",
+					"item": [
+						{
+							"name": "GET",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:1001/rating",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "1001",
+									"path": [
+										"rating"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "RECALCULATE",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:1001/rating/recalculate",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "1001",
+									"path": [
+										"rating",
+										"recalculate"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
 				{
 					"name": "Prices",
 					"item": [
@@ -126,29 +243,15 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/prices/svav?year=2022&month=1&day=3",
+									"raw": "http://localhost:1001/prices/last",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "3001",
+									"port": "1001",
 									"path": [
 										"prices",
-										"svav"
-									],
-									"query": [
-										{
-											"key": "year",
-											"value": "2022"
-										},
-										{
-											"key": "month",
-											"value": "1"
-										},
-										{
-											"key": "day",
-											"value": "3"
-										}
+										"last"
 									]
 								}
 							},
@@ -160,14 +263,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/prices/load",
+									"raw": "http://localhost:3001/1001/load",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
 									"port": "3001",
 									"path": [
-										"prices",
+										"1001",
 										"load"
 									]
 								}
@@ -185,12 +288,12 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/reports",
+									"raw": "http://localhost:1001/reports",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "3001",
+									"port": "1001",
 									"path": [
 										"reports"
 									]
@@ -204,12 +307,12 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/reports/load",
+									"raw": "http://localhost:1001/reports/load",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "3001",
+									"port": "1001",
 									"path": [
 										"reports",
 										"load"
@@ -221,7 +324,7 @@
 					]
 				},
 				{
-					"name": "Stock Splits",
+					"name": "Splits",
 					"item": [
 						{
 							"name": "GET",
@@ -229,14 +332,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/stocksplits",
+									"raw": "http://localhost:1001/splits",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "3001",
+									"port": "1001",
 									"path": [
-										"stocksplits"
+										"splits"
 									]
 								}
 							},
@@ -248,14 +351,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/stocksplits/load",
+									"raw": "http://localhost:1001/splits/load",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "3001",
+									"port": "1001",
 									"path": [
-										"stocksplits",
+										"splits",
 										"load"
 									]
 								}
@@ -265,7 +368,7 @@
 					]
 				},
 				{
-					"name": "Stock Volumes",
+					"name": "Floats",
 					"item": [
 						{
 							"name": "GET",
@@ -273,14 +376,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/stockvolumes",
+									"raw": "http://localhost:1001/floats",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "3001",
+									"port": "1001",
 									"path": [
-										"stockvolumes"
+										"floats"
 									]
 								}
 							},
@@ -292,14 +395,14 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/stockvolumes/load",
+									"raw": "http://localhost:1001/floats/load",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "3001",
+									"port": "1001",
 									"path": [
-										"stockvolumes",
+										"floats",
 										"load"
 									]
 								}
@@ -307,23 +410,69 @@
 							"response": []
 						}
 					]
-				},
+				}
+			]
+		},
+		{
+			"name": "Portfolio",
+			"item": [
 				{
-					"name": "Companies",
+					"name": "Reports",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": [
+										"/C:/Users/apestunov/Downloads/Reports/Отчеты БКС/2020/B_k-500514_ALL_20-01.xls",
+										"/C:/Users/apestunov/Downloads/Reports/Отчеты БКС/2020/B_k-500514_ALL_20-02.xls",
+										"/C:/Users/apestunov/Downloads/Reports/Отчеты БКС/2020/B_k-500514_ALL_20-03.xls",
+										"/C:/Users/apestunov/Downloads/Reports/Отчеты БКС/2020/B_k-500514_ALL_20-04.xls"
+									]
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:1002/reports",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "1002",
+							"path": [
+								"reports"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Data setter",
+			"item": [
+				{
+					"name": "Paviams",
 					"item": [
 						{
-							"name": "GET",
+							"name": "Set companies",
 							"request": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/companies",
+									"raw": "http://localhost:5000/paviams/set/companies",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "3001",
+									"port": "5000",
 									"path": [
+										"paviams",
+										"set",
 										"companies"
 									]
 								}
@@ -331,59 +480,75 @@
 							"response": []
 						},
 						{
-							"name": "SYNC",
+							"name": "Set sources",
 							"request": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3001/companies/sync",
+									"raw": "http://localhost:5000/paviams/set/sources",
 									"protocol": "http",
 									"host": [
 										"localhost"
 									],
-									"port": "3001",
+									"port": "5000",
 									"path": [
-										"companies",
-										"sync"
+										"paviams",
+										"set",
+										"sources"
 									]
 								}
 							},
 							"response": []
 						}
 					]
-				}
-			]
-		},
-		{
-			"name": "Company Analyzer",
-			"item": [
+				},
 				{
-					"name": "Ratings",
+					"name": "Sources",
 					"item": [
 						{
-							"name": "GET",
+							"name": "Rakuten",
 							"request": {
 								"method": "GET",
-								"header": [],
+								"header": [
+									{
+										"key": "x-rapidapi-key",
+										"value": "c5df0c5742mshacf8224b91b3c1fp13aa99jsn59fd932e4628",
+										"type": "text"
+									},
+									{
+										"key": "x-rapidapi-host",
+										"value": "mboum-finance.p.rapidapi.com",
+										"type": "text"
+									},
+									{
+										"key": "useQueryString",
+										"value": "true",
+										"type": "text"
+									}
+								],
 								"url": {
-									"raw": "http://localhost:3002/ratings/?page=1&limit=100",
-									"protocol": "http",
+									"raw": "https://mboum-finance.p.rapidapi.com/qu/quote/default-key-statistics?symbol=aapl",
+									"protocol": "https",
 									"host": [
-										"localhost"
+										"mboum-finance",
+										"p",
+										"rapidapi",
+										"com"
 									],
-									"port": "3002",
 									"path": [
-										"ratings",
-										""
+										"qu",
+										"quote",
+										"default-key-statistics"
 									],
 									"query": [
 										{
-											"key": "page",
-											"value": "1"
+											"key": "region",
+											"value": "US",
+											"disabled": true
 										},
 										{
-											"key": "limit",
-											"value": "100"
+											"key": "symbol",
+											"value": "aapl"
 										}
 									]
 								}
@@ -391,20 +556,54 @@
 							"response": []
 						},
 						{
-							"name": "RECALCULATE",
+							"name": "moex/stocks",
 							"request": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "http://localhost:3002/ratings/recalculate",
+									"raw": "http://iss.moex.com/iss/engines/stock/markets/foreignshares/boards/tqbd/securities.json",
 									"protocol": "http",
 									"host": [
-										"localhost"
+										"iss",
+										"moex",
+										"com"
 									],
-									"port": "3002",
 									"path": [
-										"ratings",
-										"recalculate"
+										"iss",
+										"engines",
+										"stock",
+										"markets",
+										"foreignshares",
+										"boards",
+										"tqbd",
+										"securities.json"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "moex/currencies",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://iss.moex.com/iss/engines/currency/markets/selt/boards/aucb/securities",
+									"protocol": "http",
+									"host": [
+										"iss",
+										"moex",
+										"com"
+									],
+									"path": [
+										"iss",
+										"engines",
+										"currency",
+										"markets",
+										"selt",
+										"boards",
+										"aucb",
+										"securities"
 									]
 								}
 							},
@@ -413,134 +612,6 @@
 					]
 				}
 			]
-		},
-		{
-			"name": "Broker Data",
-			"item": [
-				{
-					"name": "TransactionActions",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:2001/transactionactions",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "2001",
-							"path": [
-								"transactionactions"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Brokers",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:2001/brokers",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "2001",
-							"path": [
-								"brokers"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Broker Summary",
-			"item": []
-		},
-		{
-			"name": "GET",
-			"request": {
-				"method": "GET",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:5000/paviams/",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "5000",
-					"path": [
-						"paviams",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "POST",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:1000/api/paviams/tickers",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "1000",
-					"path": [
-						"api",
-						"paviams",
-						"tickers"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "PUT",
-			"request": {
-				"method": "PUT",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:1000/api/",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "1000",
-					"path": [
-						"api",
-						""
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "DELETE",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "http://localhost:1000/api/",
-					"protocol": "http",
-					"host": [
-						"localhost"
-					],
-					"port": "1000",
-					"path": [
-						"api",
-						""
-					]
-				}
-			},
-			"response": []
 		}
 	]
 }

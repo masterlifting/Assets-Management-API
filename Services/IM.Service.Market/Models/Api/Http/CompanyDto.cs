@@ -12,6 +12,12 @@ public record CompanyGetDto
     public string Sector { get; init; } = null!;
     public string? Description { get; init; }
 }
+public record CompanyPostDto : CompanyPutDto
+{
+    [StringLength(10, MinimumLength = 1), Upper]
+    public string Id { get; init; } = null!;
+}
+
 public record CompanyPutDto
 {
     [StringLength(100, MinimumLength = 2)]
@@ -21,10 +27,5 @@ public record CompanyPutDto
     [MoreZero(nameof(CountryId))]
     public byte CountryId { get; init; }
     public string? Description { get; init; }
-}
-public record CompanyPostDto : CompanyPutDto
-{
-    [StringLength(10, MinimumLength = 1), Upper]
-    public string Id { get; init; } = null!;
 }
 

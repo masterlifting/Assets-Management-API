@@ -69,7 +69,12 @@ public class RabbitPublisher
         var queueParams = currentQueue.Entities.FirstOrDefault(x => x.NameEnum == entity && x.Actions.Contains(action));
 
         if (queueParams is null)
-            throw new NullReferenceException(nameof(QueueEntity));
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"Entity '{entity}' for Action '{action}' from Queue '{queue}' by Exchange '{exchange.NameString}' not found!");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            return;
+        }
 
         channel.BasicPublish(
             exchange.NameString

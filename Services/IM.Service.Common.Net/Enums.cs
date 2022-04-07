@@ -23,7 +23,9 @@ public static class Enums
         Usd = 2,
         Eur = 3,
         Gbp = 4,
-        Chy = 5
+        Chy = 5,
+        Btc = 6,
+        Eth = 7
     }
     public enum Countries : byte
     {

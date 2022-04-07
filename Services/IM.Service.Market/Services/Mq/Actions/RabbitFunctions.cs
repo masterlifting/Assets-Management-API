@@ -88,7 +88,7 @@ public class RabbitFunctions : IRabbitActionService
         catch (Exception exception)
         {
             var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<RabbitFunctions>>();
-            logger.LogError(LogEvents.Function, "Entity: {entity} Queue action: {action} failed! \nError: {error}", Enum.GetName(entity), action, exception.InnerException?.Message ?? exception.Message);
+            logger.LogError(LogEvents.Function, "Action '{action}' for Entity '{entity}' failed! \n\tError: {error}", action, entity, exception.InnerException?.Message ?? exception.Message);
             return false;
         }
     }

@@ -207,32 +207,26 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             if (createResult.Any())
                 await context.Set<TEntity>().AddRangeAsync(createResult).ConfigureAwait(false);
 
-            var updateEntities = entities.Except(createResult, comparer);
+            var updateEntities = await handler.RunUpdateRangeHandlerAsync(entities).ConfigureAwait(false);
             var updateResult = updateEntities.ToArray();
 
             if (updateResult.Any())
-            {
-                updateEntities = await handler.RunUpdateRangeHandlerAsync(updateResult).ConfigureAwait(false);
-                updateResult = updateEntities.ToArray();
+                context.Set<TEntity>().UpdateRange(updateResult);
 
-                if (updateResult.Any())
-                    context.Set<TEntity>().UpdateRange(updateResult);
-            }
+            var processing = createResult.Concat(updateResult).ToArray();
 
-            var result = createResult.Concat(updateResult).ToArray();
-
-            if (result.Any())
+            if (processing.Any())
             {
                 await context.SaveChangesAsync().ConfigureAwait(false);
-                
-                if(createResult.Any())
+
+                if (createResult.Any())
                     await handler.RunPostProcessAsync(RepositoryActions.Create, createResult).ConfigureAwait(false);
                 if (updateResult.Any())
                     await handler.RunPostProcessAsync(RepositoryActions.Create, updateResult).ConfigureAwait(false);
             }
 
             logger.LogInformation(LogEvents.CreateUpdate, "Info: {info}. Entity: {name}. Created: {ccount}. Updated: {ucount}", info, entityName, createResult.Length, updateResult.Length);
-            return (null, result);
+            return (null, processing);
         }
         catch (Exception exception)
         {
@@ -260,17 +254,11 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             if (createResult.Any())
                 await context.Set<TEntity>().AddRangeAsync(createResult).ConfigureAwait(false);
 
-            var updateEntities = entities.Except(createResult, comparer);
+            var updateEntities = await handler.RunUpdateRangeHandlerAsync(entities).ConfigureAwait(false);
             var updateResult = updateEntities.ToArray();
 
             if (updateResult.Any())
-            {
-                updateEntities = await handler.RunUpdateRangeHandlerAsync(updateResult).ConfigureAwait(false);
-                updateResult = updateEntities.ToArray();
-
-                if (updateResult.Any())
-                    context.Set<TEntity>().UpdateRange(updateResult);
-            }
+                context.Set<TEntity>().UpdateRange(updateResult);
 
             var processingResult = createResult.Concat(updateResult).ToArray();
 
@@ -286,7 +274,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
                 if (createResult.Any())
                     await handler.RunPostProcessAsync(RepositoryActions.Create, createResult).ConfigureAwait(false);
-                if(updateResult.Any())
+                if (updateResult.Any())
                     await handler.RunPostProcessAsync(RepositoryActions.Create, updateResult).ConfigureAwait(false);
                 if (deleteResult.Any())
                     await handler.RunPostProcessAsync(RepositoryActions.Delete, deleteResult).ConfigureAwait(false);

@@ -111,6 +111,20 @@ public static class QueueConfiguration
                                 QueueActions.Get,
                                 QueueActions.Compute
                             }
+                        },
+                        new QueueEntity(QueueEntities.CompanySource)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Get
+                            }
+                        },
+                        new QueueEntity(QueueEntities.CompanySources)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Get
+                            }
                         }
                     }
                 },

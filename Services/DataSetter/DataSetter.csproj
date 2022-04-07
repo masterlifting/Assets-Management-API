@@ -21,4 +21,8 @@
     <ProjectReference Include="..\IM.Service.Market\IM.Service.Market.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DataAccess\" />
+  </ItemGroup>
+
 </Project>
