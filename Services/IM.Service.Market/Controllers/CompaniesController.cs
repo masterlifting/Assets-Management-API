@@ -19,21 +19,20 @@ public class CompaniesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ResponseModel<PaginatedModel<CompanyGetDto>>> GetCompanies(int page = 0, int limit = 0) =>
-        await api.GetAsync((HttpPagination)new(page, limit));
+    public Task<ResponseModel<PaginatedModel<CompanyGetDto>>> GetCompanies(int page = 0, int limit = 0) => api.GetAsync((HttpPagination)new(page, limit));
     [HttpGet("{companyId}")]
-    public async Task<ResponseModel<CompanyGetDto>> GetCompany(string companyId) => await api.GetAsync(companyId);
+    public Task<ResponseModel<CompanyGetDto>> GetCompany(string companyId) => api.GetAsync(companyId);
 
     [HttpGet("{companyId}/sources/")]
-    public async Task<ResponseModel<PaginatedModel<SourceGetDto>>> GetSources(string companyId) => await csApi.GetAsync(companyId);
+    public Task<ResponseModel<PaginatedModel<SourceGetDto>>> GetSources(string companyId) => csApi.GetAsync(companyId);
     [HttpGet("{companyId}/sources/{sourceId:int}")]
-    public async Task<ResponseModel<SourceGetDto>> GetSource(string companyId, int sourceId) => await csApi.GetAsync(companyId, (byte)sourceId);
+    public Task<ResponseModel<SourceGetDto>> GetSource(string companyId, int sourceId) => csApi.GetAsync(companyId, (byte)sourceId);
     [HttpPost("{companyId}/sources/")]
     public async Task<IActionResult> PostSource(string companyId, IEnumerable<SourcePostDto> models)
     {
-        var (error, _) = await csApi.CreateUpdateDeleteAsync(companyId, models);
+        var (error, sources) = await csApi.CreateUpdateDeleteAsync(companyId, models);
 
-        return error is null ? Ok() : BadRequest(error);
+        return error is null ? Ok(sources) : BadRequest(error);
     }
 
     [HttpPost]

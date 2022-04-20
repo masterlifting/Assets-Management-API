@@ -1,6 +1,9 @@
 ﻿using IM.Service.Common.Net;
+using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RabbitServices.Configuration;
+using IM.Service.Portfolio.Models.Dto.Mq;
+using IM.Service.Portfolio.Services.DataServices.Reports;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -8,8 +11,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
-using IM.Service.Portfolio.Models.Dto.Mq;
-using IM.Service.Portfolio.Services.DataServices.Reports;
 
 namespace IM.Service.Portfolio.Services.MqServices.Implementations;
 
@@ -29,7 +30,7 @@ public class RabbitFunctionService : IRabbitActionService
             {
                 case QueueEntities.Report:
                     {
-                        if (!RabbitHelper.TrySerialize(data, out ReportFileDto? dto))
+                        if (!JsonHelper.TryDeserialize(data, out ReportFileDto? dto))
                             throw new SerializationException(nameof(ReportFileDto));
 
                         var reportLoader = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ReportLoader>();

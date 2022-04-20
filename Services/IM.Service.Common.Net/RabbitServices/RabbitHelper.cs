@@ -1,29 +1,12 @@
-﻿using System;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+﻿using IM.Service.Common.Net.RabbitServices.Configuration;
 
+using System;
 using System.Collections.Generic;
-using System.Text.Json;
-
-using static IM.Service.Common.Net.Helper;
 
 namespace IM.Service.Common.Net.RabbitServices;
 
 public static class RabbitHelper
 {
-    public static bool TrySerialize<T>(string data, out T? entity) where T : class
-    {
-        entity = null;
-
-        try
-        {
-            entity = JsonSerializer.Deserialize<T>(data, JsonHelper.Options);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
     public static QueueActions GetQueueAction(Enums.RepositoryActions action) => action switch
     {
         Enums.RepositoryActions.Create => QueueActions.Create,

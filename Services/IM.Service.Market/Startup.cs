@@ -1,4 +1,4 @@
-using IM.Service.Common.Net.HttpServices.JsonConvertors;
+using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Market.Clients;
 using IM.Service.Market.Domain.DataAccess;
@@ -39,11 +39,11 @@ public class Startup
 
         services.AddMemoryCache();
 
-        services.AddDbContextPool<DatabaseContext>(provider =>
+        services.AddDbContext<DatabaseContext>(provider =>
         {
             provider.UseLazyLoadingProxies();
             provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
-        });
+        }, ServiceLifetime.Transient);
 
         services.AddControllers().AddJsonOptions(x =>
             {
@@ -103,7 +103,6 @@ public class Startup
         services.AddTransient<PriceService>();
         services.AddTransient<ReportService>();
         services.AddTransient<RatingCalculator>();
-        services.AddTransient<RatingComparator>();
 
         services.AddScoped(typeof(Repository<>));
         services.AddScoped<IRepositoryHandler<Company>, CompanyRepositoryHandler>();
@@ -120,6 +119,7 @@ public class Startup
 
         services.AddSingleton<RabbitActionService>();
         services.AddHostedService<RabbitBackgroundService>();
+        services.AddSingleton<RatingComparator>();
         services.AddHostedService<RatingBackgroundService>();
     }
 

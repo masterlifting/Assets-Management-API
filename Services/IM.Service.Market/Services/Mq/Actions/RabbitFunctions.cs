@@ -69,7 +69,7 @@ public class RabbitFunctions : IRabbitActionService
                 },
                 QueueActions.Set => entity switch
                 {
-                    QueueEntities.Report => serviceProvider.GetRequiredService<ReportService>().SetStatusAsync(data,(byte)Statuses.Ready),
+                    QueueEntities.Report => serviceProvider.GetRequiredService<ReportService>().SetStatusAsync(data, (byte)Statuses.Ready),
                     QueueEntities.Reports => serviceProvider.GetRequiredService<ReportService>().SetStatusRangeAsync(data, (byte)Statuses.Ready),
                     _ => Task.CompletedTask
                 },

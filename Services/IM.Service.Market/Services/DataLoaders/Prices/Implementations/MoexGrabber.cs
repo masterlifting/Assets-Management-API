@@ -7,7 +7,7 @@ using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Clients;
 
 using System.Globalization;
-
+using static IM.Service.Common.Net.Enums;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.DataLoaders.Prices.Implementations;
@@ -117,10 +117,11 @@ public class MoexGrabber : IDataGrabber
                 result[i] = new()
                 {
                     CompanyId = tickersData[i].Ticker,
-                    SourceId = (byte)Sources.Moex,
                     Date = date,
-                    StatusId = (byte)Statuses.New,
                     Value = price,
+                    CurrencyId = (byte)Currencies.Rub,
+                    SourceId = (byte)Sources.Moex,
+                    StatusId = (byte)Statuses.New,
                 };
 
         return result;
@@ -143,10 +144,11 @@ public class MoexGrabber : IDataGrabber
                 result.Add(new()
                 {
                     CompanyId = ticker,
-                    SourceId = (byte)Sources.Moex,
                     Date = date,
-                    StatusId = (byte)Statuses.New,
-                    Value = price
+                    Value = price,
+                    CurrencyId = (byte)Currencies.Rub,
+                    SourceId = (byte)Sources.Moex,
+                    StatusId = (byte)Statuses.New
                 });
         }
 

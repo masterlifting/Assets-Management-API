@@ -1,6 +1,7 @@
 ﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
 using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
+
 using static IM.Service.Common.Net.Enums;
 using static IM.Service.Common.Net.Helper.ExpressionHelper;
 
@@ -8,130 +9,96 @@ namespace IM.Service.Market.Domain.DataAccess.Filters;
 
 public class DateFilter<T> : FilterByDate<T> where T : class, IDateIdentity, IDataIdentity
 {
-    public string[] CompanyIds { get; } = Array.Empty<string>();
-    public string? CompanyId { get; }
-    public byte? SourceId { get; }
+    private string[] CompanyIds { get; } = Array.Empty<string>();
+    private string? CompanyId { get; }
+    private byte? SourceId { get; }
 
-    public DateFilter(int year) : base(year) { }
-    public DateFilter(int year, int month) : base(year, month) { }
-    public DateFilter(HttpRequestFilterType filterType, int year, int month, int day) : base(filterType, year, month, day) { }
+    public DateFilter(CompareType compareType, int year) : base(compareType, year) { }
+    public DateFilter(CompareType compareType, int year, int month) : base(compareType, year, month) { }
+    public DateFilter(CompareType compareType, int year, int month, int day) : base(compareType, year, month, day) { }
 
-    public DateFilter(string companyId)
+    public DateFilter(CompareType compareType, string companyId, int year) : base(compareType, year)
     {
-        CompanyId = companyId;
-        Expression = x => companyId == x.CompanyId;
+        CompanyId = companyId.Trim().ToUpperInvariant();
+        Expression = Combine(x => CompanyId == x.CompanyId, Expression);
     }
-    public DateFilter(string companyId, int year) : base(year)
+    public DateFilter(CompareType compareType, string companyId, int year, int month) : base(compareType, year, month)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
-        Expression = Combine(x => companyId == x.CompanyId, Expression);
+        CompanyId = companyId.Trim().ToUpperInvariant();
+        Expression = Combine(x => CompanyId == x.CompanyId, Expression);
     }
-    public DateFilter(string companyId, int year, int month) : base(year, month)
+    public DateFilter(CompareType compareType, string companyId, int year, int month, int day) : base(compareType, year, month, day)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
-        Expression = Combine(x => companyId == x.CompanyId, Expression);
-    }
-    public DateFilter(HttpRequestFilterType filterType, string companyId, int year, int month, int day) : base(filterType, year, month, day)
-    {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
-        Expression = Combine(x => companyId == x.CompanyId, Expression);
+        CompanyId = companyId.Trim().ToUpperInvariant();
+        Expression = Combine(x => CompanyId == x.CompanyId, Expression);
     }
 
-    public DateFilter(byte sourceId)
-    {
-        SourceId = sourceId;
-        Expression = x => sourceId == x.SourceId;
-    }
-    public DateFilter(byte sourceId, int year) : base(year)
+    public DateFilter(CompareType compareType, byte sourceId, int year) : base(compareType, year)
     {
         SourceId = sourceId;
         Expression = Combine(x => sourceId == x.SourceId, Expression);
     }
-    public DateFilter(byte sourceId, int year, int month) : base(year, month)
+    public DateFilter(CompareType compareType, byte sourceId, int year, int month) : base(compareType, year, month)
     {
         SourceId = sourceId;
         Expression = Combine(x => sourceId == x.SourceId, Expression);
     }
-    public DateFilter(HttpRequestFilterType filterType, byte sourceId, int year, int month, int day) : base(filterType, year, month, day)
+    public DateFilter(CompareType compareType, byte sourceId, int year, int month, int day) : base(compareType, year, month, day)
     {
         SourceId = sourceId;
         Expression = Combine(x => sourceId == x.SourceId, Expression);
     }
 
-    public DateFilter(string companyId, byte sourceId)
+    public DateFilter(CompareType compareType, string companyId, byte sourceId, int year) : base(compareType, year)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
+        CompanyId = companyId.Trim().ToUpperInvariant();
         SourceId = sourceId;
-        Expression = x => companyId == x.CompanyId && sourceId == x.SourceId;
+        Expression = Combine(x => CompanyId == x.CompanyId && SourceId == x.SourceId, Expression);
     }
-    public DateFilter(string companyId, byte sourceId, int year) : base(year)
+    public DateFilter(CompareType compareType, string companyId, byte sourceId, int year, int month) : base(compareType, year, month)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
+        CompanyId = companyId.Trim().ToUpperInvariant();
         SourceId = sourceId;
-        Expression = Combine(x => companyId == x.CompanyId && sourceId == x.SourceId, Expression);
+        Expression = Combine(x => CompanyId == x.CompanyId && SourceId == x.SourceId, Expression);
     }
-    public DateFilter(string companyId, byte sourceId, int year, int month) : base(year, month)
+    public DateFilter(CompareType compareType, string companyId, byte sourceId, int year, int month, int day) : base(compareType, year, month, day)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
+        CompanyId = companyId.Trim().ToUpperInvariant();
         SourceId = sourceId;
-        Expression = Combine(x => companyId == x.CompanyId && sourceId == x.SourceId, Expression);
-    }
-    public DateFilter(HttpRequestFilterType filterType, string companyId, byte sourceId, int year, int month, int day) : base(filterType, year, month, day)
-    {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
-        SourceId = sourceId;
-        Expression = Combine(x => companyId == x.CompanyId && sourceId == x.SourceId, Expression);
+        Expression = Combine(x => companyId == x.CompanyId && SourceId == x.SourceId, Expression);
     }
 
-    public DateFilter(string[] companyIds)
+    public DateFilter(CompareType compareType, IEnumerable<string> companyIds, int year) : base(compareType, year)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
-        Expression = x => companyIds.Contains(x.CompanyId);
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId), Expression);
     }
-    public DateFilter(string[] companyIds, int year) : base(year)
+    public DateFilter(CompareType compareType, IEnumerable<string> companyIds, int year, int month) : base(compareType, year, month)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId), Expression);
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId), Expression);
     }
-    public DateFilter(string[] companyIds, int year, int month) : base(year, month)
+    public DateFilter(CompareType compareType, IEnumerable<string> companyIds, int year, int month, int day) : base(compareType, year, month, day)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId), Expression);
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId), Expression);
     }
-    public DateFilter(HttpRequestFilterType filterType, string[] companyIds, int year, int month, int day) : base(filterType, year, month, day)
+    public DateFilter(CompareType compareType, IEnumerable<string> companyIds, byte sourceId, int year) : base(compareType, year)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId), Expression);
-    }
-    public DateFilter(string[] companyIds, byte sourceId, int year) : base(year)
-    {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
         SourceId = sourceId;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId) && sourceId == x.SourceId, Expression);
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId) && SourceId == x.SourceId, Expression);
     }
-    public DateFilter(string[] companyIds, byte sourceId, int year, int month) : base(year, month)
+    public DateFilter(CompareType compareType, IEnumerable<string> companyIds, byte sourceId, int year, int month) : base(compareType, year, month)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
         SourceId = sourceId;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId) && sourceId == x.SourceId, Expression);
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId) && SourceId == x.SourceId, Expression);
     }
-    public DateFilter(HttpRequestFilterType filterType, string[] companyIds, byte sourceId, int year, int month, int day) : base(filterType, year, month, day)
+    public DateFilter(CompareType compareType, IEnumerable<string> companyIds, byte sourceId, int year, int month, int day) : base(compareType, year, month, day)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
         SourceId = sourceId;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId) && sourceId == x.SourceId, Expression);
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId) && SourceId == x.SourceId, Expression);
     }
 }

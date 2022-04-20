@@ -1,7 +1,9 @@
 ﻿using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Catalogs;
 using IM.Service.Market.Domain.Entities.ManyToMany;
+
 using Microsoft.EntityFrameworkCore;
+
 using CommonEnums = IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess;
@@ -37,6 +39,8 @@ public class DatabaseContext : DbContext
     {
         modelBuilder.UseSerialColumns();
 
+        modelBuilder.Entity<Rating>().HasKey(x => x.CompanyId);
+
         modelBuilder.Entity<Company>().HasIndex(x => x.Name).IsUnique();
         modelBuilder.Entity<Industry>().HasIndex(x => x.Name).IsUnique();
         modelBuilder.Entity<Sector>().HasIndex(x => x.Name).IsUnique();
@@ -66,6 +70,7 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Coefficient>().HasOne(x => x.Company).WithMany(x => x.Coefficients).OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Source>().HasData(
+            new() { Id = (byte)Enums.Sources.Manual, Name = nameof(Enums.Sources.Manual), Description = "Data from manual enter" },
             new() { Id = (byte)Enums.Sources.Moex, Name = nameof(Enums.Sources.Moex), Description = "Data from Moscow Exchange" },
             new() { Id = (byte)Enums.Sources.Spbex, Name = nameof(Enums.Sources.Spbex), Description = "Data from Spb Exchange" },
             new() { Id = (byte)Enums.Sources.Yahoo, Name = nameof(Enums.Sources.Yahoo), Description = "Data from YahooFinance.com" },
@@ -89,7 +94,8 @@ public class DatabaseContext : DbContext
             new() { Id = (byte)CommonEnums.Currencies.Eth, Name = "Ξ", Description = nameof(CommonEnums.Currencies.Eth) });
 
         modelBuilder.Entity<Status>().HasData(
-            new() { Id = (byte)Enums.Statuses.Ready, Name = nameof(Enums.Statuses.Ready), Description = "ready to compute" }
+            new() { Id = (byte)Enums.Statuses.New, Name = nameof(Enums.Statuses.New), Description = "new object" }
+            , new() { Id = (byte)Enums.Statuses.Ready, Name = nameof(Enums.Statuses.Ready), Description = "ready to compute" }
             , new() { Id = (byte)Enums.Statuses.Computing, Name = nameof(Enums.Statuses.Computing), Description = "computing in process" }
             , new() { Id = (byte)Enums.Statuses.Computed, Name = nameof(Enums.Statuses.Computed), Description = "computing was completed" }
             , new() { Id = (byte)Enums.Statuses.NotComputed, Name = nameof(Enums.Statuses.NotComputed), Description = "computing was not done" }

@@ -1,7 +1,8 @@
 ﻿using IM.Service.Common.Net;
+using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.Models.Entity.Interfaces;
-using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Market.Domain.DataAccess;
+using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Interfaces;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 
@@ -28,16 +29,23 @@ public class DataLoader<TEntity> where TEntity : class, IDataIdentity, IPeriod
         IsCurrentDataCondition = _ => true;
         TimeAgo = 1;
 
-        var _lastDataHelper = Activator.CreateInstance(typeof(ILastDataHelper<TEntity>), repository, TimeAgo);
-        lastDataHelper = (_lastDataHelper as ILastDataHelper<TEntity>) ?? throw new NullReferenceException(nameof(_lastDataHelper));
+        lastDataHelper = repository switch
+        {
+            Repository<Price> repo => (new LastDateHelper<Price>(repo, TimeAgo) as ILastDataHelper<TEntity>)!,
+            Repository<Split> repo => (new LastDateHelper<Split>(repo, TimeAgo) as ILastDataHelper<TEntity>)!,
+            Repository<Float> repo => (new LastDateHelper<Float>(repo, TimeAgo) as ILastDataHelper<TEntity>)!,
+            Repository<Dividend> repo => (new LastDateHelper<Dividend>(repo, TimeAgo) as ILastDataHelper<TEntity>)!,
+            Repository<Report> repo => (new LastQuarterHelper<Report>(repo, TimeAgo) as ILastDataHelper<TEntity>)!,
+            _ => throw new ArgumentOutOfRangeException(nameof(repository), repository, null)
+        };
     }
 
     public Task LoadDataAsync(string data) =>
-        RabbitHelper.TrySerialize(data, out CompanySource? entity)
+        JsonHelper.TryDeserialize(data, out CompanySource? entity)
             ? DataSetAsync(entity!)
             : throw new SerializationException(typeof(TEntity).Name);
     public Task LoadDataRangeAsync(string data) =>
-        RabbitHelper.TrySerialize(data, out CompanySource[]? entities)
+        JsonHelper.TryDeserialize(data, out CompanySource[]? entities)
             ? DataSetAsync(entities!)
             : throw new SerializationException(typeof(TEntity).Name);
 
@@ -56,7 +64,7 @@ public class DataLoader<TEntity> where TEntity : class, IDataIdentity, IPeriod
         if (!isCurrent)
             await grabber.GetHistoryDataAsync(companySource);
 
-        logger.LogInformation(LogEvents.Processing, "Grab '{name}' by '{place}' is complete.", companySource.CompanyId, nameof(DataLoader<TEntity>));
+        logger.LogInformation(LogEvents.Processing, "Grab '{data}' for '{name}' by '{value}' is complete. ", typeof(TEntity).Name, companySource.CompanyId, companySource.Value);
     }
     private async Task DataSetAsync(CompanySource[] companySources)
     {
@@ -65,13 +73,20 @@ public class DataLoader<TEntity> where TEntity : class, IDataIdentity, IPeriod
 
         var lasts = await lastDataHelper.GetLastDataAsync(companySources);
 
-        var currentPrices = lasts.Where(x => IsCurrentDataCondition.Invoke(x));
-        var historyPrices = lasts.Where(x => !IsCurrentDataCondition.Invoke(x));
+        if (!lasts.Any())
+        {
+            await grabber.GetHistoryDataAsync(companySources);
+        }
+        else
+        {
+            var currentData = lasts.Where(x => IsCurrentDataCondition.Invoke(x));
+            var historyData = lasts.Where(x => !IsCurrentDataCondition.Invoke(x));
 
-        await grabber.GetCurrentDataAsync(companySources.Join(currentPrices, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x));
-        await grabber.GetHistoryDataAsync(companySources.Join(historyPrices, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x));
+            await grabber.GetCurrentDataAsync(companySources.Join(currentData, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x));
+            await grabber.GetHistoryDataAsync(companySources.Join(historyData, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x));
+        }
 
-        logger.LogInformation(LogEvents.Processing, "Grab '{names}' by '{place}' is complete.", string.Join(",", companySources.Select(x => x.CompanyId)), nameof(DataLoader<TEntity>));
+        logger.LogInformation(LogEvents.Processing, "Grab '{data}' for '{name}' is complete. ", typeof(TEntity).Name, string.Join(",", companySources.Select(x => x.CompanyId).Distinct()));
     }
 }
 
@@ -80,7 +95,7 @@ public interface ILastDataHelper<TEntity> where TEntity : class, IDataIdentity, 
     Task<TEntity?> GetLastDataAsync(CompanySource companySource);
     Task<TEntity[]> GetLastDataAsync(CompanySource[] companySources);
 }
-internal class LastQuarterHelper<TEntity> : ILastDataHelper<TEntity> where TEntity : class, IDataIdentity, IQuarterIdentity
+public sealed class LastQuarterHelper<TEntity> : ILastDataHelper<TEntity> where TEntity : class, IDataIdentity, IQuarterIdentity
 {
     private readonly Repository<TEntity> repository;
     private readonly int yearsAgo;
@@ -122,7 +137,7 @@ internal class LastQuarterHelper<TEntity> : ILastDataHelper<TEntity> where TEnti
             .ToArray();
     }
 }
-internal class LastDateHelper<TEntity> : ILastDataHelper<TEntity> where TEntity : class, IDataIdentity, IDateIdentity
+public sealed class LastDateHelper<TEntity> : ILastDataHelper<TEntity> where TEntity : class, IDataIdentity, IDateIdentity
 {
     private readonly Repository<TEntity> repository;
     private readonly int daysAgo;

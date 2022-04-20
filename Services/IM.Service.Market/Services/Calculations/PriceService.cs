@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.RabbitServices;
+﻿using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
@@ -23,7 +23,7 @@ public class PriceService
 
     public async Task SetValueTrueAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
     {
-        if (!RabbitHelper.TrySerialize(data, out T? entity))
+        if (!JsonHelper.TryDeserialize(data, out T? entity))
             throw new SerializationException(typeof(T).Name);
 
         var result = entity switch
@@ -33,8 +33,12 @@ public class PriceService
             _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
         };
 
-        if (!result.Any())
-            return;
+        foreach (var price in result)
+        {
+            price.StatusId = (byte) Statuses.Ready;
+            if (price.ValueTrue == 0)
+                price.ValueTrue = price.Value;
+        }
 
         var (error, _) = await priceRepo.UpdateAsync(result, nameof(SetValueTrueAsync));
 
@@ -43,7 +47,7 @@ public class PriceService
     }
     public async Task SetValueTrueRangeAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
     {
-        if (!RabbitHelper.TrySerialize(data, out T[]? entities))
+        if (!JsonHelper.TryDeserialize(data, out T[]? entities))
             throw new SerializationException(typeof(T).Name);
 
         var result = entities switch
@@ -53,8 +57,12 @@ public class PriceService
             _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
         };
 
-        if (!result.Any())
-            return;
+        foreach (var price in result)
+        {
+            price.StatusId = (byte)Statuses.Ready;
+            if (price.ValueTrue == 0)
+                price.ValueTrue = price.Value;
+        }
 
         var (error, _) = await priceRepo.UpdateAsync(result, nameof(SetValueTrueRangeAsync));
 
@@ -70,7 +78,7 @@ public class PriceService
         var splits = await splitRepo.GetSampleAsync(x => x.CompanyId == price.CompanyId && x.Date <= price.Date);
 
         if (!splits.Any())
-            return Array.Empty<Price>();
+            return new[] { price };
 
         Compute(splits, price);
 
@@ -88,7 +96,7 @@ public class PriceService
         var splits = await splitRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId) && x.Date >= dateMin && x.Date <= dateMax);
 
         if (!splits.Any())
-            return Array.Empty<Price>();
+            return prices;
 
         foreach (var group in splits.GroupBy(x => x.CompanyId))
             Compute(group.Key, group, prices);
@@ -118,6 +126,10 @@ public class PriceService
             return Array.Empty<Price>();
 
         var prices = await priceRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId) && x.Date >= dateMin);
+
+        if (!prices.Any())
+            return Array.Empty<Price>();
+
         foreach (var group in splits.GroupBy(x => x.CompanyId))
             Compute(group.Key, group, prices);
 
@@ -128,26 +140,33 @@ public class PriceService
     {
         var splitAgregatedValue = splits.OrderBy(x => x.Date).Select(x => x.Value).Aggregate((x, y) => x * y);
         price.ValueTrue = price.Value * splitAgregatedValue;
-        price.StatusId = (byte)Statuses.Ready;
     }
     private static void Compute(string companyId, IEnumerable<Split> splits, IReadOnlyCollection<Price> prices)
     {
         var splitData = splits.OrderBy(x => x.Date).Select(x => (x.Date, x.Value)).ToArray();
-        var targetData = new List<(DateOnly dateStart, DateOnly dateEnd, int value)>(splitData.Length - 1);
+        var targetData = new List<(DateOnly dateStart, DateOnly dateEnd, int value)>(splitData.Length);
 
         var splitValue = 0;
 
-        for (var i = 1; i <= splitData.Length; i++)
+        if (splitData.Length > 1)
         {
-            splitValue *= splitData[i - 1].Value;
-            targetData.Add((splitData[i - 1].Date, splitData[i].Date, splitValue));
-        }
-
-        foreach (var (dateStart, dateEnd, value) in targetData)
-            foreach (var price in prices.Where(x => x.CompanyId == companyId && x.Date >= dateStart && x.Date < dateEnd))
+            for (var i = 1; i <= splitData.Length; i++)
             {
-                price.ValueTrue = price.Value * value;
-                price.StatusId = (byte)Statuses.Ready;
+                splitValue *= splitData[i - 1].Value;
+                targetData.Add((splitData[i - 1].Date, splitData[i].Date, splitValue));
             }
+
+            foreach (var (dateStart, dateEnd, value) in targetData)
+                foreach (var price in prices.Where(x => x.CompanyId == companyId && x.Date >= dateStart && x.Date < dateEnd))
+                    price.ValueTrue = price.Value * value;
+        }
+        else
+        {
+            splitValue = splitData[0].Value;
+            var splitDate = splitData[0].Date;
+
+            foreach (var price in prices.Where(x => x.CompanyId == companyId && x.Date >= splitDate))
+                price.ValueTrue = price.Value * splitValue;
+        }
     }
 }

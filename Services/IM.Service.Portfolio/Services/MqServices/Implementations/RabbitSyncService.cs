@@ -1,15 +1,17 @@
-﻿using IM.Service.Common.Net.RabbitServices;
+﻿using IM.Service.Common.Net.Helpers;
+using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Portfolio.Clients;
 using IM.Service.Portfolio.DataAccess.Entities;
 using IM.Service.Portfolio.DataAccess.Repositories;
+using IM.Service.Portfolio.Models.Dto.Mq;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Portfolio.Models.Dto.Mq;
+
 using static IM.Service.Common.Net.Enums;
 using static IM.Service.Portfolio.Enums;
 
@@ -29,7 +31,7 @@ public class RabbitSyncService : RabbitRepositoryHandler, IRabbitActionService
 
     private async Task<bool> GetCompanyResultAsync(QueueActions action, string data)
     {
-        if (!RabbitHelper.TrySerialize(data, out CompanyDto? dto))
+        if (!JsonHelper.TryDeserialize(data, out CompanyDto? dto))
             return false;
 
         if (!Enum.TryParse<Countries>(dto!.CountryId.ToString(), true, out var country))
@@ -70,7 +72,7 @@ public class RabbitSyncService : RabbitRepositoryHandler, IRabbitActionService
     }
     private async Task<bool> GetCompaniesResultAsync(QueueActions action, string data)
     {
-        if (!RabbitHelper.TrySerialize(data, out CompanyDto[]? dtos))
+        if (!JsonHelper.TryDeserialize(data, out CompanyDto[]? dtos))
             return false;
 
         dtos = dtos!.Where(x => Enum.TryParse<Countries>(x.CountryId.ToString(), true, out _)).ToArray();

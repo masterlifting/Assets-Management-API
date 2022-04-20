@@ -1,13 +1,14 @@
-﻿using RabbitMQ.Client;
+﻿using IM.Service.Common.Net.Helpers;
+using IM.Service.Common.Net.Models.Configuration;
+using IM.Service.Common.Net.ParserServices;
+using IM.Service.Common.Net.RabbitServices.Configuration;
+
+using RabbitMQ.Client;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
-using IM.Service.Common.Net.Models.Configuration;
-using IM.Service.Common.Net.ParserServices;
-using IM.Service.Common.Net.RabbitServices.Configuration;
 
 namespace IM.Service.Common.Net.RabbitServices;
 
@@ -47,7 +48,8 @@ public class RabbitPublisher
 
     public void PublishTask<T>(IEnumerable<QueueNames> queues, QueueEntities entity, QueueActions action, T data) where T : class
     {
-        var _data = data is string stringData ? stringData : JsonSerializer.Serialize(data, Helper.JsonHelper.Options);
+        if (!JsonHelper.TrySerialize(data, out var _data))
+            return;
 
         foreach (var queue in exchange.Queues.Join(queues, x => x.NameEnum, y => y, (x, _) => x))
             foreach (var routingKey in queue.Entities.Where(x => x.NameEnum == entity && x.Actions.Contains(action)))
@@ -59,7 +61,8 @@ public class RabbitPublisher
     }
     public void PublishTask<T>(QueueNames queue, QueueEntities entity, QueueActions action, T data) where T : class
     {
-        var _data = data is string stringData ? stringData : JsonSerializer.Serialize(data, Helper.JsonHelper.Options);
+        if (!JsonHelper.TrySerialize(data, out var _data))
+            return;
 
         var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
 

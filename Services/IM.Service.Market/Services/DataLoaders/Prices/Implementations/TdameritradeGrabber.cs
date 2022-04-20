@@ -5,6 +5,7 @@ using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Clients;
+using static IM.Service.Common.Net.Enums;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.DataLoaders.Prices.Implementations;
@@ -93,10 +94,11 @@ public class TdameritradeGrabber : IDataGrabber
             : clientResult.data.Select(x => new Price
             {
                 CompanyId = x.Key,
-                SourceId = (byte)Sources.Tdameritrade,
-                Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Value.regularMarketTradeTimeInLong).DateTime),
-                StatusId = (byte)Statuses.New,
                 Value = x.Value.lastPrice,
+                Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Value.regularMarketTradeTimeInLong).DateTime),
+                CurrencyId = (byte)Currencies.Usd,
+                SourceId = (byte)Sources.Tdameritrade,
+                StatusId = (byte)Statuses.New
             }).ToArray();
     private static Price[] Map(TdAmeritradeHistoryPriceResultModel clientResult) =>
         clientResult.data?.candles is null
@@ -104,9 +106,10 @@ public class TdameritradeGrabber : IDataGrabber
             : clientResult.data.candles.Select(x => new Price
             {
                 CompanyId = clientResult.ticker,
-                SourceId = (byte)Sources.Tdameritrade,
                 Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.datetime).DateTime),
-                StatusId = (byte)Statuses.New,
                 Value = x.high,
+                CurrencyId = (byte)Currencies.Usd,
+                SourceId = (byte)Sources.Tdameritrade,
+                StatusId = (byte)Statuses.New
             }).ToArray();
 }

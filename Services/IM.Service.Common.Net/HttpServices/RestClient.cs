@@ -1,5 +1,7 @@
-﻿using IM.Service.Common.Net.Models.Dto.Http;
+﻿using IM.Service.Common.Net.Helpers;
+using IM.Service.Common.Net.Models.Dto.Http;
 
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 
 using System;
@@ -8,8 +10,6 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using static IM.Service.Common.Net.Helper;
 
 namespace IM.Service.Common.Net.HttpServices;
 

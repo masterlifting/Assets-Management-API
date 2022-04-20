@@ -53,7 +53,9 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
-                                QueueActions.Compute
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
                             }
                         },
                         new QueueEntity(QueueEntities.Prices)
@@ -61,7 +63,9 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
-                                QueueActions.Compute
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
                             }
                         },
                         new QueueEntity(QueueEntities.Report)
@@ -69,7 +73,10 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
-                                QueueActions.Compute
+                                QueueActions.Set,
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
                             }
                         },
                         new QueueEntity(QueueEntities.Reports)
@@ -77,7 +84,10 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
-                                QueueActions.Compute
+                                QueueActions.Set,
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
                             }
                         },
                         new QueueEntity(QueueEntities.Split)
@@ -85,7 +95,9 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
-                                QueueActions.Compute
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
                             }
                         },
                         new QueueEntity(QueueEntities.Splits)
@@ -93,7 +105,9 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
-                                QueueActions.Compute
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
                             }
                         },
                         new QueueEntity(QueueEntities.Float)
@@ -101,7 +115,9 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
-                                QueueActions.Compute
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
                             }
                         },
                         new QueueEntity(QueueEntities.Floats)
@@ -109,7 +125,23 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
-                                QueueActions.Compute
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Dividend)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Get
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Dividends)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Get
                             }
                         },
                         new QueueEntity(QueueEntities.CompanySource)
@@ -124,6 +156,20 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Rating)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Compute
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Ratings)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Compute
                             }
                         }
                     }

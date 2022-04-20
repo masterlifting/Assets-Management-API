@@ -14,34 +14,34 @@ public abstract class FilterByDate<T> : IFilter<T> where T : class, IDateIdentit
     public int Month { get; }
     public int Day { get; }
     public Expression<Func<T, bool>> Expression { get; set; }
-
-    protected FilterByDate()
-    {
-        Expression = x => true;
-    }
-    protected FilterByDate(int year)
+    
+    protected FilterByDate(CompareType compareType, int year)
     {
         Year = SetYear(year);
         Month = 1;
         Day = 1;
 
-        Expression = x => x.Date.Year == Year;
+        Expression = x => compareType == CompareType.More
+            ? x.Date.Year >= Year
+            : x.Date.Year == Year;
     }
-    protected FilterByDate(int year, int month)
+    protected FilterByDate(CompareType compareType, int year, int month)
     {
         Year = SetYear(year);
         Month = SetMonth(month);
         Day = 1;
 
-        Expression = x => x.Date.Year == Year && x.Date.Month == Month;
+        Expression = x => compareType == CompareType.More
+            ? x.Date.Year > Year || x.Date.Year == Year && x.Date.Month >= Month
+            : x.Date.Year == Year && x.Date.Month == Month;
     }
-    protected FilterByDate(HttpRequestFilterType filterType, int year, int month, int day)
+    protected FilterByDate(CompareType compareType, int year, int month, int day)
     {
         Year = SetYear(year);
-        Month = SetMonth(month, filterType);
+        Month = SetMonth(month, compareType);
         Day = SetDay(day);
 
-        Expression = x => filterType == HttpRequestFilterType.More
+        Expression = x => compareType == CompareType.More
             ? x.Date.Year > Year || x.Date.Year == Year && (x.Date.Month == Month && x.Date.Day >= Day || x.Date.Month > Month)
             : x.Date.Year == Year && x.Date.Month == Month && x.Date.Day == Day;
     }

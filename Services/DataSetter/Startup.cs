@@ -2,8 +2,6 @@ using DataSetter.Clients;
 using DataSetter.DataAccess;
 using DataSetter.Settings;
 
-using IM.Service.Common.Net.HttpServices.JsonConvertors;
-
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
+using IM.Service.Common.Net.Helpers;
 
 namespace DataSetter;
 

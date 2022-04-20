@@ -41,7 +41,7 @@ public static class Enums
         Update,
         Delete
     }
-    public enum HttpRequestFilterType : byte
+    public enum CompareType : byte
     {
         Equal = 1,
         More = 2

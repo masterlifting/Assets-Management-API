@@ -26,7 +26,7 @@ public class RatingBackgroundService : BackgroundService
             }
             catch (Exception exception)
             {
-                logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(ExecuteAsync), exception.Message);
+                logger.LogError(LogEvents.Processing, exception.Message);
             }
         }
     }

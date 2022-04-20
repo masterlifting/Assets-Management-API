@@ -10,26 +10,24 @@ namespace IM.Service.Common.Net.RepositoryService.Filters;
 
 public abstract class FilterByQuarter<T> : IFilter<T> where T : class, IQuarterIdentity
 {
-    public int Year { get; }
-    public byte Quarter { get; }
+    private int Year { get; }
+    private byte Quarter { get; }
     public Expression<Func<T, bool>> Expression { get; set; }
 
-    protected FilterByQuarter()
-    {
-        Expression = x => true;
-    }
-    protected FilterByQuarter(int year)
+    protected FilterByQuarter(CompareType compareType, int year)
     {
         Year = SetYear(year);
-
-        Expression = x => x.Year == Year;
+        Quarter = 1;
+        Expression = x => compareType == CompareType.More
+            ? x.Year >= Year
+            : x.Year == Year;
     }
-    protected FilterByQuarter(HttpRequestFilterType filterType, int year, int quarter)
+    protected FilterByQuarter(CompareType compareType, int year, int quarter)
     {
         Year = SetYear(year);
         Quarter = SetQuarter(quarter);
         
-        Expression = x => filterType == HttpRequestFilterType.More
+        Expression = x => compareType == CompareType.More
             ? x.Year > Year || x.Year == Year && x.Quarter >= Quarter
             : x.Year == Year && x.Quarter == Quarter;
     }

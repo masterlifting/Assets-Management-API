@@ -11,9 +11,9 @@ public static class FilterSetter
     {
         return month > 12 ? 12 : month <= 0 ? 1 : month;
     }
-    public static int SetMonth(int month, HttpRequestFilterType filter)
+    public static int SetMonth(int month, CompareType filter)
     {
-        var targetMonth = filter == HttpRequestFilterType.More && DateTime.UtcNow.Day == 1
+        var targetMonth = filter == CompareType.More && DateTime.UtcNow.Day == 1
             ? DateTime.UtcNow.AddMonths(-1).Month
             : month;
         return targetMonth > 12 ? 12 : targetMonth <= 0 ? 1 : targetMonth;

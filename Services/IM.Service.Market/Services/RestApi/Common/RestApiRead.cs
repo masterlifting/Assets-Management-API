@@ -19,14 +19,6 @@ public class RestApiRead<TEntity, TGet> where TGet : class where TEntity : class
         this.mapper = mapper;
     }
 
-    public async Task<ResponseModel<TGet>> GetAsync(TEntity entity)
-    {
-        var queryResult = await queryService.GetAsync(entity);
-
-        return queryResult is not null
-            ? new() { Data = await mapper.MapFromAsync(queryResult) }
-            : new() { Errors = new[] { $"{typeof(TEntity).Name} of '{entity.CompanyId}' not found" } };
-    }
     public async Task<ResponseModel<PaginatedModel<TGet>>> GetAsync<T>(T filter, HttpPagination pagination) where T : class, IFilter<TEntity>
     {
         var (query, count) = await queryService.GetQueryWithCountResultAsync(filter, pagination);

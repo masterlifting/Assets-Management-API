@@ -13,9 +13,10 @@ public class CompanySourceRestApi
 
     public async Task<ResponseModel<PaginatedModel<SourceGetDto>>> GetAsync(string companyId)
     {
+        companyId = companyId.ToUpperInvariant();
         var sources = await companySourceRepo.GetSampleAsync(
             x => x.CompanyId == companyId,
-            x => new SourceGetDto(x.Source.Name, x.Value));
+            x => new SourceGetDto(x.SourceId, x.Source.Name, x.Value));
 
         return new()
         {
@@ -28,21 +29,25 @@ public class CompanySourceRestApi
     }
     public async Task<ResponseModel<SourceGetDto>> GetAsync(string companyId, byte sourceId)
     {
+        companyId = companyId.ToUpperInvariant();
         var source = await companySourceRepo.FindAsync(companyId, sourceId);
 
         return source is not null
-            ? new() { Data = new SourceGetDto(source.Source.Name, source.Value) }
+            ? new() { Data = new SourceGetDto(sourceId, source.Source.Name, source.Value) }
             : new() { Errors = new[] { "Company source not found" } };
     }
-    public async Task<(string?, CompanySource[])> CreateUpdateDeleteAsync(string companyId, IEnumerable<SourcePostDto> models) =>
-        await companySourceRepo.CreateUpdateDeleteAsync(
+    public async Task<(string?, CompanySource[])> CreateUpdateDeleteAsync(string companyId, IEnumerable<SourcePostDto> models)
+    {
+        companyId = companyId.ToUpperInvariant();
+        return await companySourceRepo.CreateUpdateDeleteAsync(
             models
                 .Select(x => new CompanySource
                 {
                     CompanyId = companyId,
                     SourceId = x.Id,
                     Value = x.Value
-                }), 
+                }),
             new CompanySourceComparer(),
             "");
+    }
 }

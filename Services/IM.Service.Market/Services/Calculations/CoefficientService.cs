@@ -1,5 +1,5 @@
 ﻿using IM.Service.Common.Net;
-using IM.Service.Common.Net.RabbitServices;
+using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
@@ -39,7 +39,7 @@ public class CoefficientService
 
     public async Task SetCoefficientAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
     {
-        if (!RabbitHelper.TrySerialize(data, out T? entity))
+        if (!JsonHelper.TryDeserialize(data, out T? entity))
             throw new SerializationException(typeof(T).Name);
 
         var coefficients = entity switch
@@ -58,7 +58,7 @@ public class CoefficientService
     }
     public async Task SetCoefficientRangeAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
     {
-        if (!RabbitHelper.TrySerialize(data, out T[]? entities))
+        if (!JsonHelper.TryDeserialize(data, out T[]? entities))
             throw new SerializationException(typeof(T).Name);
 
         var coefficients = entities switch
@@ -161,32 +161,13 @@ public class CoefficientService
 
         reports = reports.OrderBy(x => x.Year).ThenBy(x => x.Quarter).ToArray();
 
-        var companyIds = reports.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
-        var currencyIds = reports.GroupBy(x => x.CurrencyId).Select(x => x.Key).ToArray();
-
-        var firstReport = reports[0];
-        var lastReport = reports[^1];
-
-        var firstDate = new DateOnly(firstReport.Year, QuarterHelper.GetFirstMonth(firstReport.Quarter), 1);
-        var lastDate = new DateOnly(lastReport.Year, QuarterHelper.GetLastMonth(lastReport.Quarter), 28);
-
-        var _floats = await floatRepo.GetSampleAsync(x =>
-            companyIds.Contains(x.CompanyId)
-            && x.Date >= firstDate
-            && x.Date <= lastDate);
-        var _prices = await priceRepo.GetSampleAsync(x =>
-            companyIds.Contains(x.CompanyId)
-            && currencyIds.Contains(x.CurrencyId)
-            && x.Date >= firstDate
-            && x.Date <= lastDate);
-
         var coefficients = new List<Coefficient>(reports.Length);
 
         foreach (var report in reports)
         {
             try
             {
-                coefficients.AddRange(await GetAsync(report, _floats, _prices));
+                coefficients.AddRange(await GetAsync(report));
             }
             catch (Exception exception)
             {
@@ -220,6 +201,7 @@ public class CoefficientService
                      ? throw new NullReferenceException($"Не найдены {nameof(Float)} для расчета")
                      : lastFloats;
         }
+
         floats = floats.OrderBy(x => x.Date).ToArray();
 
         var companyIds = floats.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
@@ -227,12 +209,7 @@ public class CoefficientService
         var firstDate = floats[0].Date;
         var lastDate = floats[^1].Date;
 
-        var _floats = await floatRepo.GetSampleAsync(x =>
-            companyIds.Contains(x.CompanyId)
-            && x.Date >= firstDate
-            && x.Date <= lastDate);
-
-        var _reports = await reportRepo
+        var reports = await reportRepo
             .GetSampleAsync(x =>
                 companyIds.Contains(x.CompanyId)
                 && (x.Year > firstDate.Year
@@ -241,21 +218,13 @@ public class CoefficientService
                     || x.Year == lastDate.Year &&
                     x.Quarter < QuarterHelper.GetQuarter(lastDate.Month)));
 
-        var currencyIds = _reports.GroupBy(x => x.CurrencyId).Select(x => x.Key).ToArray();
+        var coefficients = new List<Coefficient>(reports.Length);
 
-        var _prices = await priceRepo.GetSampleAsync(x =>
-            companyIds.Contains(x.CompanyId)
-            && currencyIds.Contains(x.CurrencyId)
-            && x.Date >= firstDate
-            && x.Date <= lastDate);
-
-        var coefficients = new List<Coefficient>(_reports.Length);
-
-        foreach (var _float in floats)
+        foreach (var report in reports)
         {
             try
             {
-                coefficients.AddRange(await GetAsync(_float, _floats, _reports, _prices));
+                coefficients.AddRange(await GetAsync(report, floats));
             }
             catch (Exception exception)
             {
@@ -300,7 +269,7 @@ public class CoefficientService
         var firstDate = prices[0].Date;
         var lastDate = prices[^1].Date;
 
-        var _reports = await reportRepo
+        var reports = await reportRepo
             .GetSampleAsync(x =>
                 companyIds.Contains(x.CompanyId)
                 && currencyIds.Contains(x.CurrencyId)
@@ -310,19 +279,13 @@ public class CoefficientService
                     || x.Year == lastDate.Year &&
                     x.Quarter < QuarterHelper.GetQuarter(lastDate.Month)));
 
-        var _prices = await priceRepo.GetSampleAsync(x =>
-            companyIds.Contains(x.CompanyId)
-            && currencyIds.Contains(x.CurrencyId)
-            && x.Date >= firstDate
-            && x.Date <= lastDate);
+        var coefficients = new List<Coefficient>(reports.Length);
 
-        var coefficients = new List<Coefficient>(_reports.Length);
-
-        foreach (var price in prices)
+        foreach (var report in reports)
         {
             try
             {
-                coefficients.AddRange(await GetAsync(price, _reports, _prices));
+                coefficients.AddRange(await GetAsync(report, null, prices));
             }
             catch (Exception exception)
             {
@@ -332,13 +295,13 @@ public class CoefficientService
 
         return coefficients.ToArray();
     }
-    
-    
+
+
     private async Task<Coefficient[]> GetAsync(Report report, Float[]? floats = null, Price[]? prices = null)
     {
         var lastDate = new DateOnly(report.Year, QuarterHelper.GetLastMonth(report.Quarter), 28);
 
-        var _floats = floats is null
+        floats = floats is null
             ? await floatRepo
                 .GetSampleOrderedAsync(x =>
                     x.CompanyId == report.CompanyId
@@ -353,17 +316,16 @@ public class CoefficientService
                 .OrderBy(x => x.Date)
                 .ToArray();
 
-        if (!_floats.Any())
-            return Array.Empty<Coefficient>();
+        if (!floats.Any())
+            floats = await floatRepo.GetSampleOrderedAsync(x =>
+                    x.CompanyId == report.CompanyId,
+                orderBy => orderBy.Date);
 
-        var coefficients = new List<Coefficient>(1)
-        {
-            await GetAsync(report, _floats[^1], prices)
-        };
-
-        return coefficients.ToArray();
+        return !floats.Any()
+            ? throw new ArithmeticException($"floats for '{report.CompanyId}' with date less '{lastDate}' not found")
+            : new[] { await GetAsync(report, floats[^1], prices) };
     }
-    private async Task<Coefficient[]> GetAsync(Float _float, Float[]? floats = null, Report[]? reports = null, Price[]? prices = null)
+    private async Task<Coefficient[]> GetAsync(Float _float, Report[]? reports = null, Price[]? prices = null)
     {
         var firstDate = _float.Date;
         DateOnly? lastDate = null;
@@ -372,23 +334,15 @@ public class CoefficientService
          какое количество отчетов было выпущено после этого изменения и были ли еще 
         изменения ценных бумаг после этого.
         Так будет выяснен период времени, на который влияет этот показатель*/
-        var _floats = floats is null
-            ? await floatRepo
-                .GetSampleOrderedAsync(x =>
+        var floats = await floatRepo
+            .GetSampleOrderedAsync(x =>
                     x.CompanyId == _float.CompanyId
                     //&& x.SourceId == // при необходимости можно указать источник данных
                     && x.Date > firstDate,
-                    orderBy => orderBy.Date)
-            : floats
-                .Where(x =>
-                    x.CompanyId == _float.CompanyId
-                    //&& x.SourceId == // при необходимости можно указать источник данных
-                    && x.Date > firstDate)
-                .OrderBy(x => x.Date)
-                .ToArray();
+                orderBy => orderBy.Date);
 
-        if (_floats.Any())
-            lastDate = _floats[^1].Date;
+        if (floats.Any())
+            lastDate = floats[^1].Date;
 
         /*Далее за этот период необходимо получить все отчеты, по которым в последствии
          будут пересчитаны коефициенты с учетом входящего параметра*/
@@ -492,7 +446,8 @@ public class CoefficientService
 
         return coefficients.ToArray();
     }
-    
+
+
     private async Task<Coefficient> GetAsync(Report report, Float _float, IEnumerable<Price>? prices = null)
     {
         var firstDate = new DateOnly(report.Year, QuarterHelper.GetFirstMonth(report.Quarter), 1);
@@ -518,7 +473,7 @@ public class CoefficientService
                 .ToArray();
 
         return !_prices.Any()
-            ? throw new ArithmeticException(nameof(_prices) + " not found")
+            ? throw new ArithmeticException($"prices for '{report.CompanyId}' with date betwen '{firstDate}' - '{lastDate}' not found")
             : Compute(report, _float, _prices[^1]);
     }
     private async Task<Coefficient> GetAsync(Report report, Price price, IEnumerable<Float>? floats = null)
@@ -541,11 +496,11 @@ public class CoefficientService
                 .ToArray();
 
         return !_floats.Any()
-            ? throw new ArithmeticException(nameof(_floats) + " not found")
+            ? throw new ArithmeticException($"floats for '{report.CompanyId}' with date less '{lastDate}' not found")
             : Compute(report, _floats[^1], price);
     }
 
-    
+
     private static Coefficient Compute(Report report, Float _float, Price price)
     {
         var coefficient = new Coefficient

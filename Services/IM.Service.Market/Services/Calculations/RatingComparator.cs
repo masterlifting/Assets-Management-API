@@ -33,7 +33,7 @@ public class RatingComparator
         var repository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<T>>();
         //var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<RatingComparator>>();
 
-        var readyData = await repository.GetSampleAsync(x => x.StatusId == (byte)Statuses.Ready);
+        var readyData = await repository.GetSampleAsync(x => x.StatusId == (byte)Statuses.Ready || x.StatusId == (byte)Statuses.Error);
 
         if (!readyData.Any())
             return false;
@@ -62,7 +62,8 @@ public class RatingComparator
         foreach (var item in entities)
             item.StatusId = statusId;
 
-        var (error, _) = await repository.UpdateAsync(entities, nameof(ChangeStatusAsync) + " to " + statusId);
+        var status = Enum.Parse<Statuses>(statusId.ToString()).ToString();
+        var (error, _) = await repository.UpdateAsync(entities, nameof(ChangeStatusAsync) + " to " + status);
 
         return error is null;
     }
@@ -84,9 +85,9 @@ internal class RatingComparatorHandler
         readyData switch
         {
             IEnumerable<Price> => (IEnumerable<T>)await GetComparedSampleAsync(repository as Repository<Price>, readyData.ToArray() as Price[]),
-            IEnumerable<Dividend> => (IEnumerable<T>)await GetComparedSampleAsync(repository as Repository<Coefficient>, readyData.ToArray() as Coefficient[]),
+            IEnumerable<Dividend> => (IEnumerable<T>)await GetComparedSampleAsync(repository as Repository<Dividend>, readyData.ToArray() as Dividend[]),
             IEnumerable<Report> => (IEnumerable<T>)await GetComparedSampleAsync(repository as Repository<Report>, readyData.ToArray() as Report[]),
-            IEnumerable<Coefficient> => (IEnumerable<T>)await GetComparedSampleAsync(repository as Repository<Dividend>, readyData.ToArray() as Dividend[]),
+            IEnumerable<Coefficient> => (IEnumerable<T>)await GetComparedSampleAsync(repository as Repository<Coefficient>, readyData.ToArray() as Coefficient[]),
             _ => throw new ArgumentOutOfRangeException()
         };
 

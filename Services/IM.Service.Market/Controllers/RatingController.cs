@@ -16,70 +16,68 @@ public class RatingController : ControllerBase
     public RatingController(RatingRestApi api) => this.api = api;
 
     [HttpGet]
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> Get(int page = 0, int limit = 0) => await api.GetAsync(new HttpPagination(page, limit));
+    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> Get(int page = 0, int limit = 0) => 
+        api.GetAsync(new HttpPagination(page, limit), nameof(Rating));
 
     [HttpGet("{companyId}")]
-    public async Task<ResponseModel<RatingGetDto>> GetByCompany(string companyId) => await api.GetAsync(companyId);
+    public Task<ResponseModel<RatingGetDto>> GetByCompany(string companyId) => api.GetAsync(companyId);
     
     [HttpGet("{place:int}")]
-    public async Task<ResponseModel<RatingGetDto>> GetByPlace(int place) => await api.GetAsync(place);
+    public Task<ResponseModel<RatingGetDto>> GetByPlace(int place) => api.GetAsync(place);
     
     [HttpGet("price/")]
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetPriceResultOrdered(int page = 0, int limit = 0) =>
-        await api.GetPriceResultOrderedAsync(new HttpPagination(page, limit));
-    
+    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetPriceResultOrdered(int page = 0, int limit = 0) =>
+        api.GetAsync(new HttpPagination(page, limit), nameof(Price));
+
     [HttpGet("report/")]
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetReportResultOrdered(int page = 0, int limit = 0) =>
-        await api.GetReportResultOrderedAsync(new HttpPagination(page, limit));
-    
+    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetReportResultOrdered(int page = 0, int limit = 0) =>
+        api.GetAsync(new HttpPagination(page, limit), nameof(Report));
+
     [HttpGet("coefficient/")]
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetCoefficientResultOrdered(int page = 0, int limit = 0) =>
-        await api.GetCoefficientResultOrderedAsync(new HttpPagination(page, limit));
-    
+    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetCoefficientResultOrdered(int page = 0, int limit = 0) =>
+        api.GetAsync(new HttpPagination(page, limit), nameof(Coefficient));
+
     [HttpGet("dividend/")]
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetDividendResultOrdered(int page = 0, int limit = 0) =>
-        await api.GetDividendResultOrderedAsync(new HttpPagination(page, limit));
+    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetDividendResultOrdered(int page = 0, int limit = 0) =>
+        api.GetAsync(new HttpPagination(page, limit), nameof(Dividend));
 
 
     [HttpGet("recalculate/")]
-    public async Task<string> Recalculate() => await api.RecalculateAsync();
+    public Task<string> Recalculate() => api.RecalculateAsync();
     [HttpGet("recalculate/{companyId}")]
-    public async Task<string> Recalculate(string companyId)
+    public Task<string> Recalculate(string companyId)
     {
         var companyIds = companyId.Split(',');
-        return companyIds.Length > 1 ? await api.RecalculateAsync(companyIds) : await api.RecalculateAsync(companyId);
+        return companyIds.Length > 1 ? api.RecalculateAsync(companyIds) : api.RecalculateAsync(companyId);
     }
     [HttpGet("recalculate/{companyId}/{year:int}")]
-    public async Task<string> Recalculate(string companyId, int year)
+    public Task<string> Recalculate(string companyId, int year)
     {
         var companyIds = companyId.Split(',');
         return companyIds.Length > 1
-            ? await api.RecalculateAsync(new CompanyDateFilter<Rating>(companyIds, year))
-            : await api.RecalculateAsync(new CompanyDateFilter<Rating>(companyId, year));
+            ? api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyIds, year))
+            : api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyId, year));
     }
     [HttpGet("recalculate/{companyId}/{year:int}/{month:int}")]
-    public async Task<string> Recalculate(string companyId, int year, int month)
+    public Task<string> Recalculate(string companyId, int year, int month)
     {
         var companyIds = companyId.Split(',');
         return companyIds.Length > 1
-            ? await api.RecalculateAsync(new CompanyDateFilter<Rating>(companyIds, year, month))
-            : await api.RecalculateAsync(new CompanyDateFilter<Rating>(companyId, year, month));
+            ? api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyIds, year, month))
+            : api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyId, year, month));
     }
     [HttpGet("recalculate/{companyId}/{year:int}/{month:int}/{day:int}")]
-    public async Task<string> Recalculate(string companyId, int year, int month, int day)
+    public Task<string> Recalculate(string companyId, int year, int month, int day)
     {
         var companyIds = companyId.Split(',');
         return companyIds.Length > 1
-            ? await api.RecalculateAsync(new CompanyDateFilter<Rating>(HttpRequestFilterType.Equal, companyIds, year, month, day))
-            : await api.RecalculateAsync(new CompanyDateFilter<Rating>(HttpRequestFilterType.Equal, companyId, year, month, day));
+            ? api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyIds, year, month, day))
+            : api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyId, year, month, day));
     }
     [HttpGet("recalculate/{year:int}")]
-    public async Task<string> Recalculate(int year) =>
-        await api.RecalculateAsync(new CompanyDateFilter<Rating>(year));
+    public Task<string> Recalculate(int year) => api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, year));
     [HttpGet("recalculate/{year:int}/{month:int}")]
-    public async Task<string> Recalculate(int year, int month) =>
-        await api.RecalculateAsync(new CompanyDateFilter<Rating>(year, month));
+    public Task<string> Recalculate(int year, int month) => api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, year, month));
     [HttpGet("recalculate/{year:int}/{month:int}/{day:int}")]
-    public async Task<string> Recalculate(int year, int month, int day) =>
-        await api.RecalculateAsync(new CompanyDateFilter<Rating>(HttpRequestFilterType.Equal, year, month, day));
+    public Task<string> Recalculate(int year, int month, int day) => api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, year, month, day));
 }

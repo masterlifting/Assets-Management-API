@@ -11,8 +11,6 @@ public record SplitGetDto
 }
 public record SplitPostDto : SplitPutDto
 {
-    public string CompanyId { get; init; } = null!;
-    public byte SourceId { get; init; }
     public DateOnly Date { get; init; }
 }
 public record SplitPutDto

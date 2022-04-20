@@ -16,15 +16,19 @@ public class ReportLoader : DataLoader<Report>
         : base(logger, repository, new Dictionary<byte, IDataGrabber>
         {
                 { (byte)Enums.Sources.Investing, new InvestingGrabber(repository, logger, investingClient) }
-            })
+        })
     {
-        IsCurrentDataCondition = x => IsMissingLastQuarter(x.Year, x.Quarter);
+        IsCurrentDataCondition = x => IsCurrentData(x.Year, x.Quarter);
         TimeAgo = 3;
     }
 
-    private static bool IsMissingLastQuarter(int year, byte quarter)
+    private static bool IsCurrentData(int year, byte quarter)
     {
-        var (controlYear, controlQuarter) = QuarterHelper.SubtractQuarter(DateOnly.FromDateTime(DateTime.UtcNow));
-        return controlYear > year || controlYear == year && controlQuarter > quarter;
+        var currentYear = DateTime.UtcNow.Year;
+        var currentQuarter = QuarterHelper.GetQuarter(DateTime.UtcNow.Month);
+
+        (currentYear, currentQuarter) = QuarterHelper.SubtractQuarter(currentYear, currentQuarter);
+
+        return currentYear == year && currentQuarter == quarter;
     }
 }

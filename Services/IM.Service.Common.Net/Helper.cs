@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Linq.Expressions;
-using System.Text.Json;
-
-using IM.Service.Common.Net.HttpServices.JsonConvertors;
 
 namespace IM.Service.Common.Net;
 
@@ -72,18 +69,6 @@ public static class Helper
             return (year, quarter);
         }
     }
-    public static class JsonHelper
-    {
-        public static JsonSerializerOptions Options { get; }
-
-        static JsonHelper()
-        {
-            Options = new(JsonSerializerDefaults.Web);
-            Options.Converters.Add(new DateOnlyConverter());
-            Options.Converters.Add(new TimeOnlyConverter());
-        }
-    }
-
     public static class ExpressionHelper
     {
         public static Expression<Func<T, bool>> Combine<T>(Expression<Func<T, bool>> firstExpression, Expression<Func<T, bool>> secondExpression)

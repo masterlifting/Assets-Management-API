@@ -4,11 +4,12 @@ public static class Enums
 {
     public enum Sources : byte
     {
-        Moex = 1,
-        Spbex = 2,
-        Tdameritrade = 3,
-        Investing = 4,
-        Yahoo = 5
+        Manual = 1,
+        Moex = 2,
+        Spbex = 3,
+        Tdameritrade = 4,
+        Investing = 5,
+        Yahoo = 6
     }
     public enum CompareTypes : short
     {

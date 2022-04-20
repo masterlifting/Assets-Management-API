@@ -12,7 +12,6 @@ public class RestQueryQuarterService<TEntity> : IRestQueryService<TEntity> where
     private readonly Repository<TEntity> repository;
     public RestQueryQuarterService(Repository<TEntity> repository) => this.repository = repository;
 
-    public Task<TEntity?> GetAsync(TEntity entity) => repository.FindAsync(entity);
     public IQueryable<TEntity> GetQuery<T>(T filter, HttpPagination pagination) where T : class, IFilter<TEntity>
     {
         var filteredQuery = repository.GetQuery(filter.Expression);

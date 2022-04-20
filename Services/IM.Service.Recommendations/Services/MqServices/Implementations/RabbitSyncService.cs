@@ -1,12 +1,13 @@
-﻿using IM.Service.Common.Net.RabbitServices;
+﻿using IM.Service.Common.Net.Helpers;
+using IM.Service.Common.Net.RabbitServices;
 using IM.Service.Common.Net.RabbitServices.Configuration;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Recommendations.DataAccess;
 using IM.Service.Recommendations.DataAccess.Entities;
 using IM.Service.Recommendations.DataAccess.Repository;
+using IM.Service.Recommendations.Models.Dto;
 
 using System.Threading.Tasks;
-using IM.Service.Recommendations.Models.Dto;
 
 namespace IM.Service.Recommendations.Services.MqServices.Implementations;
 
@@ -25,7 +26,7 @@ public class RabbitSyncService : IRabbitActionService
         if (action == QueueActions.Delete)
             return (await companyRepository.DeleteByIdAsync(new[] { data }, $"{nameof(GetCompanyResultAsync)}.{data}")).error is not null;
 
-        if (!RabbitHelper.TrySerialize(data, out CompanyDto? dto))
+        if (!JsonHelper.TryDeserialize(data, out CompanyDto? dto))
             return false;
 
         var company = new Company

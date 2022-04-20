@@ -131,11 +131,11 @@ public class CompanyRestApi
 
         return await companyRepo.UpdateAsync(entities, string.Join("; ", entities.Select(x => x.Id)));
     }
-    public async Task<(string? error, Company? result)> DeleteAsync(string companyId)
+    public Task<(string? error, Company? result)> DeleteAsync(string companyId)
     {
         companyId = string.Intern(companyId.ToUpperInvariant().Trim());
 
-        return await companyRepo.DeleteByIdAsync(new[] { companyId }, companyId);
+        return companyRepo.DeleteByIdAsync(new[] { companyId }, companyId);
     }
 
     public async Task<string> SyncAsync()

@@ -3,7 +3,7 @@
 public record RatingGetDto
 {
     public string Company { get; init; } = null!;
-    public int Place { get; init; }
+    public int Place { get; set; }
 
     public decimal? Result { get; init; }
     public decimal? ResultPrice { get; init; }

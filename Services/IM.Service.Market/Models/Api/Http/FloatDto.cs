@@ -12,8 +12,6 @@ public record FloatGetDto
 }
 public record FloatPostDto : FloatPutDto
 {
-    public string CompanyId { get; init; } = null!;
-    public byte SourceId { get; init; }
     public DateOnly Date { get; init; }
 }
 public record FloatPutDto

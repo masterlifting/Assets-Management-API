@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.RabbitServices;
+﻿using IM.Service.Common.Net.Helpers;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
 
@@ -13,7 +13,7 @@ public class ReportService
 
     public async Task SetStatusAsync(string data, byte statusId)
     {
-        if (!RabbitHelper.TrySerialize(data, out Report? report))
+        if (!JsonHelper.TryDeserialize(data, out Report? report))
             throw new SerializationException(nameof(Report));
 
         report!.StatusId = statusId;
@@ -22,7 +22,7 @@ public class ReportService
     }
     public async Task SetStatusRangeAsync(string data, byte statusId)
     {
-        if (!RabbitHelper.TrySerialize(data, out Report[]? reports))
+        if (!JsonHelper.TryDeserialize(data, out Report[]? reports))
             throw new SerializationException(nameof(Report));
 
         foreach (var report in reports!)

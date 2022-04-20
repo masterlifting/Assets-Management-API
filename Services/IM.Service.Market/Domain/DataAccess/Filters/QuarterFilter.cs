@@ -1,6 +1,7 @@
 ﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
 using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
+
 using static IM.Service.Common.Net.Enums;
 using static IM.Service.Common.Net.Helper.ExpressionHelper;
 
@@ -8,98 +9,68 @@ namespace IM.Service.Market.Domain.DataAccess.Filters;
 
 public class QuarterFilter<T> : FilterByQuarter<T> where T : class, IDataIdentity, IQuarterIdentity
 {
-    public string[] CompanyIds { get; } = Array.Empty<string>();
-    public string? CompanyId { get; }
-    public byte? SourceId { get; }
+    private string[] CompanyIds { get; } = Array.Empty<string>();
+    private string? CompanyId { get; }
+    private byte? SourceId { get; }
 
-    public QuarterFilter(int year) : base(year) { }
-    public QuarterFilter(HttpRequestFilterType filterType, int year, int quarter) : base(filterType, year, quarter) { }
+    public QuarterFilter(CompareType compareType, int year) : base(compareType, year) { }
+    public QuarterFilter(CompareType compareType, int year, int quarter) : base(compareType, year, quarter) { }
 
-    public QuarterFilter(string companyId)
+    public QuarterFilter(CompareType compareType, string companyId, int year) : base(compareType, year)
     {
-        CompanyId = companyId;
-        Expression = x => companyId == x.CompanyId;
+        CompanyId = companyId.Trim().ToUpperInvariant();
+        Expression = Combine(x => CompanyId == x.CompanyId, Expression);
     }
-    public QuarterFilter(string companyId, int year) : base(year)
+    public QuarterFilter(CompareType compareType, string companyId, int year, int quarter) : base(compareType, year, quarter)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
-        Expression = Combine(x => companyId == x.CompanyId, Expression);
-    }
-    public QuarterFilter(HttpRequestFilterType filterType, string companyId, int year, int quarter) : base(filterType, year, quarter)
-    {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
-        Expression = Combine(x => companyId == x.CompanyId, Expression);
+        CompanyId = companyId.Trim().ToUpperInvariant();
+        Expression = Combine(x => CompanyId == x.CompanyId, Expression);
     }
 
-    public QuarterFilter(byte sourceId)
+    public QuarterFilter(CompareType compareType, byte sourceId, int year) : base(compareType, year)
     {
         SourceId = sourceId;
-        Expression = x => sourceId == x.SourceId;
+        Expression = Combine(x => SourceId == x.SourceId, Expression);
     }
-    public QuarterFilter(byte sourceId, int year) : base(year)
+    public QuarterFilter(CompareType compareType, byte sourceId, int year, int quarter) : base(compareType, year, quarter)
     {
         SourceId = sourceId;
-        Expression = Combine(x => sourceId == x.SourceId, Expression);
-    }
-    public QuarterFilter(HttpRequestFilterType filterType, byte sourceId, int year, int quarter) : base(filterType, year, quarter)
-    {
-        SourceId = sourceId;
-        Expression = Combine(x => sourceId == x.SourceId, Expression);
+        Expression = Combine(x => SourceId == x.SourceId, Expression);
     }
 
-    public QuarterFilter(string companyId, byte sourceId)
+    public QuarterFilter(CompareType compareType, string companyId, byte sourceId, int year) : base(compareType, year)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
+        CompanyId = companyId.Trim().ToUpperInvariant();
         SourceId = sourceId;
-        Expression = x => companyId == x.CompanyId && sourceId == x.SourceId;
+        Expression = Combine(x => CompanyId == x.CompanyId && SourceId == x.SourceId, Expression);
     }
-    public QuarterFilter(string companyId, byte sourceId, int year) : base(year)
+    public QuarterFilter(CompareType compareType, string companyId, byte sourceId, int year, int quarter) : base(compareType, year, quarter)
     {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
+        CompanyId = companyId.Trim().ToUpperInvariant();
         SourceId = sourceId;
-        Expression = Combine(x => companyId == x.CompanyId && sourceId == x.SourceId, Expression);
-    }
-    public QuarterFilter(HttpRequestFilterType filterType, string companyId, byte sourceId, int year, int quarter) : base(filterType, year, quarter)
-    {
-        companyId = companyId.Trim().ToUpperInvariant();
-        CompanyId = companyId;
-        SourceId = sourceId;
-        Expression = Combine(x => companyId == x.CompanyId && sourceId == x.SourceId, Expression);
+        Expression = Combine(x => CompanyId == x.CompanyId && SourceId == x.SourceId, Expression);
     }
 
-    public QuarterFilter(string[] companyIds)
+    public QuarterFilter(CompareType compareType, IEnumerable<string> companyIds, int year) : base(compareType, year)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
-        Expression = x => companyIds.Contains(x.CompanyId);
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId), Expression);
     }
-    public QuarterFilter(string[] companyIds, int year) : base(year)
+    public QuarterFilter(CompareType compareType, IEnumerable<string> companyIds, int year, int quarter) : base(compareType, year, quarter)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId), Expression);
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId), Expression);
     }
-    public QuarterFilter(HttpRequestFilterType filterType, string[] companyIds, int year, int quarter) : base(filterType, year, quarter)
+    public QuarterFilter(CompareType compareType, IEnumerable<string> companyIds, byte sourceId, int year) : base(compareType, year)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId), Expression);
-    }
-    public QuarterFilter(string[] companyIds, byte sourceId, int year) : base(year)
-    {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
         SourceId = sourceId;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId) && sourceId == x.SourceId, Expression);
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId) && SourceId == x.SourceId, Expression);
     }
-    public QuarterFilter(HttpRequestFilterType filterType, string[] companyIds, byte sourceId, int year, int quarter) : base(filterType, year, quarter)
+    public QuarterFilter(CompareType compareType, IEnumerable<string> companyIds, byte sourceId, int year, int quarter) : base(compareType, year, quarter)
     {
-        companyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
-        CompanyIds = companyIds;
+        CompanyIds = companyIds.Where(x => !string.IsNullOrWhiteSpace(x)).Select(x => x.Trim().ToUpperInvariant()).ToArray();
         SourceId = sourceId;
-        Expression = Combine(x => companyIds.Contains(x.CompanyId) && sourceId == x.SourceId, Expression);
+        Expression = Combine(x => CompanyIds.Contains(x.CompanyId) && SourceId == x.SourceId, Expression);
     }
 }

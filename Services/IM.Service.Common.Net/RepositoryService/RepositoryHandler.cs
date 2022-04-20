@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
+using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Common.Net.RepositoryService;
 
@@ -34,7 +35,7 @@ public class RepositoryHandler<T, TContext> : IRepositoryHandler<T> where T : cl
         return dbEntity ?? throw new SqlNullValueException(nameof(RunDeleteHandlerAsync));
     }
 
-    public virtual Task RunPostProcessAsync(Enums.RepositoryActions action, T entity) => Task.CompletedTask;
+    public virtual Task RunPostProcessAsync(RepositoryActions action, T entity) => Task.CompletedTask;
 
     public virtual async Task<IEnumerable<T>> RunCreateRangeHandlerAsync(IEnumerable<T> entities, IEqualityComparer<T> comparer)
     {
@@ -45,7 +46,7 @@ public class RepositoryHandler<T, TContext> : IRepositoryHandler<T> where T : cl
     }
     public virtual Task<IEnumerable<T>> RunUpdateRangeHandlerAsync(IEnumerable<T> entities) => Task.FromResult(entities);
     public virtual Task<IEnumerable<T>> RunDeleteRangeHandlerAsync(IEnumerable<T> entities) => Task.FromResult(entities);
-    public virtual Task RunPostProcessAsync(Enums.RepositoryActions action, IReadOnlyCollection<T> entities) => Task.CompletedTask;
+    public virtual Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<T> entities) => Task.CompletedTask;
 
     public virtual IQueryable<T> GetExist(IEnumerable<T> entities) => context.Set<T>();
 }

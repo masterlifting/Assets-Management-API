@@ -14,85 +14,89 @@ namespace IM.Service.Market.Services.Calculations;
 
 public class RatingCalculator
 {
-    private readonly IServiceScopeFactory scopeFactory;
-    public RatingCalculator(IServiceScopeFactory scopeFactory) => this.scopeFactory = scopeFactory;
+    private readonly Repository<Company> companyRepository;
+    private readonly Repository<Rating> ratingRepository;
+    private readonly Repository<Price> priceRepository;
+    private readonly Repository<Report> reportRepository;
+    private readonly Repository<Coefficient> coefficientRepository;
+    private readonly Repository<Dividend> dividendRepository;
+
+    public RatingCalculator(
+        Repository<Company> companyRepository,
+        Repository<Rating> ratingRepository,
+        Repository<Price> priceRepository,
+        Repository<Report> reportRepository,
+        Repository<Coefficient> coefficientRepository,
+        Repository<Dividend> dividendRepository)
+    {
+        this.companyRepository = companyRepository;
+        this.ratingRepository = ratingRepository;
+        this.priceRepository = priceRepository;
+        this.reportRepository = reportRepository;
+        this.coefficientRepository = coefficientRepository;
+        this.dividendRepository = dividendRepository;
+    }
 
     public async Task ComputeRatingAsync()
     {
-        var companyRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Company>>();
-        var ratingRepository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Rating>>();
-
         var companies = await companyRepository.GetSampleAsync(x => ValueTuple.Create(x.Id, x.CountryId));
-        var ratingTasks = companies.Select(x => ComputeAsync(x.Item1, x.Item2));
-        var ratings = await Task.WhenAll(ratingTasks);
+
+        List<Rating> ratings = new(companies.Length);
+
+        foreach (var (companyId, countryId) in companies)
+            ratings.Add(await ComputeAsync(companyId, countryId));
 
         await ratingRepository.CreateUpdateDeleteAsync(ratings, new RatingComparer(), nameof(ComputeRatingAsync));
     }
-    private Task<Rating> ComputeAsync(string companyId, byte countryId) =>
-        Task.Run(async () =>
+    private async Task<Rating> ComputeAsync(string companyId, byte countryId)
+    {
+        var sourceId = countryId == (byte)Countries.Rus ? (byte)Sources.Moex : (byte)Sources.Tdameritrade;
+
+        var priceSum = await priceRepository.GetQuery(x =>
+                    x.CompanyId == companyId
+                    && x.SourceId == sourceId
+                    && x.StatusId == (byte)Statuses.Computed
+                    && x.Result.HasValue)
+                .SumAsync(x => x.Result);
+
+        var reportSum = await reportRepository.GetQuery(x =>
+                    x.CompanyId == companyId
+                    && x.SourceId == (byte)Sources.Investing
+                    && x.StatusId == (byte)Statuses.Computed
+                    && x.Result.HasValue)
+                .SumAsync(x => x.Result);
+
+        var coefficientSum = await coefficientRepository.GetQuery(x =>
+                    x.CompanyId == companyId
+                    && x.SourceId == (byte)Sources.Investing
+                    && x.StatusId == (byte)Statuses.Computed
+                    && x.Result.HasValue)
+                .SumAsync(x => x.Result);
+
+        var dividendSum = await dividendRepository.GetQuery(x =>
+                    x.CompanyId == companyId
+                    && x.SourceId == (byte)Sources.Yahoo
+                    && x.StatusId == (byte)Statuses.Computed
+                    && x.Result.HasValue)
+                .SumAsync(x => x.Result);
+
+        var resultPrice = priceSum * 10 / 1000;
+        var resultReport = reportSum / 1000;
+        var resultCoefficient = coefficientSum / 1000;
+        var resultDividend = dividendSum / 1000;
+
+        return new Rating
         {
-            var taskResultPrice = Task.Run(() =>
-            {
-                var repository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Price>>();
-                var sourceId = countryId == (byte) Countries.Rus ? (byte) Sources.Moex : (byte) Sources.Tdameritrade;
-                
-                return repository.GetQuery(x =>
-                        x.CompanyId == companyId
-                        && x.SourceId == sourceId
-                        && x.StatusId == (byte) Statuses.Computed
-                        && x.Result.HasValue)
-                    .SumAsync(x => x.Result);
-            });
-            var taskResultReport = Task.Run(() =>
-            {
-                var repository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Report>>();
-                return repository.GetQuery(x =>
-                        x.CompanyId == companyId
-                        && x.SourceId == (byte)Sources.Investing
-                        && x.StatusId == (byte)Statuses.Computed
-                        && x.Result.HasValue)
-                    .SumAsync(x => x.Result);
-            });
-            var taskResultCoefficient = Task.Run(() =>
-            {
-                var repository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Coefficient>>();
-                return repository.GetQuery(x =>
-                        x.CompanyId == companyId
-                        && x.SourceId == (byte)Sources.Investing
-                        && x.StatusId == (byte)Statuses.Computed
-                        && x.Result.HasValue)
-                    .SumAsync(x => x.Result);
-            });
-            var taskResultDividend = Task.Run(() =>
-            {
-                var repository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<Dividend>>();
-                return repository.GetQuery(x =>
-                        x.CompanyId == companyId
-                        && x.SourceId == (byte)Sources.Yahoo
-                        && x.StatusId == (byte)Statuses.Computed
-                        && x.Result.HasValue)
-                    .SumAsync(x => x.Result);
-            });
+            Result = RatingCalculatorHelper.ComputeAverageResult(new[] { resultPrice, resultReport, resultCoefficient, resultDividend }),
 
-            await Task.WhenAll(taskResultPrice, taskResultReport, taskResultCoefficient, taskResultDividend);
+            CompanyId = companyId,
 
-            var resultPrice = taskResultPrice.Result * 10 / 1000;
-            var resultReport = taskResultReport.Result / 1000;
-            var resultCoefficient = taskResultCoefficient.Result / 1000;
-            var resultDividend = taskResultDividend.Result / 1000;
-
-            return new Rating
-            {
-                Result = RatingCalculatorHelper.ComputeAverageResult(new[] { resultPrice, resultReport, resultCoefficient, resultDividend }),
-
-                CompanyId = companyId,
-
-                ResultPrice = resultPrice,
-                ResultReport = resultReport,
-                ResultCoefficient = resultCoefficient,
-                ResultDividend = resultDividend
-            };
-        });
+            ResultPrice = resultPrice,
+            ResultReport = resultReport,
+            ResultCoefficient = resultCoefficient,
+            ResultDividend = resultDividend
+        };
+    }
 }
 internal static class RatingCalculatorHelper
 {

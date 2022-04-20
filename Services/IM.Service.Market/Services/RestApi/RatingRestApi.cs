@@ -1,9 +1,11 @@
-﻿using IM.Service.Common.Net.HttpServices;
+﻿using System.Linq.Expressions;
+using IM.Service.Common.Net.HttpServices;
 using IM.Service.Common.Net.Models.Dto.Http;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Filters;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Models.Api.Http;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Market.Services.RestApi;
@@ -14,7 +16,7 @@ public class RatingRestApi
     private readonly Repository<Company> companyRepo;
     private const int resultRoundValue = 3;
 
-    public RatingRestApi( Repository<Rating> ratingRepo, Repository<Company> companyRepo)
+    public RatingRestApi(Repository<Rating> ratingRepo, Repository<Company> companyRepo)
     {
         this.ratingRepo = ratingRepo;
         this.companyRepo = companyRepo;
@@ -22,36 +24,45 @@ public class RatingRestApi
 
     public async Task<ResponseModel<RatingGetDto>> GetAsync(int place)
     {
-        var rating = await ratingRepo
+        var data = await ratingRepo
             .GetQuery()
             .OrderByDescending(x => x.Result)
             .Skip(place - 1)
             .Take(1)
-            .FirstAsync();
+            .Select(x => new
+            {
+                CompanyName = x.Company.Name,
+                x.Result,
+                x.ResultPrice,
+                x.ResultReport,
+                x.ResultCoefficient,
+                x.ResultDividend,
+                x.Date,
+                x.Time
+            })
+            .FirstOrDefaultAsync();
 
-        var company = await companyRepo.FindAsync(rating.CompanyId);
-
-        return company is null
-            ? new() { Errors = new[] { "company not found" } }
+        return data is null
+            ? new() { Errors = new[] { "rating not found" } }
             : new()
             {
                 Data = new()
                 {
-                    Company = company.Name,
                     Place = place,
-                    Result = rating.Result.HasValue ? decimal.Round(rating.Result.Value, resultRoundValue) : null,
-                    ResultPrice = rating.ResultPrice.HasValue ? decimal.Round(rating.ResultPrice.Value, resultRoundValue) : null,
-                    ResultReport = rating.ResultReport.HasValue ? decimal.Round(rating.ResultReport.Value, resultRoundValue) : null,
-                    ResultCoefficient = rating.ResultCoefficient.HasValue ? decimal.Round(rating.ResultCoefficient.Value, resultRoundValue) : null,
-                    ResultDividend = rating.ResultDividend.HasValue ? decimal.Round(rating.ResultDividend.Value, resultRoundValue) : null,
-                    UpdateTime = new DateTime(rating.Date.Year, rating.Date.Month, rating.Date.Day, rating.Time.Hour, rating.Time.Minute, rating.Time.Second)
-
+                    Company = data.CompanyName,
+                    Result = data.Result.HasValue ? decimal.Round(data.Result.Value, resultRoundValue) : null,
+                    ResultPrice = data.ResultPrice.HasValue ? decimal.Round(data.ResultPrice.Value, resultRoundValue) : null,
+                    ResultReport = data.ResultReport.HasValue ? decimal.Round(data.ResultReport.Value, resultRoundValue) : null,
+                    ResultCoefficient = data.ResultCoefficient.HasValue ? decimal.Round(data.ResultCoefficient.Value, resultRoundValue) : null,
+                    ResultDividend = data.ResultDividend.HasValue ? decimal.Round(data.ResultDividend.Value, resultRoundValue) : null,
+                    UpdateTime = new DateTime(data.Date.Year, data.Date.Month, data.Date.Day, data.Time.Hour, data.Time.Minute, data.Time.Second)
                 }
             };
     }
     public async Task<ResponseModel<RatingGetDto>> GetAsync(string companyId)
     {
         companyId = companyId.Trim().ToUpperInvariant();
+
         var company = await companyRepo.FindAsync(companyId);
 
         if (company is null)
@@ -63,12 +74,12 @@ public class RatingRestApi
         var orderedRatingIds = await ratingRepo
             .GetQuery()
             .OrderByDescending(x => x.Result)
-            .Select(x => x.Id)
+            .Select(x => x.CompanyId)
             .ToArrayAsync();
 
         var places = orderedRatingIds
-            .Select((x, i) => new { Place = i + 1, RatingId = x })
-            .ToDictionary(x => x.RatingId, y => y.Place);
+            .Select((x, i) => new { Place = i + 1, CompanyId = x })
+            .ToDictionary(x => x.CompanyId, y => y.Place);
 
         var result = await ratingRepo.FindAsync(x => x.CompanyId == company.Id);
 
@@ -79,7 +90,7 @@ public class RatingRestApi
                 Data = new()
                 {
                     Company = company.Name,
-                    Place = places[result.Id],
+                    Place = places[result.CompanyId],
                     Result = result.Result.HasValue ? decimal.Round(result.Result.Value, resultRoundValue) : null,
                     ResultPrice = result.ResultPrice.HasValue ? decimal.Round(result.ResultPrice.Value, resultRoundValue) : null,
                     ResultReport = result.ResultReport.HasValue ? decimal.Round(result.ResultReport.Value, resultRoundValue) : null,
@@ -89,210 +100,48 @@ public class RatingRestApi
                 }
             };
     }
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetAsync(HttpPagination pagination)
+    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetAsync(HttpPagination pagination, string entity)
     {
-        var count = await ratingRepo.GetCountAsync();
-        var orderedCompanyIds = await ratingRepo
-            .GetQuery()
-            .OrderByDescending(x => x.Result)
-            .Select(x => x.CompanyId)
-            .ToArrayAsync();
+        var placeStart = (pagination.Page - 1) * pagination.Limit + 1;
 
-        var places = orderedCompanyIds.Select((x, i) => new { Place = i + 1, CompanyId = x });
-
-        var queryResult = await ratingRepo.GetPaginationQueryDesc(pagination, x => x.Result)
-            .Join(companyRepo.GetDbSet(),
-                x => x.CompanyId,
-                y => y.Id,
-                (x, y) => new
-                {
-                    Company = y.Name,
-                    x.CompanyId,
-                    x.Result,
-                    x.ResultPrice,
-                    x.ResultReport,
-                    x.ResultCoefficient,
-                    x.ResultDividend,
-                    UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
-                })
-            .ToArrayAsync();
-
-        var result = queryResult.Join(places,
-                x => x.CompanyId,
-                y => y.CompanyId,
-                (x, y) => new RatingGetDto
-                {
-                    Place = y.Place,
-                    Company = x.Company,
-                    Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
-                    ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
-                    ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
-                    ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
-                    ResultDividend = x.ResultDividend.HasValue ? decimal.Round(x.ResultDividend.Value, resultRoundValue) : null,
-                    UpdateTime = x.UpdateTime
-                })
-            .ToArray();
-
-
-        return new()
+        Expression<Func<Rating, decimal?>> orderSelector = entity switch
         {
-            Data = new()
-            {
-                Items = result,
-                Count = count
-            }
+            nameof(Rating) => x => x.Result,
+            nameof(Price) => x => x.ResultPrice,
+            nameof(Report) => x => x.ResultReport,
+            nameof(Coefficient) => x => x.ResultCoefficient,
+            nameof(Dividend) => x => x.ResultDividend,
+            _ => throw new ArgumentOutOfRangeException(nameof(entity), entity, null)
         };
-    }
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetPriceResultOrderedAsync(HttpPagination pagination)
-    {
+
         var count = await ratingRepo.GetCountAsync();
-        var orderedCompanyIds = await ratingRepo
-            .GetQuery()
-            .OrderByDescending(x => x.ResultPrice)
-            .Select(x => x.CompanyId)
-            .ToArrayAsync();
-
-        var places = orderedCompanyIds.Select((x, i) => new { Place = i + 1, CompanyId = x });
-
-        var queryResult = await ratingRepo.GetPaginationQueryDesc(pagination, x => x.ResultPrice)
-            .Join(companyRepo.GetDbSet(),
-                x => x.CompanyId,
-                y => y.Id,
-                (x, y) => new
-                {
-                    Company = y.Name,
-                    x.CompanyId,
-                    x.Result,
-                    x.ResultPrice,
-                    x.ResultReport,
-                    x.ResultCoefficient,
-                    x.ResultDividend,
-                    UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
-                })
-            .ToArrayAsync();
-
-        var result = queryResult.Join(places,
-                x => x.CompanyId,
-                y => y.CompanyId,
-                (x, y) => new RatingGetDto
-                {
-                    Place = y.Place,
-                    Company = x.Company,
-                    Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
-                    ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
-                    ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
-                    ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
-                    ResultDividend = x.ResultDividend.HasValue ? decimal.Round(x.ResultDividend.Value, resultRoundValue) : null,
-                    UpdateTime = x.UpdateTime
-                })
-            .ToArray();
-
-
-        return new()
-        {
-            Data = new()
+        var data = await ratingRepo
+            .GetPaginationQueryDesc(pagination, orderSelector)
+            .Select(x => new
             {
-                Items = result,
-                Count = count
-            }
-        };
-    }
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetReportResultOrderedAsync(HttpPagination pagination)
-    {
-        var count = await ratingRepo.GetCountAsync();
-        var orderedCompanyIds = await ratingRepo
-            .GetQuery()
-            .OrderByDescending(x => x.ResultReport)
-            .Select(x => x.CompanyId)
+                CompanyName = x.Company.Name,
+                x.Result,
+                x.ResultPrice,
+                x.ResultReport,
+                x.ResultCoefficient,
+                x.ResultDividend,
+                x.Date,
+                x.Time
+            })
             .ToArrayAsync();
 
-        var places = orderedCompanyIds.Select((x, i) => new { Place = i + 1, CompanyId = x });
-
-        var queryResult = await ratingRepo.GetPaginationQueryDesc(pagination, x => x.ResultReport)
-            .Join(companyRepo.GetDbSet(),
-                x => x.CompanyId,
-                y => y.Id,
-                (x, y) => new
-                {
-                    Company = y.Name,
-                    x.CompanyId,
-                    x.Result,
-                    x.ResultPrice,
-                    x.ResultReport,
-                    x.ResultCoefficient,
-                    x.ResultDividend,
-                    UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
-                })
-            .ToArrayAsync();
-
-        var result = queryResult.Join(places,
-                x => x.CompanyId,
-                y => y.CompanyId,
-                (x, y) => new RatingGetDto
-                {
-                    Place = y.Place,
-                    Company = x.Company,
-                    Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
-                    ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
-                    ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
-                    ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
-                    ResultDividend = x.ResultDividend.HasValue ? decimal.Round(x.ResultDividend.Value, resultRoundValue) : null,
-                    UpdateTime = x.UpdateTime
-                })
-            .ToArray();
-
-
-        return new()
-        {
-            Data = new()
+        var result = data
+            .Select((x, i) => new RatingGetDto
             {
-                Items = result,
-                Count = count
-            }
-        };
-    }
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetCoefficientResultOrderedAsync(HttpPagination pagination)
-    {
-        var count = await ratingRepo.GetCountAsync();
-        var orderedCompanyIds = await ratingRepo
-            .GetQuery()
-            .OrderByDescending(x => x.ResultCoefficient)
-            .Select(x => x.CompanyId)
-            .ToArrayAsync();
-
-        var places = orderedCompanyIds.Select((x, i) => new { Place = i + 1, CompanyId = x });
-
-        var queryResult = await ratingRepo.GetPaginationQueryDesc(pagination, x => x.ResultCoefficient)
-            .Join(companyRepo.GetDbSet(),
-                x => x.CompanyId,
-                y => y.Id,
-                (x, y) => new
-                {
-                    Company = y.Name,
-                    x.CompanyId,
-                    x.Result,
-                    x.ResultPrice,
-                    x.ResultReport,
-                    x.ResultCoefficient,
-                    x.ResultDividend,
-                    UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
-                })
-            .ToArrayAsync();
-
-        var result = queryResult.Join(places,
-                x => x.CompanyId,
-                y => y.CompanyId,
-                (x, y) => new RatingGetDto
-                {
-                    Place = y.Place,
-                    Company = x.Company,
-                    Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
-                    ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
-                    ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
-                    ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
-                    ResultDividend = x.ResultDividend.HasValue ? decimal.Round(x.ResultDividend.Value, resultRoundValue) : null,
-                    UpdateTime = x.UpdateTime
-                })
+                Place = placeStart + i,
+                Company = x.CompanyName,
+                Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
+                ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
+                ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
+                ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
+                ResultDividend = x.ResultDividend.HasValue ? decimal.Round(x.ResultDividend.Value, resultRoundValue) : null,
+                UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
+            })
             .ToArray();
 
         return new()
@@ -304,60 +153,7 @@ public class RatingRestApi
             }
         };
     }
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetDividendResultOrderedAsync(HttpPagination pagination)
-    {
-        var count = await ratingRepo.GetCountAsync();
-        var orderedCompanyIds = await ratingRepo
-            .GetQuery()
-            .OrderByDescending(x => x.ResultDividend)
-            .Select(x => x.CompanyId)
-            .ToArrayAsync();
-
-        var places = orderedCompanyIds.Select((x, i) => new { Place = i + 1, CompanyId = x });
-
-        var queryResult = await ratingRepo.GetPaginationQueryDesc(pagination, x => x.ResultDividend)
-            .Join(companyRepo.GetDbSet(),
-                x => x.CompanyId,
-                y => y.Id,
-                (x, y) => new
-                {
-                    Company = y.Name,
-                    x.CompanyId,
-                    x.Result,
-                    x.ResultPrice,
-                    x.ResultReport,
-                    x.ResultCoefficient,
-                    x.ResultDividend,
-                    UpdateTime = new DateTime(x.Date.Year, x.Date.Month, x.Date.Day, x.Time.Hour, x.Time.Minute, x.Time.Second)
-                })
-            .ToArrayAsync();
-
-        var result = queryResult.Join(places,
-                x => x.CompanyId,
-                y => y.CompanyId,
-                (x, y) => new RatingGetDto
-                {
-                    Place = y.Place,
-                    Company = x.Company,
-                    Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
-                    ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
-                    ResultReport = x.ResultReport.HasValue ? decimal.Round(x.ResultReport.Value, resultRoundValue) : null,
-                    ResultCoefficient = x.ResultCoefficient.HasValue ? decimal.Round(x.ResultCoefficient.Value, resultRoundValue) : null,
-                    ResultDividend = x.ResultDividend.HasValue ? decimal.Round(x.ResultDividend.Value, resultRoundValue) : null,
-                    UpdateTime = x.UpdateTime
-                })
-            .ToArray();
-
-        return new()
-        {
-            Data = new()
-            {
-                Items = result,
-                Count = count
-            }
-        };
-    }
-
+    
     public async Task<string> RecalculateAsync(string companyId)
     {
         companyId = companyId.Trim().ToUpperInvariant();

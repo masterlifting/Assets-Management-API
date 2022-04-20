@@ -208,7 +208,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 await context.Set<TEntity>().AddRangeAsync(createResult).ConfigureAwait(false);
 
             var updateEntities = await handler.RunUpdateRangeHandlerAsync(entities).ConfigureAwait(false);
-            var updateResult = updateEntities.ToArray();
+            var updateResult = updateEntities.Except(createResult, comparer).ToArray();
 
             if (updateResult.Any())
                 context.Set<TEntity>().UpdateRange(updateResult);
@@ -255,7 +255,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 await context.Set<TEntity>().AddRangeAsync(createResult).ConfigureAwait(false);
 
             var updateEntities = await handler.RunUpdateRangeHandlerAsync(entities).ConfigureAwait(false);
-            var updateResult = updateEntities.ToArray();
+            var updateResult = updateEntities.Except(createResult, comparer).ToArray();
 
             if (updateResult.Any())
                 context.Set<TEntity>().UpdateRange(updateResult);
@@ -263,7 +263,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             var processingResult = createResult.Concat(updateResult).ToArray();
 
             var deleteEntities = await handler.RunDeleteRangeHandlerAsync(processingResult).ConfigureAwait(false);
-            var deleteResult = deleteEntities.ToArray();
+            var deleteResult = deleteEntities.Except(processingResult, comparer).ToArray();
 
             if (deleteResult.Any())
                 context.Set<TEntity>().RemoveRange(deleteResult);
@@ -384,17 +384,38 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             .Skip((pagination.Page - 1) * pagination.Limit)
             .Take(pagination.Limit);
     public IQueryable<TEntity> GetPaginationQuery<TSelector1, TSelector2>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
-        query.OrderBy(orderSelector1).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
+        query
+            .OrderBy(orderSelector1)
+            .ThenBy(orderSelector2)
+            .Skip((pagination.Page - 1) * pagination.Limit)
+            .Take(pagination.Limit);
+    public IQueryable<TEntity> GetPaginationQueryDesc<TSelector>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
+        query
+            .OrderByDescending(orderSelector)
+            .Skip((pagination.Page - 1) * pagination.Limit)
+            .Take(pagination.Limit);
+    public IQueryable<TEntity> GetPaginationQueryDesc<TSelector1, TSelector2>(IQueryable<TEntity> query, HttpPagination pagination, Expression<Func<TEntity, TSelector1>> orderSelector1, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
+        query
+            .OrderByDescending(orderSelector1)
+            .ThenByDescending(orderSelector2)
+            .Skip((pagination.Page - 1) * pagination.Limit)
+            .Take(pagination.Limit);
 
-    public async Task<TEntity[]> GetSampleAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync().ConfigureAwait(false);
-    public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, TResult>> selector) =>
-        await context.Set<TEntity>().AsNoTracking().Select(selector).ToArrayAsync().ConfigureAwait(false);
-    public async Task<TResult[]> GetSampleAsync<TResult>(IQueryable<TEntity> query, Expression<Func<TEntity, TResult>> selector) =>
-        await query.AsNoTracking().Select(selector).ToArrayAsync().ConfigureAwait(false);
-    public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector) =>
-        await context.Set<TEntity>().AsNoTracking().Where(predicate).Select(selector).ToArrayAsync().ConfigureAwait(false);
-    public async Task<TEntity[]> GetSampleOrderedAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector) =>
-        await context.Set<TEntity>().AsNoTracking().Where(predicate).OrderBy(orderSelector).ToArrayAsync().ConfigureAwait(false);
+    public async Task<TEntity[]> GetSampleAsync(Expression<Func<TEntity, bool>> predicate, bool isTracking = false) => isTracking
+        ? await context.Set<TEntity>().Where(predicate).ToArrayAsync().ConfigureAwait(false)
+        : await context.Set<TEntity>().AsNoTracking().Where(predicate).ToArrayAsync().ConfigureAwait(false);
+    public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, TResult>> selector, bool isTracking = false) => isTracking
+        ? await context.Set<TEntity>().Select(selector).ToArrayAsync().ConfigureAwait(false)
+        : await context.Set<TEntity>().AsNoTracking().Select(selector).ToArrayAsync().ConfigureAwait(false);
+    public async Task<TResult[]> GetSampleAsync<TResult>(IQueryable<TEntity> query, Expression<Func<TEntity, TResult>> selector, bool isTracking = false) => isTracking
+        ? await query.Select(selector).ToArrayAsync().ConfigureAwait(false)
+        : await query.AsNoTracking().Select(selector).ToArrayAsync().ConfigureAwait(false);
+    public async Task<TResult[]> GetSampleAsync<TResult>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TResult>> selector, bool isTracking = false) => isTracking
+        ? await context.Set<TEntity>().Where(predicate).Select(selector).ToArrayAsync().ConfigureAwait(false)
+        : await context.Set<TEntity>().AsNoTracking().Where(predicate).Select(selector).ToArrayAsync().ConfigureAwait(false);
+    public async Task<TEntity[]> GetSampleOrderedAsync<TSelector>(Expression<Func<TEntity, bool>> predicate, Expression<Func<TEntity, TSelector>> orderSelector, bool isTracking = false) => isTracking
+        ? await context.Set<TEntity>().Where(predicate).OrderBy(orderSelector).ToArrayAsync().ConfigureAwait(false)
+        : await context.Set<TEntity>().AsNoTracking().Where(predicate).OrderBy(orderSelector).ToArrayAsync().ConfigureAwait(false);
 
     public async Task<int> GetCountAsync(IQueryable<TEntity> query) => await query.AsNoTracking().CountAsync().ConfigureAwait(false);
     public async Task<int> GetCountAsync() => await context.Set<TEntity>().AsNoTracking().CountAsync().ConfigureAwait(false);
