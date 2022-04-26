@@ -1,12 +1,14 @@
-﻿using IM.Service.Market.Domain.Entities.ManyToMany;
+﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
+using IM.Service.Market.Domain.Entities.Interfaces;
+using IM.Service.Market.Domain.Entities.ManyToMany;
 
 namespace IM.Service.Market.Services.DataLoaders;
 
-public interface IDataGrabber
+public interface IDataGrabber<out TEntity> where TEntity : class, IDataIdentity, IPeriod
 {
-    Task GetHistoryDataAsync(CompanySource companySource);
-    Task GetHistoryDataAsync(IEnumerable<CompanySource> companySources);
-           
-    Task GetCurrentDataAsync(CompanySource companySource);
-    Task GetCurrentDataAsync(IEnumerable<CompanySource> companySources);
+    IAsyncEnumerable<TEntity[]> GetHistoryDataAsync(CompanySource companySource);
+    IAsyncEnumerable<TEntity[]> GetHistoryDataAsync(IEnumerable<CompanySource> companySources);
+
+    IAsyncEnumerable<TEntity[]> GetCurrentDataAsync(CompanySource companySource);
+    IAsyncEnumerable<TEntity[]> GetCurrentDataAsync(IEnumerable<CompanySource> companySources);
 }

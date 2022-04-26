@@ -22,7 +22,17 @@ public class MapperFloat : IMapperRead<Float, FloatGetDto>, IMapperWrite<Float, 
         .ToArrayAsync();
     public async Task<FloatGetDto[]> MapLastFromAsync(IQueryable<Float> query)
     {
-        var queryResult = await MapFromAsync(query);
+        var queryResult = await query
+            .Select(x => new FloatGetDto
+            {
+                Company = x.Company.Name,
+                Source = x.Source.Name,
+                Date = x.Date,
+
+                Value = x.Value,
+                ValueFree = x.ValueFree
+            })
+            .ToArrayAsync();
 
         return queryResult
             .GroupBy(x => x.Company)

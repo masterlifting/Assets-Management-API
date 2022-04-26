@@ -189,7 +189,7 @@ public class PaviamsController : ControllerBase
     }
 
 
-    [HttpPost("prices/{companyId:string}")]
+    [HttpPost("prices/{companyId}")]
     public async Task<IActionResult> SetPrices(string companyId)
     {
         companyId = companyId.ToUpperInvariant();
@@ -219,7 +219,7 @@ public class PaviamsController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("reports/{companyId:string}")]
+    [HttpPost("reports/{companyId}")]
     public async Task<IActionResult> SetReports(string companyId)
     {
         var entities = await context.Reports
@@ -268,7 +268,7 @@ public class PaviamsController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("splits/{companyId:string}")]
+    [HttpPost("splits/{companyId}")]
     public async Task<IActionResult> SetSplits(string companyId)
     {
         var entities = await context.StockSplits
@@ -296,7 +296,7 @@ public class PaviamsController : ControllerBase
         return Ok();
     }
 
-    [HttpPost("floats/{companyId:string}")]
+    [HttpPost("floats/{companyId}")]
     public async Task<IActionResult> SetFloats(string companyId)
     {
         var entities = await context.StockVolumes
@@ -473,7 +473,12 @@ public class PaviamsController : ControllerBase
         var result = new List<IActionResult>(sources.Length);
 
         foreach (var group in sources.GroupBy(x => x.CompanyId))
-            result.Add(await client.Post($"companies/{group.Key}/sources", group.Select(x => new SourcePostDto(GetSourceId(x.SourceId), x.Value))));
+        {
+            var target = group.Select(x => new SourcePostDto(GetSourceId(x.SourceId), x.Value)).ToList();
+            target.Add(new SourcePostDto(1, null));
+
+            result.Add(await client.Post($"companies/{group.Key}/sources", target));
+        }
 
         return Ok(result.Count);
     }
@@ -485,9 +490,12 @@ public class PaviamsController : ControllerBase
 
         var sources = await context.CompanySources.Where(x => x.CompanyId == companyId).ToArrayAsync();
 
+        var target = sources.Select(x => new SourcePostDto(GetSourceId(x.SourceId), x.Value)).ToList();
+        target.Add(new SourcePostDto(1, null));
+
         return !sources.Any()
             ? BadRequest("Sources not found")
-            : await client.Post($"companies/{companyId}/sources", sources.Select(x => new SourcePostDto(GetSourceId(x.SourceId), x.Value)));
+            : await client.Post($"companies/{companyId}/sources", target);
     }
 
     private byte GetCountryId(string companyId) => chn.Contains(companyId, StringComparer.OrdinalIgnoreCase)

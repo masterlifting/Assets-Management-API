@@ -1,5 +1,5 @@
-﻿using IM.Service.Common.Net.RabbitServices;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+﻿using IM.Service.Common.Net.RabbitMQ;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Market.Services.Mq;
 using IM.Service.Market.Settings;
 using Microsoft.Extensions.Options;

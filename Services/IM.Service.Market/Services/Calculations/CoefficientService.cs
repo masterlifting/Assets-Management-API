@@ -1,6 +1,5 @@
-﻿using IM.Service.Common.Net;
-using IM.Service.Common.Net.Helpers;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+﻿using IM.Service.Common.Net.Helpers;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
@@ -10,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 using System.Runtime.Serialization;
 
-using static IM.Service.Common.Net.Helper;
+using static IM.Service.Common.Net.Helpers.LogHelper;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.Calculations;
@@ -50,11 +49,7 @@ public class CoefficientService
             _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
         };
 
-        var (error, _) = await coefficientRepo
-            .CreateUpdateAsync(coefficients, new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync));
-
-        if (error is not null)
-            throw new Exception(error);
+       await coefficientRepo.CreateUpdateAsync(coefficients, new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync));
     }
     public async Task SetCoefficientRangeAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
     {
@@ -69,11 +64,7 @@ public class CoefficientService
             _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
         };
 
-        var (error, _) = await coefficientRepo
-            .CreateUpdateAsync(coefficients, new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientRangeAsync));
-
-        if (error is not null)
-            throw new Exception(error);
+        await coefficientRepo.CreateUpdateAsync(coefficients, new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientRangeAsync));
     }
 
 
@@ -171,7 +162,7 @@ public class CoefficientService
             }
             catch (Exception exception)
             {
-                logger.LogWarning(LogEvents.Function, exception.Message);
+                logger.LogWarning(nameof(SetCoefficientAsync), report.CompanyId, exception.Message);
             }
         }
 
@@ -213,10 +204,10 @@ public class CoefficientService
             .GetSampleAsync(x =>
                 companyIds.Contains(x.CompanyId)
                 && (x.Year > firstDate.Year
-                    || x.Year == firstDate.Year && x.Quarter >= QuarterHelper.GetQuarter(firstDate.Month))
+                    || x.Year == firstDate.Year && x.Quarter >= LogicHelper.QuarterHelper.GetQuarter(firstDate.Month))
                 && (x.Year < lastDate.Year
                     || x.Year == lastDate.Year &&
-                    x.Quarter < QuarterHelper.GetQuarter(lastDate.Month)));
+                    x.Quarter < LogicHelper.QuarterHelper.GetQuarter(lastDate.Month)));
 
         var coefficients = new List<Coefficient>(reports.Length);
 
@@ -274,10 +265,10 @@ public class CoefficientService
                 companyIds.Contains(x.CompanyId)
                 && currencyIds.Contains(x.CurrencyId)
                 && (x.Year > firstDate.Year
-                    || x.Year == firstDate.Year && x.Quarter >= QuarterHelper.GetQuarter(firstDate.Month))
+                    || x.Year == firstDate.Year && x.Quarter >= LogicHelper.QuarterHelper.GetQuarter(firstDate.Month))
                 && (x.Year < lastDate.Year
                     || x.Year == lastDate.Year &&
-                    x.Quarter < QuarterHelper.GetQuarter(lastDate.Month)));
+                    x.Quarter < LogicHelper.QuarterHelper.GetQuarter(lastDate.Month)));
 
         var coefficients = new List<Coefficient>(reports.Length);
 
@@ -289,7 +280,7 @@ public class CoefficientService
             }
             catch (Exception exception)
             {
-                logger.LogWarning(LogEvents.Function, exception.Message);
+                logger.LogWarning(nameof(SetCoefficientAsync), report.CompanyId, exception.Message);
             }
         }
 
@@ -299,7 +290,7 @@ public class CoefficientService
 
     private async Task<Coefficient[]> GetAsync(Report report, Float[]? floats = null, Price[]? prices = null)
     {
-        var lastDate = new DateOnly(report.Year, QuarterHelper.GetLastMonth(report.Quarter), 28);
+        var lastDate = new DateOnly(report.Year, LogicHelper.QuarterHelper.GetLastMonth(report.Quarter), 28);
 
         floats = floats is null
             ? await floatRepo
@@ -352,29 +343,29 @@ public class CoefficientService
                     .GetSampleAsync(x =>
                         x.CompanyId == _float.CompanyId
                         && (x.Year > firstDate.Year
-                            || x.Year == firstDate.Year && x.Quarter >= QuarterHelper.GetQuarter(firstDate.Month))
+                            || x.Year == firstDate.Year && x.Quarter >= LogicHelper.QuarterHelper.GetQuarter(firstDate.Month))
                         && (x.Year < lastDate.Value.Year
                             || x.Year == lastDate.Value.Year &&
-                            x.Quarter < QuarterHelper.GetQuarter(lastDate.Value.Month)))
+                            x.Quarter < LogicHelper.QuarterHelper.GetQuarter(lastDate.Value.Month)))
                 : reports
                     .Where(x =>
                         x.CompanyId == _float.CompanyId
                         && (x.Year > firstDate.Year
-                            || x.Year == firstDate.Year && x.Quarter >= QuarterHelper.GetQuarter(firstDate.Month))
+                            || x.Year == firstDate.Year && x.Quarter >= LogicHelper.QuarterHelper.GetQuarter(firstDate.Month))
                         && (x.Year < lastDate.Value.Year
                             || x.Year == lastDate.Value.Year &&
-                            x.Quarter < QuarterHelper.GetQuarter(lastDate.Value.Month)))
+                            x.Quarter < LogicHelper.QuarterHelper.GetQuarter(lastDate.Value.Month)))
                     .ToArray()
             : reports is null
                 ? await reportRepo
                     .GetSampleAsync(x =>
                         x.CompanyId == _float.CompanyId
                         && (x.Year > firstDate.Year
-                            || x.Year == firstDate.Year && x.Quarter >= QuarterHelper.GetQuarter(firstDate.Month)))
+                            || x.Year == firstDate.Year && x.Quarter >= LogicHelper.QuarterHelper.GetQuarter(firstDate.Month)))
                 : reports.Where(x =>
                         x.CompanyId == _float.CompanyId
                         && (x.Year > firstDate.Year
-                            || x.Year == firstDate.Year && x.Quarter >= QuarterHelper.GetQuarter(firstDate.Month)))
+                            || x.Year == firstDate.Year && x.Quarter >= LogicHelper.QuarterHelper.GetQuarter(firstDate.Month)))
                     .ToArray();
 
         if (!_reports.Any())
@@ -391,8 +382,8 @@ public class CoefficientService
     {
         var firstDate = price.Date;
 
-        var quarter = QuarterHelper.GetQuarter(price.Date.Month);
-        var lastMonth = QuarterHelper.GetLastMonth(quarter);
+        var quarter = LogicHelper.QuarterHelper.GetQuarter(price.Date.Month);
+        var lastMonth = LogicHelper.QuarterHelper.GetLastMonth(quarter);
         var lastDate = new DateOnly(price.Date.Year, lastMonth, 28);
 
         /*Необходимо выяснить, является ли входящая цена последней в квартале*/
@@ -450,8 +441,8 @@ public class CoefficientService
 
     private async Task<Coefficient> GetAsync(Report report, Float _float, IEnumerable<Price>? prices = null)
     {
-        var firstDate = new DateOnly(report.Year, QuarterHelper.GetFirstMonth(report.Quarter), 1);
-        var lastDate = new DateOnly(report.Year, QuarterHelper.GetLastMonth(report.Quarter), 28);
+        var firstDate = new DateOnly(report.Year, LogicHelper.QuarterHelper.GetFirstMonth(report.Quarter), 1);
+        var lastDate = new DateOnly(report.Year, LogicHelper.QuarterHelper.GetLastMonth(report.Quarter), 28);
 
         var _prices = prices is null
             ? await priceRepo
@@ -478,7 +469,7 @@ public class CoefficientService
     }
     private async Task<Coefficient> GetAsync(Report report, Price price, IEnumerable<Float>? floats = null)
     {
-        var lastDate = new DateOnly(report.Year, QuarterHelper.GetLastMonth(report.Quarter), 28);
+        var lastDate = new DateOnly(report.Year, LogicHelper.QuarterHelper.GetLastMonth(report.Quarter), 28);
 
         var _floats = floats is null
             ? await floatRepo

@@ -1,10 +1,11 @@
-﻿using IM.Service.Common.Net.HttpServices;
-using IM.Service.Common.Net.Models.Dto.Http;
-using IM.Service.Common.Net.Models.Entity.Interfaces;
+﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
+using IM.Service.Common.Net.Models.Services;
 using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
 using IM.Service.Market.Services.RestApi.Common.Interfaces;
 using IM.Service.Market.Services.RestApi.Mappers.Interfaces;
+
+using static IM.Service.Common.Net.Helpers.ServiceHelper;
 
 namespace IM.Service.Market.Services.RestApi.Common;
 
@@ -19,32 +20,18 @@ public class RestApiRead<TEntity, TGet> where TGet : class where TEntity : class
         this.mapper = mapper;
     }
 
-    public async Task<ResponseModel<PaginatedModel<TGet>>> GetAsync<T>(T filter, HttpPagination pagination) where T : class, IFilter<TEntity>
+    public async Task<PaginationModel<TGet>> GetAsync<T>(T filter, Paginatior pagination) where T : class, IFilter<TEntity>
     {
-        var (query, count) = await queryService.GetQueryWithCountResultAsync(filter, pagination);
+        var (query, count) = await queryService.GetQueryWithCountAsync(filter, pagination);
 
-        return new()
-        {
-            Data = new()
-            {
-                Items = await mapper.MapFromAsync(query),
-                Count = count
-            }
-        };
+        return new PaginationModel<TGet> { Items = await mapper.MapFromAsync(query), Count = count };
     }
-    public async Task<ResponseModel<PaginatedModel<TGet>>> GetLastAsync<T>(T filter, HttpPagination pagination) where T : class, IFilter<TEntity>
+    public async Task<PaginationModel<TGet>> GetLastAsync<T>(T filter, Paginatior pagination) where T : class, IFilter<TEntity>
     {
-        var query = queryService.GetQuery(filter, pagination);
+        var query = queryService.GetQuery(filter);
 
-        var result = await mapper.MapLastFromAsync(query);
+        var lastResult = await mapper.MapLastFromAsync(query);
 
-        return new()
-        {
-            Data = new()
-            {
-                Items = pagination.GetPaginatedResult(result),
-                Count = result.Length
-            }
-        };
+        return new PaginationModel<TGet> { Items = pagination.GetPaginatedResult(lastResult), Count = lastResult.Length };
     }
 }

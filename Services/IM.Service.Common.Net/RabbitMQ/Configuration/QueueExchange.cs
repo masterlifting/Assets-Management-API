@@ -2,7 +2,7 @@
 
 using System;
 
-namespace IM.Service.Common.Net.RabbitServices.Configuration;
+namespace IM.Service.Common.Net.RabbitMQ.Configuration;
 
 public class QueueExchange
 {

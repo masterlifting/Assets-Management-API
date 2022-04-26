@@ -1,9 +1,8 @@
-﻿using IM.Service.Common.Net.RabbitServices.Configuration;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
 
-namespace IM.Service.Common.Net.RabbitServices;
+namespace IM.Service.Common.Net.RabbitMQ;
 
 public static class RabbitHelper
 {

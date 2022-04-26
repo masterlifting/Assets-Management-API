@@ -1,5 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Dto.Http;
-using IM.Service.Common.Net.Models.Entity.Interfaces;
+﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.DataAccess.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
@@ -26,110 +25,147 @@ public class QuarterControllerBase<TEntity, TPost, TGet> : ControllerBase
     }
 
     [HttpGet]
-    public Task<ResponseModel<PaginatedModel<TGet>>> Gets(string? companyId, int? sourceId, int year = 0, int quarter = 0, int page = 0, int limit = 0) =>
-        apiRead.GetAsync(GetFilter(CompareType.More, companyId, sourceId, year, quarter), new(page, limit));
+    public async Task<IActionResult> Gets(string? companyId, int? sourceId, int year = 0, int quarter = 0, int page = 0, int limit = 0)
+    {
+        try
+        {
+            var result = await apiRead.GetAsync(QuarterFilter<TEntity>.GetFilter(CompareType.More, companyId, sourceId, year, quarter), new(page, limit));
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("last/")]
-    public async Task<ResponseModel<PaginatedModel<TGet>>> GetLast(string? companyId, int? sourceId, int year = 0, int quarter = 0, int page = 0, int limit = 0) =>
-        await apiRead.GetLastAsync(GetFilter(CompareType.More, companyId, sourceId, year, quarter), new(page, limit));
+    public async Task<IActionResult> GetLast(string? companyId, int? sourceId, int year = 0, int quarter = 0, int page = 0, int limit = 0)
+    {
+        try
+        {
+            var result = await apiRead.GetLastAsync(QuarterFilter<TEntity>.GetFilter(CompareType.More, companyId, sourceId, year, quarter), new(page, limit));
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
     [HttpGet("{year:int}")]
-    public Task<ResponseModel<PaginatedModel<TGet>>> Get(string? companyId, int? sourceId, int year, int page = 0, int limit = 0) =>
-        apiRead.GetAsync(GetFilter(CompareType.Equal, companyId, sourceId, year), new(page, limit));
+    public async Task<IActionResult> Get(string? companyId, int? sourceId, int year, int page = 0, int limit = 0)
+    {
+        try
+        {
+            var result = await apiRead.GetAsync(QuarterFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year), new(page, limit));
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("{year:int}/{quarter:int}")]
-    public Task<ResponseModel<PaginatedModel<TGet>>> Get(string? companyId, int? sourceId, int year, int quarter, int page = 0, int limit = 0) =>
-        apiRead.GetAsync(GetFilter(CompareType.Equal, companyId, sourceId, year, quarter), new(page, limit));
-    
+    public async Task<IActionResult> Get(string? companyId, int? sourceId, int year, int quarter, int page = 0, int limit = 0)
+    {
+        try
+        {
+            var result = await apiRead.GetAsync(QuarterFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year, quarter), new(page, limit));
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
 
     [HttpPost]
     public async Task<IActionResult> Create(string companyId, int sourceId, TPost model)
     {
-        var (error, _) = await apiWrite.CreateAsync(companyId, sourceId, model);
-
-        return error is null ? Ok() : BadRequest(error);
+        try
+        {
+            var result = await apiWrite.CreateAsync(companyId, sourceId, model);
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpPost("collection/")]
     public async Task<IActionResult> Create(string companyId, int sourceId, IEnumerable<TPost> models)
     {
-        var (error, _) = await apiWrite.CreateAsync(companyId, sourceId, models, new DataQuarterComparer<TEntity>());
-
-        return error is null ? Ok() : BadRequest(error);
+        try
+        {
+            var result = await apiWrite.CreateAsync(companyId, sourceId, models, new DataQuarterComparer<TEntity>());
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpPut("{year:int}/{quarter:int}")]
     public async Task<IActionResult> Update(string companyId, int sourceId, int year, int quarter, TPost model)
     {
-        var id = Activator.CreateInstance<TEntity>();
-        id.CompanyId = companyId;
-        id.SourceId = (byte)sourceId;
-        id.Year = year;
-        id.Quarter = (byte)quarter;
+        try
+        {
+            var id = Activator.CreateInstance<TEntity>();
+            id.CompanyId = companyId;
+            id.SourceId = (byte)sourceId;
+            id.Year = year;
+            id.Quarter = (byte)quarter;
 
-        var (error, _) = await apiWrite.UpdateAsync(id, model);
+            var result = await apiWrite.UpdateAsync(id, model);
 
-        return error is null ? Ok() : BadRequest(error);
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpDelete("{year:int}/{quarter:int}")]
     public async Task<IActionResult> Delete(string companyId, int sourceId, int year, int quarter)
     {
-        var id = Activator.CreateInstance<TEntity>();
-        id.CompanyId = companyId;
-        id.SourceId = (byte)sourceId;
-        id.Year = year;
-        id.Quarter = (byte)quarter;
+        try
+        {
+            var id = Activator.CreateInstance<TEntity>();
+            id.CompanyId = companyId;
+            id.SourceId = (byte)sourceId;
+            id.Year = year;
+            id.Quarter = (byte)quarter;
 
-        var (error, _) = await apiWrite.DeleteAsync(id);
+            var result = await apiWrite.DeleteAsync(id);
 
-        return error is null ? Ok() : BadRequest(error);
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpGet("load/")]
-    public Task<string> Load(string companyId, int sourceId) => GetLoader(apiWrite, companyId, sourceId);
-
-
-    private static QuarterFilter<TEntity> GetFilter(CompareType compareType, string? companyId, int? sourceId, int year = 0, int quarter = 0)
+    public async Task<IActionResult> Load(string companyId, int sourceId)
     {
-        QuarterFilter<TEntity> filter;
-
-        switch (companyId)
+        try
         {
-            case null when sourceId is null:
-                filter = quarter != 0
-                        ? new(compareType, year, quarter)
-                        : new(compareType, year);
-                break;
-            case null when true:
-                filter = quarter != 0
-                        ? new(compareType, (byte)sourceId, year, quarter)
-                        : new(compareType, (byte)sourceId, year);
-                break;
-            default:
-                {
-                    var companyIds = companyId.Split(',');
-
-                    filter = sourceId is null
-                        ? companyIds.Length > 1
-                            ? quarter != 0
-                                    ? new(compareType, companyIds, year, quarter)
-                                    : new(compareType, companyIds, year)
-                            : quarter != 0
-                                    ? new(compareType, companyId, year, quarter)
-                                    : new(compareType, companyId, year)
-                        : companyIds.Length > 1
-                            ? quarter != 0
-                                    ? new(compareType, companyIds, (byte)sourceId, year, quarter)
-                                    : new(compareType, companyIds, (byte)sourceId, year)
-                            : quarter != 0
-                                    ? new(compareType, companyId, (byte)sourceId, year, quarter)
-                                    : new(compareType, companyId, (byte)sourceId, year);
-                    break;
-                }
+            return Ok(await GetLoaderAsync(apiWrite, companyId, sourceId));
         }
-
-        return filter;
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
-    private static Task<string> GetLoader(RestApiWrite<TEntity, TPost> api, string? companyId, int? sourceId)
+
+
+    private static Task<string> GetLoaderAsync(RestApiWrite<TEntity, TPost> api, string? companyId, int? sourceId)
     {
         Task<string> loader;
 
@@ -142,18 +178,18 @@ public class QuarterControllerBase<TEntity, TPost, TGet> : ControllerBase
                 loader = api.LoadAsync((byte)sourceId.Value);
                 break;
             default:
-            {
-                var companyIds = companyId.Split(',');
+                {
+                    var companyIds = companyId.Split(',');
 
-                loader = sourceId is null
-                    ? companyIds.Length > 1
-                        ? Task.FromResult("Загрузка по выбранным компаниям не предусмотрена")
-                        : api.LoadAsync(companyId)
-                    : companyIds.Length > 1
-                        ? Task.FromResult("Загрузка по выбранным компаниям не предусмотрена")
-                        : api.LoadAsync(companyId, (byte)sourceId.Value);
-                break;
-            }
+                    loader = sourceId is null
+                        ? companyIds.Length > 1
+                            ? Task.FromResult("Загрузка по выбранным компаниям не предусмотрена")
+                            : api.LoadAsync(companyId)
+                        : companyIds.Length > 1
+                            ? Task.FromResult("Загрузка по выбранным компаниям не предусмотрена")
+                            : api.LoadAsync(companyId, (byte)sourceId.Value);
+                    break;
+                }
         }
 
         return loader;

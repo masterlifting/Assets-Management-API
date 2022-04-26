@@ -1,13 +1,16 @@
-﻿using System.Collections.Immutable;
-using IM.Service.Common.Net;
-using IM.Service.Common.Net.RabbitServices;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+﻿using IM.Service.Common.Net.RabbitMQ;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Interfaces;
 using IM.Service.Market.Models.Services.Calculations.Rating;
 using IM.Service.Market.Settings;
+
 using Microsoft.Extensions.Options;
+
+using System.Collections.Immutable;
+
+using static IM.Service.Common.Net.Helpers.LogicHelper;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.Calculations;
@@ -31,41 +34,31 @@ public class RatingComparator
     private async Task<bool> UpdateRatingAsync<T>() where T : class, IRating
     {
         var repository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<T>>();
-        //var logger = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<ILogger<RatingComparator>>();
-
         var readyData = await repository.GetSampleAsync(x => x.StatusId == (byte)Statuses.Ready || x.StatusId == (byte)Statuses.Error);
 
         if (!readyData.Any())
             return false;
 
-        if (!await ChangeStatusAsync((byte)Statuses.Computing, readyData, repository))
-            return false;
-
-        IEnumerable<T> computedData;
-
         try
         {
-            computedData = await RatingComparatorHandler.GetComparedSampleAsync(repository, readyData);
+            await ChangeStatusAsync((byte) Statuses.Computing, readyData, repository);
+            var computedData = await RatingComparatorHandler.GetComparedSampleAsync(repository, readyData);
+            await repository.UpdateAsync(computedData, nameof(UpdateRatingAsync));
+            return true;
         }
         catch
         {
             await ChangeStatusAsync((byte)Statuses.Error, readyData, repository);
             return false;
         }
-
-        var (error, _) = await repository.UpdateAsync(computedData, nameof(UpdateRatingAsync));
-
-        return error is null;
     }
-    private async Task<bool> ChangeStatusAsync<T>(byte statusId, T[] entities, Repository<T> repository) where T : class, IRating
+    private Task ChangeStatusAsync<T>(byte statusId, T[] entities, Repository<T> repository) where T : class, IRating
     {
         foreach (var item in entities)
             item.StatusId = statusId;
 
         var status = Enum.Parse<Statuses>(statusId.ToString()).ToString();
-        var (error, _) = await repository.UpdateAsync(entities, nameof(ChangeStatusAsync) + " to " + status);
-
-        return error is null;
+        return repository.UpdateAsync(entities, nameof(ChangeStatusAsync) + " to " + status);
     }
 
     private Task SetRatingAsync()
@@ -223,7 +216,7 @@ internal class RatingComparatorHandler
         if (readyData is null) throw new ArgumentNullException(nameof(readyData));
 
         var reportMin = readyData.Min(x => (x.Year, x.Quarter));
-        var (year, quarter) = Helper.QuarterHelper.SubtractQuarter(reportMin.Year, reportMin.Quarter);
+        var (year, quarter) = QuarterHelper.SubtractQuarter(reportMin.Year, reportMin.Quarter);
         var companyIds = readyData.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
         var sourceIds = readyData.GroupBy(x => x.SourceId).Select(x => x.Key).ToArray();
 
@@ -299,7 +292,7 @@ internal class RatingComparatorHandler
         if (readyData is null) throw new ArgumentNullException(nameof(readyData));
 
         var coefficientMin = readyData.Min(x => (x.Year, x.Quarter));
-        var (year, quarter) = Helper.QuarterHelper.SubtractQuarter(coefficientMin.Year, coefficientMin.Quarter);
+        var (year, quarter) = QuarterHelper.SubtractQuarter(coefficientMin.Year, coefficientMin.Quarter);
         var companyIds = readyData.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
         var sourceIds = readyData.GroupBy(x => x.SourceId).Select(x => x.Key).ToArray();
 

@@ -17,7 +17,6 @@ public class Coefficient : IQuarterIdentity, IRating
 
     [Range(1900, 3000)]
     public int Year { get; set; }
-
     [Range(1, 4)]
     public byte Quarter { get; set; }
 

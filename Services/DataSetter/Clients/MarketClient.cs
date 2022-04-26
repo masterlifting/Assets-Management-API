@@ -1,11 +1,9 @@
 ﻿using DataSetter.Settings;
-
-using IM.Service.Common.Net.HttpServices;
-
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 using System.Net.Http;
-using Microsoft.Extensions.Caching.Memory;
+using static IM.Service.Common.Net.Helpers.HttpHelper;
 
 namespace DataSetter.Clients;
 

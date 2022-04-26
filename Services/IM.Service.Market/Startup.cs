@@ -1,4 +1,3 @@
-using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Market.Clients;
 using IM.Service.Market.Domain.DataAccess;
@@ -25,6 +24,7 @@ using IM.Service.Market.Settings;
 using Microsoft.EntityFrameworkCore;
 
 using Polly;
+using static IM.Service.Common.Net.Helpers.JsonHelper;
 
 namespace IM.Service.Market;
 
@@ -69,6 +69,10 @@ public class Startup
         services.AddScoped<IMapperWrite<Float, FloatPostDto>, MapperFloat>();
         services.AddScoped<IMapperRead<Split, SplitGetDto>, MapperSplit>();
         services.AddScoped<IMapperWrite<Split, SplitPostDto>, MapperSplit>();
+        services.AddScoped<IMapperRead<Dividend, DividendGetDto>, MapperDividend>();
+        services.AddScoped<IMapperWrite<Dividend, DividendPostDto>, MapperDividend>();
+        services.AddScoped<IMapperRead<Coefficient, CoefficientGetDto>, MapperCoefficient>();
+        services.AddScoped<IMapperWrite<Coefficient, CoefficientPostDto>, MapperCoefficient>();
 
         services.AddScoped<IRestQueryService<Coefficient>, RestQueryQuarterService<Coefficient>>();
         services.AddScoped<IRestQueryService<Dividend>, RestQueryDateService<Dividend>>();
@@ -88,10 +92,10 @@ public class Startup
         services.AddScoped<RestApiWrite<Float, FloatPostDto>>();
         services.AddScoped<RestApiRead<Split, SplitGetDto>>();
         services.AddScoped<RestApiWrite<Split, SplitPostDto>>();
-        //services.AddScoped<RestApiRead<Dividend, DividendGetDto>>();
-        //services.AddScoped<RestApiRead<Coefficient, CoefficientGetDto>>();
-        //services.AddScoped<RestApiWrite<Dividend, DividendPostDto>>();
-        //services.AddScoped<RestApiWrite<Coefficient, CoefficientPostDto>>();
+        services.AddScoped<RestApiRead<Dividend, DividendGetDto>>();
+        services.AddScoped<RestApiWrite<Dividend, DividendPostDto>>();
+        services.AddScoped<RestApiRead<Coefficient, CoefficientGetDto>>();
+        services.AddScoped<RestApiWrite<Coefficient, CoefficientPostDto>>();
 
         services.AddTransient<PriceLoader>();
         services.AddTransient<ReportLoader>();

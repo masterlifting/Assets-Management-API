@@ -1,5 +1,5 @@
 ﻿using IM.Service.Common.Net.Helpers;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Interfaces;
@@ -35,15 +35,12 @@ public class PriceService
 
         foreach (var price in result)
         {
-            price.StatusId = (byte) Statuses.Ready;
+            price.StatusId = (byte)Statuses.Ready;
             if (price.ValueTrue == 0)
                 price.ValueTrue = price.Value;
         }
 
-        var (error, _) = await priceRepo.UpdateAsync(result, nameof(SetValueTrueAsync));
-
-        if (error is not null)
-            throw new Exception(error);
+        await priceRepo.UpdateAsync(result, string.Join("; ", result.Select(x => x.CompanyId)));
     }
     public async Task SetValueTrueRangeAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
     {
@@ -64,10 +61,7 @@ public class PriceService
                 price.ValueTrue = price.Value;
         }
 
-        var (error, _) = await priceRepo.UpdateAsync(result, nameof(SetValueTrueRangeAsync));
-
-        if (error is not null)
-            throw new Exception(error);
+        await priceRepo.UpdateAsync(result, string.Join("; ", result.Select(x => x.CompanyId)));
     }
 
     private async Task<Price[]> SetValueAsync(QueueActions action, Price price)

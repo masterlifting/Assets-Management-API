@@ -1,5 +1,4 @@
-﻿using IM.Service.Common.Net;
-using IM.Service.Common.Net.Helpers;
+﻿using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.Models.Entity.Interfaces;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
@@ -12,20 +11,22 @@ namespace IM.Service.Market.Services.DataLoaders;
 
 public class DataLoader<TEntity> where TEntity : class, IDataIdentity, IPeriod
 {
+    private readonly Repository<TEntity> repository;
     private readonly ILogger<DataLoader<TEntity>> logger;
     private readonly ILastDataHelper<TEntity> lastDataHelper;
 
-    private readonly DataGrabber grabber;
+    private readonly DataGrabber<TEntity> grabber;
 
     protected Func<TEntity, bool> IsCurrentDataCondition { get; init; }
     protected int TimeAgo { get; init; }
+    protected IEqualityComparer<TEntity>? Comparer { get; init; }
 
-    protected DataLoader(ILogger<DataLoader<TEntity>> logger, Repository<TEntity> repository, Dictionary<byte, IDataGrabber> sourceMatcher)
+    protected DataLoader(ILogger<DataLoader<TEntity>> logger, Repository<TEntity> repository, Dictionary<byte, IDataGrabber<TEntity>> sourceMatcher)
     {
         this.logger = logger;
+        this.repository = repository;
 
-        grabber = new DataGrabber(sourceMatcher);
-
+        grabber = new DataGrabber<TEntity>(sourceMatcher);
         IsCurrentDataCondition = _ => true;
         TimeAgo = 1;
 
@@ -52,41 +53,50 @@ public class DataLoader<TEntity> where TEntity : class, IDataIdentity, IPeriod
 
     private async Task DataSetAsync(CompanySource companySource)
     {
+        if (Comparer is null)
+            throw new NullReferenceException(nameof(Comparer));
+
         if (!grabber.ToContinue(companySource))
             return;
 
+        await foreach (var data in grabber.GetCurrentDataAsync(companySource))
+            await repository.CreateUpdateAsync(data, Comparer, nameof(DataSetAsync));
+
         var last = await lastDataHelper.GetLastDataAsync(companySource);
-
         var isCurrent = last is not null && IsCurrentDataCondition.Invoke(last);
-
-        await grabber.GetCurrentDataAsync(companySource);
-
+        
         if (!isCurrent)
-            await grabber.GetHistoryDataAsync(companySource);
+            await foreach (var data in grabber.GetHistoryDataAsync(companySource))
+                await repository.UpdateAsync(data, nameof(DataSetAsync));
 
-        logger.LogInformation(LogEvents.Processing, "Grab '{data}' for '{name}' by '{value}' is complete. ", typeof(TEntity).Name, companySource.CompanyId, companySource.Value);
+        logger.LogDebug(nameof(DataSetAsync), typeof(TEntity).Name, $" CompanyId: {companySource.CompanyId}, Source: {companySource.Value}");
     }
     private async Task DataSetAsync(CompanySource[] companySources)
     {
+        if (Comparer is null)
+            throw new NullReferenceException(nameof(Comparer));
+
         if (!grabber.ToContinue(companySources))
             return;
 
         var lasts = await lastDataHelper.GetLastDataAsync(companySources);
 
         if (!lasts.Any())
-        {
-            await grabber.GetHistoryDataAsync(companySources);
-        }
+            await foreach (var data in grabber.GetHistoryDataAsync(companySources))
+                await repository.UpdateAsync(data, nameof(DataSetAsync));
         else
         {
-            var currentData = lasts.Where(x => IsCurrentDataCondition.Invoke(x));
-            var historyData = lasts.Where(x => !IsCurrentDataCondition.Invoke(x));
+            var currentSources = lasts.Where(x => IsCurrentDataCondition.Invoke(x));
+            var historySources = lasts.Where(x => !IsCurrentDataCondition.Invoke(x));
 
-            await grabber.GetCurrentDataAsync(companySources.Join(currentData, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x));
-            await grabber.GetHistoryDataAsync(companySources.Join(historyData, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x));
+            await foreach (var data in grabber.GetCurrentDataAsync(companySources.Join(currentSources, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x)))
+                await repository.CreateUpdateAsync(data, Comparer, nameof(DataSetAsync));
+
+            await foreach (var data in grabber.GetHistoryDataAsync(companySources.Join(historySources, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x)))
+                await repository.UpdateAsync(data, nameof(DataSetAsync));
         }
 
-        logger.LogInformation(LogEvents.Processing, "Grab '{data}' for '{name}' is complete. ", typeof(TEntity).Name, string.Join(",", companySources.Select(x => x.CompanyId).Distinct()));
+        logger.LogDebug(nameof(DataSetAsync), typeof(TEntity).Name, string.Join(",", companySources.Select(x => $"{x.CompanyId}-{x.Value}").Distinct()));
     }
 }
 

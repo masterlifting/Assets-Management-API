@@ -21,7 +21,16 @@ public class MapperSplit : IMapperRead<Split, SplitGetDto>, IMapperWrite<Split, 
         .ToArrayAsync();
     public async Task<SplitGetDto[]> MapLastFromAsync(IQueryable<Split> query)
     {
-        var queryResult = await MapFromAsync(query);
+        var queryResult = await query
+            .Select(x => new SplitGetDto
+            {
+                Company = x.Company.Name,
+                Source = x.Source.Name,
+                Date = x.Date,
+
+                Value = x.Value
+            })
+            .ToArrayAsync();
 
         return queryResult
             .GroupBy(x => x.Company)

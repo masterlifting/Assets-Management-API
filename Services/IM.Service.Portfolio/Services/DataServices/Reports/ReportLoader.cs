@@ -1,10 +1,11 @@
-using IM.Service.Common.Net;
+using IM.Service.Common.Net.Helpers;
 using IM.Service.Portfolio.DataAccess.Entities;
 using IM.Service.Portfolio.DataAccess.Repositories;
 using IM.Service.Portfolio.Models.Dto.Mq;
 
 using Microsoft.Extensions.Logging;
 
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 
 namespace IM.Service.Portfolio.Services.DataServices.Reports;
@@ -25,20 +26,23 @@ public class ReportLoader
         this.userRepo = userRepo;
     }
 
-    public async Task DataSetAsync(ReportFileDto file)
+    public async Task DataSetAsync(string data)
     {
-        var user = await userRepo.FindAsync(file.UserId); // delete!
+        if (!JsonHelper.TryDeserialize(data, out ReportFileDto? file))
+            throw new SerializationException(nameof(ReportFileDto));
+
+        var user = await userRepo.FindAsync(file!.UserId); // delete!
 
         if (user is null)
         {
-            logger.LogWarning(LogEvents.Processing, "'{userId}' was not found", file.UserId);
+            logger.LogWarning(nameof(DataSetAsync), "User not found", file.UserId);
             await userRepo.CreateAsync(new User { Id = file.UserId, Name = "Пестунов Андрей Викторович" }, "Пестунов Андрей Викторович");
             return;
         }
 
         if (!ReportHelper.TryGetBroker(file.Name, out var broker))
         {
-            logger.LogWarning(LogEvents.Processing, "Broker from '{fileName}' was not recognized", file.Name);
+            logger.LogWarning(nameof(DataSetAsync), "Broker not recognized", file.Name);
             return;
         }
 

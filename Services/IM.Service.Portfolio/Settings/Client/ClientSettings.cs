@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Dto.Http;
+﻿using IM.Service.Common.Net.Models.Http;
 
 namespace IM.Service.Portfolio.Settings.Client;
 

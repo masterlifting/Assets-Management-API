@@ -1,6 +1,7 @@
-﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
-using IM.Service.Common.Net.RabbitServices;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+﻿using IM.Service.Common.Net.Helpers;
+using IM.Service.Common.Net.Models.Entity.Interfaces;
+using IM.Service.Common.Net.RabbitMQ;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Interfaces;
@@ -37,36 +38,24 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
         this.repository = repository;
     }
 
-    public async Task<(string? error, TEntity? entity)> CreateAsync(string companyId, int sourceId, TPost model)
+    public async Task<TEntity> CreateAsync(string companyId, int sourceId, TPost model)
     {
         var entity = mapper.MapTo(companyId.ToUpperInvariant(), (byte)sourceId, model);
-
-        var message = $"{typeof(TEntity).Name} of '{entity.CompanyId}' create";
-
-        return await repository.CreateAsync(entity, message);
+        return await repository.CreateAsync(entity, entity.CompanyId);
     }
-    public async Task<(string? error, TEntity[]? entities)> CreateAsync(string companyId, int sourceId, IEnumerable<TPost> models, IEqualityComparer<TEntity> comparer)
+    public async Task<TEntity[]> CreateAsync(string companyId, int sourceId, IEnumerable<TPost> models, IEqualityComparer<TEntity> comparer)
     {
         var entities = mapper.MapTo(companyId.ToUpperInvariant(), (byte)sourceId, models);
-
-        return await repository.CreateAsync(entities, comparer, $"Source count: {entities.Length}");
+        return await repository.CreateAsync(entities, comparer, LogHelper.GetInfo(companyId, sourceId));
     }
 
-    public async Task<(string? error, TEntity? entity)> UpdateAsync(TEntity id, TPost model)
+    public async Task<TEntity> UpdateAsync(TEntity id, TPost model)
     {
         var entity = mapper.MapTo(id, model);
-
-        var info = $"{typeof(TEntity)} of '{entity.CompanyId}' update";
-
-        return await repository.UpdateAsync(entity, info);
+        return await repository.UpdateAsync(entity, entity.CompanyId);
     }
 
-    public async Task<(string? error, TEntity? entity)> DeleteAsync(TEntity id)
-    {
-        var info = $"{typeof(TEntity).Name} of '{id.CompanyId}' delete";
-
-        return await repository.DeleteAsync(id, info);
-    }
+    public async Task<TEntity> DeleteAsync(TEntity id) => await repository.DeleteAsync(id, id.CompanyId);
 
 
     public async Task<string> LoadAsync()

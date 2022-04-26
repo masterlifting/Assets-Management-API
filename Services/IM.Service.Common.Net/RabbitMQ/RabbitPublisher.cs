@@ -1,16 +1,15 @@
 ﻿using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.Models.Configuration;
-using IM.Service.Common.Net.ParserServices;
-using IM.Service.Common.Net.RabbitServices.Configuration;
-
 using RabbitMQ.Client;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
+using static IM.Service.Common.Net.Helpers.ServiceHelper;
 
-namespace IM.Service.Common.Net.RabbitServices;
+namespace IM.Service.Common.Net.RabbitMQ;
 
 public class RabbitPublisher
 {

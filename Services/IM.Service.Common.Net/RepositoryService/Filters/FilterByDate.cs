@@ -4,15 +4,15 @@ using System;
 using System.Linq.Expressions;
 
 using static IM.Service.Common.Net.Enums;
-using static IM.Service.Common.Net.RepositoryService.Filters.FilterSetter;
+using static IM.Service.Common.Net.Helpers.LogicHelper.PeriodConfigurator;
 
 namespace IM.Service.Common.Net.RepositoryService.Filters;
 
 public abstract class FilterByDate<T> : IFilter<T> where T : class, IDateIdentity
 {
-    public int Year { get; }
-    public int Month { get; }
-    public int Day { get; }
+    private int Year { get; }
+    private int Month { get; }
+    private int Day { get; }
     public Expression<Func<T, bool>> Expression { get; set; }
     
     protected FilterByDate(CompareType compareType, int year)

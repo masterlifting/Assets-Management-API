@@ -1,8 +1,8 @@
 using ExcelDataReader;
 
-using IM.Service.Common.Net;
 using IM.Service.Portfolio.DataAccess.Comparators;
 using IM.Service.Portfolio.DataAccess.Entities;
+using IM.Service.Portfolio.DataAccess.Entities.Catalogs;
 using IM.Service.Portfolio.DataAccess.Repositories;
 using IM.Service.Portfolio.Models.Dto.Mq;
 
@@ -16,8 +16,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IM.Service.Portfolio.DataAccess.Entities.Catalogs;
+
 using static IM.Service.Common.Net.Enums;
+using static IM.Service.Common.Net.Helpers.LogHelper;
 using static IM.Service.Portfolio.Enums;
 using static IM.Service.Portfolio.Services.DataServices.Reports.Implementations.ReportConfiguration;
 
@@ -90,24 +91,19 @@ public class BcsGrabber : IDataGrabber
                 foreach (var deal in deals)
                     deal.DateTime = deal.DateTime.ToUniversalTime();
 
-                var (dealError, _) = await dealRepo.CreateAsync(deals, new DealComparer(), nameof(BcsGrabber));
-
-                if (dealError is not null)
-                    return;
+                _ = await dealRepo.CreateAsync(deals, new DealComparer(), string.Join("; ", deals.Select(x => x.AccountName)));
             }
             else if (events.Any())
             {
                 foreach (var _event in events)
                     _event.DateTime = _event.DateTime.ToUniversalTime();
 
-                var (eventError, _) = await eventRepo.CreateAsync(events, new EventComparer(), nameof(BcsGrabber));
-
-                if (eventError is not null)
-                    return;
+                _ = await eventRepo.CreateAsync(events, new EventComparer(), string.Join("; ", events.Select(x => x.AccountName)));
             }
             else
             {
-                logger.LogInformation(LogEvents.Processing, "Place: {place}. New transactions was not found.", nameof(BcsGrabber) + '.' + file.Name);
+                logger.LogInfo(nameof(GrabDataAsync), file.Name, "New transactions was not found");
+
                 return;
             }
 
@@ -123,7 +119,7 @@ public class BcsGrabber : IDataGrabber
         }
         catch (Exception exception)
         {
-            logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(BcsGrabber) + '.' + file.Name, exception.Message);
+            logger.LogError(nameof(GrabDataAsync), exception);
 
             // automatically creating account
             if (exception.Message.IndexOf("Agreement '", StringComparison.Ordinal) > -1)
@@ -549,7 +545,7 @@ internal sealed class ReportParser
     private void ParseAdditionalStockRelease(Currencies currency, string value)
     {
         var ticker = value.Trim();
-        
+
         if (!derivativeCodes.ContainsKey(ticker))
             throw new Exception(nameof(ParseAdditionalStockRelease) + $".Ticker '{ticker}' was not found");
 

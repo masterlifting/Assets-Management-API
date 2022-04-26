@@ -1,15 +1,17 @@
-﻿using IM.Service.Common.Net.HttpServices;
-using IM.Service.Common.Net.Models.Dto.Http;
-using IM.Service.Common.Net.RabbitServices;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+﻿using IM.Service.Common.Net.Models.Services;
+using IM.Service.Common.Net.RabbitMQ;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Models.Api.Amqp;
 using IM.Service.Market.Models.Api.Http;
 using IM.Service.Market.Settings;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+
+using static IM.Service.Common.Net.Helpers.ServiceHelper;
 
 namespace IM.Service.Market.Services.RestApi;
 
@@ -25,27 +27,24 @@ public class CompanyRestApi
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public async Task<ResponseModel<CompanyGetDto>> GetAsync(string companyId)
+    public async Task<CompanyGetDto> GetAsync(string companyId)
     {
         var company = await companyRepo.FindAsync(companyId.Trim().ToUpperInvariant())
                       ?? await companyRepo.FindAsync(x => x.Name.Contains(companyId)); //TODO: TO DELETE
 
-        return company is null
-            ? new() { Errors = new[] { $"'{companyId}' not found" } }
-            : new()
+        return company is not null
+            ? new CompanyGetDto
             {
-                Data = new()
-                {
-                    Id = company.Id,
-                    Name = company.Name,
-                    Country = company.Country.Name,
-                    Industry = company.Industry.Name,
-                    Sector = company.Industry.Sector.Name,
-                    Description = company.Description,
-                }
-            };
+                Id = company.Id,
+                Name = company.Name,
+                Country = company.Country.Name,
+                Industry = company.Industry.Name,
+                Sector = company.Industry.Sector.Name,
+                Description = company.Description,
+            }
+            : throw new NullReferenceException(nameof(company));
     }
-    public async Task<ResponseModel<PaginatedModel<CompanyGetDto>>> GetAsync(HttpPagination pagination)
+    public async Task<PaginationModel<CompanyGetDto>> GetAsync(Paginatior pagination)
     {
         var count = await companyRepo.GetCountAsync();
         var paginatedResult = companyRepo.GetPaginationQuery(pagination, x => x.Name);
@@ -61,17 +60,14 @@ public class CompanyRestApi
         })
         .ToArrayAsync();
 
-        return new()
+        return new PaginationModel<CompanyGetDto>
         {
-            Data = new()
-            {
-                Items = companies,
-                Count = count
-            }
+            Items = companies,
+            Count = count
         };
     }
 
-    public async Task<(string? error, Company? result)> CreateAsync(CompanyPostDto model)
+    public async Task<Company> CreateAsync(CompanyPostDto model)
     {
         var entity = new Company
         {
@@ -81,14 +77,15 @@ public class CompanyRestApi
             IndustryId = model.IndustryId,
             Description = model.Description
         };
+
         return await companyRepo.CreateAsync(entity, entity.Name);
     }
-    public async Task<(string? message, Company[] results)> CreateAsync(IEnumerable<CompanyPostDto> models)
+    public async Task<Company[]> CreateAsync(IEnumerable<CompanyPostDto> models)
     {
         var dtos = models.ToArray();
 
         if (!dtos.Any())
-            return ("Data for creating not found", Array.Empty<Company>());
+            return Array.Empty<Company>();
 
         var entities = dtos.Select(x => new Company
         {
@@ -101,7 +98,7 @@ public class CompanyRestApi
 
         return await companyRepo.CreateAsync(entities, new CompanyComparer(), string.Join("; ", entities.Select(x => x.Id)));
     }
-    public async Task<(string? error, Company? result)> UpdateAsync(string companyId, CompanyPutDto model)
+    public async Task<Company> UpdateAsync(string companyId, CompanyPutDto model)
     {
         var entity = new Company
         {
@@ -113,12 +110,12 @@ public class CompanyRestApi
 
         return await companyRepo.UpdateAsync(new[] { entity.Id }, entity, entity.Name);
     }
-    public async Task<(string? message, Company[] results)> UpdateAsync(IEnumerable<CompanyPostDto> models)
+    public async Task<Company[]> UpdateAsync(IEnumerable<CompanyPostDto> models)
     {
         var dtos = models.ToArray();
 
         if (!dtos.Any())
-            return ("Data for updating not found", Array.Empty<Company>());
+            return Array.Empty<Company>();
 
         var entities = dtos.Select(x => new Company
         {
@@ -131,10 +128,9 @@ public class CompanyRestApi
 
         return await companyRepo.UpdateAsync(entities, string.Join("; ", entities.Select(x => x.Id)));
     }
-    public Task<(string? error, Company? result)> DeleteAsync(string companyId)
+    public Task<Company> DeleteAsync(string companyId)
     {
         companyId = string.Intern(companyId.ToUpperInvariant().Trim());
-
         return companyRepo.DeleteByIdAsync(new[] { companyId }, companyId);
     }
 

@@ -1,5 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Dto.Http;
-using IM.Service.Common.Net.Models.Entity.Interfaces;
+﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.DataAccess.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
@@ -26,122 +25,157 @@ public class DateControllerBase<TEntity, TPost, TGet> : ControllerBase
     }
 
     [HttpGet]
-    public Task<ResponseModel<PaginatedModel<TGet>>> Gets(string? companyId, int? sourceId, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
-        apiRead.GetAsync(GetFilter(CompareType.More, companyId, sourceId, year, month, day), new(page, limit));
+    public async Task<IActionResult> Gets(string? companyId, int? sourceId, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0)
+    {
+        try
+        {
+            var result = await apiRead.GetAsync(DateFilter<TEntity>.GetFilter(CompareType.More, companyId, sourceId, year, month, day), new(page, limit));
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("last/")]
-    public async Task<ResponseModel<PaginatedModel<TGet>>> GetLast(string? companyId, int? sourceId, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0) =>
-        await apiRead.GetLastAsync(GetFilter(CompareType.More, companyId, sourceId, year, month, day), new(page, limit));
+    public async Task<IActionResult> GetLast(string? companyId, int? sourceId, int year = 0, int month = 0, int day = 0, int page = 0, int limit = 0)
+    {
+        try
+        {
+            var result = await apiRead.GetLastAsync(DateFilter<TEntity>.GetFilter(CompareType.More, companyId, sourceId, year, month, day), new(page, limit));
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
     [HttpGet("{year:int}")]
-    public Task<ResponseModel<PaginatedModel<TGet>>> Get(string? companyId, int? sourceId, int year, int page = 0, int limit = 0) =>
-        apiRead.GetAsync(GetFilter(CompareType.Equal, companyId, sourceId, year), new(page, limit));
+    public async Task<IActionResult> Get(string? companyId, int? sourceId, int year, int page = 0, int limit = 0)
+    {
+        try
+        {
+            var result = await apiRead.GetAsync(DateFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year), new(page, limit));
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("{year:int}/{month:int}")]
-    public Task<ResponseModel<PaginatedModel<TGet>>> Get(string? companyId, int? sourceId, int year, int month, int page = 0, int limit = 0) =>
-        apiRead.GetAsync(GetFilter(CompareType.Equal, companyId, sourceId, year, month), new(page, limit));
+    public async Task<IActionResult> Get(string? companyId, int? sourceId, int year, int month, int page = 0, int limit = 0)
+    {
+        try
+        {
+            var result = await apiRead.GetAsync(DateFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year, month), new(page, limit));
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("{year:int}/{month:int}/{day:int}")]
-    public Task<ResponseModel<PaginatedModel<TGet>>> Get(string? companyId, int? sourceId, int year, int month, int day, int page = 0, int limit = 0) =>
-        apiRead.GetAsync(GetFilter(CompareType.Equal, companyId, sourceId, year, month, day), new(page, limit));
+    public async Task<IActionResult> Get(string? companyId, int? sourceId, int year, int month, int day, int page = 0, int limit = 0)
+    {
+        try
+        {
+            var result = await apiRead.GetAsync(DateFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year, month, day), new(page, limit));
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
     [HttpPost]
     public async Task<IActionResult> Create(string companyId, int sourceId, TPost model)
     {
-        var (error, _) = await apiWrite.CreateAsync(companyId, sourceId, model);
-
-        return error is null ? Ok() : BadRequest(error);
+        try
+        {
+            var result = await apiWrite.CreateAsync(companyId, sourceId, model);
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
     [HttpPost("collection/")]
     public async Task<IActionResult> Create(string companyId, int sourceId, IEnumerable<TPost> models)
     {
-        var (error, _) = await apiWrite.CreateAsync(companyId, sourceId, models, new DataDateComparer<TEntity>());
-
-        return error is null ? Ok() : BadRequest(error);
+        try
+        {
+            var result = await apiWrite.CreateAsync(companyId, sourceId, models, new DataDateComparer<TEntity>());
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpPut("{year:int}/{month:int}/{day:int}")]
     public async Task<IActionResult> Update(string companyId, int sourceId, int year, int month, int day, TPost model)
     {
-        var id = Activator.CreateInstance<TEntity>();
-        id.CompanyId = companyId;
-        id.SourceId = (byte)sourceId;
-        id.Date = new DateOnly(year, month, day);
+        try
+        {
+            var id = Activator.CreateInstance<TEntity>();
+            id.CompanyId = companyId;
+            id.SourceId = (byte)sourceId;
+            id.Date = new DateOnly(year, month, day);
 
-        var (error, _) = await apiWrite.UpdateAsync(id, model);
+            var result = await apiWrite.UpdateAsync(id, model);
 
-        return error is null ? Ok() : BadRequest(error);
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpDelete("{year:int}/{month:int}/{day:int}")]
     public async Task<IActionResult> Delete(string companyId, int sourceId, int year, int month, int day)
     {
-        var id = Activator.CreateInstance<TEntity>();
-        id.CompanyId = companyId;
-        id.SourceId = (byte)sourceId;
-        id.Date = new DateOnly(year, month, day);
+        try
+        {
+            var id = Activator.CreateInstance<TEntity>();
+            id.CompanyId = companyId;
+            id.SourceId = (byte)sourceId;
+            id.Date = new DateOnly(year, month, day);
 
-        var (error, _) = await apiWrite.DeleteAsync(id);
+            var result = await apiWrite.DeleteAsync(id);
 
-        return error is null ? Ok() : BadRequest(error);
+            return Ok(result);
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpGet("load/")]
-    public Task<string> Load(string? companyId, int? sourceId) => GetLoader(apiWrite, companyId, sourceId);
-
-
-    private static DateFilter<TEntity> GetFilter(CompareType compareType, string? companyId, int? sourceId, int year = 0, int month = 0, int day = 0)
+    public async Task<IActionResult> Load(string? companyId, int? sourceId)
     {
-        DateFilter<TEntity> filter;
-
-        switch (companyId)
+        try
         {
-            case null when sourceId is null:
-                filter = day != 0
-                    ? new(compareType, year, month, day)
-                    : month != 0
-                        ? new(compareType, year, month)
-                        : new(compareType, year);
-                break;
-            case null when true:
-                filter = day != 0
-                    ? new(compareType, (byte)sourceId, year, month, day)
-                    : month != 0
-                        ? new(compareType, (byte)sourceId, year, month)
-                        : new(compareType, (byte)sourceId, year);
-                break;
-            default:
-                {
-                    var companyIds = companyId.Split(',');
+            return Ok(await GetLoaderAsync(apiWrite, companyId, sourceId));
 
-                    filter = sourceId is null
-                        ? companyIds.Length > 1
-                            ? day != 0
-                                ? new(compareType, companyIds, year, month, day)
-                                : month != 0
-                                    ? new(compareType, companyIds, year, month)
-                                    : new(compareType, companyIds, year)
-                            : day != 0
-                                ? new(compareType, companyId, year, month, day)
-                                : month != 0
-                                    ? new(compareType, companyId, year, month)
-                                    : new(compareType, companyId, year)
-                        : companyIds.Length > 1
-                            ? day != 0
-                                ? new(compareType, companyIds, (byte)sourceId, year, month, day)
-                                : month != 0
-                                    ? new(compareType, companyIds, (byte)sourceId, year, month)
-                                    : new(compareType, companyIds, (byte)sourceId, year)
-                            : day != 0
-                                ? new(compareType, companyId, (byte)sourceId, year, month, day)
-                                : month != 0
-                                    ? new(compareType, companyId, (byte)sourceId, year, month)
-                                    : new(compareType, companyId, (byte)sourceId, year);
-
-                    break;
-                }
         }
-
-        return filter;
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
-    private static Task<string> GetLoader(RestApiWrite<TEntity, TPost> api, string? companyId, int? sourceId)
+
+    private static Task<string> GetLoaderAsync(RestApiWrite<TEntity, TPost> api, string? companyId, int? sourceId)
     {
         Task<string> loader;
 

@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.RabbitServices;
+﻿using IM.Service.Common.Net.RabbitMQ;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Recommendations.Services.MqServices;
 using IM.Service.Recommendations.Settings;
 using Microsoft.Extensions.Logging;

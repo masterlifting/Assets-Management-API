@@ -1,5 +1,6 @@
-﻿using IM.Service.Common.Net;
-using IM.Service.Market.Services.Calculations;
+﻿using IM.Service.Market.Services.Calculations;
+
+using static IM.Service.Common.Net.Helpers.LogHelper;
 
 namespace IM.Service.Market.Services.Background;
 

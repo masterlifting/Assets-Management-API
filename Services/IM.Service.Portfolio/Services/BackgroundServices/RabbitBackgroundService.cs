@@ -1,11 +1,11 @@
-﻿using IM.Service.Common.Net.RabbitServices;
+﻿using IM.Service.Common.Net.RabbitMQ;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using System.Threading;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.RabbitServices.Configuration;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Portfolio.Services.MqServices;
 using IM.Service.Portfolio.Settings;
 

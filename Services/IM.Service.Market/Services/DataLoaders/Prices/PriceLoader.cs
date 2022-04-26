@@ -1,7 +1,9 @@
 using IM.Service.Market.Clients;
 using IM.Service.Market.Domain.DataAccess;
+using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Services.DataLoaders.Prices.Implementations;
+
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.DataLoaders.Prices;
@@ -9,15 +11,11 @@ namespace IM.Service.Market.Services.DataLoaders.Prices;
 public class PriceLoader : DataLoader<Price>
 {
     private readonly Dictionary<byte, DateOnly[]> exchangeWeekend;
-    public PriceLoader(
-        ILogger<DataLoader<Price>> logger, 
-        Repository<Price> repository, 
-        MoexClient moexClient,
-        TdAmeritradeClient tdAmeritradeClient) 
-        : base(logger, repository , new Dictionary<byte, IDataGrabber>
+    public PriceLoader(ILogger<DataLoader<Price>> logger, Repository<Price> repository, MoexClient moexClient, TdAmeritradeClient tdAmeritradeClient)
+        : base(logger, repository, new Dictionary<byte, IDataGrabber<Price>>
         {
-            { (byte)Sources.Moex, new MoexGrabber(repository, logger, moexClient) },
-            { (byte)Sources.Tdameritrade, new TdameritradeGrabber(repository, logger, tdAmeritradeClient) }
+            { (byte)Sources.Moex, new MoexGrabber(moexClient) },
+            { (byte)Sources.Tdameritrade, new TdameritradeGrabber(tdAmeritradeClient) }
         })
     {
         exchangeWeekend = new()
@@ -39,6 +37,7 @@ public class PriceLoader : DataLoader<Price>
         };
         IsCurrentDataCondition = x => IsCurrentData(x.SourceId, x.Date);
         TimeAgo = 30;
+        Comparer = new DataDateComparer<Price>();
     }
 
     private bool IsCurrentData(byte sourceId, DateOnly date)

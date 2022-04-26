@@ -47,52 +47,53 @@ public static class JsonHelper
             return false;
         }
     }
-}
-public class DateOnlyConverter : JsonConverter<DateOnly>
-{
-    private readonly string serializationFormat;
 
-    public DateOnlyConverter() : this(null)
+    public class DateOnlyConverter : JsonConverter<DateOnly>
     {
-    }
+        private readonly string serializationFormat;
 
-    public DateOnlyConverter(string? serializationFormat)
+        public DateOnlyConverter() : this(null)
+        {
+        }
+
+        public DateOnlyConverter(string? serializationFormat)
+        {
+            this.serializationFormat = serializationFormat ?? "yyyy-MM-dd";
+        }
+
+        public override DateOnly Read(ref Utf8JsonReader reader,
+            Type typeToConvert, JsonSerializerOptions options)
+        {
+            var value = reader.GetString();
+            return DateOnly.Parse(value!);
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateOnly value,
+            JsonSerializerOptions options)
+            => writer.WriteStringValue(value.ToString(serializationFormat));
+    }
+    public class TimeOnlyConverter : JsonConverter<TimeOnly>
     {
-        this.serializationFormat = serializationFormat ?? "yyyy-MM-dd";
+        private readonly string serializationFormat;
+
+        public TimeOnlyConverter() : this(null)
+        {
+        }
+
+        public TimeOnlyConverter(string? serializationFormat)
+        {
+            this.serializationFormat = serializationFormat ?? "HH:mm:ss";
+        }
+
+        public override TimeOnly Read(ref Utf8JsonReader reader,
+            Type typeToConvert, JsonSerializerOptions options)
+        {
+            var value = reader.GetString();
+            return TimeOnly.Parse(value!);
+        }
+
+        public override void Write(Utf8JsonWriter writer, TimeOnly value,
+            JsonSerializerOptions options)
+            => writer.WriteStringValue(value.ToString(serializationFormat));
     }
-
-    public override DateOnly Read(ref Utf8JsonReader reader,
-        Type typeToConvert, JsonSerializerOptions options)
-    {
-        var value = reader.GetString();
-        return DateOnly.Parse(value!);
-    }
-
-    public override void Write(Utf8JsonWriter writer, DateOnly value,
-        JsonSerializerOptions options)
-        => writer.WriteStringValue(value.ToString(serializationFormat));
-}
-public class TimeOnlyConverter : JsonConverter<TimeOnly>
-{
-    private readonly string serializationFormat;
-
-    public TimeOnlyConverter() : this(null)
-    {
-    }
-
-    public TimeOnlyConverter(string? serializationFormat)
-    {
-        this.serializationFormat = serializationFormat ?? "HH:mm:ss";
-    }
-
-    public override TimeOnly Read(ref Utf8JsonReader reader,
-        Type typeToConvert, JsonSerializerOptions options)
-    {
-        var value = reader.GetString();
-        return TimeOnly.Parse(value!);
-    }
-
-    public override void Write(Utf8JsonWriter writer, TimeOnly value,
-        JsonSerializerOptions options)
-        => writer.WriteStringValue(value.ToString(serializationFormat));
 }

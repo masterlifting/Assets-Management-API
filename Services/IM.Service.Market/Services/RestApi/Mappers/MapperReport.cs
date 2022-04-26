@@ -34,7 +34,28 @@ public class MapperReport : IMapperRead<Report, ReportGetDto>, IMapperWrite<Repo
         .ToArrayAsync();
     public async Task<ReportGetDto[]> MapLastFromAsync(IQueryable<Report> query)
     {
-        var queryResult = await MapFromAsync(query);
+        var queryResult = await query
+            .Select(x => new ReportGetDto
+            {
+                Company = x.Company.Name,
+                Source = x.Source.Name,
+                Year = x.Year,
+                Quarter = x.Quarter,
+
+                Multiplier = x.Multiplier,
+                Currency = x.Currency.Name,
+
+                Asset = x.Asset,
+                CashFlow = x.CashFlow,
+                LongTermDebt = x.LongTermDebt,
+                Obligation = x.Obligation,
+                ProfitGross = x.ProfitGross,
+                ProfitNet = x.ProfitNet,
+                Revenue = x.Revenue,
+                ShareCapital = x.ShareCapital,
+                Turnover = x.Turnover
+            })
+            .ToArrayAsync();
 
         return queryResult
                 .GroupBy(x => x.Company)

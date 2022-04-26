@@ -1,91 +1,55 @@
-﻿using IM.Service.Common.Net;
-using IM.Service.Market.Clients;
-using IM.Service.Market.Domain.DataAccess;
-using IM.Service.Market.Domain.DataAccess.Comparators;
+﻿using IM.Service.Market.Clients;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Clients;
+
 using static IM.Service.Common.Net.Enums;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.DataLoaders.Prices.Implementations;
 
-public class TdameritradeGrabber : IDataGrabber
+public class TdameritradeGrabber : IDataGrabber<Price>
 {
-    private readonly Repository<Price> repository;
-    private readonly ILogger<DataLoader<Price>> logger;
     private readonly TdAmeritradeClient client;
+    public TdameritradeGrabber(TdAmeritradeClient client) => this.client = client;
 
-    public TdameritradeGrabber(Repository<Price> repository, ILogger<DataLoader<Price>> logger, TdAmeritradeClient client)
+    public async IAsyncEnumerable<Price[]> GetCurrentDataAsync(CompanySource companySource)
     {
-        this.repository = repository;
-        this.logger = logger;
-        this.client = client;
+        if (companySource.Value is null)
+            throw new ArgumentNullException(companySource.CompanyId);
+
+        var data = await client.GetCurrentPricesAsync(new[] { companySource.CompanyId });
+
+        var result = Map(data);
+
+        yield return result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
+    }
+    public async IAsyncEnumerable<Price[]> GetCurrentDataAsync(IEnumerable<CompanySource> companySources)
+    {
+        var data = await client.GetCurrentPricesAsync(companySources.Select(x => x.CompanyId));
+
+        var result = Map(data);
+
+        yield return result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
     }
 
-    public async Task GetCurrentDataAsync(CompanySource companySource)
+    public async IAsyncEnumerable<Price[]> GetHistoryDataAsync(CompanySource companySource)
     {
-        try
-        {
-            if (companySource.Value is null)
-                throw new ArgumentNullException(companySource.CompanyId);
+        if (companySource.Value is null)
+            throw new ArgumentNullException(companySource.CompanyId);
 
-            var data = await client.GetCurrentPricesAsync(new[] { companySource.CompanyId });
+        var data = await client.GetHistoryPricesAsync(companySource.CompanyId);
 
-            var result = Map(data);
-
-            result = result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
-
-            await repository.CreateUpdateAsync(result, new DataDateComparer<Price>(), "Tdameritrade current prices");
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(TdameritradeGrabber) + '.' + nameof(GetCurrentDataAsync), exception.InnerException?.Message ?? exception.Message);
-        }
+        yield return Map(data);
     }
-    public async Task GetCurrentDataAsync(IEnumerable<CompanySource> companySources)
-    {
-        try
-        {
-            var data = await client.GetCurrentPricesAsync(companySources.Select(x => x.CompanyId));
-
-            var result = Map(data);
-
-            result = result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
-
-            await repository.CreateUpdateAsync(result, new DataDateComparer<Price>(), "Tdameritrade current prices");
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(TdameritradeGrabber) + '.' + nameof(GetCurrentDataAsync), exception.InnerException?.Message ?? exception.Message);
-        }
-    }
-
-    public async Task GetHistoryDataAsync(CompanySource companySource)
-    {
-        try
-        {
-            if (companySource.Value is null)
-                throw new ArgumentNullException(companySource.CompanyId);
-
-            var data = await client.GetHistoryPricesAsync(companySource.CompanyId);
-
-            var result = Map(data);
-
-            await repository.CreateAsync(result, new DataDateComparer<Price>(), "Tdameritrade history prices");
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(TdameritradeGrabber) + '.' + nameof(GetHistoryDataAsync), exception.InnerException?.Message ?? exception.Message);
-        }
-    }
-    public async Task GetHistoryDataAsync(IEnumerable<CompanySource> companySources)
+    public async IAsyncEnumerable<Price[]> GetHistoryDataAsync(IEnumerable<CompanySource> companySources)
     {
         using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(100));
 
-        foreach (var config in companySources)
+        foreach (var companySource in companySources)
             if (await timer.WaitForNextTickAsync())
-                await GetHistoryDataAsync(config);
+                await foreach (var data in GetHistoryDataAsync(companySource))
+                    yield return data;
     }
 
     private static Price[] Map(TdAmeritradeLastPriceResultModel clientResult) =>

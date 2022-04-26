@@ -1,55 +1,41 @@
 using HtmlAgilityPack;
 
-using IM.Service.Common.Net;
-using System.Globalization;
 using IM.Service.Market.Clients;
-using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
+
+using System.Globalization;
+
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.DataLoaders.Floats.Implementations;
 
-public class InvestingGrabber : IDataGrabber
+public class InvestingGrabber : IDataGrabber<Float>
 {
-    private readonly Repository<Float> repository;
-    private readonly ILogger<DataLoader<Float>> logger;
     private readonly InvestingParserHandler handler;
+    public InvestingGrabber(InvestingClient client) => handler = new(client);
 
-    public InvestingGrabber(Repository<Float> repository, ILogger<DataLoader<Float>> logger, InvestingClient client)
+    public IAsyncEnumerable<Float[]> GetCurrentDataAsync(CompanySource companySource) => GetHistoryDataAsync(companySource);
+    public IAsyncEnumerable<Float[]> GetCurrentDataAsync(IEnumerable<CompanySource> companySources) => GetHistoryDataAsync(companySources);
+
+    public async IAsyncEnumerable<Float[]> GetHistoryDataAsync(CompanySource companySource)
     {
-        this.repository = repository;
-        this.logger = logger;
-        handler = new(client);
+        if (companySource.Value is null)
+            throw new ArgumentNullException(companySource.CompanyId);
+
+        var site = await handler.LoadDataAsync(companySource.Value);
+        var result = InvestingParserHandler.Parse(site, companySource.CompanyId);
+
+        yield return new[] { result };
     }
-
-    public async Task GetCurrentDataAsync(CompanySource companySource) => await GetHistoryDataAsync(companySource);
-    public async Task GetCurrentDataAsync(IEnumerable<CompanySource> companySources) => await GetHistoryDataAsync(companySources);
-
-    public async Task GetHistoryDataAsync(CompanySource companySource)
-    {
-        try
-        {
-            if (companySource.Value is null)
-                throw new ArgumentNullException(companySource.CompanyId);
-
-            var site = await handler.LoadDataAsync(companySource.Value);
-            var result = InvestingParserHandler.Parse(site, companySource.CompanyId);
-
-            await repository.CreateAsync(result, "Investing history stock volumes");
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(InvestingGrabber) + '.' + nameof(GetCurrentDataAsync), exception.InnerException?.Message ?? exception.Message);
-        }
-    }
-    public async Task GetHistoryDataAsync(IEnumerable<CompanySource> companySources)
+    public async IAsyncEnumerable<Float[]> GetHistoryDataAsync(IEnumerable<CompanySource> companySources)
     {
         using PeriodicTimer timer = new(TimeSpan.FromSeconds(10));
 
-        foreach (var config in companySources)
+        foreach (var companySource in companySources)
             if (await timer.WaitForNextTickAsync())
-                await GetHistoryDataAsync(config);
+                await foreach (var data in GetHistoryDataAsync(companySource))
+                    yield return data;
     }
 }
 internal class InvestingParserHandler

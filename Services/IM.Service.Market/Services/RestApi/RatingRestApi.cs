@@ -1,12 +1,21 @@
-﻿using System.Linq.Expressions;
-using IM.Service.Common.Net.HttpServices;
-using IM.Service.Common.Net.Models.Dto.Http;
+﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
+using IM.Service.Common.Net.Models.Services;
+using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Filters;
 using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Domain.Entities.Interfaces;
 using IM.Service.Market.Models.Api.Http;
 
 using Microsoft.EntityFrameworkCore;
+
+using System.Linq.Expressions;
+using System.Text;
+
+using static IM.Service.Common.Net.Enums;
+using static IM.Service.Common.Net.Helpers.LogicHelper;
+using static IM.Service.Common.Net.Helpers.ServiceHelper;
+using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.RestApi;
 
@@ -14,17 +23,31 @@ public class RatingRestApi
 {
     private readonly Repository<Rating> ratingRepo;
     private readonly Repository<Company> companyRepo;
+    private readonly Repository<Price> priceRepo;
+    private readonly Repository<Report> reportRepo;
+    private readonly Repository<Coefficient> coefficientRepo;
+    private readonly Repository<Dividend> dividendRepo;
     private const int resultRoundValue = 3;
 
-    public RatingRestApi(Repository<Rating> ratingRepo, Repository<Company> companyRepo)
+    public RatingRestApi(
+        Repository<Rating> ratingRepo,
+        Repository<Company> companyRepo,
+        Repository<Price> priceRepo,
+        Repository<Report> reportRepo,
+        Repository<Coefficient> coefficientRepo,
+        Repository<Dividend> dividendRepo)
     {
         this.ratingRepo = ratingRepo;
         this.companyRepo = companyRepo;
+        this.priceRepo = priceRepo;
+        this.reportRepo = reportRepo;
+        this.coefficientRepo = coefficientRepo;
+        this.dividendRepo = dividendRepo;
     }
 
-    public async Task<ResponseModel<RatingGetDto>> GetAsync(int place)
+    public async Task<RatingGetDto> GetAsync(int place)
     {
-        var data = await ratingRepo
+        var rating = await ratingRepo
             .GetQuery()
             .OrderByDescending(x => x.Result)
             .Skip(place - 1)
@@ -42,34 +65,28 @@ public class RatingRestApi
             })
             .FirstOrDefaultAsync();
 
-        return data is null
-            ? new() { Errors = new[] { "rating not found" } }
-            : new()
+        return rating is null
+            ? throw new NullReferenceException(nameof(rating))
+            : new RatingGetDto
             {
-                Data = new()
-                {
-                    Place = place,
-                    Company = data.CompanyName,
-                    Result = data.Result.HasValue ? decimal.Round(data.Result.Value, resultRoundValue) : null,
-                    ResultPrice = data.ResultPrice.HasValue ? decimal.Round(data.ResultPrice.Value, resultRoundValue) : null,
-                    ResultReport = data.ResultReport.HasValue ? decimal.Round(data.ResultReport.Value, resultRoundValue) : null,
-                    ResultCoefficient = data.ResultCoefficient.HasValue ? decimal.Round(data.ResultCoefficient.Value, resultRoundValue) : null,
-                    ResultDividend = data.ResultDividend.HasValue ? decimal.Round(data.ResultDividend.Value, resultRoundValue) : null,
-                    UpdateTime = new DateTime(data.Date.Year, data.Date.Month, data.Date.Day, data.Time.Hour, data.Time.Minute, data.Time.Second)
-                }
+                Place = place,
+                Company = rating.CompanyName,
+                Result = rating.Result.HasValue ? decimal.Round(rating.Result.Value, resultRoundValue) : null,
+                ResultPrice = rating.ResultPrice.HasValue ? decimal.Round(rating.ResultPrice.Value, resultRoundValue) : null,
+                ResultReport = rating.ResultReport.HasValue ? decimal.Round(rating.ResultReport.Value, resultRoundValue) : null,
+                ResultCoefficient = rating.ResultCoefficient.HasValue ? decimal.Round(rating.ResultCoefficient.Value, resultRoundValue) : null,
+                ResultDividend = rating.ResultDividend.HasValue ? decimal.Round(rating.ResultDividend.Value, resultRoundValue) : null,
+                UpdateTime = new DateTime(rating.Date.Year, rating.Date.Month, rating.Date.Day, rating.Time.Hour, rating.Time.Minute, rating.Time.Second)
             };
     }
-    public async Task<ResponseModel<RatingGetDto>> GetAsync(string companyId)
+    public async Task<RatingGetDto> GetAsync(string companyId)
     {
         companyId = companyId.Trim().ToUpperInvariant();
 
         var company = await companyRepo.FindAsync(companyId);
 
         if (company is null)
-            return new()
-            {
-                Errors = new[] { "company not found" }
-            };
+            throw new NullReferenceException(nameof(company));
 
         var orderedRatingIds = await ratingRepo
             .GetQuery()
@@ -81,26 +98,23 @@ public class RatingRestApi
             .Select((x, i) => new { Place = i + 1, CompanyId = x })
             .ToDictionary(x => x.CompanyId, y => y.Place);
 
-        var result = await ratingRepo.FindAsync(x => x.CompanyId == company.Id);
+        var rating = await ratingRepo.FindAsync(x => x.CompanyId == company.Id);
 
-        return result is null
-            ? new() { Errors = new[] { "rating not found" } }
-            : new()
+        return rating is null
+            ? throw new NullReferenceException(nameof(rating))
+            : new RatingGetDto
             {
-                Data = new()
-                {
-                    Company = company.Name,
-                    Place = places[result.CompanyId],
-                    Result = result.Result.HasValue ? decimal.Round(result.Result.Value, resultRoundValue) : null,
-                    ResultPrice = result.ResultPrice.HasValue ? decimal.Round(result.ResultPrice.Value, resultRoundValue) : null,
-                    ResultReport = result.ResultReport.HasValue ? decimal.Round(result.ResultReport.Value, resultRoundValue) : null,
-                    ResultCoefficient = result.ResultCoefficient.HasValue ? decimal.Round(result.ResultCoefficient.Value, resultRoundValue) : null,
-                    ResultDividend = result.ResultDividend.HasValue ? decimal.Round(result.ResultDividend.Value, resultRoundValue) : null,
-                    UpdateTime = new DateTime(result.Date.Year, result.Date.Month, result.Date.Day, result.Time.Hour, result.Time.Minute, result.Time.Second)
-                }
+                Company = company.Name,
+                Place = places[rating.CompanyId],
+                Result = rating.Result.HasValue ? decimal.Round(rating.Result.Value, resultRoundValue) : null,
+                ResultPrice = rating.ResultPrice.HasValue ? decimal.Round(rating.ResultPrice.Value, resultRoundValue) : null,
+                ResultReport = rating.ResultReport.HasValue ? decimal.Round(rating.ResultReport.Value, resultRoundValue) : null,
+                ResultCoefficient = rating.ResultCoefficient.HasValue ? decimal.Round(rating.ResultCoefficient.Value, resultRoundValue) : null,
+                ResultDividend = rating.ResultDividend.HasValue ? decimal.Round(rating.ResultDividend.Value, resultRoundValue) : null,
+                UpdateTime = new DateTime(rating.Date.Year, rating.Date.Month, rating.Date.Day, rating.Time.Hour, rating.Time.Minute, rating.Time.Second)
             };
     }
-    public async Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetAsync(HttpPagination pagination, string entity)
+    public async Task<PaginationModel<RatingGetDto>> GetAsync(Paginatior pagination, string entity)
     {
         var placeStart = (pagination.Page - 1) * pagination.Limit + 1;
 
@@ -144,55 +158,51 @@ public class RatingRestApi
             })
             .ToArray();
 
-        return new()
+        return new PaginationModel<RatingGetDto> { Items = result, Count = count };
+    }
+
+    public async Task<string> RecalculateAsync(CompareType compareType, string? companyId, int year = 0, int month = 0, int day = 0)
+    {
+        var result = new StringBuilder(500);
+
+        result.Append("Recalculating task start");
+
+        var priceFilter = DateFilter<Price>.GetFilter(compareType, companyId, null, year, month, day);
+        var dividendFilter = DateFilter<Dividend>.GetFilter(compareType, companyId, null, year, month, day);
+        var reportFilter = QuarterFilter<Report>.GetFilter(compareType, companyId, null, year, QuarterHelper.GetQuarter(month));
+        var coefficientFilter = QuarterFilter<Coefficient>.GetFilter(compareType, companyId, null, year, QuarterHelper.GetQuarter(month));
+
+        var prices = await priceRepo.GetSampleAsync(priceFilter.Expression);
+        var dividends = await dividendRepo.GetSampleOrderedAsync(dividendFilter.Expression, x => x.Date);
+        var reports = await reportRepo.GetSampleOrderedAsync(reportFilter.Expression, x => x.Year, x => x.Quarter);
+        var coefficients = await coefficientRepo.GetSampleOrderedAsync(coefficientFilter.Expression, x => x.Year, x => x.Quarter);
+
+        await SetCalculatingTask(priceRepo, prices, result, x => x.Date);
+        await SetCalculatingTask(reportRepo, reports, result, x => x.Year, x => x.Quarter);
+        await SetCalculatingTask(dividendRepo, dividends, result, x => x.Date);
+        await SetCalculatingTask(coefficientRepo, coefficients, result, x => x.Year, x => x.Quarter);
+
+        return result.ToString();
+    }
+    private static async Task SetCalculatingTask<T, TSelector>(Repository<T, DatabaseContext> repository, T[] data, StringBuilder result, Func<T, TSelector> orderSelector, Func<T, TSelector>? orderSelector2 = null) where T : class, IRating, IPeriod
+    {
+        if (!data.Any())
+            return;
+
+        var groupedData = data.GroupBy(x => x.CompanyId).ToArray();
+        var dataResult = new List<T>(groupedData.Length);
+
+        foreach (var group in groupedData)
         {
-            Data = new()
-            {
-                Items = result,
-                Count = count
-            }
-        };
-    }
-    
-    public async Task<string> RecalculateAsync(string companyId)
-    {
-        companyId = companyId.Trim().ToUpperInvariant();
-        var company = await companyRepo.FindAsync(companyId);
-        return company is null ? $"'{companyId}' not found" : await RecalculateBaseAsync(new[] { company.Id });
-    }
-    public async Task<string> RecalculateAsync()
-    {
-        var ids = await companyRepo.GetSampleAsync(x => x.Id);
-        return await RecalculateBaseAsync(ids);
-    }
-    public async Task<string> RecalculateAsync(string[] companyIds)
-    {
-        var ids = await companyRepo.GetSampleAsync(x => companyIds.Select(y => y.Trim().ToUpperInvariant()).Contains(x.Id), x => x.Id);
-        return await RecalculateBaseAsync(ids);
-    }
-    public async Task<string> RecalculateAsync(CompanyDateFilter<Rating> filter)
-    {
-        var ids = filter.CompanyId is null && !filter.CompanyIds.Any()
-            ? await companyRepo.GetSampleAsync(x => x.Id)
-            : await companyRepo.GetSampleAsync(x => filter.CompanyId != null ? filter.CompanyId == x.Id : filter.CompanyIds.Contains(x.Id), x => x.Id);
+            var firstData = orderSelector2 is null
+                ? group.OrderBy(orderSelector.Invoke).First()
+                : group.OrderBy(orderSelector.Invoke).ThenBy(orderSelector2.Invoke).First();
+            firstData.StatusId = (byte)Statuses.Ready;
+            dataResult.Add(firstData);
+        }
 
-        return await RecalculateBaseAsync(ids, new DateOnly(filter.Year, filter.Month, filter.Day));
-    }
-    private async Task<string> RecalculateBaseAsync(string[] companyIds, DateOnly? date = null)
-    {
-        //var types = Enum.GetValues<Enums.EntityTypes>();
-        //date ??= new DateOnly(2016, 1, resultRoundValue);
+        await repository.UpdateAsync(dataResult, "Recalculating rating");
 
-        //var data = companyIds.SelectMany(x => types.Select(y => new AnalyzedEntity
-        //{
-        //    CompanyId = x,
-        //    AnalyzedEntityTypeId = (byte)y,
-        //    StatusId = (byte)Enums.Statuses.Ready,
-        //    Date = date.Value
-        //}));
-
-        //var result = await analyzedEntityRepository.CreateUpdateAsync(data, new AnalyzedEntityComparer(), nameof(RecalculateAsync));
-
-        return /*result.error ??*/ $"Recalculate rating for '{string.Join(";", companyIds)}' at {date.Value: yyyy-MM-dd} is running.";
+        result.Append($"Recalculating rating task for {typeof(T).Name}: {string.Join("; ", dataResult.Select(x => x.CompanyId))} is running");
     }
 }

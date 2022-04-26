@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace IM.Service.Common.Net.RabbitServices.Configuration;
+namespace IM.Service.Common.Net.RabbitMQ.Configuration;
 
 public static class QueueConfiguration
 {

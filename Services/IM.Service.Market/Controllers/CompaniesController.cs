@@ -1,8 +1,9 @@
-﻿using IM.Service.Common.Net.HttpServices;
-using IM.Service.Common.Net.Models.Dto.Http;
-using IM.Service.Market.Models.Api.Http;
+﻿using IM.Service.Market.Models.Api.Http;
 using IM.Service.Market.Services.RestApi;
+
 using Microsoft.AspNetCore.Mvc;
+
+using static IM.Service.Common.Net.Helpers.ServiceHelper;
 
 namespace IM.Service.Market.Controllers;
 
@@ -19,60 +20,143 @@ public class CompaniesController : ControllerBase
     }
 
     [HttpGet]
-    public Task<ResponseModel<PaginatedModel<CompanyGetDto>>> GetCompanies(int page = 0, int limit = 0) => api.GetAsync((HttpPagination)new(page, limit));
+    public async Task<IActionResult> GetCompanies(int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit)));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("{companyId}")]
-    public Task<ResponseModel<CompanyGetDto>> GetCompany(string companyId) => api.GetAsync(companyId);
+    public async Task<IActionResult> GetCompany(string companyId)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(companyId));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
     [HttpGet("{companyId}/sources/")]
-    public Task<ResponseModel<PaginatedModel<SourceGetDto>>> GetSources(string companyId) => csApi.GetAsync(companyId);
-    [HttpGet("{companyId}/sources/{sourceId:int}")]
-    public Task<ResponseModel<SourceGetDto>> GetSource(string companyId, int sourceId) => csApi.GetAsync(companyId, (byte)sourceId);
-    [HttpPost("{companyId}/sources/")]
-    public async Task<IActionResult> PostSource(string companyId, IEnumerable<SourcePostDto> models)
+    public async Task<IActionResult> GetSources(string companyId)
     {
-        var (error, sources) = await csApi.CreateUpdateDeleteAsync(companyId, models);
+        try
+        {
+            return Ok(await csApi.GetAsync(companyId));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
-        return error is null ? Ok(sources) : BadRequest(error);
+    [HttpGet("{companyId}/sources/{sourceId:int}")]
+    public async Task<IActionResult> GetSource(string companyId, int sourceId)
+    {
+        try
+        {
+            return Ok(await csApi.GetAsync(companyId, (byte)sourceId));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
+    [HttpPost("{companyId}/sources/")]
+    public async Task<IActionResult> CrateSource(string companyId, IEnumerable<SourcePostDto> models)
+    {
+        try
+        {
+            return Ok(await csApi.CreateUpdateDeleteAsync(companyId, models));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpPost]
-    public async Task<IActionResult> PostCompany(CompanyPostDto model)
+    public async Task<IActionResult> Create(CompanyPostDto model)
     {
-        var (error, _) = await api.CreateAsync(model);
-
-        return error is null ? Ok() : BadRequest(error);
+        try
+        {
+            return Ok(await api.CreateAsync(model));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
     [HttpPost("collection/")]
     public async Task<IActionResult> PostCompanies(IEnumerable<CompanyPostDto> models)
     {
-        var (error, _) = await api.CreateAsync(models);
-
-        return error is null ? Ok() : BadRequest(error);
+        try
+        {
+            return Ok(await api.CreateAsync(models));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpPut("{companyId}")]
-    public async Task<IActionResult> PutCompany(string companyId, CompanyPutDto model)
+    public async Task<IActionResult> UpdateCompany(string companyId, CompanyPutDto model)
     {
-        var (error, _) = await api.UpdateAsync(companyId, model);
-
-        return error is null ? Ok() : BadRequest(error);
+        try
+        {
+            return Ok(await api.UpdateAsync(companyId, model));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
     [HttpPut("collection/")]
-    public async Task<IActionResult> PutCompanies(IEnumerable<CompanyPostDto> models)
+    public async Task<IActionResult> UpdateCompanies(IEnumerable<CompanyPostDto> models)
     {
-        var (error, _) = await api.UpdateAsync(models);
-
-        return error is null ? Ok() : BadRequest(error);
+        try
+        {
+            return Ok(await api.UpdateAsync(models));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpDelete("{companyId}")]
     public async Task<IActionResult> DeleteCompany(string companyId)
     {
-        var (error, _) = await api.DeleteAsync(companyId);
-
-        return error is null ? Ok() : BadRequest(error);
+        try
+        {
+            return Ok(await api.DeleteAsync(companyId));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
 
     [HttpGet("sync/")]
-    public async Task<string> Sync() => await api.SyncAsync();
+    public async Task<IActionResult> Sync()
+    {
+        try
+        {
+            return Ok(await api.SyncAsync());
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 }

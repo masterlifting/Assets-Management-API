@@ -1,11 +1,10 @@
-﻿using IM.Service.Common.Net.HttpServices;
-using IM.Service.Common.Net.Models.Dto.Http;
-using IM.Service.Market.Domain.DataAccess.Filters;
-using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Models.Api.Http;
+﻿using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Services.RestApi;
+
 using Microsoft.AspNetCore.Mvc;
+
 using static IM.Service.Common.Net.Enums;
+using static IM.Service.Common.Net.Helpers.ServiceHelper;
 
 namespace IM.Service.Market.Controllers;
 
@@ -16,68 +15,198 @@ public class RatingController : ControllerBase
     public RatingController(RatingRestApi api) => this.api = api;
 
     [HttpGet]
-    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> Get(int page = 0, int limit = 0) => 
-        api.GetAsync(new HttpPagination(page, limit), nameof(Rating));
+    public async Task<IActionResult> Get(int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), nameof(Rating)));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
     [HttpGet("{companyId}")]
-    public Task<ResponseModel<RatingGetDto>> GetByCompany(string companyId) => api.GetAsync(companyId);
-    
+    public async Task<IActionResult> GetByCompany(string companyId)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(companyId));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("{place:int}")]
-    public Task<ResponseModel<RatingGetDto>> GetByPlace(int place) => api.GetAsync(place);
-    
+    public async Task<IActionResult> GetByPlace(int place)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(place));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("price/")]
-    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetPriceResultOrdered(int page = 0, int limit = 0) =>
-        api.GetAsync(new HttpPagination(page, limit), nameof(Price));
+    public async Task<IActionResult> GetPriceResultOrdered(int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), nameof(Price)));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
     [HttpGet("report/")]
-    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetReportResultOrdered(int page = 0, int limit = 0) =>
-        api.GetAsync(new HttpPagination(page, limit), nameof(Report));
+    public async Task<IActionResult> GetReportResultOrdered(int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), nameof(Report)));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
     [HttpGet("coefficient/")]
-    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetCoefficientResultOrdered(int page = 0, int limit = 0) =>
-        api.GetAsync(new HttpPagination(page, limit), nameof(Coefficient));
+    public async Task<IActionResult> GetCoefficientResultOrdered(int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), nameof(Coefficient)));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
     [HttpGet("dividend/")]
-    public Task<ResponseModel<PaginatedModel<RatingGetDto>>> GetDividendResultOrdered(int page = 0, int limit = 0) =>
-        api.GetAsync(new HttpPagination(page, limit), nameof(Dividend));
+    public async Task<IActionResult> GetDividendResultOrdered(int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), nameof(Dividend)));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 
 
     [HttpGet("recalculate/")]
-    public Task<string> Recalculate() => api.RecalculateAsync();
+    public async Task<IActionResult> Recalculate()
+    {
+        try
+        {
+            return Ok(await api.RecalculateAsync(CompareType.Equal, null, 2016));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("recalculate/{companyId}")]
-    public Task<string> Recalculate(string companyId)
+    public async Task<IActionResult> Recalculate(string companyId)
     {
-        var companyIds = companyId.Split(',');
-        return companyIds.Length > 1 ? api.RecalculateAsync(companyIds) : api.RecalculateAsync(companyId);
+        try
+        {
+            return Ok(await api.RecalculateAsync(CompareType.Equal, companyId, 2016));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
+
     [HttpGet("recalculate/{companyId}/{year:int}")]
-    public Task<string> Recalculate(string companyId, int year)
+    public async Task<IActionResult> Recalculate(string companyId, int year)
     {
-        var companyIds = companyId.Split(',');
-        return companyIds.Length > 1
-            ? api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyIds, year))
-            : api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyId, year));
+        try
+        {
+            return Ok(await api.RecalculateAsync(CompareType.Equal, companyId, year));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
+
     [HttpGet("recalculate/{companyId}/{year:int}/{month:int}")]
-    public Task<string> Recalculate(string companyId, int year, int month)
+    public async Task<IActionResult> Recalculate(string companyId, int year, int month)
     {
-        var companyIds = companyId.Split(',');
-        return companyIds.Length > 1
-            ? api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyIds, year, month))
-            : api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyId, year, month));
+        try
+        {
+            return Ok(await api.RecalculateAsync(CompareType.Equal, companyId, year, month));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
+
     [HttpGet("recalculate/{companyId}/{year:int}/{month:int}/{day:int}")]
-    public Task<string> Recalculate(string companyId, int year, int month, int day)
+    public async Task<IActionResult> Recalculate(string companyId, int year, int month, int day)
     {
-        var companyIds = companyId.Split(',');
-        return companyIds.Length > 1
-            ? api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyIds, year, month, day))
-            : api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, companyId, year, month, day));
+        try
+        {
+            return Ok(await api.RecalculateAsync(CompareType.Equal, companyId, year, month, day));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
     }
+
     [HttpGet("recalculate/{year:int}")]
-    public Task<string> Recalculate(int year) => api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, year));
+    public async Task<IActionResult> Recalculate(int year)
+    {
+        try
+        {
+            return Ok(await api.RecalculateAsync(CompareType.Equal, null, year));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("recalculate/{year:int}/{month:int}")]
-    public Task<string> Recalculate(int year, int month) => api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, year, month));
+    public async Task<IActionResult> Recalculate(int year, int month)
+    {
+        try
+        {
+            return Ok(await api.RecalculateAsync(CompareType.Equal, null, year, month));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
     [HttpGet("recalculate/{year:int}/{month:int}/{day:int}")]
-    public Task<string> Recalculate(int year, int month, int day) => api.RecalculateAsync(new CompanyDateFilter<Rating>(CompareType.Equal, year, month, day));
+    public async Task<IActionResult> Recalculate(int year, int month, int day)
+    {
+        try
+        {
+            return Ok(await api.RecalculateAsync(CompareType.Equal, null, year, month, day));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
 }

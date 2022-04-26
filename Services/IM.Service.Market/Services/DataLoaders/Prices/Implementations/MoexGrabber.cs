@@ -1,93 +1,55 @@
-﻿using IM.Service.Common.Net;
-using IM.Service.Market.Clients;
-using IM.Service.Market.Domain.DataAccess;
-using IM.Service.Market.Domain.DataAccess.Comparators;
+﻿using IM.Service.Market.Clients;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Clients;
 
 using System.Globalization;
+
 using static IM.Service.Common.Net.Enums;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.DataLoaders.Prices.Implementations;
 
-public class MoexGrabber : IDataGrabber
+public class MoexGrabber : IDataGrabber<Price>
 {
-    private readonly Repository<Price> repository;
-    private readonly ILogger<DataLoader<Price>> logger;
     private readonly MoexClient client;
+    public MoexGrabber(MoexClient client) => this.client = client;
 
-    public MoexGrabber(Repository<Price> repository, ILogger<DataLoader<Price>> logger, MoexClient client)
+    public async IAsyncEnumerable<Price[]> GetCurrentDataAsync(CompanySource companySource)
     {
-        this.repository = repository;
-        this.logger = logger;
-        this.client = client;
+        if (companySource.Value is null)
+            throw new ArgumentNullException(companySource.CompanyId);
+
+        var data = await client.GetCurrentPricesAsync();
+        var result = Map(data, new[] { companySource.CompanyId });
+
+        yield return result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
+    }
+    public async IAsyncEnumerable<Price[]> GetCurrentDataAsync(IEnumerable<CompanySource> companySources)
+    {
+        var data = await client.GetCurrentPricesAsync();
+        var result = Map(data, companySources.Select(x => x.CompanyId));
+
+        yield return result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
     }
 
-    public async Task GetCurrentDataAsync(CompanySource companySource)
+    public async IAsyncEnumerable<Price[]> GetHistoryDataAsync(CompanySource companySource)
     {
-        try
-        {
-            if (companySource.Value is null)
-                throw new ArgumentNullException(companySource.CompanyId);
+        if (companySource.Value is null)
+            throw new ArgumentNullException(companySource.CompanyId);
 
-            var data = await client.GetCurrentPricesAsync();
+        var data = await client.GetHistoryPricesAsync(companySource.CompanyId, DateTime.UtcNow.AddYears(-1));
 
-            var result = Map(data, new[] { companySource.CompanyId });
-
-            result = result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
-
-            await repository.CreateUpdateAsync(result, new DataDateComparer<Price>(), "Moex current prices");
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(MoexGrabber) + '.' + nameof(GetCurrentDataAsync), exception.InnerException?.Message ?? exception.Message);
-        }
+        yield return Map(data);
     }
-    public async Task GetCurrentDataAsync(IEnumerable<CompanySource> companySources)
-    {
-        try
-        {
-            var data = await client.GetCurrentPricesAsync();
-
-            var result = Map(data, companySources.Select(x => x.CompanyId));
-
-            result = result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();
-
-            await repository.CreateUpdateAsync(result, new DataDateComparer<Price>(), "Moex current prices");
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(MoexGrabber) + '.' + nameof(GetCurrentDataAsync), exception.InnerException?.Message ?? exception.Message);
-        }
-    }
-
-    public async Task GetHistoryDataAsync(CompanySource companySource)
-    {
-        try
-        {
-            if (companySource.Value is null)
-                throw new ArgumentNullException(companySource.CompanyId);
-
-            var data = await client.GetHistoryPricesAsync(companySource.CompanyId, DateTime.UtcNow.AddYears(-1));
-
-            var result = Map(data);
-
-            await repository.CreateAsync(result, new DataDateComparer<Price>(), "Moex history prices");
-        }
-        catch (Exception exception)
-        {
-            logger.LogError(LogEvents.Processing, "Place: {place}. Error: {exception}", nameof(MoexGrabber) + '.' + nameof(GetHistoryDataAsync), exception.InnerException?.Message ?? exception.Message);
-        }
-    }
-    public async Task GetHistoryDataAsync(IEnumerable<CompanySource> companySources)
+    public async IAsyncEnumerable<Price[]> GetHistoryDataAsync(IEnumerable<CompanySource> companySources)
     {
         using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(100));
 
-        foreach (var item in companySources)
+        foreach (var companySource in companySources)
             if (await timer.WaitForNextTickAsync())
-                await GetHistoryDataAsync(item);
+                await foreach (var data in GetHistoryDataAsync(companySource))
+                    yield return data;
     }
 
     private static Price[] Map(MoexCurrentPriceResultModel clientResult, IEnumerable<string> tickers)

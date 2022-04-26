@@ -1,4 +1,4 @@
-﻿namespace IM.Service.Common.Net.Models.Dto.Http;
+﻿namespace IM.Service.Common.Net.Models.Http;
 
 public class HostModel
 {

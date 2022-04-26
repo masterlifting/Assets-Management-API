@@ -23,7 +23,18 @@ public class MapperPrice : IMapperRead<Price, PriceGetDto>, IMapperWrite<Price, 
         .ToArrayAsync();
     public async Task<PriceGetDto[]> MapLastFromAsync(IQueryable<Price> query)
     {
-        var queryResult = await MapFromAsync(query);
+        var queryResult = await query
+            .Select(x => new PriceGetDto
+            {
+                Company = x.Company.Name,
+                Source = x.Source.Name,
+                Date = x.Date,
+
+                Currency = x.Currency.Name,
+                Value = x.Value,
+                ValueTrue = x.ValueTrue
+            })
+            .ToArrayAsync();
 
         return queryResult
             .GroupBy(x => x.Company)

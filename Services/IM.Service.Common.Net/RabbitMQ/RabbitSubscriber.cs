@@ -1,4 +1,7 @@
-﻿using RabbitMQ.Client;
+﻿using IM.Service.Common.Net.Models.Configuration;
+using Microsoft.Extensions.Logging;
+
+using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 using System;
@@ -7,12 +10,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using IM.Service.Common.Net.Models.Configuration;
-using IM.Service.Common.Net.ParserServices;
-using IM.Service.Common.Net.RabbitServices.Configuration;
-using Microsoft.Extensions.Logging;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
+using static IM.Service.Common.Net.Helpers.LogHelper;
+using static IM.Service.Common.Net.Helpers.ServiceHelper;
 
-namespace IM.Service.Common.Net.RabbitServices;
+namespace IM.Service.Common.Net.RabbitMQ;
 
 public class RabbitSubscriber
 {
