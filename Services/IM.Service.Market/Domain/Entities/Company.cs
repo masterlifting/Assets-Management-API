@@ -25,7 +25,7 @@ public class Company
 
     public virtual Rating? Rating { get; set; }
 
-    public virtual IEnumerable<CompanySource>? CompanySources { get; set; }
+    public virtual IEnumerable<CompanySource>? Sources { get; set; }
     [JsonIgnore]
     public virtual IEnumerable<Price>? Prices { get; init; }
     [JsonIgnore]

@@ -1,7 +1,6 @@
 ﻿using IM.Service.Common.Net.RabbitMQ;
 using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Settings;
 
@@ -49,45 +48,6 @@ public class PriceRepositoryHandler : RepositoryHandler<Price, DatabaseContext>
 
         return result.Select(x => x.Old);
     }
-    public override async Task<IEnumerable<Price>> RunDeleteRangeHandlerAsync(IEnumerable<Price> entities)
-    {
-        var comparer = new DataDateComparer<Price>();
-        var result = new List<Price>();
-
-        foreach (var group in entities.GroupBy(x => x.CompanyId))
-        {
-            var dbEntities = await context.Prices.Where(x => x.CompanyId.Equals(group.Key)).ToArrayAsync();
-            result.AddRange(dbEntities.Except(group, comparer));
-        }
-
-        return result;
-    }
-
-    public override Task RunPostProcessAsync(RepositoryActions action, Price entity)
-    {
-        if (action is RepositoryActions.Update && entity.StatusId is not (byte)Statuses.New)
-            return Task.CompletedTask;
-
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, RabbitHelper.GetQueueAction(action), entity);
-
-        return Task.CompletedTask;
-    }
-    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Price> entities)
-    {
-        if (action is RepositoryActions.Update && !entities.Any(x => x.StatusId is (byte)Statuses.New))
-            return Task.CompletedTask;
-
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Prices, RabbitHelper.GetQueueAction(action),
-            action is RepositoryActions.Update
-                ? entities.Where(x => x.StatusId is (byte) Statuses.New)
-                : entities);
-
-        return Task.CompletedTask;
-    }
-
     public override IQueryable<Price> GetExist(IEnumerable<Price> entities)
     {
         entities = entities.ToArray();
@@ -107,5 +67,71 @@ public class PriceRepositoryHandler : RepositoryHandler<Price, DatabaseContext>
                 companyIds.Contains(x.CompanyId)
                 && sourceIds.Contains(x.SourceId)
                 && dates.Contains(x.Date));
+    }
+
+    public override async Task RunPostProcessAsync(RepositoryActions action, Price entity)
+    {
+        RabbitPublisher publisher;
+
+        if (action is RepositoryActions.Delete)
+        {
+            var lastEntity = await context.Prices.Where(x =>
+                x.CompanyId == entity.CompanyId
+                && x.SourceId == entity.SourceId
+                && x.CurrencyId == entity.CurrencyId
+                && x.Date < entity.Date)
+                .OrderBy(x => x.Date)
+                .LastOrDefaultAsync();
+
+            publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+
+            if (lastEntity is not null)
+                publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, QueueActions.Set, lastEntity);
+
+            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, QueueActions.Delete, entity);
+        }
+        else if (entity.StatusId is (byte)Statuses.New)
+        {
+            publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, RabbitHelper.GetQueueAction(action), entity);
+        }
+    }
+    public override async Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Price> entities)
+    {
+        RabbitPublisher publisher;
+
+        if (action is RepositoryActions.Delete)
+        {
+            var lastEntities = new List<Price>(entities.Count);
+            foreach (var group in entities.GroupBy(x => (x.CompanyId, x.SourceId, x.CurrencyId)))
+            {
+                var minEntity = group.MinBy(x => x.Date)!;
+
+                var lastEntity = await context.Prices.Where(x =>
+                    x.CompanyId == group.Key.CompanyId
+                    && x.SourceId == group.Key.SourceId
+                    && x.CurrencyId == group.Key.CurrencyId
+                    && x.Date < minEntity.Date)
+                    .OrderBy(x => x.Date)
+                    .LastOrDefaultAsync();
+
+                if (lastEntity is not null)
+                    lastEntities.Add(lastEntity);
+            }
+
+            publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Prices, QueueActions.Delete, entities);
+
+            if (lastEntities.Any())
+                publisher.PublishTask(QueueNames.MarketData, QueueEntities.Prices, QueueActions.Set, lastEntities);
+        }
+
+        var newEntities = entities.Where(x => x.StatusId is (byte)Statuses.New).ToArray();
+
+        if (!newEntities.Any())
+            return;
+
+        publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Prices, RabbitHelper.GetQueueAction(action), newEntities);
     }
 }

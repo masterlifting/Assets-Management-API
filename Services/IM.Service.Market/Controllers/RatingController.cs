@@ -106,12 +106,12 @@ public class RatingController : ControllerBase
     }
 
 
-    [HttpGet("recalculate/")]
-    public async Task<IActionResult> Recalculate()
+    [HttpGet("recompare/")]
+    public async Task<IActionResult> Recompare()
     {
         try
         {
-            return Ok(await api.RecalculateAsync(CompareType.Equal, null, 2016));
+            return Ok(await api.RecalculateAsync(CompareType.More, null, 2016));
         }
         catch (Exception exception)
         {
@@ -119,12 +119,12 @@ public class RatingController : ControllerBase
         }
     }
 
-    [HttpGet("recalculate/{companyId}")]
-    public async Task<IActionResult> Recalculate(string companyId)
+    [HttpGet("recompare/{companyId}")]
+    public async Task<IActionResult> Recompare(string companyId)
     {
         try
         {
-            return Ok(await api.RecalculateAsync(CompareType.Equal, companyId, 2016));
+            return Ok(await api.RecalculateAsync(CompareType.More, companyId, 2016));
         }
         catch (Exception exception)
         {
@@ -132,12 +132,12 @@ public class RatingController : ControllerBase
         }
     }
 
-    [HttpGet("recalculate/{companyId}/{year:int}")]
-    public async Task<IActionResult> Recalculate(string companyId, int year)
+    [HttpGet("recompare/{companyId}/{year:int}")]
+    public async Task<IActionResult> Recompare(string companyId, int year)
     {
         try
         {
-            return Ok(await api.RecalculateAsync(CompareType.Equal, companyId, year));
+            return Ok(await api.RecalculateAsync(CompareType.More, companyId, year));
         }
         catch (Exception exception)
         {
@@ -145,12 +145,12 @@ public class RatingController : ControllerBase
         }
     }
 
-    [HttpGet("recalculate/{companyId}/{year:int}/{month:int}")]
-    public async Task<IActionResult> Recalculate(string companyId, int year, int month)
+    [HttpGet("recompare/{companyId}/{year:int}/{month:int}")]
+    public async Task<IActionResult> Recompare(string companyId, int year, int month)
     {
         try
         {
-            return Ok(await api.RecalculateAsync(CompareType.Equal, companyId, year, month));
+            return Ok(await api.RecalculateAsync(CompareType.More, companyId, year, month));
         }
         catch (Exception exception)
         {
@@ -158,12 +158,12 @@ public class RatingController : ControllerBase
         }
     }
 
-    [HttpGet("recalculate/{companyId}/{year:int}/{month:int}/{day:int}")]
-    public async Task<IActionResult> Recalculate(string companyId, int year, int month, int day)
+    [HttpGet("recompare/{companyId}/{year:int}/{month:int}/{day:int}")]
+    public async Task<IActionResult> Recompare(string companyId, int year, int month, int day)
     {
         try
         {
-            return Ok(await api.RecalculateAsync(CompareType.Equal, companyId, year, month, day));
+            return Ok(await api.RecalculateAsync(CompareType.More, companyId, year, month, day));
         }
         catch (Exception exception)
         {
@@ -171,12 +171,12 @@ public class RatingController : ControllerBase
         }
     }
 
-    [HttpGet("recalculate/{year:int}")]
-    public async Task<IActionResult> Recalculate(int year)
+    [HttpGet("recompare/{year:int}")]
+    public async Task<IActionResult> Recompare(int year)
     {
         try
         {
-            return Ok(await api.RecalculateAsync(CompareType.Equal, null, year));
+            return Ok(await api.RecalculateAsync(CompareType.More, null, year));
         }
         catch (Exception exception)
         {
@@ -184,12 +184,12 @@ public class RatingController : ControllerBase
         }
     }
 
-    [HttpGet("recalculate/{year:int}/{month:int}")]
-    public async Task<IActionResult> Recalculate(int year, int month)
+    [HttpGet("recompare/{year:int}/{month:int}")]
+    public async Task<IActionResult> Recompare(int year, int month)
     {
         try
         {
-            return Ok(await api.RecalculateAsync(CompareType.Equal, null, year, month));
+            return Ok(await api.RecalculateAsync(CompareType.More, null, year, month));
         }
         catch (Exception exception)
         {
@@ -197,12 +197,12 @@ public class RatingController : ControllerBase
         }
     }
 
-    [HttpGet("recalculate/{year:int}/{month:int}/{day:int}")]
-    public async Task<IActionResult> Recalculate(int year, int month, int day)
+    [HttpGet("recompare/{year:int}/{month:int}/{day:int}")]
+    public async Task<IActionResult> Recompare(int year, int month, int day)
     {
         try
         {
-            return Ok(await api.RecalculateAsync(CompareType.Equal, null, year, month, day));
+            return Ok(await api.RecalculateAsync(CompareType.More, null, year, month, day));
         }
         catch (Exception exception)
         {

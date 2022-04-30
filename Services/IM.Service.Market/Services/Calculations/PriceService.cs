@@ -10,12 +10,12 @@ using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.Calculations;
 
-public class PriceService
+public sealed class PriceService : ChangeStatusService<Price>
 {
     private readonly Repository<Price> priceRepo;
     private readonly Repository<Split> splitRepo;
 
-    public PriceService(Repository<Price> priceRepo, Repository<Split> splitRepo)
+    public PriceService(Repository<Price> priceRepo, Repository<Split> splitRepo) : base(priceRepo)
     {
         this.priceRepo = priceRepo;
         this.splitRepo = splitRepo;
@@ -29,7 +29,7 @@ public class PriceService
         var result = entity switch
         {
             Price price => await SetValueAsync(action, price),
-            Split split => await SetValueAsync(split),
+            Split split => await SetValueAsync(action, split),
             _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
         };
 
@@ -40,7 +40,7 @@ public class PriceService
                 price.ValueTrue = price.Value;
         }
 
-        await priceRepo.UpdateAsync(result, string.Join("; ", result.Select(x => x.CompanyId)));
+        await priceRepo.UpdateRangeAsync(result, $"{nameof(SetValueTrueAsync)}: {string.Join("; ", result.Select(x => x.CompanyId).Distinct())}");
     }
     public async Task SetValueTrueRangeAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
     {
@@ -50,7 +50,7 @@ public class PriceService
         var result = entities switch
         {
             Price[] prices => await SetValueAsync(action, prices),
-            Split[] splits => await SetValueAsync(splits),
+            Split[] splits => await SetValueAsync(action, splits),
             _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
         };
 
@@ -61,7 +61,7 @@ public class PriceService
                 price.ValueTrue = price.Value;
         }
 
-        await priceRepo.UpdateAsync(result, string.Join("; ", result.Select(x => x.CompanyId)));
+        await priceRepo.UpdateRangeAsync(result, $"{nameof(SetValueTrueRangeAsync)}: {string.Join("; ", result.Select(x => x.CompanyId).Distinct())}");
     }
 
     private async Task<Price[]> SetValueAsync(QueueActions action, Price price)
@@ -74,7 +74,7 @@ public class PriceService
         if (!splits.Any())
             return new[] { price };
 
-        Compute(splits, price);
+        Compute(action, splits, price);
 
         return new[] { price };
     }
@@ -93,49 +93,67 @@ public class PriceService
             return prices;
 
         foreach (var group in splits.GroupBy(x => x.CompanyId))
-            Compute(group.Key, group, prices);
+            Compute(action, group.Key, group, prices);
 
         return prices;
     }
-    private async Task<Price[]> SetValueAsync(Split split)
+
+    private async Task<Price[]> SetValueAsync(QueueActions action, Split split)
     {
         var splits = await splitRepo.GetSampleAsync(x => x.CompanyId == split.CompanyId);
-
-        if (!splits.Any())
-            return Array.Empty<Price>();
-
         var prices = await priceRepo.GetSampleAsync(x => x.CompanyId == split.CompanyId && x.Date >= split.Date);
 
-        Compute(split.CompanyId, splits, prices);
+        if(!prices.Any())
+            return Array.Empty<Price>();
+
+        if (!splits.Any())
+        {
+            foreach (var price in prices)
+                price.ValueTrue = 0;
+
+            return prices;
+        }
+
+        Compute(action, split.CompanyId, splits, prices);
 
         return prices;
     }
-    private async Task<Price[]> SetValueAsync(Split[] splits)
+    private async Task<Price[]> SetValueAsync(QueueActions action, Split[] splits)
     {
         var companyIds = splits.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
         var dateMin = splits.Min(x => x.Date);
         var _splits = await splitRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId));
-
-        if (!_splits.Any())
-            return Array.Empty<Price>();
-
         var prices = await priceRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId) && x.Date >= dateMin);
 
         if (!prices.Any())
             return Array.Empty<Price>();
 
+        if (!_splits.Any())
+        {
+            foreach (var price in prices)
+                price.ValueTrue = 0;
+
+            return prices;
+        }
+
         foreach (var group in splits.GroupBy(x => x.CompanyId))
-            Compute(group.Key, group, prices);
+            Compute(action, group.Key, group, prices);
 
         return prices;
     }
 
-    private static void Compute(IEnumerable<Split> splits, Price price)
+    private static void Compute(QueueActions action, IEnumerable<Split> splits, Price price)
     {
+        if (action is QueueActions.Delete)
+        {
+            price.ValueTrue = 0;
+            return;
+        }
+
         var splitAgregatedValue = splits.OrderBy(x => x.Date).Select(x => x.Value).Aggregate((x, y) => x * y);
         price.ValueTrue = price.Value * splitAgregatedValue;
     }
-    private static void Compute(string companyId, IEnumerable<Split> splits, IReadOnlyCollection<Price> prices)
+    private static void Compute(QueueActions action, string companyId, IEnumerable<Split> splits, IReadOnlyCollection<Price> prices)
     {
         var splitData = splits.OrderBy(x => x.Date).Select(x => (x.Date, x.Value)).ToArray();
         var targetData = new List<(DateOnly dateStart, DateOnly dateEnd, int value)>(splitData.Length);
@@ -146,7 +164,7 @@ public class PriceService
         {
             for (var i = 1; i <= splitData.Length; i++)
             {
-                splitValue *= splitData[i - 1].Value;
+                splitValue *= action is not QueueActions.Delete ? splitData[i - 1].Value : 0;
                 targetData.Add((splitData[i - 1].Date, splitData[i].Date, splitValue));
             }
 
@@ -156,7 +174,7 @@ public class PriceService
         }
         else
         {
-            splitValue = splitData[0].Value;
+            splitValue = action is not QueueActions.Delete ? splitData[0].Value : 0;
             var splitDate = splitData[0].Date;
 
             foreach (var price in prices.Where(x => x.CompanyId == companyId && x.Date >= splitDate))

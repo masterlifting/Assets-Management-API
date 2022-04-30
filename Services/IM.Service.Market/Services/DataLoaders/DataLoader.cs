@@ -60,16 +60,16 @@ public class DataLoader<TEntity> where TEntity : class, IDataIdentity, IPeriod
             return;
 
         await foreach (var data in grabber.GetCurrentDataAsync(companySource))
-            await repository.CreateUpdateAsync(data, Comparer, nameof(DataSetAsync));
+            await repository.CreateUpdateRangeAsync(data, Comparer, companySource.CompanyId);
 
         var last = await lastDataHelper.GetLastDataAsync(companySource);
         var isCurrent = last is not null && IsCurrentDataCondition.Invoke(last);
         
         if (!isCurrent)
             await foreach (var data in grabber.GetHistoryDataAsync(companySource))
-                await repository.UpdateAsync(data, nameof(DataSetAsync));
+                await repository.UpdateRangeAsync(data, companySource.CompanyId);
 
-        logger.LogDebug(nameof(DataSetAsync), typeof(TEntity).Name, $" CompanyId: {companySource.CompanyId}, Source: {companySource.Value}");
+        logger.LogDebug(nameof(DataSetAsync), typeof(TEntity).Name, companySource.CompanyId);
     }
     private async Task DataSetAsync(CompanySource[] companySources)
     {
@@ -83,20 +83,20 @@ public class DataLoader<TEntity> where TEntity : class, IDataIdentity, IPeriod
 
         if (!lasts.Any())
             await foreach (var data in grabber.GetHistoryDataAsync(companySources))
-                await repository.UpdateAsync(data, nameof(DataSetAsync));
+                await repository.CreateRangeAsync(data, Comparer, nameof(DataSetAsync) + ": " + string.Join(",", companySources.Select(x => x.CompanyId).Distinct()));
         else
         {
-            var currentSources = lasts.Where(x => IsCurrentDataCondition.Invoke(x));
-            var historySources = lasts.Where(x => !IsCurrentDataCondition.Invoke(x));
+            var currentData = lasts.Where(x => IsCurrentDataCondition.Invoke(x)).ToArray();
+            var historyData = lasts.Where(x => !IsCurrentDataCondition.Invoke(x)).ToArray();
 
-            await foreach (var data in grabber.GetCurrentDataAsync(companySources.Join(currentSources, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x)))
-                await repository.CreateUpdateAsync(data, Comparer, nameof(DataSetAsync));
+            await foreach (var data in grabber.GetCurrentDataAsync(companySources.Join(currentData, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x)))
+                await repository.CreateUpdateRangeAsync(data, Comparer, nameof(DataSetAsync) + ": " + string.Join(",", currentData.Select(x => x.CompanyId).Distinct()));
 
-            await foreach (var data in grabber.GetHistoryDataAsync(companySources.Join(historySources, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x)))
-                await repository.UpdateAsync(data, nameof(DataSetAsync));
+            await foreach (var data in grabber.GetHistoryDataAsync(companySources.Join(historyData, x => (x.CompanyId, x.SourceId), y => (y.CompanyId, y.SourceId), (x, _) => x)))
+                await repository.UpdateRangeAsync(data, nameof(DataSetAsync) +": " +string.Join(",", historyData.Select(x => x.CompanyId).Distinct()));
         }
 
-        logger.LogDebug(nameof(DataSetAsync), typeof(TEntity).Name, string.Join(",", companySources.Select(x => $"{x.CompanyId}-{x.Value}").Distinct()));
+        logger.LogDebug(nameof(DataSetAsync), typeof(TEntity).Name, string.Join(",", companySources.Select(x => x.CompanyId).Distinct()));
     }
 }
 

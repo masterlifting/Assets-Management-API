@@ -1,21 +1,15 @@
-﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
-using IM.Service.Common.Net.Models.Services;
-using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Common.Net.Models.Services;
 using IM.Service.Market.Domain.DataAccess;
-using IM.Service.Market.Domain.DataAccess.Filters;
 using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Domain.Entities.Interfaces;
 using IM.Service.Market.Models.Api.Http;
+using IM.Service.Market.Services.Calculations;
 
 using Microsoft.EntityFrameworkCore;
 
 using System.Linq.Expressions;
-using System.Text;
 
 using static IM.Service.Common.Net.Enums;
-using static IM.Service.Common.Net.Helpers.LogicHelper;
 using static IM.Service.Common.Net.Helpers.ServiceHelper;
-using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.RestApi;
 
@@ -23,26 +17,17 @@ public class RatingRestApi
 {
     private readonly Repository<Rating> ratingRepo;
     private readonly Repository<Company> companyRepo;
-    private readonly Repository<Price> priceRepo;
-    private readonly Repository<Report> reportRepo;
-    private readonly Repository<Coefficient> coefficientRepo;
-    private readonly Repository<Dividend> dividendRepo;
+    private readonly RatingCalculator calculator;
     private const int resultRoundValue = 3;
 
     public RatingRestApi(
         Repository<Rating> ratingRepo,
         Repository<Company> companyRepo,
-        Repository<Price> priceRepo,
-        Repository<Report> reportRepo,
-        Repository<Coefficient> coefficientRepo,
-        Repository<Dividend> dividendRepo)
+        RatingCalculator calculator)
     {
         this.ratingRepo = ratingRepo;
         this.companyRepo = companyRepo;
-        this.priceRepo = priceRepo;
-        this.reportRepo = reportRepo;
-        this.coefficientRepo = coefficientRepo;
-        this.dividendRepo = dividendRepo;
+        this.calculator = calculator;
     }
 
     public async Task<RatingGetDto> GetAsync(int place)
@@ -161,48 +146,6 @@ public class RatingRestApi
         return new PaginationModel<RatingGetDto> { Items = result, Count = count };
     }
 
-    public async Task<string> RecalculateAsync(CompareType compareType, string? companyId, int year = 0, int month = 0, int day = 0)
-    {
-        var result = new StringBuilder(500);
-
-        result.Append("Recalculating task start");
-
-        var priceFilter = DateFilter<Price>.GetFilter(compareType, companyId, null, year, month, day);
-        var dividendFilter = DateFilter<Dividend>.GetFilter(compareType, companyId, null, year, month, day);
-        var reportFilter = QuarterFilter<Report>.GetFilter(compareType, companyId, null, year, QuarterHelper.GetQuarter(month));
-        var coefficientFilter = QuarterFilter<Coefficient>.GetFilter(compareType, companyId, null, year, QuarterHelper.GetQuarter(month));
-
-        var prices = await priceRepo.GetSampleAsync(priceFilter.Expression);
-        var dividends = await dividendRepo.GetSampleOrderedAsync(dividendFilter.Expression, x => x.Date);
-        var reports = await reportRepo.GetSampleOrderedAsync(reportFilter.Expression, x => x.Year, x => x.Quarter);
-        var coefficients = await coefficientRepo.GetSampleOrderedAsync(coefficientFilter.Expression, x => x.Year, x => x.Quarter);
-
-        await SetCalculatingTask(priceRepo, prices, result, x => x.Date);
-        await SetCalculatingTask(reportRepo, reports, result, x => x.Year, x => x.Quarter);
-        await SetCalculatingTask(dividendRepo, dividends, result, x => x.Date);
-        await SetCalculatingTask(coefficientRepo, coefficients, result, x => x.Year, x => x.Quarter);
-
-        return result.ToString();
-    }
-    private static async Task SetCalculatingTask<T, TSelector>(Repository<T, DatabaseContext> repository, T[] data, StringBuilder result, Func<T, TSelector> orderSelector, Func<T, TSelector>? orderSelector2 = null) where T : class, IRating, IPeriod
-    {
-        if (!data.Any())
-            return;
-
-        var groupedData = data.GroupBy(x => x.CompanyId).ToArray();
-        var dataResult = new List<T>(groupedData.Length);
-
-        foreach (var group in groupedData)
-        {
-            var firstData = orderSelector2 is null
-                ? group.OrderBy(orderSelector.Invoke).First()
-                : group.OrderBy(orderSelector.Invoke).ThenBy(orderSelector2.Invoke).First();
-            firstData.StatusId = (byte)Statuses.Ready;
-            dataResult.Add(firstData);
-        }
-
-        await repository.UpdateAsync(dataResult, "Recalculating rating");
-
-        result.Append($"Recalculating rating task for {typeof(T).Name}: {string.Join("; ", dataResult.Select(x => x.CompanyId))} is running");
-    }
+    public Task<string> RecalculateAsync(CompareType compareType, string? companyId, int year = 0, int month = 0, int day = 0) =>
+        calculator.RecompareRatingAsync(compareType, companyId, year, month, day);
 }

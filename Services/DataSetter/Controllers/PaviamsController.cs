@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -29,7 +28,7 @@ public class PaviamsController : ControllerBase
         this.context = context;
     }
 
-    [HttpPost("companies/")]
+    [HttpGet("companies/")]
     public async Task<IActionResult> SetCompanies()
     {
         var entities = await context.Companies
@@ -42,19 +41,18 @@ public class PaviamsController : ControllerBase
             })
             .ToArrayAsync();
 
-        return await client.Post("companies/collection", entities
-            .Select(x => new CompanyPostDto
-            {
-                Id = x.Id,
-                Name = x.Name,
-                CountryId = GetCountryId(x.Id),
-                IndustryId = x.IndustryId,
-                Description = x.Description
-            }));
+        return await client.Post("companies/collection", entities.Select(x => new CompanyPostDto
+        {
+            Id = x.Id,
+            Name = x.Name,
+            CountryId = GetCountryId(x.Id),
+            IndustryId = x.IndustryId,
+            Description = x.Description
+        }));
     }
 
 
-    [HttpPost("prices/")]
+    [HttpGet("prices/")]
     public async Task<IActionResult> SetPrices()
     {
         var entities = await context.Prices
@@ -80,10 +78,9 @@ public class PaviamsController : ControllerBase
                 }));
         }
 
-        return Ok();
+        return Ok("prices was set");
     }
-
-    [HttpPost("reports/")]
+    [HttpGet("reports/")]
     public async Task<IActionResult> SetReports()
     {
         var entities = await context.Reports
@@ -129,10 +126,9 @@ public class PaviamsController : ControllerBase
                 }));
         }
 
-        return Ok();
+        return Ok("reports was set");
     }
-
-    [HttpPost("splits/")]
+    [HttpGet("splits/")]
     public async Task<IActionResult> SetSplits()
     {
         var entities = await context.StockSplits
@@ -157,10 +153,9 @@ public class PaviamsController : ControllerBase
             }));
         }
 
-        return Ok();
+        return Ok("splits was set");
     }
-
-    [HttpPost("floats/")]
+    [HttpGet("floats/")]
     public async Task<IActionResult> SetFloats()
     {
         var entities = await context.StockVolumes
@@ -185,11 +180,11 @@ public class PaviamsController : ControllerBase
             }));
         }
 
-        return Ok();
+        return Ok("floats was set");
     }
 
 
-    [HttpPost("prices/{companyId}")]
+    [HttpGet("prices/{companyId}")]
     public async Task<IActionResult> SetPrices(string companyId)
     {
         companyId = companyId.ToUpperInvariant();
@@ -216,12 +211,12 @@ public class PaviamsController : ControllerBase
                 }));
         }
 
-        return Ok();
+        return Ok($"prices for {companyId} was set");
     }
-
-    [HttpPost("reports/{companyId}")]
+    [HttpGet("reports/{companyId}")]
     public async Task<IActionResult> SetReports(string companyId)
     {
+        companyId = companyId.ToUpperInvariant();
         var entities = await context.Reports
             .Where(x => x.CompanyId == companyId)
             .Select(x => new
@@ -265,12 +260,12 @@ public class PaviamsController : ControllerBase
                 }));
         }
 
-        return Ok();
+        return Ok($"reports for {companyId} was set");
     }
-
-    [HttpPost("splits/{companyId}")]
+    [HttpGet("splits/{companyId}")]
     public async Task<IActionResult> SetSplits(string companyId)
     {
+        companyId = companyId.ToUpperInvariant();
         var entities = await context.StockSplits
             .Where(x => x.CompanyId == companyId)
             .Select(x => new
@@ -293,12 +288,12 @@ public class PaviamsController : ControllerBase
             }));
         }
 
-        return Ok();
+        return Ok($"splits for {companyId} was set");
     }
-
-    [HttpPost("floats/{companyId}")]
+    [HttpGet("floats/{companyId}")]
     public async Task<IActionResult> SetFloats(string companyId)
     {
+        companyId = companyId.ToUpperInvariant();
         var entities = await context.StockVolumes
             .Where(x => x.CompanyId == companyId)
             .Select(x => new
@@ -321,11 +316,11 @@ public class PaviamsController : ControllerBase
             }));
         }
 
-        return Ok();
+        return Ok($"floats for {companyId} was set");
     }
 
 
-    [HttpPost("prices/{sourceId:int}")]
+    [HttpGet("prices/{sourceId:int}")]
     public async Task<IActionResult> SetPrices(int sourceId)
     {
         var sourceType = GetSourceType(sourceId);
@@ -353,10 +348,9 @@ public class PaviamsController : ControllerBase
                 }));
         }
 
-        return Ok();
+        return Ok($"prices for sourceId: {sourceId} was set");
     }
-
-    [HttpPost("reports/{sourceId:int}")]
+    [HttpGet("reports/{sourceId:int}")]
     public async Task<IActionResult> SetReports(int sourceId)
     {
         var sourceType = GetSourceType(sourceId);
@@ -403,10 +397,9 @@ public class PaviamsController : ControllerBase
                 }));
         }
 
-        return Ok();
+        return Ok($"reports for sourceId: {sourceId} was set");
     }
-
-    [HttpPost("splits/{sourceId:int}")]
+    [HttpGet("splits/{sourceId:int}")]
     public async Task<IActionResult> SetSplits(int sourceId)
     {
         var sourceType = GetSourceType(sourceId);
@@ -432,10 +425,9 @@ public class PaviamsController : ControllerBase
             }));
         }
 
-        return Ok();
+        return Ok($"splits for sourceId: {sourceId} was set");
     }
-
-    [HttpPost("floats/{sourceId:int}")]
+    [HttpGet("floats/{sourceId:int}")]
     public async Task<IActionResult> SetFloats(int sourceId)
     {
         var sourceType = GetSourceType(sourceId);
@@ -461,29 +453,26 @@ public class PaviamsController : ControllerBase
             }));
         }
 
-        return Ok();
+        return Ok($"floats for sourceId: {sourceId} was set");
     }
 
 
-    [HttpPost("sources")]
+    [HttpGet("sources")]
     public async Task<IActionResult> SetSourses()
     {
         var sources = await context.CompanySources.ToArrayAsync();
-
-        var result = new List<IActionResult>(sources.Length);
 
         foreach (var group in sources.GroupBy(x => x.CompanyId))
         {
             var target = group.Select(x => new SourcePostDto(GetSourceId(x.SourceId), x.Value)).ToList();
             target.Add(new SourcePostDto(1, null));
 
-            result.Add(await client.Post($"companies/{group.Key}/sources", target));
+            await client.Post($"companies/{group.Key}/sources", target);
         }
 
-        return Ok(result.Count);
+        return Ok("sources was set");
     }
-
-    [HttpPost("sources/{companyId}")]
+    [HttpGet("sources/{companyId}")]
     public async Task<IActionResult> SetSourses(string companyId)
     {
         companyId = companyId.Trim().ToUpperInvariant();

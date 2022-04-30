@@ -1,10 +1,10 @@
 ﻿using IM.Service.Common.Net.RabbitMQ;
 using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Models.Api.Amqp;
 using IM.Service.Market.Settings;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -44,18 +44,23 @@ public class CompanyRepositoryHandler : RepositoryHandler<Company, DatabaseConte
 
         return result.Select(x => x.Old);
     }
-    public override async Task<IEnumerable<Company>> RunDeleteRangeHandlerAsync(IEnumerable<Company> entities)
+    public override IQueryable<Company> GetExist(IEnumerable<Company> entities)
     {
-        var comparer = new CompanyComparer();
-        var ctxEntities = await context.Companies.ToArrayAsync();
-        return ctxEntities.Except(entities, comparer);
+        var existData = entities
+            .GroupBy(x => x.Id)
+            .Select(x => x.Key)
+            .ToArray();
+
+        return context.Companies.Where(x => existData.Contains(x.Id));
     }
 
     public override Task RunPostProcessAsync(RepositoryActions action, Company entity)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
+        if (action is RepositoryActions.Delete)
+            new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function)
+                .PublishTask(QueueNames.MarketData, QueueEntities.Rating, QueueActions.Compute, string.Empty);
 
-        publisher.PublishTask(
+        new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync).PublishTask(
             new[] { QueueNames.Recommendation, QueueNames.Portfolio },
             QueueEntities.Company,
             RabbitHelper.GetQueueAction(action),
@@ -65,23 +70,17 @@ public class CompanyRepositoryHandler : RepositoryHandler<Company, DatabaseConte
     }
     public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Company> entities)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
-        publisher.PublishTask(
+
+        if (action is RepositoryActions.Delete)
+            new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function)
+                .PublishTask(QueueNames.MarketData, QueueEntities.Ratings, QueueActions.Compute, string.Empty);
+
+        new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync).PublishTask(
             new[] { QueueNames.Recommendation, QueueNames.Portfolio },
             QueueEntities.Companies,
             RabbitHelper.GetQueueAction(action),
             entities.Select(x => new CompanyDto(x.Id, x.CountryId, x.Name)));
 
         return Task.CompletedTask;
-    }
-
-    public override IQueryable<Company> GetExist(IEnumerable<Company> entities)
-    {
-        var existData = entities
-            .GroupBy(x => x.Id)
-            .Select(x => x.Key)
-            .ToArray();
-
-        return context.Companies.Where(x => existData.Contains(x.Id));
     }
 }

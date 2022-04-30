@@ -11,6 +11,7 @@ public record CompanyGetDto
     public string Industry { get; init; } = null!;
     public string Sector { get; init; } = null!;
     public string? Description { get; init; }
+    public string[]? Data { get; init; }
 }
 public record CompanyPostDto : CompanyPutDto
 {

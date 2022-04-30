@@ -15,23 +15,24 @@ using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.Calculations;
 
-public class RatingComparator
+public sealed class RatingComparator
 {
     private readonly IServiceScopeFactory scopeFactory;
     public RatingComparator(IServiceScopeFactory scopeFactory) => this.scopeFactory = scopeFactory;
 
-    public async Task RunRatingComparisionsAsync()
+    public async Task StartAsync()
     {
         var tasks = await Task.WhenAll(
-            UpdateRatingAsync<Price>(),
-            UpdateRatingAsync<Report>(),
-            UpdateRatingAsync<Coefficient>(),
-            UpdateRatingAsync<Dividend>());
+            CompareDataAsync<Price>(),
+            CompareDataAsync<Report>(),
+            CompareDataAsync<Coefficient>(),
+            CompareDataAsync<Dividend>());
 
         if (tasks.Contains(true))
-            await SetRatingAsync();
+            await SetComputeRatingTaskAsync();
     }
-    private async Task<bool> UpdateRatingAsync<T>() where T : class, IRating
+
+    private async Task<bool> CompareDataAsync<T>() where T : class, IRating
     {
         var repository = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<Repository<T>>();
         var readyData = await repository.GetSampleAsync(x => x.StatusId == (byte)Statuses.Ready || x.StatusId == (byte)Statuses.Error);
@@ -43,7 +44,7 @@ public class RatingComparator
         {
             await ChangeStatusAsync((byte) Statuses.Computing, readyData, repository);
             var computedData = await RatingComparatorHandler.GetComparedSampleAsync(repository, readyData);
-            await repository.UpdateAsync(computedData, nameof(UpdateRatingAsync));
+            await repository.UpdateRangeAsync(computedData, nameof(CompareDataAsync));
             return true;
         }
         catch
@@ -52,16 +53,15 @@ public class RatingComparator
             return false;
         }
     }
-    private Task ChangeStatusAsync<T>(byte statusId, T[] entities, Repository<T> repository) where T : class, IRating
+    private static Task ChangeStatusAsync<T>(byte statusId, T[] entities, Repository<T> repository) where T : class, IRating
     {
         foreach (var item in entities)
             item.StatusId = statusId;
 
-        var status = Enum.Parse<Statuses>(statusId.ToString()).ToString();
-        return repository.UpdateAsync(entities, nameof(ChangeStatusAsync) + " to " + status);
+        return repository.UpdateRangeAsync(entities, $"Set status '{Enum.Parse<Statuses>(statusId.ToString())}'");
     }
 
-    private Task SetRatingAsync()
+    private Task SetComputeRatingTaskAsync()
     {
         var options = scopeFactory.CreateScope().ServiceProvider.GetRequiredService<IOptions<ServiceSettings>>();
         var rabbitConnectionString = options.Value.ConnectionStrings.Mq;
@@ -81,7 +81,7 @@ internal class RatingComparatorHandler
             IEnumerable<Dividend> => (IEnumerable<T>)await GetComparedSampleAsync(repository as Repository<Dividend>, readyData.ToArray() as Dividend[]),
             IEnumerable<Report> => (IEnumerable<T>)await GetComparedSampleAsync(repository as Repository<Report>, readyData.ToArray() as Report[]),
             IEnumerable<Coefficient> => (IEnumerable<T>)await GetComparedSampleAsync(repository as Repository<Coefficient>, readyData.ToArray() as Coefficient[]),
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(readyData),"Не удалось определить объект для расчетов данных для рейтинга")
         };
 
     private static async Task<IEnumerable<Price>> GetComparedSampleAsync(Repository<Price>? repository, Price[]? readyData)

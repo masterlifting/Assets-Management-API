@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 
 using System;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
@@ -16,16 +17,14 @@ namespace IM.Service.Common.Net.RepositoryService;
 public class Repository<TEntity, TContext> where TEntity : class where TContext : DbContext
 {
     private const string OK = "OK";
-    private const string NoCollection = "No incomming collection";
 
     private readonly TContext context;
     private readonly IRepositoryHandler<TEntity> handler;
 
-    private readonly ILogger<Repository<TEntity, TContext>> logger;
+    private readonly ILogger<TEntity> logger;
 
     protected Repository(
-        ILogger<Repository<TEntity
-        , TContext>> logger
+        ILogger<TEntity> logger
         , TContext context
         , IRepositoryHandler<TEntity> handler)
     {
@@ -41,19 +40,16 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         await context.SaveChangesAsync().ConfigureAwait(false);
         await handler.RunPostProcessAsync(RepositoryActions.Create, entity).ConfigureAwait(false);
 
-        logger.LogDebug(nameof(CreateAsync), OK, info);
+        logger.LogDebug(nameof(CreateRangeAsync), info, OK);
 
         return entity;
     }
-    public async Task<TEntity[]> CreateAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+    public async Task<TEntity[]> CreateRangeAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
         entities = entities.ToArray();
 
         if (!entities.Any())
-        {
-            logger.LogDebug(nameof(CreateAsync), NoCollection, info);
             return Array.Empty<TEntity>();
-        }
 
         entities = await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
 
@@ -67,7 +63,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             await handler.RunPostProcessAsync(RepositoryActions.Create, result).ConfigureAwait(false);
         }
 
-        logger.LogDebug(nameof(CreateAsync), count, info);
+        logger.LogDebug(nameof(CreateRangeAsync), info, count);
 
         return result;
     }
@@ -78,7 +74,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         await context.SaveChangesAsync().ConfigureAwait(false);
         await handler.RunPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
 
-        logger.LogDebug(nameof(UpdateAsync), OK, info);
+        logger.LogDebug(nameof(UpdateRangeAsync), info, OK);
 
         return entity;
     }
@@ -88,19 +84,16 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         await context.SaveChangesAsync().ConfigureAwait(false);
         await handler.RunPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
 
-        logger.LogDebug(nameof(UpdateAsync), OK, info);
+        logger.LogDebug(nameof(UpdateRangeAsync), info, OK);
 
         return entity;
     }
-    public async Task<TEntity[]> UpdateAsync(IEnumerable<TEntity> entities, string info)
+    public async Task<TEntity[]> UpdateRangeAsync(IEnumerable<TEntity> entities, string info)
     {
         entities = entities.ToArray();
 
         if (!entities.Any())
-        {
-            logger.LogDebug(nameof(UpdateAsync), NoCollection, info);
             return Array.Empty<TEntity>();
-        }
 
         entities = await handler.RunUpdateRangeHandlerAsync(entities).ConfigureAwait(false);
 
@@ -114,7 +107,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             await handler.RunPostProcessAsync(RepositoryActions.Update, result).ConfigureAwait(false);
         }
 
-        logger.LogDebug(nameof(UpdateAsync), count, info);
+        logger.LogDebug(nameof(UpdateRangeAsync), info, count);
 
         return result;
     }
@@ -128,7 +121,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             await context.SaveChangesAsync().ConfigureAwait(false);
             await handler.RunPostProcessAsync(RepositoryActions.Create, entity).ConfigureAwait(false);
 
-            logger.LogDebug(nameof(CreateUpdateAsync), "Created: " + OK, info);
+            logger.LogDebug(nameof(CreateUpdateRangeAsync), info, "Created: " + OK);
         }
         catch
         {
@@ -138,19 +131,16 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             await context.SaveChangesAsync().ConfigureAwait(false);
             await handler.RunPostProcessAsync(RepositoryActions.Update, entity).ConfigureAwait(false);
 
-            logger.LogDebug(nameof(CreateUpdateAsync), "Updated: " + OK, info);
+            logger.LogDebug(nameof(CreateUpdateRangeAsync), info, "Updated: " + OK);
         }
         return entity;
     }
-    public async Task<TEntity[]> CreateUpdateAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+    public async Task<TEntity[]> CreateUpdateRangeAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
         entities = entities.ToArray();
 
         if (!entities.Any())
-        {
-            logger.LogDebug(nameof(CreateUpdateAsync), NoCollection, info);
             return Array.Empty<TEntity>();
-        }
 
         var createEntities = await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
         var createResult = createEntities.ToArray();
@@ -176,7 +166,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
                 await handler.RunPostProcessAsync(RepositoryActions.Create, updateResult).ConfigureAwait(false);
         }
 
-        logger.LogDebug(nameof(CreateUpdateAsync), $"Created: { createResult.Length}. Updated: { updateResult.Length}", info);
+        logger.LogDebug(nameof(CreateUpdateRangeAsync), info, $"Created: { createResult.Length}. Updated: { updateResult.Length}");
 
         return processingResult;
     }
@@ -186,10 +176,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         entities = entities.ToArray();
 
         if (!entities.Any())
-        {
-            logger.LogDebug(nameof(CreateUpdateDeleteAsync), NoCollection, info);
             return Array.Empty<TEntity>();
-        }
 
         var createEntities = await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
         var createResult = createEntities.ToArray();
@@ -205,8 +192,8 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
         var processingResult = createResult.Concat(updateResult).ToArray();
 
-        var deleteEntities = await handler.RunDeleteRangeHandlerAsync(processingResult).ConfigureAwait(false);
-        var deleteResult = deleteEntities.Except(processingResult, comparer).ToArray();
+        var allData = await context.Set<TEntity>().ToArrayAsync().ConfigureAwait(false);
+        var deleteResult = allData.Except(processingResult, comparer).ToArray();
 
         if (deleteResult.Any())
             context.Set<TEntity>().RemoveRange(deleteResult);
@@ -218,63 +205,54 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             if (createResult.Any())
                 await handler.RunPostProcessAsync(RepositoryActions.Create, createResult).ConfigureAwait(false);
             if (updateResult.Any())
-                await handler.RunPostProcessAsync(RepositoryActions.Create, updateResult).ConfigureAwait(false);
+                await handler.RunPostProcessAsync(RepositoryActions.Update, updateResult).ConfigureAwait(false);
             if (deleteResult.Any())
                 await handler.RunPostProcessAsync(RepositoryActions.Delete, deleteResult).ConfigureAwait(false);
         }
 
-        logger.LogDebug(nameof(CreateUpdateDeleteAsync), $"Created: {createResult.Length}. Updated: {updateResult.Length}. Deleted: {deleteResult.Length}", info);
+        logger.LogDebug(nameof(CreateUpdateDeleteAsync), info, $"Created: {createResult.Length}. Updated: {updateResult.Length}. Deleted: {deleteResult.Length}");
 
         return processingResult;
     }
 
-    public async Task<TEntity> DeleteByIdAsync(object[] id, string info)
+    public async Task<TEntity> DeleteAsync(object[] id, string info)
     {
-        var result = await handler.RunDeleteHandlerAsync(id).ConfigureAwait(false);
+        var result = await context.Set<TEntity>().FindAsync(id).ConfigureAwait(false);
+        
+        if (result is null)
+            throw new SqlNullValueException($"{typeof(TEntity).Name} with id: '{string.Join(",", id)}' not found");
+
         context.Set<TEntity>().Remove(result);
         await context.SaveChangesAsync().ConfigureAwait(false);
         await handler.RunPostProcessAsync(RepositoryActions.Delete, result);
 
-        logger.LogDebug(nameof(DeleteByIdAsync), OK, info);
+        logger.LogDebug(nameof(DeleteAsync), info, OK);
         return result;
     }
-    public async Task<TEntity> DeleteAsync(TEntity entity, string info)
-    {
-        var result = await handler.RunDeleteHandlerAsync(entity).ConfigureAwait(false);
-        context.Set<TEntity>().Remove(result);
-        await context.SaveChangesAsync().ConfigureAwait(false);
-        await handler.RunPostProcessAsync(RepositoryActions.Delete, result);
-
-        logger.LogDebug(nameof(DeleteAsync), OK, info);
-
-        return result;
-    }
-    public async Task<TEntity[]> DeleteAsync(IEnumerable<TEntity> entities, string info)
+    public async Task<TEntity[]> DeleteRangeAsync(IEnumerable<TEntity> entities, string info)
     {
         entities = entities.ToArray();
 
         if (!entities.Any())
-        {
-            logger.LogDebug(nameof(DeleteAsync), NoCollection, info);
             return Array.Empty<TEntity>();
-        }
 
         var deleteResult = await handler.GetExist(entities).ToArrayAsync().ConfigureAwait(false);
 
         var count = 0;
         if (deleteResult.Any())
         {
+            foreach (var entry in context.ChangeTracker.Entries<TEntity>())
+                entry.State = EntityState.Detached;
+
             context.Set<TEntity>().RemoveRange(deleteResult);
             count = await context.SaveChangesAsync().ConfigureAwait(false);
             await handler.RunPostProcessAsync(RepositoryActions.Delete, deleteResult);
         }
 
-        logger.LogDebug(nameof(DeleteAsync), count, info);
+        logger.LogDebug(nameof(DeleteRangeAsync), info, count);
 
         return deleteResult;
     }
-
-    public DbSet<TEntity> GetDbSet() => context.Set<TEntity>();
 
     public async Task<TEntity?> FindAsync(params object[] parameters) => await context.Set<TEntity>().FindAsync(parameters).ConfigureAwait(false);
     public async Task<TEntity?> FindAsync(Expression<Func<TEntity, bool>> predicate) => await context.Set<TEntity>().FirstOrDefaultAsync(predicate).ConfigureAwait(false);

@@ -13,7 +13,7 @@ using IM.Service.Market.Services.DataLoaders.Floats;
 using IM.Service.Market.Services.DataLoaders.Prices;
 using IM.Service.Market.Services.DataLoaders.Reports;
 using IM.Service.Market.Services.DataLoaders.Splits;
-using IM.Service.Market.Services.Mq;
+using IM.Service.Market.Services.RabbitMq;
 using IM.Service.Market.Services.RestApi;
 using IM.Service.Market.Services.RestApi.Common;
 using IM.Service.Market.Services.RestApi.Common.Interfaces;

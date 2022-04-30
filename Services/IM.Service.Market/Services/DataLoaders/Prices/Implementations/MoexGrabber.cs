@@ -28,6 +28,7 @@ public class MoexGrabber : IDataGrabber<Price>
     public async IAsyncEnumerable<Price[]> GetCurrentDataAsync(IEnumerable<CompanySource> companySources)
     {
         var data = await client.GetCurrentPricesAsync();
+
         var result = Map(data, companySources.Select(x => x.CompanyId));
 
         yield return result.Where(x => x.Date == DateOnly.FromDateTime(DateTime.UtcNow)).ToArray();

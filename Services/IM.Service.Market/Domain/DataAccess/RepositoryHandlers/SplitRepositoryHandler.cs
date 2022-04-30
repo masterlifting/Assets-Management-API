@@ -1,7 +1,6 @@
 ﻿using IM.Service.Common.Net.RabbitMQ;
 using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Settings;
 
@@ -39,18 +38,25 @@ public class SplitRepositoryHandler : RepositoryHandler<Split, DatabaseContext>
 
         return result.Select(x => x.Old).ToArray();
     }
-    public override async Task<IEnumerable<Split>> RunDeleteRangeHandlerAsync(IEnumerable<Split> entities)
+    public override IQueryable<Split> GetExist(IEnumerable<Split> entities)
     {
-        var comparer = new DataDateComparer<Split>();
-        var result = new List<Split>();
+        entities = entities.ToArray();
 
-        foreach (var group in entities.GroupBy(x => x.CompanyId))
-        {
-            var dbEntities = await context.Splits.Where(x => x.CompanyId.Equals(group.Key)).ToArrayAsync();
-            result.AddRange(dbEntities.Except(group, comparer));
-        }
+        var companyIds = entities
+            .GroupBy(x => x.CompanyId)
+            .Select(x => x.Key);
+        var sourceIds = entities
+            .GroupBy(x => x.SourceId)
+            .Select(x => x.Key);
+        var dates = entities
+            .GroupBy(x => x.Date)
+            .Select(x => x.Key);
 
-        return result;
+        return context.Splits
+            .Where(x => 
+                companyIds.Contains(x.CompanyId) 
+                && sourceIds.Contains(x.SourceId) 
+                && dates.Contains(x.Date));
     }
 
     public override Task RunPostProcessAsync(RepositoryActions action, Split entity)
@@ -90,26 +96,5 @@ public class SplitRepositoryHandler : RepositoryHandler<Split, DatabaseContext>
         publisher.PublishTask(QueueNames.MarketData, QueueEntities.Splits, RabbitHelper.GetQueueAction(action), entities);
 
         return Task.CompletedTask;
-    }
-
-    public override IQueryable<Split> GetExist(IEnumerable<Split> entities)
-    {
-        entities = entities.ToArray();
-
-        var companyIds = entities
-            .GroupBy(x => x.CompanyId)
-            .Select(x => x.Key);
-        var sourceIds = entities
-            .GroupBy(x => x.SourceId)
-            .Select(x => x.Key);
-        var dates = entities
-            .GroupBy(x => x.Date)
-            .Select(x => x.Key);
-
-        return context.Splits
-            .Where(x => 
-                companyIds.Contains(x.CompanyId) 
-                && sourceIds.Contains(x.SourceId) 
-                && dates.Contains(x.Date));
     }
 }

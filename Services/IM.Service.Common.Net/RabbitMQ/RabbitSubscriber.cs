@@ -75,30 +75,29 @@ public class RabbitSubscriber
     private void SubscribeQueue(Func<QueueExchanges, string, string, Task<bool>> getActionResult, Queue queue)
     {
         var consumer = new EventingBasicConsumer(channel);
-        consumer.Received += OnConsumerOnReceivedAsync;
+        consumer.Received += OnReceivedAsync;
         channel.BasicConsume(queue.NameString, !queue.WithConfirm, consumer);
 
-        async void OnConsumerOnReceivedAsync(object? _, BasicDeliverEventArgs ea)
+        async void OnReceivedAsync(object? _, BasicDeliverEventArgs ea)
         {
             var data = Encoding.UTF8.GetString(ea.Body.ToArray());
             var queueName = string.Empty;
             var result = false;
 
+            await semaphore.WaitAsync().ConfigureAwait(false);
+            
             try
             {
-                await semaphore.WaitAsync().ConfigureAwait(false);
-
                 queueName = ea.RoutingKey.Split('.')[0];
                 var exchange = Enum.Parse<QueueExchanges>(ea.Exchange, true);
                 result = await getActionResult(exchange, ea.RoutingKey, data);
-
-                semaphore.Release();
             }
             catch (Exception exception)
             {
-                semaphore.Release();
-                logger.LogError(LogEvents.Configuration, "Queue subscribe error: {error}", exception.InnerException?.Message ?? exception.Message);
+                logger.LogError(nameof(SubscribeQueue), exception);
             }
+
+            semaphore.Release();
 
             if (queuesWithConfirm.Contains(queueName) && result)
                 channel.BasicAck(ea.DeliveryTag, false);

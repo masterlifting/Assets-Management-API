@@ -1,7 +1,7 @@
-﻿using IM.Service.Common.Net.Helpers;
-using IM.Service.Common.Net.Models.Entity.Interfaces;
+﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
 using IM.Service.Common.Net.RabbitMQ;
 using IM.Service.Common.Net.RabbitMQ.Configuration;
+using IM.Service.Common.Net.RepositoryService.Filters;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Interfaces;
@@ -9,6 +9,7 @@ using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Services.RestApi.Mappers.Interfaces;
 using IM.Service.Market.Settings;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 namespace IM.Service.Market.Services.RestApi.Common;
@@ -46,7 +47,7 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
     public async Task<TEntity[]> CreateAsync(string companyId, int sourceId, IEnumerable<TPost> models, IEqualityComparer<TEntity> comparer)
     {
         var entities = mapper.MapTo(companyId.ToUpperInvariant(), (byte)sourceId, models);
-        return await repository.CreateAsync(entities, comparer, LogHelper.GetInfo(companyId, sourceId));
+        return await repository.CreateRangeAsync(entities, comparer, $"{nameof(companyId)}: {companyId}, {nameof(sourceId)}: {sourceId}");
     }
 
     public async Task<TEntity> UpdateAsync(TEntity id, TPost model)
@@ -55,7 +56,12 @@ public class RestApiWrite<TEntity, TPost> where TPost : class where TEntity : cl
         return await repository.UpdateAsync(entity, entity.CompanyId);
     }
 
-    public async Task<TEntity> DeleteAsync(TEntity id) => await repository.DeleteAsync(id, id.CompanyId);
+    public async Task<object[]> DeleteAsync<T>(T filter) where T : class, IFilter<TEntity>
+    {
+        var entities = await repository.GetQuery(filter.Expression).ToArrayAsync();
+        var deletedEntities = await repository.DeleteRangeAsync(entities, string.Join("; ", entities.Select(x => x.CompanyId).Distinct()));
+        return deletedEntities.Select(x => new { x.CompanyId, x.SourceId }).ToArray();
+    }
 
 
     public async Task<string> LoadAsync()

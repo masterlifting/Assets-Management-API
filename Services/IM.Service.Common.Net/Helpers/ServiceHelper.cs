@@ -91,7 +91,7 @@ public static class ServiceHelper
                 QueueActions.Create => repository.CreateAsync(data, info),
                 QueueActions.CreateUpdate => repository.CreateUpdateAsync(id, data, info),
                 QueueActions.Update => repository.UpdateAsync(id, data, info),
-                QueueActions.Delete => repository.DeleteByIdAsync(id, info),
+                QueueActions.Delete => repository.DeleteAsync(id, info),
                 _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
             };
         }
@@ -106,11 +106,11 @@ public static class ServiceHelper
 
             return action switch
             {
-                QueueActions.Create => repository.CreateAsync(data, comparer, info),
-                QueueActions.CreateUpdate => repository.CreateUpdateAsync(data, comparer, info),
+                QueueActions.Create => repository.CreateRangeAsync(data, comparer, info),
+                QueueActions.CreateUpdate => repository.CreateUpdateRangeAsync(data, comparer, info),
                 QueueActions.CreateUpdateDelete => repository.CreateUpdateDeleteAsync(data, comparer, info),
-                QueueActions.Update => repository.UpdateAsync(data, info),
-                QueueActions.Delete => repository.DeleteAsync(data, info),
+                QueueActions.Update => repository.UpdateRangeAsync(data, info),
+                QueueActions.Delete => repository.DeleteRangeAsync(data, info),
                 _ => Task.FromResult(Array.Empty<TEntity>())
             };
         }

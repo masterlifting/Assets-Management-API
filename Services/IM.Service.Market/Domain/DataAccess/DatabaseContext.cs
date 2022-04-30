@@ -48,7 +48,7 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<CompanySource>().HasKey(x => new {x.CompanyId, x.SourceId});
         modelBuilder.Entity<CompanySource>()
             .HasOne(x => x.Company)
-            .WithMany(x => x.CompanySources)
+            .WithMany(x => x.Sources)
             .HasForeignKey(x => x.CompanyId);
         modelBuilder.Entity<CompanySource>()
             .HasOne(x => x.Source)

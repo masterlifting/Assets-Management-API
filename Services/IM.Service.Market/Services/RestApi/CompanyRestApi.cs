@@ -1,4 +1,8 @@
-﻿using IM.Service.Common.Net.Models.Services;
+﻿using System.Collections;
+
+using Castle.Core.Internal;
+
+using IM.Service.Common.Net.Models.Services;
 using IM.Service.Common.Net.RabbitMQ;
 using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Market.Domain.DataAccess;
@@ -41,6 +45,12 @@ public class CompanyRestApi
                 Industry = company.Industry.Name,
                 Sector = company.Industry.Sector.Name,
                 Description = company.Description,
+                Data = company.GetType().GetProperties()
+                    .Where(x => x.PropertyType != typeof(string))
+                    .Where(x => x.PropertyType.GetInterface(nameof(IEnumerable)) != null)
+                    .Where(x => !((IEnumerable?)x.GetValue(company)).IsNullOrEmpty())
+                    .Select(x => x.Name.ToLowerInvariant())
+                    .ToArray()
             }
             : throw new NullReferenceException(nameof(company));
     }
@@ -96,7 +106,7 @@ public class CompanyRestApi
             Description = x.Description
         }).ToArray();
 
-        return await companyRepo.CreateAsync(entities, new CompanyComparer(), string.Join("; ", entities.Select(x => x.Id)));
+        return await companyRepo.CreateRangeAsync(entities, new CompanyComparer(), string.Join("; ", entities.Select(x => x.Id)));
     }
     public async Task<Company> UpdateAsync(string companyId, CompanyPutDto model)
     {
@@ -126,12 +136,13 @@ public class CompanyRestApi
         })
         .ToArray();
 
-        return await companyRepo.UpdateAsync(entities, string.Join("; ", entities.Select(x => x.Id)));
+        return await companyRepo.UpdateRangeAsync(entities, string.Join("; ", entities.Select(x => x.Id)));
     }
-    public Task<Company> DeleteAsync(string companyId)
+    public async Task<string> DeleteAsync(string companyId)
     {
         companyId = string.Intern(companyId.ToUpperInvariant().Trim());
-        return companyRepo.DeleteByIdAsync(new[] { companyId }, companyId);
+        await companyRepo.DeleteAsync(new[] { companyId }, companyId);
+        return companyId;
     }
 
     public async Task<string> SyncAsync()

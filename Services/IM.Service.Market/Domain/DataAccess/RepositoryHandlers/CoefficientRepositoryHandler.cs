@@ -1,7 +1,13 @@
-﻿using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Market.Domain.DataAccess.Comparators;
+﻿using IM.Service.Common.Net.RabbitMQ;
+using IM.Service.Common.Net.RabbitMQ.Configuration;
+using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Settings;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+
+using static IM.Service.Common.Net.Enums;
 
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
@@ -9,7 +15,12 @@ namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient, DatabaseContext>
 {
     private readonly DatabaseContext context;
-    public CoefficientRepositoryHandler(DatabaseContext context) : base(context) => this.context = context;
+    private readonly string rabbitConnectionString;
+    public CoefficientRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context) : base(context)
+    {
+        this.context = context;
+        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+    }
 
     public override async Task<IEnumerable<Coefficient>> RunUpdateRangeHandlerAsync(IEnumerable<Coefficient> entities)
     {
@@ -39,20 +50,6 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient, Datab
 
         return result.Select(x => x.Old);
     }
-    public override async Task<IEnumerable<Coefficient>> RunDeleteRangeHandlerAsync(IEnumerable<Coefficient> entities)
-    {
-        var comparer = new DataQuarterComparer<Coefficient>();
-        var result = new List<Coefficient>();
-
-        foreach (var group in entities.GroupBy(x => x.CompanyId))
-        {
-            var dbEntities = await context.Coefficients.Where(x => x.CompanyId.Equals(group.Key)).ToArrayAsync();
-            result.AddRange(dbEntities.Except(group, comparer));
-        }
-
-        return result;
-    }
-
     public override IQueryable<Coefficient> GetExist(IEnumerable<Coefficient> entities)
     {
         entities = entities.ToArray();
@@ -76,5 +73,55 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient, Datab
                 && sourceIds.Contains(x.SourceId)
                 && years.Contains(x.Year)
                 && quarters.Contains(x.Quarter));
+    }
+
+    public override async Task RunPostProcessAsync(RepositoryActions action, Coefficient entity)
+    {
+        if (action is not RepositoryActions.Delete)
+            return;
+
+        var lastEntity = await context.Coefficients.Where(x =>
+            x.CompanyId == entity.CompanyId
+            && x.SourceId == entity.SourceId
+            && x.Year < entity.Year || x.Year == entity.Year && x.Quarter < entity.Quarter)
+            .OrderBy(x => x.Year)
+            .ThenBy(x => x.Quarter)
+            .LastOrDefaultAsync();
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+
+        if (lastEntity is not null)
+            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Coefficient, QueueActions.Set, lastEntity);
+        else
+            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Rating, QueueActions.Compute, string.Empty);
+    }
+    public override async Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Coefficient> entities)
+    {
+        if (action is not RepositoryActions.Delete)
+            return;
+
+        var lastEntities = new List<Coefficient>(entities.Count);
+        foreach (var group in entities.GroupBy(x => (x.CompanyId, x.SourceId)))
+        {
+            var minEntity = group.MinBy(x => (x.Year, x.Quarter))!;
+
+            var lastEntity = await context.Coefficients.Where(x =>
+                x.CompanyId == group.Key.CompanyId
+                && x.SourceId == group.Key.SourceId
+                && x.Year < minEntity.Year || x.Year == minEntity.Year && x.Quarter < minEntity.Quarter)
+                .OrderBy(x => x.Year)
+                .ThenBy(x => x.Quarter)
+                .LastOrDefaultAsync();
+
+            if (lastEntity is not null)
+                lastEntities.Add(lastEntity);
+        }
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+
+        if (lastEntities.Any())
+            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Coefficients, QueueActions.Set, lastEntities);
+        else
+            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Ratings, QueueActions.Compute, string.Empty);
     }
 }

@@ -1,6 +1,6 @@
 ﻿using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities.Catalogs;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
@@ -29,19 +29,6 @@ public class SectorRepositoryHandler : RepositoryHandler<Sector, DatabaseContext
         }
 
         return result.Select(x => x.Old).ToArray();
-    }
-    public override async Task<IEnumerable<Sector>> RunDeleteRangeHandlerAsync(IEnumerable<Sector> entities)
-    {
-        var comparer = new SectorComparer();
-        var result = new List<Sector>();
-
-        foreach (var group in entities.GroupBy(x => x.Name))
-        {
-            var dbEntities = await context.Sectors.Where(x => x.Name.Equals(group.Key)).ToArrayAsync();
-            result.AddRange(dbEntities.Except(group, comparer));
-        }
-
-        return result;
     }
     public override IQueryable<Sector> GetExist(IEnumerable<Sector> entities)
     {

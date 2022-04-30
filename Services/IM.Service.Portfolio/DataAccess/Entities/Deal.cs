@@ -15,23 +15,23 @@ public class Deal
 
 
     public virtual Derivative Derivative { get; set; } = null!;
-    public string DerivativeId { get; init; } = string.Empty;
+    public string DerivativeId { get; set; } = string.Empty;
 
     public virtual Exchange Exchange { get; set; } = null!;
-    public byte ExchangeId { get; init; }
+    public byte ExchangeId { get; set; }
 
     public virtual Broker Broker { get; set; } = null!;
-    public byte  BrokerId { get; init; }
+    public byte  BrokerId { get; set; }
 
     public virtual User User { get; set; } = null!;
-    public string UserId { get; init; } = null!;
+    public string UserId { get; set; } = null!;
 
     public virtual Account Account { get; set; } = null!;
-    public string AccountName { get; init; } = null!;
+    public string AccountName { get; set; } = null!;
 
     public virtual Operation Operation { get; set; } = null!;
-    public byte OperationId { get; init; }
+    public byte OperationId { get; set; }
 
     public virtual Currency Currency { get; set; } = null!;
-    public byte CurrencyId { get; init; }
+    public byte CurrencyId { get; set; }
 }

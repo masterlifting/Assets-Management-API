@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.Extensions.Logging;
 
-using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
 
 namespace IM.Service.Common.Net.Helpers;
 
 public static class LogHelper
 {
-    public static string GetInfo(params object[] data) => string.Join("; ", data.Select(x => $"{x.GetType().Name}: '{x}'"));
-
     private static readonly Action<ILogger, DateTime, string, string, Exception?> logError =
          LoggerMessage.Define<DateTime, string, string>(LogLevel.Error, LogEvents.Defined, "[{time:yyyy-MM-dd HH:mm:ss}] {method}: {errors}");
     private static readonly Action<ILogger, DateTime, string, string, object, Exception?> logWarning =

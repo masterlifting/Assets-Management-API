@@ -23,11 +23,11 @@ public class RatingBackgroundService : BackgroundService
         {
             try
             {
-                await service.RunRatingComparisionsAsync();
+                await service.StartAsync();
             }
             catch (Exception exception)
             {
-                logger.LogError(LogEvents.Processing, exception.Message);
+                logger.LogError(nameof(ExecuteAsync), exception.Message);
             }
         }
     }

@@ -141,25 +141,43 @@ public class DateControllerBase<TEntity, TPost, TGet> : ControllerBase
         }
     }
 
-    [HttpDelete("{year:int}/{month:int}/{day:int}")]
-    public async Task<IActionResult> Delete(string companyId, int sourceId, int year, int month, int day)
+    [HttpDelete("{year:int}")]
+    public async Task<IActionResult> Delete(string? companyId, int? sourceId, int year)
     {
         try
         {
-            var id = Activator.CreateInstance<TEntity>();
-            id.CompanyId = companyId;
-            id.SourceId = (byte)sourceId;
-            id.Date = new DateOnly(year, month, day);
-
-            var result = await apiWrite.DeleteAsync(id);
-
-            return Ok(result);
+            return Ok(await apiWrite.DeleteAsync(DateFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year)));
         }
         catch (Exception exception)
         {
             return BadRequest(exception.Message);
         }
     }
+    [HttpDelete("{year:int}/{month:int}")]
+    public async Task<IActionResult> Delete(string? companyId, int? sourceId, int year, int month)
+    {
+        try
+        {
+            return Ok(await apiWrite.DeleteAsync(DateFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year, month)));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpDelete("{year:int}/{month:int}/{day:int}")]
+    public async Task<IActionResult> Delete(string? companyId, int? sourceId, int year, int month, int day)
+    {
+        try
+        {
+            return Ok(await apiWrite.DeleteAsync(DateFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year, month, day)));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+
 
     [HttpGet("load/")]
     public async Task<IActionResult> Load(string? companyId, int? sourceId)

@@ -53,6 +53,7 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
+                                QueueActions.Set,
                                 QueueActions.Create,
                                 QueueActions.Update,
                                 QueueActions.Delete
@@ -63,6 +64,7 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Get,
+                                QueueActions.Set,
                                 QueueActions.Create,
                                 QueueActions.Update,
                                 QueueActions.Delete
@@ -134,6 +136,7 @@ public static class QueueConfiguration
                         {
                             Actions = new[]
                             {
+                                QueueActions.Set,
                                 QueueActions.Get
                             }
                         },
@@ -141,6 +144,23 @@ public static class QueueConfiguration
                         {
                             Actions = new[]
                             {
+                                QueueActions.Set,
+                                QueueActions.Get
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Coefficient)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Set,
+                                QueueActions.Get
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Coefficients)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Set,
                                 QueueActions.Get
                             }
                         },

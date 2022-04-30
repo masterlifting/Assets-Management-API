@@ -1,13 +1,14 @@
 ﻿using IM.Service.Common.Net.RabbitMQ;
 using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Settings;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
 using System.Data;
-using IM.Service.Market.Domain.DataAccess.Comparators;
-using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Settings;
+
 using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
@@ -22,14 +23,6 @@ public class FloatRepositoryHandler : RepositoryHandler<Float, DatabaseContext>
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<Float> RunCreateHandlerAsync(Float entity)
-    {
-        var existEntities = await GetExist(new[] { entity }).ToArrayAsync();
-
-        return existEntities.Any()
-            ? throw new ConstraintException($"{nameof(entity.Value)}: '{entity.Value}' for '{entity.CompanyId}' is already.")
-            : entity;
-    }
     public override async Task<IEnumerable<Float>> RunUpdateRangeHandlerAsync(IEnumerable<Float> entities)
     {
         entities = entities.ToArray();
@@ -50,35 +43,6 @@ public class FloatRepositoryHandler : RepositoryHandler<Float, DatabaseContext>
 
         return result.Select(x => x.Old).ToArray();
     }
-    public override async Task<IEnumerable<Float>> RunDeleteRangeHandlerAsync(IEnumerable<Float> entities)
-    {
-        var comparer = new FloatComparer();
-        var result = new List<Float>();
-
-        foreach (var group in entities.GroupBy(x => x.CompanyId))
-        {
-            var dbEntities = await context.Floats.Where(x => x.CompanyId.Equals(group.Key)).ToArrayAsync();
-            result.AddRange(dbEntities.Except(group, comparer));
-        }
-
-        return result;
-    }
-
-    public override Task RunPostProcessAsync(RepositoryActions action, Float entity)
-    {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Float, RabbitHelper.GetQueueAction(action), entity);
-
-        return Task.CompletedTask;
-    }
-    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Float> entities)
-    {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Floats, RabbitHelper.GetQueueAction(action), entities);
-
-        return Task.CompletedTask;
-    }
-
     public override IQueryable<Float> GetExist(IEnumerable<Float> entities)
     {
         entities = entities.ToArray();
@@ -94,5 +58,29 @@ public class FloatRepositoryHandler : RepositoryHandler<Float, DatabaseContext>
             .Select(x => x.Key);
 
         return context.Floats.Where(x => companyIds.Contains(x.CompanyId) && sourceIds.Contains(x.SourceId) && values.Contains(x.Value));
+    }
+
+    public override async Task<Float> RunCreateHandlerAsync(Float entity)
+    {
+        var existEntities = await GetExist(new[] { entity }).ToArrayAsync();
+
+        return existEntities.Any()
+            ? throw new ConstraintException($"{nameof(entity.Value)}: '{entity.Value}' for '{entity.CompanyId}' is already.")
+            : entity;
+    }
+
+    public override Task RunPostProcessAsync(RepositoryActions action, Float entity)
+    {
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Float, RabbitHelper.GetQueueAction(action), entity);
+
+        return Task.CompletedTask;
+    }
+    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Float> entities)
+    {
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Floats, RabbitHelper.GetQueueAction(action), entities);
+
+        return Task.CompletedTask;
     }
 }

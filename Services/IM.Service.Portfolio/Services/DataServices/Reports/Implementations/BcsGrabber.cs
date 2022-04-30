@@ -91,18 +91,18 @@ public class BcsGrabber : IDataGrabber
                 foreach (var deal in deals)
                     deal.DateTime = deal.DateTime.ToUniversalTime();
 
-                _ = await dealRepo.CreateAsync(deals, new DealComparer(), string.Join("; ", deals.Select(x => x.AccountName)));
+                _ = await dealRepo.CreateRangeAsync(deals, new DealComparer(), string.Join("; ", deals.Select(x => x.AccountName)));
             }
             else if (events.Any())
             {
                 foreach (var _event in events)
                     _event.DateTime = _event.DateTime.ToUniversalTime();
 
-                _ = await eventRepo.CreateAsync(events, new EventComparer(), string.Join("; ", events.Select(x => x.AccountName)));
+                _ = await eventRepo.CreateRangeAsync(events, new EventComparer(), string.Join("; ", events.Select(x => x.AccountName)));
             }
             else
             {
-                logger.LogInfo(nameof(GrabDataAsync), file.Name, "New transactions was not found");
+                logger.LogInfo(nameof(GrabDataAsync), "New transactions was not found", file.Name);
 
                 return;
             }

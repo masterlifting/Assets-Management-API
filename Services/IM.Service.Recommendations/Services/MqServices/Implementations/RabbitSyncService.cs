@@ -25,7 +25,7 @@ public class RabbitSyncService : IRabbitActionService
     private Task GetCompanyResultAsync(QueueActions action, string data)
     {
         if (action == QueueActions.Delete)
-            return companyRepository.DeleteByIdAsync(new[] { data }, data);
+            return companyRepository.DeleteAsync(new[] { data }, data);
 
         if (!JsonHelper.TryDeserialize(data, out CompanyDto? dto))
             throw new SerializationException(nameof(CompanyDto));

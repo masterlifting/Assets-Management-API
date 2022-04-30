@@ -6,13 +6,18 @@ using IM.Service.Market.Models.Services.Calculations.Rating;
 using Microsoft.EntityFrameworkCore;
 
 using System.Collections.Immutable;
-
+using System.Text;
+using IM.Service.Common.Net.Helpers;
+using IM.Service.Common.Net.Models.Entity.Interfaces;
+using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Market.Domain.DataAccess.Filters;
+using IM.Service.Market.Domain.Entities.Interfaces;
 using static IM.Service.Common.Net.Enums;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.Calculations;
 
-public class RatingCalculator
+public sealed class RatingCalculator
 {
     private readonly Repository<Company> companyRepository;
     private readonly Repository<Rating> ratingRepository;
@@ -41,14 +46,14 @@ public class RatingCalculator
     {
         var companies = await companyRepository.GetSampleAsync(x => ValueTuple.Create(x.Id, x.CountryId));
 
-        List<Rating> ratings = new(companies.Length);
+        List<Rating?> ratings = new(companies.Length);
 
         foreach (var (companyId, countryId) in companies)
             ratings.Add(await ComputeAsync(companyId, countryId));
 
-        await ratingRepository.CreateUpdateDeleteAsync(ratings, new RatingComparer(), nameof(ComputeRatingAsync));
+        await ratingRepository.CreateUpdateDeleteAsync(ratings.Where(x => x is not null)!, new RatingComparer(), nameof(ComputeRatingAsync));
     }
-    private async Task<Rating> ComputeAsync(string companyId, byte countryId)
+    private async Task<Rating?> ComputeAsync(string companyId, byte countryId)
     {
         var sourceId = countryId == (byte)Countries.Rus ? (byte)Sources.Moex : (byte)Sources.Tdameritrade;
 
@@ -85,9 +90,11 @@ public class RatingCalculator
         var resultCoefficient = coefficientSum / 1000;
         var resultDividend = dividendSum / 1000;
 
-        return new Rating
+        var result = RatingCalculatorHelper.ComputeAverageResult(new[] {resultPrice, resultReport, resultCoefficient, resultDividend});
+
+        return result == 0 ? null : new Rating
         {
-            Result = RatingCalculatorHelper.ComputeAverageResult(new[] { resultPrice, resultReport, resultCoefficient, resultDividend }),
+            Result = result,
 
             CompanyId = companyId,
 
@@ -96,6 +103,53 @@ public class RatingCalculator
             ResultCoefficient = resultCoefficient,
             ResultDividend = resultDividend
         };
+    }
+
+    public async Task<string> RecompareRatingAsync(CompareType compareType, string? companyId, int year = 0, int month = 0, int day = 0)
+    {
+
+        var priceFilter = DateFilter<Price>.GetFilter(compareType, companyId, null, year, month, day);
+        var dividendFilter = DateFilter<Dividend>.GetFilter(compareType, companyId, null, year, month, day);
+        var reportFilter = month == 0
+            ? QuarterFilter<Report>.GetFilter(compareType, companyId, null, year)
+            : QuarterFilter<Report>.GetFilter(compareType, companyId, null, year, LogicHelper.QuarterHelper.GetQuarter(month));
+        var coefficientFilter = month == 0
+            ? QuarterFilter<Coefficient>.GetFilter(compareType, companyId, null, year)
+            : QuarterFilter<Coefficient>.GetFilter(compareType, companyId, null, year, LogicHelper.QuarterHelper.GetQuarter(month));
+
+        var prices = await priceRepository.GetSampleAsync(priceFilter.Expression);
+        var dividends = await dividendRepository.GetSampleOrderedAsync(dividendFilter.Expression, x => x.Date);
+        var reports = await reportRepository.GetSampleOrderedAsync(reportFilter.Expression, x => x.Year, x => x.Quarter);
+        var coefficients = await coefficientRepository.GetSampleOrderedAsync(coefficientFilter.Expression, x => x.Year, x => x.Quarter);
+
+        var result = new StringBuilder(500);
+        result.Append(await SetRatingComparisionTask(priceRepository, prices, x => x.Date));
+        result.Append(await SetRatingComparisionTask(reportRepository, reports, x => x.Year, x => x.Quarter));
+        result.Append(await SetRatingComparisionTask(dividendRepository, dividends, x => x.Date));
+        result.Append(await SetRatingComparisionTask(coefficientRepository, coefficients, x => x.Year, x => x.Quarter));
+
+        return result.ToString();
+    }
+    private static async Task<string> SetRatingComparisionTask<T, TSelector>(Repository<T, DatabaseContext> repository, T[] data, Func<T, TSelector> orderSelector, Func<T, TSelector>? orderSelector2 = null) where T : class, IRating, IPeriod
+    {
+        if (!data.Any())
+            return $"\nData for {typeof(T).Name}s not found; ";
+
+        var groupedData = data.GroupBy(x => x.CompanyId).ToArray();
+        var dataResult = new List<T>(groupedData.Length);
+
+        foreach (var group in groupedData)
+        {
+            var firstData = orderSelector2 is null
+                ? group.OrderBy(orderSelector.Invoke).First()
+                : group.OrderBy(orderSelector.Invoke).ThenBy(orderSelector2.Invoke).First();
+            firstData.StatusId = (byte)Statuses.Ready;
+            dataResult.Add(firstData);
+        }
+
+        await repository.UpdateRangeAsync(dataResult, "Recalculating rating");
+
+        return $"\nRecompare {typeof(T).Name}s data for : {string.Join("; ", dataResult.Select(x => x.CompanyId))} is start; ";
     }
 }
 internal static class RatingCalculatorHelper

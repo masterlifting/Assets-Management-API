@@ -130,20 +130,24 @@ public class QuarterControllerBase<TEntity, TPost, TGet> : ControllerBase
         }
     }
 
-    [HttpDelete("{year:int}/{quarter:int}")]
-    public async Task<IActionResult> Delete(string companyId, int sourceId, int year, int quarter)
+    [HttpDelete("{year:int}")]
+    public async Task<IActionResult> Delete(string? companyId, int? sourceId, int year)
     {
         try
         {
-            var id = Activator.CreateInstance<TEntity>();
-            id.CompanyId = companyId;
-            id.SourceId = (byte)sourceId;
-            id.Year = year;
-            id.Quarter = (byte)quarter;
-
-            var result = await apiWrite.DeleteAsync(id);
-
-            return Ok(result);
+            return Ok(await apiWrite.DeleteAsync(QuarterFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year)));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpDelete("{year:int}/{quarter:int}")]
+    public async Task<IActionResult> Delete(string? companyId, int? sourceId, int year, int quarter)
+    {
+        try
+        {
+            return Ok(await apiWrite.DeleteAsync(QuarterFilter<TEntity>.GetFilter(CompareType.Equal, companyId, sourceId, year, quarter)));
         }
         catch (Exception exception)
         {

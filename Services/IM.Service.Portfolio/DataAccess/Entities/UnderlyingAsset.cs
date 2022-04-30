@@ -15,7 +15,7 @@ public class UnderlyingAsset
     public virtual Country Country { get; set; } = null!;
     public byte CountryId { get; set; }
 
-    public string Name { get; init; } = null!;
+    public string Name { get; set; } = null!;
 
     public virtual IEnumerable<Derivative>? Derivatives { get; set; }
 }
