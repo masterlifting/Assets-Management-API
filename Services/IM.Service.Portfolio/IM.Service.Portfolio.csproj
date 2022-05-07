@@ -14,4 +14,8 @@
     <ProjectReference Include="..\IM.Service.Common.Net\IM.Service.Common.Net.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\Api\Http\" />
+  </ItemGroup>
+
 </Project>

@@ -41,7 +41,7 @@ public class PaviamsController : ControllerBase
             })
             .ToArrayAsync();
 
-        return await client.Post("companies/collection", entities.Select(x => new CompanyPostDto
+        return await client.Put("companies/collection", entities.Select(x => new CompanyPostDto
         {
             Id = x.Id,
             Name = x.Name,

@@ -5,7 +5,7 @@ namespace IM.Service.Recommendations.DataAccess.Repository;
 
 public class Repository<T> : Repository<T, DatabaseContext> where T : class
 {
-    public Repository(ILogger<T> logger, DatabaseContext context, IRepositoryHandler<T> handler) :
+    public Repository(ILogger<T> logger, DatabaseContext context, RepositoryHandler<T> handler) :
         base(logger, context, handler)
     { }
 }

@@ -1,7 +1,7 @@
 ﻿using IM.Service.Market.Controllers.Base;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Models.Api.Http;
-using IM.Service.Market.Services.RestApi.Common;
+using IM.Service.Market.Services.HttpRestApi.Common;
 
 using Microsoft.AspNetCore.Mvc;
 

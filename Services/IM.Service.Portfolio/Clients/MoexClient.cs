@@ -1,5 +1,4 @@
-﻿using IM.Service.Portfolio.Models.Client;
-using IM.Service.Portfolio.Settings;
+﻿using IM.Service.Portfolio.Settings;
 
 using Microsoft.Extensions.Options;
 
@@ -7,7 +6,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-
+using IM.Service.Portfolio.Models.Clients;
 using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Portfolio.Clients;

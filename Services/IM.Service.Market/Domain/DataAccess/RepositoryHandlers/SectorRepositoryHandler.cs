@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
-public class SectorRepositoryHandler : RepositoryHandler<Sector, DatabaseContext>
+public class SectorRepositoryHandler : RepositoryHandler<Sector>
 {
     private readonly DatabaseContext context;
-    public SectorRepositoryHandler(DatabaseContext context) : base(context) => this.context = context;
+    public SectorRepositoryHandler(DatabaseContext context) => this.context = context;
 
     public override async Task<IEnumerable<Sector>> RunUpdateRangeHandlerAsync(IEnumerable<Sector> entities)
     {

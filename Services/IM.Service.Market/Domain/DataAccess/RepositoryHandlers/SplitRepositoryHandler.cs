@@ -11,11 +11,11 @@ using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
-public class SplitRepositoryHandler : RepositoryHandler<Split, DatabaseContext>
+public class SplitRepositoryHandler : RepositoryHandler<Split>
 {
     private readonly DatabaseContext context;
     private readonly string rabbitConnectionString;
-    public SplitRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context) : base(context)
+    public SplitRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
     {
         this.context = context;
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;

@@ -57,28 +57,28 @@ public sealed class RatingCalculator
     {
         var sourceId = countryId == (byte)Countries.Rus ? (byte)Sources.Moex : (byte)Sources.Tdameritrade;
 
-        var priceSum = await priceRepository.GetQuery(x =>
+        var priceSum = await priceRepository.Where(x =>
                     x.CompanyId == companyId
                     && x.SourceId == sourceId
                     && x.StatusId == (byte)Statuses.Computed
                     && x.Result.HasValue)
                 .SumAsync(x => x.Result);
 
-        var reportSum = await reportRepository.GetQuery(x =>
+        var reportSum = await reportRepository.Where(x =>
                     x.CompanyId == companyId
                     && x.SourceId == (byte)Sources.Investing
                     && x.StatusId == (byte)Statuses.Computed
                     && x.Result.HasValue)
                 .SumAsync(x => x.Result);
 
-        var coefficientSum = await coefficientRepository.GetQuery(x =>
+        var coefficientSum = await coefficientRepository.Where(x =>
                     x.CompanyId == companyId
                     && x.SourceId == (byte)Sources.Investing
                     && x.StatusId == (byte)Statuses.Computed
                     && x.Result.HasValue)
                 .SumAsync(x => x.Result);
 
-        var dividendSum = await dividendRepository.GetQuery(x =>
+        var dividendSum = await dividendRepository.Where(x =>
                     x.CompanyId == companyId
                     && x.SourceId == (byte)Sources.Yahoo
                     && x.StatusId == (byte)Statuses.Computed

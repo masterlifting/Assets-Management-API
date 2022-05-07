@@ -12,12 +12,12 @@ using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
-public class PriceRepositoryHandler : RepositoryHandler<Price, DatabaseContext>
+public class PriceRepositoryHandler : RepositoryHandler<Price>
 {
     private readonly DatabaseContext context;
     private readonly string rabbitConnectionString;
 
-    public PriceRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context) : base(context)
+    public PriceRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
     {
         this.context = context;
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;

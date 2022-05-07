@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using IM.Service.Common.Net.RabbitMQ.Configuration;
+using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Common.Net.RabbitMQ;
 
 public static class RabbitHelper
 {
-    public static QueueActions GetQueueAction(Enums.RepositoryActions action) => action switch
+    public static QueueActions GetQueueAction(RepositoryActions action) => action switch
     {
-        Enums.RepositoryActions.Create => QueueActions.Create,
-        Enums.RepositoryActions.Update => QueueActions.Update,
-        Enums.RepositoryActions.Delete => QueueActions.Delete,
+        RepositoryActions.Create => QueueActions.Create,
+        RepositoryActions.Update => QueueActions.Update,
+        RepositoryActions.Delete => QueueActions.Delete,
         _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
     };
 }

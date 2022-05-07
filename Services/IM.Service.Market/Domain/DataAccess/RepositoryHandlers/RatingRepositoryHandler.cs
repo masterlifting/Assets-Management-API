@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
-public class RatingRepositoryHandler : RepositoryHandler<Rating, DatabaseContext>
+public class RatingRepositoryHandler : RepositoryHandler<Rating>
 {
     private readonly DatabaseContext context;
-    public RatingRepositoryHandler(DatabaseContext context) : base(context) => this.context = context;
+    public RatingRepositoryHandler(DatabaseContext context) => this.context = context;
 
     public override async Task<IEnumerable<Rating>> RunUpdateRangeHandlerAsync(IEnumerable<Rating> entities)
     {

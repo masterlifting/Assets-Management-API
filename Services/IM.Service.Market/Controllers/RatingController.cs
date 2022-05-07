@@ -1,5 +1,5 @@
 ﻿using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Services.RestApi;
+using IM.Service.Market.Services.HttpRestApi;
 
 using Microsoft.AspNetCore.Mvc;
 

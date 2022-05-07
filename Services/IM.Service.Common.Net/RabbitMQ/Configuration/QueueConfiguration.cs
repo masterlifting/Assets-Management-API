@@ -19,7 +19,6 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Create,
-                                QueueActions.CreateUpdate,
                                 QueueActions.Update,
                                 QueueActions.Delete
                             }
@@ -29,8 +28,6 @@ public static class QueueConfiguration
                             Actions = new[]
                             {
                                 QueueActions.Create,
-                                QueueActions.CreateUpdate,
-                                QueueActions.CreateUpdateDelete,
                                 QueueActions.Update,
                                 QueueActions.Delete
                             }
@@ -257,8 +254,6 @@ public enum QueueEntities
 public enum QueueActions
 {
     Create,
-    CreateUpdate,
-    CreateUpdateDelete,
     Update,
     Delete,
     Get,

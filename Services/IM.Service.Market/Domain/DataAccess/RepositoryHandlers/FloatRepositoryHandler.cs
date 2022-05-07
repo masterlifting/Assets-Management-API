@@ -1,4 +1,5 @@
-﻿using IM.Service.Common.Net.RabbitMQ;
+﻿using System.Data;
+using IM.Service.Common.Net.RabbitMQ;
 using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Market.Domain.Entities;
@@ -7,20 +8,26 @@ using IM.Service.Market.Settings;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using System.Data;
-
 using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
-public class FloatRepositoryHandler : RepositoryHandler<Float, DatabaseContext>
+public class FloatRepositoryHandler : RepositoryHandler<Float>
 {
     private readonly DatabaseContext context;
     private readonly string rabbitConnectionString;
-    public FloatRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context) : base(context)
+    public FloatRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
     {
         this.context = context;
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+    }
+    public override async Task<Float> RunCreateHandlerAsync(Float entity)
+    {
+        var existEntities = await GetExist(new[] { entity }).ToArrayAsync();
+
+        return existEntities.Any()
+            ? throw new ConstraintException($"{nameof(entity.Value)}: '{entity.Value}' for '{entity.CompanyId}' is already.")
+            : entity;
     }
 
     public override async Task<IEnumerable<Float>> RunUpdateRangeHandlerAsync(IEnumerable<Float> entities)
@@ -58,15 +65,6 @@ public class FloatRepositoryHandler : RepositoryHandler<Float, DatabaseContext>
             .Select(x => x.Key);
 
         return context.Floats.Where(x => companyIds.Contains(x.CompanyId) && sourceIds.Contains(x.SourceId) && values.Contains(x.Value));
-    }
-
-    public override async Task<Float> RunCreateHandlerAsync(Float entity)
-    {
-        var existEntities = await GetExist(new[] { entity }).ToArrayAsync();
-
-        return existEntities.Any()
-            ? throw new ConstraintException($"{nameof(entity.Value)}: '{entity.Value}' for '{entity.CompanyId}' is already.")
-            : entity;
     }
 
     public override Task RunPostProcessAsync(RepositoryActions action, Float entity)

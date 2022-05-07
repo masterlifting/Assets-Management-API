@@ -33,7 +33,7 @@ public static class Enums
         Gbr = 4,
         Deu = 5
     }
-    public enum RepositoryActions 
+    public enum RepositoryActions
     {
         Create,
         Update,

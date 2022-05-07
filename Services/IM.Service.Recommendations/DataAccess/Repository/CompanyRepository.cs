@@ -7,10 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Recommendations.DataAccess.Repository;
 
-public class CompanyRepository : RepositoryHandler<Company, DatabaseContext>
+public class CompanyRepository : RepositoryHandler<Company>
 {
     private readonly DatabaseContext context;
-    public CompanyRepository(DatabaseContext context) : base(context) => this.context = context;
+    public CompanyRepository(DatabaseContext context) => this.context = context;
 
     public override async Task<IEnumerable<Company>> RunUpdateRangeHandlerAsync(IEnumerable<Company> entities)
     {

@@ -1,13 +1,11 @@
-using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Portfolio.Clients;
-using IM.Service.Portfolio.DataAccess;
-using IM.Service.Portfolio.DataAccess.Entities;
-using IM.Service.Portfolio.DataAccess.Entities.Catalogs;
-using IM.Service.Portfolio.DataAccess.Repositories;
-using IM.Service.Portfolio.Services.BackgroundServices;
-using IM.Service.Portfolio.Services.DataServices.Reports;
-using IM.Service.Portfolio.Services.DtoServices;
-using IM.Service.Portfolio.Services.MqServices;
+using IM.Service.Portfolio.Domain.DataAccess;
+using IM.Service.Portfolio.Domain.DataAccess.RepositoryHandlers;
+using IM.Service.Portfolio.Services.Background;
+using IM.Service.Portfolio.Services.Data.Isins;
+using IM.Service.Portfolio.Services.Data.Reports;
+using IM.Service.Portfolio.Services.HttpRestApi;
+using IM.Service.Portfolio.Services.RabbitMq;
 using IM.Service.Portfolio.Settings;
 
 using Microsoft.AspNetCore.Builder;
@@ -20,6 +18,9 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
+using IM.Service.Common.Net.RepositoryService;
+using IM.Service.Portfolio.Domain.Entities;
+using IM.Service.Portfolio.Domain.Entities.Catalogs;
 using static IM.Service.Common.Net.Helpers.JsonHelper;
 
 namespace IM.Service.Portfolio;
@@ -52,19 +53,21 @@ public class Startup
         });
 
         services.AddScoped(typeof(Repository<>));
-        services.AddScoped<IRepositoryHandler<User>, UserRepository>();
-        services.AddScoped<IRepositoryHandler<Account>, AccountRepository>();
-        services.AddScoped<IRepositoryHandler<Broker>, BrokerRepository>();
-        services.AddScoped<IRepositoryHandler<Event>, EventRepository>();
-        services.AddScoped<IRepositoryHandler<Deal>, DealRepository>();
-        services.AddScoped<IRepositoryHandler<Report>, ReportRepository>();
-        services.AddScoped<IRepositoryHandler<UnderlyingAsset>, UnderlyingAssetRepository>();
-        services.AddScoped<IRepositoryHandler<Derivative>, DerivativeRepository>();
+        services.AddScoped<RepositoryHandler<User>, UserRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Account>, AccountRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Broker>, BrokerRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Event>, EventRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Deal>, DealRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Report>, ReportRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<UnderlyingAsset>, UnderlyingAssetRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Derivative>, DerivativeRepositoryHandler>();
 
-        services.AddScoped<ReportDtoManager>();
+        services.AddScoped<ReportRestApi>();
 
         services.AddScoped<ReportGrabber>();
         services.AddScoped<ReportLoader>();
+
+        services.AddTransient<MoexIsinService>();
 
         services.AddSingleton<RabbitActionService>();
         services.AddHostedService<RabbitBackgroundService>();

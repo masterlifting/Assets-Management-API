@@ -1,13 +1,7 @@
-﻿using IM.Service.Common.Net.RabbitMQ.Configuration;
-using IM.Service.Common.Net.RepositoryService;
-
-using Microsoft.EntityFrameworkCore;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 
 namespace IM.Service.Common.Net.Helpers;
 
@@ -75,44 +69,5 @@ public static class ServiceHelper
         public string QueryParams => $"page={Page}&limit={Limit}";
 
         public T[] GetPaginatedResult<T>(IEnumerable<T>? collection) where T : class => collection is not null ? collection.Skip((Page - 1) * Limit).Take(Limit).ToArray() : Array.Empty<T>();
-    }
-    public abstract class RabbitRepository
-    {
-        public virtual Task<TEntity> GetRepositoryActionAsync<TEntity, TContext>(
-            Repository<TEntity, TContext> repository,
-            QueueActions action,
-            object[] id,
-            TEntity data) where TEntity : class where TContext : DbContext
-        {
-            var info = string.Join(",", id);
-
-            return action switch
-            {
-                QueueActions.Create => repository.CreateAsync(data, info),
-                QueueActions.CreateUpdate => repository.CreateUpdateAsync(id, data, info),
-                QueueActions.Update => repository.UpdateAsync(id, data, info),
-                QueueActions.Delete => repository.DeleteAsync(id, info),
-                _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
-            };
-        }
-
-        public virtual Task<TEntity[]> GetRepositoryActionAsync<TEntity, TContext>(
-            Repository<TEntity, TContext> repository,
-            QueueActions action,
-            IEnumerable<TEntity> data,
-            IEqualityComparer<TEntity> comparer) where TEntity : class where TContext : DbContext
-        {
-            var info = string.Empty;
-
-            return action switch
-            {
-                QueueActions.Create => repository.CreateRangeAsync(data, comparer, info),
-                QueueActions.CreateUpdate => repository.CreateUpdateRangeAsync(data, comparer, info),
-                QueueActions.CreateUpdateDelete => repository.CreateUpdateDeleteAsync(data, comparer, info),
-                QueueActions.Update => repository.UpdateRangeAsync(data, info),
-                QueueActions.Delete => repository.DeleteRangeAsync(data, info),
-                _ => Task.FromResult(Array.Empty<TEntity>())
-            };
-        }
     }
 }

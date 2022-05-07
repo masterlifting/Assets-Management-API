@@ -8,6 +8,14 @@
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.42" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -15,8 +23,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\DataLoaders\Dividends\Implementations\" />
-    <Folder Include="Services\DataLoaders\Splits\Implementations\" />
+    <Folder Include="Services\Data\Dividends\Implementations\" />
+    <Folder Include="Services\Data\Splits\Implementations\" />
   </ItemGroup>
 
 </Project>

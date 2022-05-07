@@ -1,5 +1,4 @@
 ﻿using IM.Service.Common.Net.Models.Configuration;
-using IM.Service.Portfolio.Settings.Client;
 
 namespace IM.Service.Portfolio.Settings;
 

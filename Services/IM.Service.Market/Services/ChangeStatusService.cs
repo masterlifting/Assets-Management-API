@@ -6,7 +6,7 @@ using System.Runtime.Serialization;
 
 namespace IM.Service.Market.Services;
 
-public class ChangeStatusService<T> where T: class, IRating
+public class ChangeStatusService<T> where T : class, IRating
 {
     private readonly Repository<T> repository;
     protected ChangeStatusService(Repository<T> repository) => this.repository = repository;
@@ -18,7 +18,7 @@ public class ChangeStatusService<T> where T: class, IRating
 
         entity!.StatusId = statusId;
 
-        await repository.UpdateAsync(entity, $"Set status '{Enum.Parse<Enums.Statuses>(statusId.ToString())}'");
+        await repository.UpdateRangeAsync(new[] { entity }, $"Set status '{Enum.Parse<Enums.Statuses>(statusId.ToString())}'");
     }
     public async Task ChangeStatusRangeAsync(string data, byte statusId)
     {

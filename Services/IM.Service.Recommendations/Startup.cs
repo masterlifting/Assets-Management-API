@@ -1,5 +1,5 @@
-using IM.Service.Common.Net.RepositoryService;
 
+using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Recommendations.Clients;
 using IM.Service.Recommendations.DataAccess;
 using IM.Service.Recommendations.DataAccess.Entities;
@@ -43,7 +43,7 @@ public class Startup
         services.AddScoped<PurchaseDtoAggregator>();
         services.AddScoped<SaleDtoAggregator>();
 
-        services.AddScoped<IRepositoryHandler<Company>, CompanyRepository>();
+        services.AddScoped<RepositoryHandler<Company>, CompanyRepository>();
         services.AddScoped(typeof(Repository<>));
 
         services.AddScoped<RabbitActionService>();

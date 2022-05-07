@@ -13,11 +13,11 @@ using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
-public class ReportRepositoryHandler : RepositoryHandler<Report, DatabaseContext>
+public class ReportRepositoryHandler : RepositoryHandler<Report>
 {
     private readonly DatabaseContext context;
     private readonly string rabbitConnectionString;
-    public ReportRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context) : base(context)
+    public ReportRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
     {
         this.context = context;
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;

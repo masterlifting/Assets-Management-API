@@ -2,7 +2,7 @@
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.DataAccess.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
-using IM.Service.Market.Services.RestApi.Common;
+using IM.Service.Market.Services.HttpRestApi.Common;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -156,7 +156,7 @@ public class QuarterControllerBase<TEntity, TPost, TGet> : ControllerBase
     }
 
     [HttpGet("load/")]
-    public async Task<IActionResult> Load(string companyId, int sourceId)
+    public async Task<IActionResult> Load(string? companyId, int? sourceId)
     {
         try
         {

@@ -88,7 +88,7 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
         var deletedFloat = _float;
 
         var lastFloat = await floatRepo
-            .GetQuery(x =>
+            .Where(x =>
                 x.CompanyId == deletedFloat.CompanyId
                 && x.Date >= dateStart && x.Date <= dateEnd)
             .OrderBy(x => x.Date)
@@ -111,7 +111,7 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
         var deletedPrice = price;
 
         var lastPrice = await priceRepo
-            .GetQuery(x =>
+            .Where(x =>
                 x.CompanyId == deletedPrice.CompanyId
                 && x.Date >= dateStart && x.Date <= dateEnd)
             .OrderBy(x => x.Date)

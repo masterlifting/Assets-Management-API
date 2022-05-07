@@ -8,22 +8,23 @@ using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Api.Http;
 using IM.Service.Market.Services.Background;
 using IM.Service.Market.Services.Calculations;
-using IM.Service.Market.Services.DataLoaders.Dividends;
-using IM.Service.Market.Services.DataLoaders.Floats;
-using IM.Service.Market.Services.DataLoaders.Prices;
-using IM.Service.Market.Services.DataLoaders.Reports;
-using IM.Service.Market.Services.DataLoaders.Splits;
+using IM.Service.Market.Services.Data.Dividends;
+using IM.Service.Market.Services.Data.Floats;
+using IM.Service.Market.Services.Data.Prices;
+using IM.Service.Market.Services.Data.Reports;
+using IM.Service.Market.Services.Data.Splits;
+using IM.Service.Market.Services.HttpRestApi;
+using IM.Service.Market.Services.HttpRestApi.Common;
+using IM.Service.Market.Services.HttpRestApi.Common.Interfaces;
+using IM.Service.Market.Services.HttpRestApi.Mappers;
+using IM.Service.Market.Services.HttpRestApi.Mappers.Interfaces;
 using IM.Service.Market.Services.RabbitMq;
-using IM.Service.Market.Services.RestApi;
-using IM.Service.Market.Services.RestApi.Common;
-using IM.Service.Market.Services.RestApi.Common.Interfaces;
-using IM.Service.Market.Services.RestApi.Mappers;
-using IM.Service.Market.Services.RestApi.Mappers.Interfaces;
 using IM.Service.Market.Settings;
 
 using Microsoft.EntityFrameworkCore;
 
 using Polly;
+
 using static IM.Service.Common.Net.Helpers.JsonHelper;
 
 namespace IM.Service.Market;
@@ -42,7 +43,7 @@ public class Startup
         services.AddDbContext<DatabaseContext>(provider =>
         {
             provider.UseLazyLoadingProxies();
-            provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
+            provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Paviams"]);
         }, ServiceLifetime.Transient);
 
         services.AddControllers().AddJsonOptions(x =>
@@ -109,17 +110,17 @@ public class Startup
         services.AddTransient<RatingCalculator>();
 
         services.AddScoped(typeof(Repository<>));
-        services.AddScoped<IRepositoryHandler<Company>, CompanyRepositoryHandler>();
-        services.AddScoped<IRepositoryHandler<CompanySource>, CompanySourceRepositoryHandler>();
-        services.AddScoped<IRepositoryHandler<Industry>, IndustryRepositoryHandler>();
-        services.AddScoped<IRepositoryHandler<Sector>, SectorRepositoryHandler>();
-        services.AddScoped<IRepositoryHandler<Price>, PriceRepositoryHandler>();
-        services.AddScoped<IRepositoryHandler<Report>, ReportRepositoryHandler>();
-        services.AddScoped<IRepositoryHandler<Float>, FloatRepositoryHandler>();
-        services.AddScoped<IRepositoryHandler<Split>, SplitRepositoryHandler>(); 
-        services.AddScoped<IRepositoryHandler<Dividend>, DividendRepositoryHandler>();
-        services.AddScoped<IRepositoryHandler<Coefficient>, CoefficientRepositoryHandler>();
-        services.AddScoped<IRepositoryHandler<Rating>, RatingRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Company>, CompanyRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<CompanySource>, CompanySourceRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Industry>, IndustryRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Sector>, SectorRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Price>, PriceRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Report>, ReportRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Float>, FloatRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Split>, SplitRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Dividend>, DividendRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Coefficient>, CoefficientRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Rating>, RatingRepositoryHandler>();
 
         services.AddSingleton<RabbitActionService>();
         services.AddHostedService<RabbitBackgroundService>();

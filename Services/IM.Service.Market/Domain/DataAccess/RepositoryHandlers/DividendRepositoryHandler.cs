@@ -11,12 +11,12 @@ using static IM.Service.Common.Net.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
-public class DividendRepositoryHandler : RepositoryHandler<Dividend, DatabaseContext>
+public class DividendRepositoryHandler : RepositoryHandler<Dividend>
 {
     private readonly DatabaseContext context;
     private readonly string rabbitConnectionString;
 
-    public DividendRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context) : base(context)
+    public DividendRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
     {
         this.context = context;
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;

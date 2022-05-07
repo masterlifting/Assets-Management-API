@@ -239,8 +239,8 @@ public static class HttpHelper
                 ? response is not null
                     ? response.IsSuccessStatusCode
                         ? Ok(model)
-                        : BadRequest(response.ToString())
-                    : NotFound("response is null")
+                        : BadRequest(response.ReasonPhrase)
+                    : BadRequest("response is null")
                 : BadRequest(error);
         }
         public async Task<IActionResult> Put<TPost>(string controller, TPost model, params object[] parameters) where TPost : class
@@ -271,8 +271,8 @@ public static class HttpHelper
                 ? response is not null
                     ? response.IsSuccessStatusCode
                         ? Ok(model)
-                        : BadRequest(response.ToString())
-                    : NotFound("response is null")
+                        : BadRequest(response.ReasonPhrase)
+                    : BadRequest("response is null")
                 : BadRequest(error);
         }
         public async Task<IActionResult> Delete(string controller, params object[] parameters)
@@ -303,8 +303,8 @@ public static class HttpHelper
                 ? response is not null
                     ? response.IsSuccessStatusCode
                         ? Ok(parameters)
-                        : BadRequest(response.ToString())
-                    : NotFound("response is null")
+                        : BadRequest(response.ReasonPhrase)
+                    : BadRequest("response is null")
                 : BadRequest(error);
         }
 
