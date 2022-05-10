@@ -8,7 +8,6 @@ public static class Enums
         Bcs = 1,
         Tinkoff = 2
     }
-    
     public enum UnderlyingAssetTypes
     {
         Default = 0,
@@ -17,7 +16,7 @@ public static class Enums
         ETF = 3,
         Currency = 4
     }
-    public enum Operations : byte
+    public enum OperationTypes : byte
     {
         Default = 0,
         Приход = 1,

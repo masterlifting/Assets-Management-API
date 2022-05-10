@@ -14,9 +14,8 @@ public class BrokerRepositoryHandler : RepositoryHandler<Broker>
     private readonly DatabaseContext context;
     public BrokerRepositoryHandler(DatabaseContext context) => this.context = context;
 
-    public override async Task<IEnumerable<Broker>> RunUpdateRangeHandlerAsync(IEnumerable<Broker> entities)
+    public override async Task<IEnumerable<Broker>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Broker> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         return existEntities

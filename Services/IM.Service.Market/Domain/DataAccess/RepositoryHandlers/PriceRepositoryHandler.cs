@@ -23,9 +23,8 @@ public class PriceRepositoryHandler : RepositoryHandler<Price>
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<IEnumerable<Price>> RunUpdateRangeHandlerAsync(IEnumerable<Price> entities)
+    public override async Task<IEnumerable<Price>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Price> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities
@@ -86,17 +85,17 @@ public class PriceRepositoryHandler : RepositoryHandler<Price>
             publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
 
             if (lastEntity is not null)
-                publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, QueueActions.Set, lastEntity);
+                publisher.PublishTask(QueueNames.Market, QueueEntities.Price, QueueActions.Set, lastEntity);
 
-            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, QueueActions.Delete, entity);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Price, QueueActions.Delete, entity);
         }
         else if (entity.StatusId is (byte)Statuses.New)
         {
             publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Price, RabbitHelper.GetQueueAction(action), entity);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Price, RabbitHelper.GetQueueAction(action), entity);
         }
     }
-    public override async Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Price> entities)
+    public override async Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Price> entities)
     {
         RabbitPublisher publisher;
 
@@ -120,10 +119,10 @@ public class PriceRepositoryHandler : RepositoryHandler<Price>
             }
 
             publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Prices, QueueActions.Delete, entities);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Prices, QueueActions.Delete, entities);
 
             if (lastEntities.Any())
-                publisher.PublishTask(QueueNames.MarketData, QueueEntities.Prices, QueueActions.Set, lastEntities);
+                publisher.PublishTask(QueueNames.Market, QueueEntities.Prices, QueueActions.Set, lastEntities);
         }
 
         var newEntities = entities.Where(x => x.StatusId is (byte)Statuses.New).ToArray();
@@ -132,6 +131,6 @@ public class PriceRepositoryHandler : RepositoryHandler<Price>
             return;
 
         publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Prices, RabbitHelper.GetQueueAction(action), newEntities);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.Prices, RabbitHelper.GetQueueAction(action), newEntities);
     }
 }

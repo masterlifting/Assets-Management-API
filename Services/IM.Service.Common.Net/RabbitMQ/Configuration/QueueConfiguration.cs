@@ -36,12 +36,65 @@ public static class QueueConfiguration
                 }
             }
         },
-        new QueueExchange (QueueExchanges.Transfer),
+        new QueueExchange (QueueExchanges.Transfer)
+        {
+            Queues = new[]
+            {
+                new Queue(QueueNames.Market)
+                {
+                    Entities = new[]
+                    {
+                        new QueueEntity(QueueEntities.Company)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Companies)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        }
+                    }
+                },
+                new Queue(QueueNames.Portfolio)
+                {
+                    Entities = new[]
+                    {
+                        new QueueEntity(QueueEntities.Company)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Companies)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        }
+                    }
+                }
+            }
+        },
         new QueueExchange (QueueExchanges.Function)
         {
             Queues = new[]
             {
-                new Queue(QueueNames.MarketData)
+                new Queue(QueueNames.Market)
                 {
                     Entities = new[]
                     {
@@ -218,9 +271,9 @@ public static class QueueConfiguration
 
 public enum QueueNames
 {
-    MarketData,
+    Market,
     Portfolio,
-    Recommendation
+    Recommendations
 }
 public enum QueueExchanges
 {
@@ -248,8 +301,8 @@ public enum QueueEntities
     Ratings,
     Coefficient,
     Coefficients,
-    Transaction,
-    Transactions
+    Deal,
+    Deals
 }
 public enum QueueActions
 {

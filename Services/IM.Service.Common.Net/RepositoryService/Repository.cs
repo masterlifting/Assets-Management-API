@@ -43,19 +43,14 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
         await handler.RunPostProcessAsync(RepositoryActions.Create, entity).ConfigureAwait(false);
 
         logger.LogDebug(nameof(CreateRangeAsync), info, OK);
-
         return entity;
     }
-    public async Task<TEntity[]> CreateRangeAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+    public async Task<TEntity[]> CreateRangeAsync(IReadOnlyCollection<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
-        entities = entities.ToArray();
-
         if (!entities.Any())
             return Array.Empty<TEntity>();
 
-        entities = await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
-
-        var result = entities.ToArray();
+        var result = (await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false)).ToArray();
         var count = result.Length;
 
         if (result.Any())
@@ -63,11 +58,10 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             await DbSet.AddRangeAsync(result).ConfigureAwait(false);
             count = await context.SaveChangesAsync().ConfigureAwait(false);
 
-            await handler.RunPostProcessAsync(RepositoryActions.Create, result).ConfigureAwait(false);
+            await handler.RunPostProcessRangeAsync(RepositoryActions.Create, result).ConfigureAwait(false);
         }
 
         logger.LogDebug(nameof(CreateRangeAsync), info, count);
-
         return result;
     }
 
@@ -87,16 +81,12 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
         return entity;
     }
-    public async Task<TEntity[]> UpdateRangeAsync(IEnumerable<TEntity> entities, string info)
+    public async Task<TEntity[]> UpdateRangeAsync(IReadOnlyCollection<TEntity> entities, string info)
     {
-        entities = entities.ToArray();
-
         if (!entities.Any())
             return Array.Empty<TEntity>();
 
-        entities = await handler.RunUpdateRangeHandlerAsync(entities).ConfigureAwait(false);
-
-        var result = entities.ToArray();
+        var result = (await handler.RunUpdateRangeHandlerAsync(entities).ConfigureAwait(false)).ToArray();
         var count = result.Length;
 
         if (result.Any())
@@ -104,7 +94,7 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             DbSet.UpdateRange(result);
             count = await context.SaveChangesAsync().ConfigureAwait(false);
 
-            await handler.RunPostProcessAsync(RepositoryActions.Update, result).ConfigureAwait(false);
+            await handler.RunPostProcessRangeAsync(RepositoryActions.Update, result).ConfigureAwait(false);
         }
 
         logger.LogDebug(nameof(UpdateRangeAsync), info, count);
@@ -128,10 +118,8 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
         return result;
     }
-    public async Task<TEntity[]> DeleteRangeAsync(IEnumerable<TEntity> entities, string info)
+    public async Task<TEntity[]> DeleteRangeAsync(IReadOnlyCollection<TEntity> entities, string info)
     {
-        entities = entities.ToArray();
-
         if (!entities.Any())
             return Array.Empty<TEntity>();
 
@@ -145,11 +133,10 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             DbSet.RemoveRange(deleteResult);
             count = await context.SaveChangesAsync().ConfigureAwait(false);
 
-            await handler.RunPostProcessAsync(RepositoryActions.Delete, deleteResult);
+            await handler.RunPostProcessRangeAsync(RepositoryActions.Delete, deleteResult);
         }
 
         logger.LogDebug(nameof(DeleteRangeAsync), info, count);
-
         return deleteResult;
     }
 
@@ -183,15 +170,12 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
 
         return entity;
     }
-    public async Task<TEntity[]> CreateUpdateRangeAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+    public async Task<TEntity[]> CreateUpdateRangeAsync(IReadOnlyCollection<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
-        entities = entities.ToArray();
-
         if (!entities.Any())
             return Array.Empty<TEntity>();
 
-        var createEntities = await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
-        var createResult = createEntities.ToArray();
+        var createResult = (await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false)).ToArray();
 
         if (createResult.Any())
             await DbSet.AddRangeAsync(createResult).ConfigureAwait(false);
@@ -209,25 +193,21 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             await context.SaveChangesAsync().ConfigureAwait(false);
 
             if (createResult.Any())
-                await handler.RunPostProcessAsync(RepositoryActions.Create, createResult).ConfigureAwait(false);
+                await handler.RunPostProcessRangeAsync(RepositoryActions.Create, createResult).ConfigureAwait(false);
             if (updateResult.Any())
-                await handler.RunPostProcessAsync(RepositoryActions.Create, updateResult).ConfigureAwait(false);
+                await handler.RunPostProcessRangeAsync(RepositoryActions.Create, updateResult).ConfigureAwait(false);
         }
 
         logger.LogDebug(nameof(CreateUpdateRangeAsync), info, $"Created: { createResult.Length}. Updated: { updateResult.Length}");
-
         return processingResult;
     }
 
-    public async Task<TEntity[]> CreateUpdateDeleteAsync(IEnumerable<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
+    public async Task<TEntity[]> CreateUpdateDeleteAsync(IReadOnlyCollection<TEntity> entities, IEqualityComparer<TEntity> comparer, string info)
     {
-        entities = entities.ToArray();
-
         if (!entities.Any())
             return Array.Empty<TEntity>();
 
-        var createEntities = await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false);
-        var createResult = createEntities.ToArray();
+        var createResult = (await handler.RunCreateRangeHandlerAsync(entities, comparer).ConfigureAwait(false)).ToArray();
 
         if (createResult.Any())
             await DbSet.AddRangeAsync(createResult).ConfigureAwait(false);
@@ -251,15 +231,14 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             await context.SaveChangesAsync().ConfigureAwait(false);
 
             if (createResult.Any())
-                await handler.RunPostProcessAsync(RepositoryActions.Create, createResult).ConfigureAwait(false);
+                await handler.RunPostProcessRangeAsync(RepositoryActions.Create, createResult).ConfigureAwait(false);
             if (updateResult.Any())
-                await handler.RunPostProcessAsync(RepositoryActions.Update, updateResult).ConfigureAwait(false);
+                await handler.RunPostProcessRangeAsync(RepositoryActions.Update, updateResult).ConfigureAwait(false);
             if (deleteResult.Any())
-                await handler.RunPostProcessAsync(RepositoryActions.Delete, deleteResult).ConfigureAwait(false);
+                await handler.RunPostProcessRangeAsync(RepositoryActions.Delete, deleteResult).ConfigureAwait(false);
         }
 
         logger.LogDebug(nameof(CreateUpdateDeleteAsync), info, $"Created: {createResult.Length}. Updated: {updateResult.Length}. Deleted: {deleteResult.Length}");
-
         return processingResult;
     }
     #endregion

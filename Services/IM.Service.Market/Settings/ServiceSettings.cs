@@ -1,4 +1,5 @@
 using IM.Service.Common.Net.Models.Configuration;
+using IM.Service.Market.Settings.Sections;
 
 namespace IM.Service.Market.Settings;
 

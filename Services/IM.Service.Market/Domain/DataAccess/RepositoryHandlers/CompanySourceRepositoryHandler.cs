@@ -22,9 +22,8 @@ public class CompanySourceRepositoryHandler : RepositoryHandler<CompanySource>
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<IEnumerable<CompanySource>> RunUpdateRangeHandlerAsync(IEnumerable<CompanySource> entities)
+    public override async Task<IEnumerable<CompanySource>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<CompanySource> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities
@@ -59,17 +58,17 @@ public class CompanySourceRepositoryHandler : RepositoryHandler<CompanySource>
             return Task.CompletedTask;
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.CompanySource, QueueActions.Get, entity);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySource, QueueActions.Get, entity);
 
         return Task.CompletedTask;
     }
-    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<CompanySource> entities)
+    public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<CompanySource> entities)
     {
         if (action is RepositoryActions.Delete)
             return Task.CompletedTask;
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.CompanySources, QueueActions.Get, entities);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, entities);
 
         return Task.CompletedTask;
     }

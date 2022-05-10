@@ -10,9 +10,8 @@ public class SectorRepositoryHandler : RepositoryHandler<Sector>
     private readonly DatabaseContext context;
     public SectorRepositoryHandler(DatabaseContext context) => this.context = context;
 
-    public override async Task<IEnumerable<Sector>> RunUpdateRangeHandlerAsync(IEnumerable<Sector> entities)
+    public override async Task<IEnumerable<Sector>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Sector> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities

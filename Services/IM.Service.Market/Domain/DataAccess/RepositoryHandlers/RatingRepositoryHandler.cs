@@ -9,9 +9,8 @@ public class RatingRepositoryHandler : RepositoryHandler<Rating>
     private readonly DatabaseContext context;
     public RatingRepositoryHandler(DatabaseContext context) => this.context = context;
 
-    public override async Task<IEnumerable<Rating>> RunUpdateRangeHandlerAsync(IEnumerable<Rating> entities)
+    public override async Task<IEnumerable<Rating>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Rating> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities

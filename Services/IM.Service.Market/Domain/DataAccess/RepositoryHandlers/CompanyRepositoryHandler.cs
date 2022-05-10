@@ -22,9 +22,8 @@ public class CompanyRepositoryHandler : RepositoryHandler<Company>
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<IEnumerable<Company>> RunUpdateRangeHandlerAsync(IEnumerable<Company> entities)
+    public override async Task<IEnumerable<Company>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Company> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities
@@ -58,25 +57,25 @@ public class CompanyRepositoryHandler : RepositoryHandler<Company>
     {
         if (action is RepositoryActions.Delete)
             new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function)
-                .PublishTask(QueueNames.MarketData, QueueEntities.Rating, QueueActions.Compute, string.Empty);
+                .PublishTask(QueueNames.Market, QueueEntities.Rating, QueueActions.Compute, string.Empty);
 
         new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync).PublishTask(
-            new[] { QueueNames.Recommendation, QueueNames.Portfolio },
+            new[] { QueueNames.Recommendations, QueueNames.Portfolio },
             QueueEntities.Company,
             RabbitHelper.GetQueueAction(action),
             new CompanyDto(entity.Id, entity.CountryId, entity.Name));
 
         return Task.CompletedTask;
     }
-    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Company> entities)
+    public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Company> entities)
     {
 
         if (action is RepositoryActions.Delete)
             new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function)
-                .PublishTask(QueueNames.MarketData, QueueEntities.Ratings, QueueActions.Compute, string.Empty);
+                .PublishTask(QueueNames.Market, QueueEntities.Ratings, QueueActions.Compute, string.Empty);
 
         new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync).PublishTask(
-            new[] { QueueNames.Recommendation, QueueNames.Portfolio },
+            new[] { QueueNames.Recommendations, QueueNames.Portfolio },
             QueueEntities.Companies,
             RabbitHelper.GetQueueAction(action),
             entities.Select(x => new CompanyDto(x.Id, x.CountryId, x.Name)));

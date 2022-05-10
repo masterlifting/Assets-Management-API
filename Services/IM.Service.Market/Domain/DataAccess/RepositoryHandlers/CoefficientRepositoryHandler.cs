@@ -22,9 +22,8 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient>
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<IEnumerable<Coefficient>> RunUpdateRangeHandlerAsync(IEnumerable<Coefficient> entities)
+    public override async Task<IEnumerable<Coefficient>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Coefficient> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities
@@ -91,11 +90,11 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient>
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
 
         if (lastEntity is not null)
-            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Coefficient, QueueActions.Set, lastEntity);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Coefficient, QueueActions.Set, lastEntity);
         else
-            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Rating, QueueActions.Compute, string.Empty);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Rating, QueueActions.Compute, string.Empty);
     }
-    public override async Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Coefficient> entities)
+    public override async Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Coefficient> entities)
     {
         if (action is not RepositoryActions.Delete)
             return;
@@ -120,8 +119,8 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient>
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
 
         if (lastEntities.Any())
-            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Coefficients, QueueActions.Set, lastEntities);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Coefficients, QueueActions.Set, lastEntities);
         else
-            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Ratings, QueueActions.Compute, string.Empty);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Ratings, QueueActions.Compute, string.Empty);
     }
 }

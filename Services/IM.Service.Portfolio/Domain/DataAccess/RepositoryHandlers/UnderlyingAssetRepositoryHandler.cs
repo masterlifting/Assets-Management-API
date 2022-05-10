@@ -14,9 +14,8 @@ public class UnderlyingAssetRepositoryHandler : RepositoryHandler<UnderlyingAsse
     private readonly DatabaseContext context;
     public UnderlyingAssetRepositoryHandler(DatabaseContext context) => this.context = context;
 
-    public override async Task<IEnumerable<UnderlyingAsset>> RunUpdateRangeHandlerAsync(IEnumerable<UnderlyingAsset> entities)
+    public override async Task<IEnumerable<UnderlyingAsset>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<UnderlyingAsset> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities

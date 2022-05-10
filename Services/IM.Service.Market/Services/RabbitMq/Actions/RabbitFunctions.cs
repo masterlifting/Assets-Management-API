@@ -1,13 +1,12 @@
 ﻿using IM.Service.Common.Net.RabbitMQ;
 using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Services.Calculations;
 using IM.Service.Market.Services.Data.Dividends;
 using IM.Service.Market.Services.Data.Floats;
 using IM.Service.Market.Services.Data.Prices;
 using IM.Service.Market.Services.Data.Reports;
 using IM.Service.Market.Services.Data.Splits;
-
+using IM.Service.Market.Services.Entity;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.RabbitMq.Actions;

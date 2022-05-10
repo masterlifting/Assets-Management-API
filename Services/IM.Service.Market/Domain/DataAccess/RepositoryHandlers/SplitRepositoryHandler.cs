@@ -21,9 +21,8 @@ public class SplitRepositoryHandler : RepositoryHandler<Split>
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
-    public override async Task<IEnumerable<Split>> RunUpdateRangeHandlerAsync(IEnumerable<Split> entities)
+    public override async Task<IEnumerable<Split>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Split> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities
@@ -68,14 +67,14 @@ public class SplitRepositoryHandler : RepositoryHandler<Split>
             var companySource = context.CompanySources.Find(entity.CompanyId, entity.SourceId);
             
             if(companySource is not null)
-                publisher.PublishTask(QueueNames.MarketData, QueueEntities.Float, QueueActions.Get, companySource);
+                publisher.PublishTask(QueueNames.Market, QueueEntities.Float, QueueActions.Get, companySource);
         }
 
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Split, RabbitHelper.GetQueueAction(action), entity);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.Split, RabbitHelper.GetQueueAction(action), entity);
 
         return Task.CompletedTask;
     }
-    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Split> entities)
+    public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Split> entities)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
 
@@ -90,10 +89,10 @@ public class SplitRepositoryHandler : RepositoryHandler<Split>
                     && sourceIds.Contains(x.SourceId))
                 .ToArray();
 
-            publisher.PublishTask(QueueNames.MarketData, QueueEntities.Floats, QueueActions.Get, companySources);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Floats, QueueActions.Get, companySources);
         }
 
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Splits, RabbitHelper.GetQueueAction(action), entities);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.Splits, RabbitHelper.GetQueueAction(action), entities);
 
         return Task.CompletedTask;
     }

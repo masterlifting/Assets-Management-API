@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31912.275
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IM.Service.Identity", "Services\IM.Service.Identity\IM.Service.Identity.csproj", "{D53EB50B-DFBA-46B5-87C1-5F8170FDB693}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IM.Service.Recommendations", "Services\IM.Service.Recommendations\IM.Service.Recommendations.csproj", "{6B804F68-7DE9-4394-BD19-78EAF63634FC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataSetter", "Services\DataSetter\DataSetter.csproj", "{529241AE-AEB9-4D32-821F-54480B8367D9}"
@@ -21,10 +19,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D53EB50B-DFBA-46B5-87C1-5F8170FDB693}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D53EB50B-DFBA-46B5-87C1-5F8170FDB693}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D53EB50B-DFBA-46B5-87C1-5F8170FDB693}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D53EB50B-DFBA-46B5-87C1-5F8170FDB693}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6B804F68-7DE9-4394-BD19-78EAF63634FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6B804F68-7DE9-4394-BD19-78EAF63634FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B804F68-7DE9-4394-BD19-78EAF63634FC}.Release|Any CPU.ActiveCfg = Release|Any CPU

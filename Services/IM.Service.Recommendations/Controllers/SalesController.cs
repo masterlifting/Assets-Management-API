@@ -2,7 +2,7 @@
 
 namespace IM.Service.Recommendations.Controllers;
 
-[ApiController, Route("api/[controller]")]
+[ApiController, Route("[controller]")]
 public class SalesController : Controller
 {
     public IActionResult Index()

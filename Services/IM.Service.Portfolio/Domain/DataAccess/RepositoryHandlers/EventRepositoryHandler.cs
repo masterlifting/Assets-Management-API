@@ -14,9 +14,8 @@ public class EventRepositoryHandler : RepositoryHandler<Event>
     private readonly DatabaseContext context;
     public EventRepositoryHandler(DatabaseContext context) => this.context = context;
 
-    public override async Task<IEnumerable<Event>> RunUpdateRangeHandlerAsync(IEnumerable<Event> entities)
+    public override async Task<IEnumerable<Event>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Event> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities

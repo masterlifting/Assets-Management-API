@@ -30,9 +30,8 @@ public class FloatRepositoryHandler : RepositoryHandler<Float>
             : entity;
     }
 
-    public override async Task<IEnumerable<Float>> RunUpdateRangeHandlerAsync(IEnumerable<Float> entities)
+    public override async Task<IEnumerable<Float>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Float> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities
@@ -70,14 +69,14 @@ public class FloatRepositoryHandler : RepositoryHandler<Float>
     public override Task RunPostProcessAsync(RepositoryActions action, Float entity)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Float, RabbitHelper.GetQueueAction(action), entity);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.Float, RabbitHelper.GetQueueAction(action), entity);
 
         return Task.CompletedTask;
     }
-    public override Task RunPostProcessAsync(RepositoryActions action, IReadOnlyCollection<Float> entities)
+    public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Float> entities)
     {
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.MarketData, QueueEntities.Floats, RabbitHelper.GetQueueAction(action), entities);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.Floats, RabbitHelper.GetQueueAction(action), entities);
 
         return Task.CompletedTask;
     }

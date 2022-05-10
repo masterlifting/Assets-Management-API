@@ -1,12 +1,10 @@
 ﻿using IM.Service.Common.Net.Models.Configuration;
+using IM.Service.Recommendations.Settings.Sections;
 
-using IM.Service.Recommendations.Settings.Client;
+namespace IM.Service.Recommendations.Settings;
 
-namespace IM.Service.Recommendations.Settings
+public class ServiceSettings
 {
-    public class ServiceSettings
-    {
-        public ClientSettings ClientSettings { get; set; } = null!;
-        public ConnectionStrings ConnectionStrings { get; set; } = null!;
-    }
+    public ClientSettings ClientSettings { get; set; } = null!;
+    public ConnectionStrings ConnectionStrings { get; set; } = null!;
 }

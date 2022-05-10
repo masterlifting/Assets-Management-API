@@ -14,9 +14,8 @@ public class ReportRepositoryHandler : RepositoryHandler<Report>
     private readonly DatabaseContext context;
     public ReportRepositoryHandler(DatabaseContext context) => this.context = context;
 
-    public override async Task<IEnumerable<Report>> RunUpdateRangeHandlerAsync(IEnumerable<Report> entities)
+    public override async Task<IEnumerable<Report>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Report> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities

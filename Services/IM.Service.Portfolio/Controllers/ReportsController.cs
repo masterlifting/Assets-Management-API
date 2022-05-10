@@ -1,7 +1,5 @@
 ﻿using System;
-
-using IM.Service.Portfolio.Services.HttpRestApi;
-
+using IM.Service.Portfolio.Services.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,8 +8,8 @@ namespace IM.Service.Portfolio.Controllers;
 [ApiController, Route("[controller]")]
 public class ReportsController : ControllerBase
 {
-    private readonly ReportRestApi api;
-    public ReportsController(ReportRestApi api) => this.api = api;
+    private readonly ReportApi api;
+    public ReportsController(ReportApi api) => this.api = api;
 
     [HttpPost]
     public IActionResult Post(IFormFileCollection files)

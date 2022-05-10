@@ -7,17 +7,17 @@ using IM.Service.Market.Domain.Entities.Catalogs;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Api.Http;
 using IM.Service.Market.Services.Background;
-using IM.Service.Market.Services.Calculations;
 using IM.Service.Market.Services.Data.Dividends;
 using IM.Service.Market.Services.Data.Floats;
 using IM.Service.Market.Services.Data.Prices;
 using IM.Service.Market.Services.Data.Reports;
 using IM.Service.Market.Services.Data.Splits;
-using IM.Service.Market.Services.HttpRestApi;
-using IM.Service.Market.Services.HttpRestApi.Common;
-using IM.Service.Market.Services.HttpRestApi.Common.Interfaces;
-using IM.Service.Market.Services.HttpRestApi.Mappers;
-using IM.Service.Market.Services.HttpRestApi.Mappers.Interfaces;
+using IM.Service.Market.Services.Entity;
+using IM.Service.Market.Services.Http;
+using IM.Service.Market.Services.Http.Common;
+using IM.Service.Market.Services.Http.Common.Interfaces;
+using IM.Service.Market.Services.Http.Mappers;
+using IM.Service.Market.Services.Http.Mappers.Interfaces;
 using IM.Service.Market.Services.RabbitMq;
 using IM.Service.Market.Settings;
 
@@ -82,9 +82,9 @@ public class Startup
         services.AddScoped<IRestQueryService<Float>, RestQueryDateService<Float>>();
         services.AddScoped<IRestQueryService<Split>, RestQueryDateService<Split>>();
 
-        services.AddScoped<CompanyRestApi>();
-        services.AddScoped<CompanySourceRestApi>();
-        services.AddScoped<RatingRestApi>();
+        services.AddScoped<CompanyApi>();
+        services.AddScoped<CompanySourceApi>();
+        services.AddScoped<RatingApi>();
         services.AddScoped<RestApiRead<Report, ReportGetDto>>();
         services.AddScoped<RestApiWrite<Report, ReportPostDto>>();
         services.AddScoped<RestApiRead<Price, PriceGetDto>>();

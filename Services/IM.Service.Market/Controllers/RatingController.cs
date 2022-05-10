@@ -1,5 +1,5 @@
 ﻿using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Services.HttpRestApi;
+using IM.Service.Market.Services.Http;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,8 +11,8 @@ namespace IM.Service.Market.Controllers;
 [ApiController, Route("[controller]")]
 public class RatingController : ControllerBase
 {
-    private readonly RatingRestApi api;
-    public RatingController(RatingRestApi api) => this.api = api;
+    private readonly RatingApi api;
+    public RatingController(RatingApi api) => this.api = api;
 
     [HttpGet]
     public async Task<IActionResult> Get(int page = 0, int limit = 0)

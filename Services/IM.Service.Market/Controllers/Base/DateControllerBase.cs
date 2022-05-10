@@ -2,7 +2,7 @@
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.DataAccess.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
-using IM.Service.Market.Services.HttpRestApi.Common;
+using IM.Service.Market.Services.Http.Common;
 
 using Microsoft.AspNetCore.Mvc;
 

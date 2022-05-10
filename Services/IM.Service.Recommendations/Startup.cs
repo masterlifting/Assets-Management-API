@@ -1,12 +1,9 @@
-
+using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Recommendations.Clients;
-using IM.Service.Recommendations.DataAccess;
-using IM.Service.Recommendations.DataAccess.Entities;
-using IM.Service.Recommendations.DataAccess.Repository;
-using IM.Service.Recommendations.Services.BackgroundServices;
-using IM.Service.Recommendations.Services.DtoServices;
-using IM.Service.Recommendations.Services.MqServices;
+using IM.Service.Recommendations.Domain.DataAccess;
+using IM.Service.Recommendations.Domain.DataAccess.RepositoryHandlers;
+using IM.Service.Recommendations.Domain.Entities;
 using IM.Service.Recommendations.Settings;
 
 using Microsoft.AspNetCore.Builder;
@@ -15,6 +12,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
+using Polly;
+
+using System;
+using IM.Service.Recommendations.Services.Background;
+using IM.Service.Recommendations.Services.Http;
+using IM.Service.Recommendations.Services.RabbitMq;
 
 namespace IM.Service.Recommendations;
 
@@ -33,18 +37,28 @@ public class Startup
         {
             provider.UseLazyLoadingProxies();
             provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
-            provider.EnableSensitiveDataLogging();
         });
 
         services.AddControllers();
 
-        services.AddHttpClient<CompanyAnalyzerClient>();
+        services.AddHttpClient<MarketClient>()
+            .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
+            .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
+        services.AddHttpClient<PortfolioClient>()
+            .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
+            .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
 
-        services.AddScoped<PurchaseDtoAggregator>();
-        services.AddScoped<SaleDtoAggregator>();
+        services.AddControllers().AddJsonOptions(x =>
+        {
+            x.JsonSerializerOptions.Converters.Add(new JsonHelper.TimeOnlyConverter());
+            x.JsonSerializerOptions.Converters.Add(new JsonHelper.DateOnlyConverter());
+        });
 
-        services.AddScoped<RepositoryHandler<Company>, CompanyRepository>();
         services.AddScoped(typeof(Repository<>));
+        services.AddScoped<RepositoryHandler<Company>, CompanyRepositoryHandler>();
+
+        services.AddScoped<PurchaseApi>();
+        services.AddScoped<SaleApi>();
 
         services.AddScoped<RabbitActionService>();
         services.AddHostedService<RabbitBackgroundService>();

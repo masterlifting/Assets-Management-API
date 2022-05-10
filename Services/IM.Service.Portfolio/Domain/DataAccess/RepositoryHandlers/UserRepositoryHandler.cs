@@ -14,9 +14,8 @@ public class UserRepositoryHandler : RepositoryHandler<User>
     private readonly DatabaseContext context;
     public UserRepositoryHandler(DatabaseContext context) => this.context = context;
 
-    public override async Task<IEnumerable<User>> RunUpdateRangeHandlerAsync(IEnumerable<User> entities)
+    public override async Task<IEnumerable<User>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<User> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities

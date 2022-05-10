@@ -79,8 +79,8 @@ public sealed class DatabaseContext : DbContext
             new() { Id = (byte)Enums.Brokers.Tinkoff, Name = nameof(Enums.Brokers.Tinkoff) });
 
         modelBuilder.Entity<Operation>().HasData(
-            new() {Id = (byte)Enums.Operations.Приход, Name = nameof(Enums.Operations.Приход)},
-            new() {Id = (byte)Enums.Operations.Расход, Name = nameof(Enums.Operations.Расход)});
+            new() {Id = (byte)Enums.OperationTypes.Приход, Name = nameof(Enums.OperationTypes.Приход)},
+            new() {Id = (byte)Enums.OperationTypes.Расход, Name = nameof(Enums.OperationTypes.Расход)});
 
         modelBuilder.Entity<UnderlyingAssetType>().HasData(
             new () { Id = (byte)Enums.UnderlyingAssetTypes.Stock, Name = nameof(Enums.UnderlyingAssetTypes.Stock)},
@@ -89,15 +89,15 @@ public sealed class DatabaseContext : DbContext
             new () { Id = (byte)Enums.UnderlyingAssetTypes.Currency, Name = nameof(Enums.UnderlyingAssetTypes.Currency) });
 
         modelBuilder.Entity<EventType>().HasData(
-            new() {Id = (byte)Enums.EventTypes.Пополнение_счета, OperationId = (byte)Enums.Operations.Приход, Name = nameof(Enums.EventTypes.Пополнение_счета)},
-            new() {Id = (byte)Enums.EventTypes.Дополнительный_выпуск_акции, OperationId = (byte)Enums.Operations.Приход,  Name = nameof(Enums.EventTypes.Дополнительный_выпуск_акции)},
-            new() {Id = (byte)Enums.EventTypes.Дивиденд, OperationId = (byte)Enums.Operations.Приход,  Name = nameof(Enums.EventTypes.Дивиденд)},
-            new() {Id = (byte)Enums.EventTypes.Вывод_с_счета, OperationId = (byte)Enums.Operations.Расход,  Name = nameof(Enums.EventTypes.Вывод_с_счета)},
-            new() {Id = (byte)Enums.EventTypes.Делистинг_акции, OperationId = (byte)Enums.Operations.Расход,  Name = nameof(Enums.EventTypes.Делистинг_акции)},
-            new() {Id = (byte)Enums.EventTypes.Налог_с_дивиденда, OperationId = (byte)Enums.Operations.Расход,  Name = nameof(Enums.EventTypes.Налог_с_дивиденда)},
-            new() {Id = (byte)Enums.EventTypes.НДФЛ, OperationId = (byte)Enums.Operations.Расход,  Name = nameof(Enums.EventTypes.НДФЛ)},
-            new() {Id = (byte)Enums.EventTypes.Комиссия_брокера, OperationId = (byte)Enums.Operations.Расход,  Name = nameof(Enums.EventTypes.Комиссия_брокера)},
-            new() {Id = (byte)Enums.EventTypes.Комиссия_депозитария, OperationId = (byte)Enums.Operations.Расход,  Name = nameof(Enums.EventTypes.Комиссия_депозитария)});
+            new() {Id = (byte)Enums.EventTypes.Пополнение_счета, OperationId = (byte)Enums.OperationTypes.Приход, Name = nameof(Enums.EventTypes.Пополнение_счета)},
+            new() {Id = (byte)Enums.EventTypes.Дополнительный_выпуск_акции, OperationId = (byte)Enums.OperationTypes.Приход,  Name = nameof(Enums.EventTypes.Дополнительный_выпуск_акции)},
+            new() {Id = (byte)Enums.EventTypes.Дивиденд, OperationId = (byte)Enums.OperationTypes.Приход,  Name = nameof(Enums.EventTypes.Дивиденд)},
+            new() {Id = (byte)Enums.EventTypes.Вывод_с_счета, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Вывод_с_счета)},
+            new() {Id = (byte)Enums.EventTypes.Делистинг_акции, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Делистинг_акции)},
+            new() {Id = (byte)Enums.EventTypes.Налог_с_дивиденда, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Налог_с_дивиденда)},
+            new() {Id = (byte)Enums.EventTypes.НДФЛ, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.НДФЛ)},
+            new() {Id = (byte)Enums.EventTypes.Комиссия_брокера, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Комиссия_брокера)},
+            new() {Id = (byte)Enums.EventTypes.Комиссия_депозитария, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Комиссия_депозитария)});
 
         base.OnModelCreating(modelBuilder);
     }

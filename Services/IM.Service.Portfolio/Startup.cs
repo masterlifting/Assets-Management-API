@@ -4,7 +4,6 @@ using IM.Service.Portfolio.Domain.DataAccess.RepositoryHandlers;
 using IM.Service.Portfolio.Services.Background;
 using IM.Service.Portfolio.Services.Data.Isins;
 using IM.Service.Portfolio.Services.Data.Reports;
-using IM.Service.Portfolio.Services.HttpRestApi;
 using IM.Service.Portfolio.Services.RabbitMq;
 using IM.Service.Portfolio.Settings;
 
@@ -18,10 +17,12 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
+using IM.Service.Common.Net.Helpers;
 using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Portfolio.Domain.Entities;
 using IM.Service.Portfolio.Domain.Entities.Catalogs;
-using static IM.Service.Common.Net.Helpers.JsonHelper;
+using IM.Service.Portfolio.Services.Entity;
+using IM.Service.Portfolio.Services.Http;
 
 namespace IM.Service.Portfolio;
 
@@ -48,8 +49,8 @@ public class Startup
 
         services.AddControllers().AddJsonOptions(x =>
         {
-            x.JsonSerializerOptions.Converters.Add(new TimeOnlyConverter());
-            x.JsonSerializerOptions.Converters.Add(new DateOnlyConverter());
+            x.JsonSerializerOptions.Converters.Add(new JsonHelper.TimeOnlyConverter());
+            x.JsonSerializerOptions.Converters.Add(new JsonHelper.DateOnlyConverter());
         });
 
         services.AddScoped(typeof(Repository<>));
@@ -62,12 +63,13 @@ public class Startup
         services.AddScoped<RepositoryHandler<UnderlyingAsset>, UnderlyingAssetRepositoryHandler>();
         services.AddScoped<RepositoryHandler<Derivative>, DerivativeRepositoryHandler>();
 
-        services.AddScoped<ReportRestApi>();
+        services.AddScoped<ReportApi>();
 
         services.AddScoped<ReportGrabber>();
         services.AddScoped<ReportLoader>();
 
         services.AddTransient<MoexIsinService>();
+        services.AddTransient<DealService>();
 
         services.AddSingleton<RabbitActionService>();
         services.AddHostedService<RabbitBackgroundService>();

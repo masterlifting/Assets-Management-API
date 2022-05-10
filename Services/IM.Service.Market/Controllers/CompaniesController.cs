@@ -1,5 +1,5 @@
 ﻿using IM.Service.Market.Models.Api.Http;
-using IM.Service.Market.Services.HttpRestApi;
+using IM.Service.Market.Services.Http;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,10 +10,10 @@ namespace IM.Service.Market.Controllers;
 [ApiController, Route("[controller]")]
 public class CompaniesController : ControllerBase
 {
-    private readonly CompanyRestApi api;
-    private readonly CompanySourceRestApi csApi;
+    private readonly CompanyApi api;
+    private readonly CompanySourceApi csApi;
 
-    public CompaniesController(CompanyRestApi api, CompanySourceRestApi csApi)
+    public CompaniesController(CompanyApi api, CompanySourceApi csApi)
     {
         this.api = api;
         this.csApi = csApi;

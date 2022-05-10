@@ -14,9 +14,8 @@ public class DerivativeRepositoryHandler : RepositoryHandler<Derivative>
     private readonly DatabaseContext context;
     public DerivativeRepositoryHandler(DatabaseContext context) => this.context = context;
 
-    public override async Task<IEnumerable<Derivative>> RunUpdateRangeHandlerAsync(IEnumerable<Derivative> entities)
+    public override async Task<IEnumerable<Derivative>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Derivative> entities)
     {
-        entities = entities.ToArray();
         var existEntities = await GetExist(entities).ToArrayAsync();
 
         var result = existEntities

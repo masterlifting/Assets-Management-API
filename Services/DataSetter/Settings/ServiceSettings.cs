@@ -1,4 +1,4 @@
-﻿using DataSetter.Settings.Client;
+﻿using DataSetter.Settings.Sections;
 
 namespace DataSetter.Settings;
 
