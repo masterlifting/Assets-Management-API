@@ -1,33 +1,36 @@
-﻿using System.Collections;
+﻿using Castle.Core.Internal;
 
-using Castle.Core.Internal;
-
-using IM.Service.Common.Net.Models.Services;
-using IM.Service.Common.Net.RabbitMQ;
-using IM.Service.Common.Net.RabbitMQ.Configuration;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Models.Api.Amqp;
+using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Api.Http;
 using IM.Service.Market.Settings;
+using IM.Service.Shared.Models.Service;
+using IM.Service.Shared.RabbitMq;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using static IM.Service.Common.Net.Helpers.ServiceHelper;
+using System.Collections;
+using IM.Service.Shared.Models.RabbitMq.Api;
+using static IM.Service.Shared.Helpers.ServiceHelper;
 
 namespace IM.Service.Market.Services.Http;
 
 public class CompanyApi
 {
     private readonly Repository<Company> companyRepo;
+    private readonly Repository<CompanySource> companySourceRepo;
+
     private readonly string rabbitConnectionString;
     public CompanyApi(
         IOptions<ServiceSettings> options,
-        Repository<Company> companyRepo)
+        Repository<Company> companyRepo,
+        Repository<CompanySource> companySourceRepo)
     {
         this.companyRepo = companyRepo;
+        this.companySourceRepo = companySourceRepo;
         rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
@@ -147,6 +150,51 @@ public class CompanyApi
         return companyId;
     }
 
+    public async Task<string> LoadAsync()
+    {
+        var companySources = await companySourceRepo.GetSampleAsync(x => x);
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, companySources);
+
+        return $"Load data by {string.Join(";", companySources.Select(x => Enum.Parse<Enums.Statuses>(x.SourceId.ToString())))} is starting...";
+    }
+    public async Task<string> LoadAsync(string companyId)
+    {
+        companyId = companyId.Trim().ToUpperInvariant();
+        var companySources = await companySourceRepo.GetSampleAsync(x => x.CompanyId == companyId);
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, companySources);
+
+        return $"Load data by {string.Join(";", companySources.Select(x => Enum.Parse<Enums.Statuses>(x.SourceId.ToString())))} is starting...";
+    }
+    public async Task<string> LoadAsync(byte sourceId)
+    {
+        var companySources = await companySourceRepo.GetSampleAsync(x => x.SourceId == sourceId);
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, companySources);
+
+        return $"Load data by {string.Join(";", companySources.Select(x => Enum.Parse<Enums.Statuses>(x.SourceId.ToString())))} is starting...";
+    }
+    public async Task<string> LoadAsync(string companyId, byte sourceId)
+    {
+        companyId = companyId.Trim().ToUpperInvariant();
+        var companySource = await companySourceRepo
+            .FindAsync(x =>
+                x.CompanyId == companyId
+                && x.SourceId == sourceId);
+
+        if (companySource?.Value is null)
+            return $"source for '{companyId}' not found";
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySource, QueueActions.Get, companySource);
+
+        return $"Load data by {Enum.Parse<Enums.Statuses>(companySource.SourceId.ToString())} is starting...";
+    }
+
     public async Task<string> SyncAsync()
     {
         var companies = await companyRepo.GetSampleAsync(x => ValueTuple.Create(x.Id, x.CountryId, x.Name));
@@ -155,13 +203,12 @@ public class CompanyApi
             return "Data for sync not found";
 
         var data = companies
-            .Select(x => new CompanyDto(x.Item1, x.Item2, x.Item3))
+            .Select(x => new CompanyMqDto(x.Item1, x.Item2, x.Item3))
             .ToArray();
 
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
 
-        foreach (var queue in new[] { QueueNames.Recommendations, QueueNames.Portfolio })
-            publisher.PublishTask(queue, QueueEntities.Companies, QueueActions.Set, data);
+        publisher.PublishTask(new[] { QueueNames.Recommendations, QueueNames.Portfolio }, QueueEntities.Companies, QueueActions.Set, data);
 
         return "Task of sync is running...";
     }

@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Shared.RepositoryService;
 
 namespace IM.Service.Market.Domain.DataAccess;
 

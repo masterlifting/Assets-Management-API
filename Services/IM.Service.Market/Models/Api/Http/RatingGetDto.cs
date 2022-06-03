@@ -2,6 +2,7 @@
 
 public record RatingGetDto
 {
+    public string CompanyId { get; init; } = null!;
     public string Company { get; init; } = null!;
     public int Place { get; set; }
 

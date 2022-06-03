@@ -14,7 +14,8 @@ public static class Enums
         Stock = 1,
         Bond = 2,
         ETF = 3,
-        Currency = 4
+        Currency = 4,
+        CryptoCurrency = 5
     }
     public enum OperationTypes : byte
     {

@@ -1,23 +1,18 @@
 ﻿using System;
-using IM.Service.Recommendations.Domain.Entities;
 
-namespace IM.Service.Recommendations.Models.Api.Http
+namespace IM.Service.Recommendations.Models.Api.Http;
+
+public record SaleDto
 {
-    public class SaleDto
-    {
-        public SaleDto() { }
-        public SaleDto(Sale sale)
-        {
-            Ticker = sale.CompanyId;
-            Lot = sale.Lot;
-            Price = sale.Price;
-            Percent = sale.Percent;
-            UpdateTime = DateTime.UtcNow;
-        }
-        public string Ticker { get;} = null!;
-        public DateTime UpdateTime { get;}
-        public int Lot { get; }
-        public decimal Price { get; }
-        public int Percent { get; }
-    }
+    public string Company { get; init; } = null!;
+    public SaleRecommendationDto[] Recommendations { get; init; } = Array.Empty<SaleRecommendationDto>();
+}
+
+public record SaleRecommendationDto
+{
+    public string Plan { get; init; } = null!;
+    public string? Fact { get; init; }
+    public decimal Value { get; init; }
+    public decimal Price { get; init; }
+    public bool IrReady { get; init; }
 }

@@ -1,0 +1,30 @@
+{
+    "Id":"MOEX",
+    "Name": "Московская биржа ОАО ММВБ",
+    "IndustryId": 6,
+    "CountryId" : 1
+}
+{
+    "Id":"KD",
+    "Name": "Kyndryl Holdings Inc",
+    "IndustryId": 11,
+    "CountryId" : 2
+}
+{
+    "Id":"OGN",
+    "Name": "Organon & Co.",
+    "IndustryId": 10,
+    "CountryId" : 2
+}
+{
+    "Id":"CHX",
+    "Name": "ChampionX Corp",
+    "IndustryId": 1,
+    "CountryId" : 2
+}
+{
+    "Id":"VTRS",
+    "Name": "Viatris inc. (Mylan)",
+    "IndustryId": 10,
+    "CountryId" : 2
+}

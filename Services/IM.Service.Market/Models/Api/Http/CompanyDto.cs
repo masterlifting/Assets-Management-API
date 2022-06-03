@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using IM.Service.Common.Net.Attributes;
+using IM.Service.Shared.Attributes;
 
 namespace IM.Service.Market.Models.Api.Http;
 

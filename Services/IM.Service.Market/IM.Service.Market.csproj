@@ -19,12 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IM.Service.Common.Net\IM.Service.Common.Net.csproj" />
+    <Folder Include="Services\Data\Dividends\Implementations\" />
+    <Folder Include="Services\Data\Splits\Implementations\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\Data\Dividends\Implementations\" />
-    <Folder Include="Services\Data\Splits\Implementations\" />
+    <ProjectReference Include="..\IM.Service.Shared\IM.Service.Shared.csproj" />
   </ItemGroup>
 
 </Project>

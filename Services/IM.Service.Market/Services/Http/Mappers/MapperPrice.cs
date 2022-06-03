@@ -1,6 +1,7 @@
 ﻿using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Models.Api.Http;
 using IM.Service.Market.Services.Http.Mappers.Interfaces;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace IM.Service.Market.Services.Http.Mappers;
@@ -11,6 +12,7 @@ public class MapperPrice : IMapperRead<Price, PriceGetDto>, IMapperWrite<Price, 
         .OrderByDescending(x => x.Date)
         .Select(x => new PriceGetDto
         {
+            CompanyId = x.CompanyId,
             Company = x.Company.Name,
             Source = x.Source.Name,
             Date = x.Date,
@@ -25,6 +27,7 @@ public class MapperPrice : IMapperRead<Price, PriceGetDto>, IMapperWrite<Price, 
         var queryResult = await query
             .Select(x => new PriceGetDto
             {
+                CompanyId = x.CompanyId,
                 Company = x.Company.Name,
                 Source = x.Source.Name,
                 Date = x.Date,
@@ -52,7 +55,8 @@ public class MapperPrice : IMapperRead<Price, PriceGetDto>, IMapperWrite<Price, 
         Date = id.Date,
 
         CurrencyId = model.CurrencyId,
-        Value = model.Value
+        Value = model.Value,
+        ValueTrue = model.Value
     };
     public Price MapTo(string companyId, byte sourceId, PricePostDto model) => new()
     {
@@ -61,7 +65,8 @@ public class MapperPrice : IMapperRead<Price, PriceGetDto>, IMapperWrite<Price, 
         Date = model.Date,
 
         CurrencyId = model.CurrencyId,
-        Value = model.Value
+        Value = model.Value,
+        ValueTrue = model.Value
     };
     public Price[] MapTo(string companyId, byte sourceId, IEnumerable<PricePostDto> models)
     {

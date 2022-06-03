@@ -1,5 +1,4 @@
-﻿using IM.Service.Common.Net.RabbitMQ;
-using IM.Service.Common.Net.RabbitMQ.Configuration;
+﻿using IM.Service.Shared.RabbitMq;
 using IM.Service.Portfolio.Models.Api.Mq;
 using IM.Service.Portfolio.Settings;
 using Microsoft.AspNetCore.Http;

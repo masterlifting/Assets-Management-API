@@ -1,27 +1,30 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using IM.Service.Common.Net.RabbitMQ;
-using IM.Service.Common.Net.RabbitMQ.Configuration;
+﻿using IM.Service.Shared.RabbitMq;
 using IM.Service.Portfolio.Services.RabbitMq;
 using IM.Service.Portfolio.Settings;
+
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IM.Service.Portfolio.Services.Background;
 
 public class RabbitBackgroundService : BackgroundService
 {
-    private readonly RabbitActionService service;
+    private readonly RabbitAction action;
     private readonly RabbitSubscriber subscriber;
 
-    public RabbitBackgroundService(ILogger<RabbitSubscriber> logger, IOptions<ServiceSettings> options, RabbitActionService service)
+    public RabbitBackgroundService(ILogger<RabbitBackgroundService> logger, IOptions<ServiceSettings> options, IServiceScopeFactory scopeFactory)
     {
-        var targetExchanges = new[] { QueueExchanges.Sync, QueueExchanges.Function, QueueExchanges.Transfer };
-        var targetQueues = new[] { QueueNames.Portfolio};
-           
-        this.service = service;
-        subscriber = new RabbitSubscriber(logger, options.Value.ConnectionStrings.Mq, targetExchanges, targetQueues);
+        subscriber = new RabbitSubscriber(
+            logger,
+            options.Value.ConnectionStrings.Mq,
+            new[] { QueueExchanges.Sync, QueueExchanges.Function, QueueExchanges.Transfer },
+            QueueNames.Portfolio);
+        action = new RabbitAction(logger, scopeFactory);
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -32,7 +35,7 @@ public class RabbitBackgroundService : BackgroundService
             return Task.CompletedTask;
         }
 
-        subscriber.Subscribe(service.GetActionResultAsync);
+        subscriber.Subscribe(action.GetResultAsync);
         return Task.CompletedTask;
     }
     public override Task StopAsync(CancellationToken stoppingToken)

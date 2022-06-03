@@ -1,13 +1,25 @@
-﻿using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Market.Domain.Entities;
+﻿using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Settings;
+using IM.Service.Shared.Models.RabbitMq.Api;
+using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.RepositoryService;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+
+using static IM.Service.Shared.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
 public class RatingRepositoryHandler : RepositoryHandler<Rating>
 {
     private readonly DatabaseContext context;
-    public RatingRepositoryHandler(DatabaseContext context) => this.context = context;
+    private readonly string rabbitConnectionString;
+    public RatingRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    {
+        this.context = context;
+        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+    }
 
     public override async Task<IEnumerable<Rating>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Rating> entities)
     {
@@ -38,5 +50,15 @@ public class RatingRepositoryHandler : RepositoryHandler<Rating>
             .Select(x => x.Key);
 
         return context.Rating.Where(x => companyIds.Contains(x.CompanyId));
+    }
+
+    public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Rating> entities)
+    {
+        var ratings = entities.OrderByDescending(x => x.Result).Select((x, i) => new RatingMqDto(x.CompanyId, i + 1));
+
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Ratings, RabbitHelper.GetQueueAction(action), ratings);
+
+        return Task.CompletedTask;
     }
 }

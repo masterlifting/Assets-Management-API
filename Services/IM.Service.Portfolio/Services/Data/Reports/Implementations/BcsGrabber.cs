@@ -17,8 +17,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using static IM.Service.Common.Net.Enums;
-using static IM.Service.Common.Net.Helpers.LogHelper;
+using static IM.Service.Shared.Enums;
+using static IM.Service.Shared.Helpers.LogHelper;
 using static IM.Service.Portfolio.Enums;
 
 // ReSharper disable RedundantJumpStatement
@@ -55,18 +55,23 @@ public sealed class BcsGrabber : IDataGrabber
 
     public async Task GetDataAsync(ReportFileDto file)
     {
-        var accountNames = await accountRepo.GetSampleAsync(x => x.BrokerId == brokerId && x.UserId == file.UserId, x => x.Name);
-        var derivatives = await derivativeRepo.GetSampleAsync(x => ValueTuple.Create(x.Id, x.Code));
+        var dbAccounts = await accountRepo.GetSampleAsync(x => x.BrokerId == brokerId && x.UserId == file.UserId, x => ValueTuple.Create(x.Name, x.Id));
+        var dbDerivatives = await derivativeRepo.GetSampleAsync(x => ValueTuple.Create(x.Id, x.Code));
+
+        var accounts = dbAccounts
+            .ToDictionary(x => x.Item1, x => x.Item2);
+        var derivatives = dbDerivatives
+            .GroupBy(x => x.Item1)
+            .ToDictionary(x => x.Key, x => x.Select(y => y.Item2).ToArray());
 
         try
         {
             var table = GetExcelTable(file);
-            var parser = new BcsReportParser(file.UserId, table, accountNames, derivatives.ToDictionary(x => x.Item1, x => x.Item2));
+            var parser = new BcsReportParser(file.UserId, table, accounts, derivatives);
 
             var reports = await reportRepo.GetSampleAsync(x =>
-                x.AccountUserId == file.UserId
-                && x.AccountBrokerId == brokerId
-                && x.AccountName == parser.AccountName
+                x.Id == file.Name
+                && x.BrokerId == brokerId
                 && x.DateStart <= parser.DateEnd);
 
             var alreadyReportDates = reports.SelectMany(x =>
@@ -83,46 +88,33 @@ public sealed class BcsGrabber : IDataGrabber
                 return dates;
             }).Distinct();
 
-            var deals = parser.Deals.Where(x => !alreadyReportDates.Contains(DateOnly.FromDateTime(x.DateTime))).ToArray();
-            var events = parser.Events.Where(x => !alreadyReportDates.Contains(DateOnly.FromDateTime(x.DateTime))).ToArray();
+            var deals = parser.Deals.Where(x => !alreadyReportDates.Contains(x.Date)).ToArray();
+            var events = parser.Events.Where(x => !alreadyReportDates.Contains(x.Date)).ToArray();
 
             if (deals.Any())
-            {
-                foreach (var deal in deals)
-                    deal.DateTime = deal.DateTime.ToUniversalTime();
-
-                _ = await dealRepo.CreateRangeAsync(deals, new DealComparer(), string.Join("; ", deals.Select(x => x.AccountName).Distinct()));
-            }
+                _ = await dealRepo.CreateRangeAsync(deals, new DealComparer(), parser.AccountName);
             else if (events.Any())
-            {
-                foreach (var _event in events)
-                    _event.DateTime = _event.DateTime.ToUniversalTime();
-
-                _ = await eventRepo.CreateRangeAsync(events, new EventComparer(), string.Join("; ", events.Select(x => x.AccountName).Distinct()));
-            }
+                _ = await eventRepo.CreateRangeAsync(events, new EventComparer(), parser.AccountName);
             else
             {
-                logger.LogInfo(nameof(GetDataAsync), file.Name, "report is already");
+                logger.LogInfo<BcsGrabber>(nameof(GetDataAsync), file.Name, "New deals and events not found");
                 return;
             }
 
             var report = new Report
             {
-                AccountName = parser.AccountName,
-                AccountUserId = file.UserId,
-                AccountBrokerId = brokerId,
+                Id = file.Name,
+                BrokerId = brokerId,
                 DateStart = parser.DateStart,
                 DateEnd = parser.DateEnd,
-                Name = file.Name,
                 ContentType = file.ContentType,
                 Payload = file.Payload
             };
-            await reportRepo.CreateAsync(report, report.Name);
+            await reportRepo.CreateAsync(report, report.Id);
         }
         catch (Exception exception)
         {
-            logger.LogError(nameof(GetDataAsync), exception);
-
+            logger.LogError<BcsGrabber>(nameof(GetDataAsync), exception);
             // automatically creating account
             if (exception.Message.IndexOf("Agreement '", StringComparison.Ordinal) > -1)
             {
@@ -133,7 +125,7 @@ public sealed class BcsGrabber : IDataGrabber
                     Name = agreement,
                     BrokerId = brokerId,
                     UserId = file.UserId
-                }, agreement);
+                }, $"{agreement} created automatically");
             }
         }
     }
@@ -157,43 +149,41 @@ internal sealed class BcsReportParser
     internal List<Deal> Deals { get; }
     internal List<Event> Events { get; }
 
-
-    private readonly IFormatProvider culture;
-
-    private readonly Dictionary<string, int> reportPointPatterns;
-    private readonly Dictionary<string, Action<Currencies, string>> reportActionPatterns;
-
-    private readonly Dictionary<string, EventTypes> eventTypes;
-    private readonly Dictionary<string, Exchanges> exchangeTypes;
-    private readonly Dictionary<string, (Currencies buy, Currencies sell)> exchangeCurrencyTypes;
-
-    private const byte brokerId = (byte)Brokers.Bcs;
+    private readonly int accountId;
     private readonly string userId;
+    private const byte brokerId = (byte)Brokers.Bcs;
+
     private int rowId;
-    private readonly Dictionary<string, string> derivatives;
     private readonly DataTable table;
 
-    internal BcsReportParser(string userId, DataTable table, IEnumerable<string> accounts, Dictionary<string, string> derivatives)
+    private readonly IFormatProvider culture;
+    private readonly Dictionary<string, int> reportPoints;
+
+    private readonly Dictionary<string, string[]> derivatives;
+
+    private readonly Dictionary<string, Action<string, Currencies?>> reportActionPatterns;
+
+    internal BcsReportParser(string userId, DataTable table, Dictionary<string, int> accounts, Dictionary<string, string[]> derivatives)
     {
-        this.derivatives = derivatives;
         this.userId = userId;
+        this.derivatives = derivatives;
         this.table = table;
         culture = new CultureInfo("ru-RU");
         Deals = new List<Deal>(table.Rows.Count);
         Events = new List<Event>(table.Rows.Count);
 
-        reportPointPatterns = new Dictionary<string, int>(BcsReportStructure.Points.Length);
+        reportPoints = new Dictionary<string, int>(BcsReportStructure.Points.Length);
 
-        while (!TryCellValue(1, "Дата составления отчета:", 1, out var pointValue))
+        while (!TryGetCellValue(1, "Дата составления отчета:", 1, out var pointValue))
             if (pointValue is not null && BcsReportStructure.Points.Select(x => pointValue.IndexOf(x, StringComparison.OrdinalIgnoreCase)).Any(x => x > -1))
-                reportPointPatterns.Add(pointValue, rowId);
+                reportPoints.Add(pointValue, rowId);
 
-        if (!reportPointPatterns.Any())
+        if (!reportPoints.Any())
             throw new ApplicationException("Report structure not recognized");
 
         rowId = 0;
         string? _period;
-        while (!TryCellValue(1, "Период:", 5, out _period))
+        while (!TryGetCellValue(1, "Период:", 5, out _period))
             continue;
 
         if (_period is null)
@@ -204,15 +194,16 @@ internal sealed class BcsReportParser
         DateEnd = DateOnly.Parse(dates[3], culture);
 
         string? _agreement;
-        while (!TryCellValue(1, "Генеральное соглашение:", 5, out _agreement))
+        while (!TryGetCellValue(1, "Генеральное соглашение:", 5, out _agreement))
             continue;
 
-        var account = accounts.FirstOrDefault(x => x.Equals(_agreement, StringComparison.OrdinalIgnoreCase));
-        AccountName = _agreement is not null && account is not null
-                    ? account
-                    : throw new ApplicationException($"Agreement '{_agreement}' not recognized");
+        if (_agreement is null || !accounts.ContainsKey(_agreement))
+            throw new ApplicationException($"Agreement '{_agreement}' not recognized");
 
-        reportActionPatterns = new(StringComparer.OrdinalIgnoreCase)
+        accountId = accounts[_agreement];
+        AccountName = _agreement;
+
+        reportActionPatterns = new(BcsReportStructure.Actions.Length, StringComparer.OrdinalIgnoreCase)
         {
             { BcsReportStructure.Actions[0], ParseDividend },
             { BcsReportStructure.Actions[1], ParseComission },
@@ -232,32 +223,6 @@ internal sealed class BcsReportParser
             { BcsReportStructure.Actions[15], ParseComission },
             { BcsReportStructure.Actions[16], ParseAdditionalStockRelease }
         };
-        eventTypes = new()
-        {
-            { BcsReportStructure.Actions[1], EventTypes.Комиссия_брокера },
-            { BcsReportStructure.Actions[2], EventTypes.Комиссия_брокера },
-            { BcsReportStructure.Actions[3], EventTypes.Комиссия_депозитария },
-            { BcsReportStructure.Actions[4], EventTypes.Комиссия_депозитария },
-            { BcsReportStructure.Actions[5], EventTypes.НДФЛ },
-            { BcsReportStructure.Actions[7], EventTypes.Пополнение_счета },
-            { BcsReportStructure.Actions[8], EventTypes.Вывод_с_счета },
-            { BcsReportStructure.Actions[11], EventTypes.Комиссия_брокера },
-            { BcsReportStructure.Actions[12], EventTypes.Комиссия_брокера },
-            { BcsReportStructure.Actions[13], EventTypes.Комиссия_брокера },
-            { BcsReportStructure.Actions[14], EventTypes.Комиссия_брокера },
-            { BcsReportStructure.Actions[15], EventTypes.Комиссия_брокера }
-        };
-        exchangeTypes = new()
-        {
-            { BcsReportStructure.Exchanges[0], Exchanges.Moex },
-            { BcsReportStructure.Exchanges[1], Exchanges.Moex },
-            { BcsReportStructure.Exchanges[2], Exchanges.Spbex }
-        };
-        exchangeCurrencyTypes = new()
-        {
-            { BcsReportStructure.ExchangeCurrencies[0], (Currencies.Usd, Currencies.Rub) },
-            { BcsReportStructure.ExchangeCurrencies[1], (Currencies.Usd, Currencies.Rub) }
-        };
 
         Run();
     }
@@ -266,60 +231,63 @@ internal sealed class BcsReportParser
     {
         string? cellValue;
 
-        var firstBlock = reportPointPatterns.Keys.FirstOrDefault(x => x.IndexOf(BcsReportStructure.Points[0], StringComparison.OrdinalIgnoreCase) > -1);
+        var firstBlock = reportPoints.Keys.FirstOrDefault(x => x.IndexOf(BcsReportStructure.Points[0], StringComparison.OrdinalIgnoreCase) > -1);
         if (firstBlock is not null)
         {
-            rowId = reportPointPatterns[firstBlock];
+            rowId = reportPoints[firstBlock];
 
-            var border = reportPointPatterns.Skip(1).First().Key;
+            var border = reportPoints.Skip(1).First().Key;
 
             var rowNo = rowId;
-            while (!TryCellValue(++rowNo, 1, border, 1, out cellValue))
+            while (!TryGetCellValue(++rowNo, 1, border, 1, out cellValue))
                 if (cellValue is not null)
                     switch (cellValue)
                     {
-                        case "USD": GetAction(Currencies.Usd, "USD"); break;
-                        case "Рубль": GetAction(Currencies.Rub, "Рубль"); break;
+                        case "USD": GetAction("USD", Currencies.Usd); break;
+                        case "Рубль": GetAction("Рубль", Currencies.Rub); break;
                     }
 
-            void GetAction(Currencies currency, string value)
+            void GetAction(string value, Currencies? currency)
             {
-                while (!TryCellValue(1, new[] { $"Итого по валюте {value}:", border }, 2, out cellValue))
+                while (!TryGetCellValue(1, new[] { $"Итого по валюте {value}:", border }, 2, out cellValue))
                     if (cellValue is not null && reportActionPatterns.ContainsKey(cellValue))
-                        reportActionPatterns[cellValue](currency, cellValue);
+                        reportActionPatterns[cellValue](cellValue, currency);
             }
         }
 
-        var secondBlock = reportPointPatterns.Keys.FirstOrDefault(x => x.IndexOf(BcsReportStructure.Points[2], StringComparison.OrdinalIgnoreCase) > -1);
+        var secondBlock = reportPoints.Keys.FirstOrDefault(x => x.IndexOf(BcsReportStructure.Points[2], StringComparison.OrdinalIgnoreCase) > -1);
         if (secondBlock is not null)
         {
-            rowId = reportPointPatterns[secondBlock] + 3;
+            rowId = reportPoints[secondBlock] + 3;
 
-            while (!TryCellValue(1, "Итого по валюте Рубль:", 1, out cellValue))
+            while (!TryGetCellValue(1, "Итого по валюте Рубль:", 1, out cellValue))
                 if (cellValue is not null)
-                    reportActionPatterns[BcsReportStructure.Points[2]](Currencies.Default, cellValue);
+                    reportActionPatterns[BcsReportStructure.Points[2]](cellValue, null);
         }
 
-        var thirdBlock = reportPointPatterns.Keys.FirstOrDefault(x => x.IndexOf(BcsReportStructure.Points[3], StringComparison.OrdinalIgnoreCase) > -1);
+        var thirdBlock = reportPoints.Keys.FirstOrDefault(x => x.IndexOf(BcsReportStructure.Points[3], StringComparison.OrdinalIgnoreCase) > -1);
         if (thirdBlock is not null)
         {
-            rowId = reportPointPatterns[thirdBlock];
-            var borders = reportPointPatterns.Keys
+            rowId = reportPoints[thirdBlock];
+            var borders = reportPoints.Keys
                 .Where(x => BcsReportStructure.Points[4].IndexOf(x, StringComparison.OrdinalIgnoreCase) > -1 || BcsReportStructure.Points[5].IndexOf(x, StringComparison.OrdinalIgnoreCase) > -1)
                 .ToArray();
 
-            while (!TryCellValue(1, borders, 6, out cellValue))
+            while (!TryGetCellValue(1, borders, 6, out cellValue))
                 if (cellValue is not null && reportActionPatterns.ContainsKey(cellValue))
-                    reportActionPatterns[cellValue](Currencies.Default, cellValue);
+                    reportActionPatterns[cellValue](cellValue, null);
         }
 
-        while (!TryCellValue(1, "Дата составления отчета:", 12, out cellValue))
+        while (!TryGetCellValue(1, "Дата составления отчета:", 12, out cellValue))
             if (cellValue is not null && reportActionPatterns.ContainsKey(cellValue))
-                reportActionPatterns[cellValue](Currencies.Default, GetCellValue(1)!);
+                reportActionPatterns[cellValue](GetCellValue(1)!, null);
     }
 
-    private void ParseDividend(Currencies currency, string value)
+    private void ParseDividend(string value, Currencies? currency)
     {
+        if (!currency.HasValue)
+            throw new ArgumentNullException(nameof(currency));
+
         var info = GetCellValue(14);
 
         if (info is null)
@@ -332,7 +300,7 @@ internal sealed class BcsReportParser
         if (derivativeId is null)
             throw new Exception(nameof(ParseDividend) + $". Derivative from '{info}' not found");
 
-        var derivativeCode = derivatives[derivativeId];
+        var derivativeCode = derivatives[derivativeId].First();
 
         decimal tax = 0;
         var taxPosition = info.IndexOf("налог", StringComparison.OrdinalIgnoreCase);
@@ -343,146 +311,146 @@ internal sealed class BcsReportParser
             tax = decimal.Parse(taxRow, NumberStyles.Number, culture);
         }
 
-        var dateTime = DateTime.Parse(GetCellValue(1)!, culture);
-        var exchange = GetCellValue(12);
-        byte? exchangeId = exchange is null ? null : (byte)exchangeTypes[exchange];
+        var dateTime = DateOnly.Parse(GetCellValue(1)!, culture);
+        var exchangeId = GetExchangeId();
 
         Events.Add(new Event
         {
-            DateTime = dateTime,
+            Date = dateTime,
             Cost = decimal.Parse(GetCellValue(6)!),
             Info = info,
             EventTypeId = (byte)EventTypes.Дивиденд,
             DerivativeId = derivativeId,
             DerivativeCode = derivativeCode,
             ExchangeId = exchangeId,
-            AccountBrokerId = brokerId,
-            AccountUserId = userId,
-            AccountName = AccountName,
+            AccountId = accountId,
+            UserId = userId,
+            BrokerId = brokerId,
             CurrencyId = (byte)currency
         });
         Events.Add(new Event
         {
-            DateTime = dateTime,
+            Date = dateTime,
             Cost = tax,
             Info = info,
             EventTypeId = (byte)EventTypes.Налог_с_дивиденда,
             DerivativeId = derivativeId,
             DerivativeCode = derivativeCode,
             ExchangeId = exchangeId,
-            AccountBrokerId = brokerId,
-            AccountUserId = userId,
-            AccountName = AccountName,
+            AccountId = accountId,
+            UserId = userId,
+            BrokerId = brokerId,
             CurrencyId = (byte)currency
         });
     }
-    private void ParseComission(Currencies currency, string value)
+    private void ParseComission(string value, Currencies? currency)
     {
-        var info = GetCellValue(14);
-        var exchange = GetCellValue(12);
-        byte? exchangeId = exchange is null ? null : (byte)exchangeTypes[exchange];
+        if (!currency.HasValue)
+            throw new ArgumentNullException(nameof(currency));
 
         Events.Add(new Event
         {
-            DateTime = DateTime.Parse(GetCellValue(1)!, culture),
+            Date = DateOnly.Parse(GetCellValue(1)!, culture),
             Cost = decimal.Parse(GetCellValue(7)!),
-            Info = info,
-            EventTypeId = (byte)eventTypes[value],
-            ExchangeId = exchangeId,
-            AccountBrokerId = brokerId,
-            AccountUserId = userId,
-            AccountName = AccountName,
+            Info = GetCellValue(14),
+            EventTypeId = (byte)BcsReportStructure.EventTypes[value],
+            ExchangeId = GetExchangeId(),
+            AccountId = accountId,
+            UserId = userId,
+            BrokerId = brokerId,
             CurrencyId = (byte)currency
         });
     }
-    private void CheckComission(Currencies currency, string value)
+    private void CheckComission(string value, Currencies? currency = null)
     {
         if (!reportActionPatterns.ContainsKey(value))
             throw new ApplicationException(nameof(CheckComission) + $". {nameof(EventType)} '{value}' not found");
     }
-    private void ParseAccountBalance(Currencies currency, string value)
+    private void ParseAccountBalance(string value, Currencies? currency)
     {
-        var costRowIndex = eventTypes[value] switch
+        if (!currency.HasValue)
+            throw new ArgumentNullException(nameof(currency));
+
+        var costRowIndex = BcsReportStructure.EventTypes[value] switch
         {
             EventTypes.Пополнение_счета => 6,
             EventTypes.Вывод_с_счета => 7,
             _ => throw new ArgumentOutOfRangeException(nameof(ParseAccountBalance) + $". {nameof(EventType)} not recognized")
         };
 
-        var exchange = GetCellValue(12);
-        byte? exchangeId = exchange is null ? null : (byte)exchangeTypes[exchange];
-
         Events.Add(new Event
         {
-            DateTime = DateTime.Parse(GetCellValue(1)!, culture),
+            Date = DateOnly.Parse(GetCellValue(1)!, culture),
             Cost = decimal.Parse(GetCellValue(costRowIndex)!),
             Info = value,
-            EventTypeId = (byte)eventTypes[value],
-            ExchangeId = exchangeId,
-            AccountBrokerId = brokerId,
-            AccountUserId = userId,
-            AccountName = AccountName,
+            EventTypeId = (byte)BcsReportStructure.EventTypes[value],
+            ExchangeId = GetExchangeId(),
+            AccountId = accountId,
+            UserId = userId,
+            BrokerId = brokerId,
             CurrencyId = (byte)currency
         });
     }
-    private void ParseExchangeRate(Currencies currency, string value)
+    private void ParseExchangeRate(string value, Currencies? currency = null)
     {
         var code = GetCellValue(1);
 
         if (code is null)
             throw new ApplicationException(nameof(ParseExchangeRate) + ". Code not found");
 
-        if (!derivatives.ContainsValue(code))
+        var (derivativeId, derivativeCodes) = derivatives.FirstOrDefault(x => x.Value.Contains(code, StringComparer.OrdinalIgnoreCase));
+
+        if (string.IsNullOrEmpty(derivativeId))
             throw new ApplicationException(nameof(ParseExchangeRate) + $". Derivative '{code}' not found");
 
-        var (derivativeId, derivativeCode) = derivatives.First(x => x.Value.Equals(code));
+        var derivativeCode = derivativeCodes.First(x => x.Equals(code, StringComparison.OrdinalIgnoreCase));
 
-        var buyCurrencyId = (byte)exchangeCurrencyTypes[derivativeCode].buy;
-        var sellCurrencyId = (byte)exchangeCurrencyTypes[derivativeCode].sell;
+        var buyCurrencyId = (byte)BcsReportStructure.ExchangeCurrencyTypes[derivativeCode].buy;
+        var sellCurrencyId = (byte)BcsReportStructure.ExchangeCurrencyTypes[derivativeCode].sell;
 
-        while (!TryCellValue(1, $"Итого по {derivativeCode}:", 5, out var cellBuyValue))
+        while (!TryGetCellValue(1, $"Итого по {derivativeCode}:", 5, out var cellBuyValue))
         {
-            var date = DateTime.Parse(GetCellValue(1)!, culture);
+            var date = DateOnly.Parse(GetCellValue(1)!, culture);
             var exchange = GetCellValue(14);
             var exchangeId = exchange is null
                 ? throw new ApplicationException(nameof(ParseExchangeRate) + ". Exchange not found")
-                : (byte)exchangeTypes[exchange];
+                : (byte)BcsReportStructure.ExchangeTypes[exchange];
 
             if (!string.IsNullOrWhiteSpace(cellBuyValue))
                 Deals.Add(new Deal
                 {
-                    DateTime = date,
+                    Date = date,
                     Cost = decimal.Parse(GetCellValue(4)!),
                     Value = decimal.Parse(cellBuyValue),
                     Info = derivativeCode,
                     DerivativeId = derivativeId,
                     DerivativeCode = derivativeCode,
                     ExchangeId = exchangeId,
-                    AccountBrokerId = brokerId,
-                    AccountUserId = userId,
-                    AccountName = AccountName,
+                    AccountId = accountId,
+                    UserId = userId,
+                    BrokerId = brokerId,
                     OperationId = (byte)OperationTypes.Расход,
                     CurrencyId = buyCurrencyId
                 });
             else
                 Deals.Add(new Deal
                 {
-                    DateTime = date,
+                    Date = date,
                     Cost = decimal.Parse(GetCellValue(7)!),
                     Value = decimal.Parse(GetCellValue(8)!),
                     Info = derivativeCode,
                     DerivativeId = derivativeId,
                     DerivativeCode = derivativeCode,
                     ExchangeId = exchangeId,
-                    AccountBrokerId = brokerId,
-                    AccountUserId = userId,
-                    AccountName = AccountName,
+                    AccountId = accountId,
+                    UserId = userId,
+                    BrokerId = brokerId,
                     OperationId = (byte)OperationTypes.Приход,
                     CurrencyId = sellCurrencyId
                 });
         }
     }
-    private void ParseStockTransactions(Currencies currency, string value)
+    private void ParseStockTransactions(string value, Currencies? currency = null)
     {
         var isin = GetCellValue(7);
 
@@ -496,12 +464,10 @@ internal sealed class BcsReportParser
         if (derivativeId is null)
             throw new ApplicationException(nameof(ParseStockTransactions) + $". Derivative '{isin}' not found");
 
-        var derivativeCode = derivatives[derivativeId];
-
         var name = GetCellValue(1);
-        while (!TryCellValue(1, $"Итого по {name}:", 4, out var cellBuyValue))
+        while (!TryGetCellValue(1, $"Итого по {name}:", 4, out var cellBuyValue))
         {
-            var date = DateTime.Parse(GetCellValue(1)!, culture);
+            var date = DateOnly.Parse(GetCellValue(1)!, culture);
             currency = GetCellValue(10) switch
             {
                 "USD" => Currencies.Usd,
@@ -512,76 +478,92 @@ internal sealed class BcsReportParser
             var exchange = GetCellValue(17);
             var exchangeId = exchange is null
                 ? throw new ApplicationException(nameof(ParseStockTransactions) + ". Exchange not found")
-                : (byte)exchangeTypes[exchange];
+                : (byte)BcsReportStructure.ExchangeTypes[exchange];
+
+            var derivativeCode = derivatives[derivativeId].First();
 
             if (!string.IsNullOrWhiteSpace(cellBuyValue))
                 Deals.Add(new Deal
                 {
-                    DateTime = date,
+                    Date = date,
                     Cost = decimal.Parse(GetCellValue(5)!),
                     Value = decimal.Parse(cellBuyValue),
                     Info = name,
                     DerivativeId = derivativeId,
                     DerivativeCode = derivativeCode,
                     ExchangeId = exchangeId,
-                    AccountBrokerId = brokerId,
-                    AccountUserId = userId,
-                    AccountName = AccountName,
+                    AccountId = accountId,
+                    UserId = userId,
+                    BrokerId = brokerId,
                     OperationId = (byte)OperationTypes.Расход,
                     CurrencyId = (byte)currency
                 });
             else
                 Deals.Add(new Deal
                 {
-                    DateTime = date,
+                    Date = date,
                     Cost = decimal.Parse(GetCellValue(8)!),
                     Value = decimal.Parse(GetCellValue(7)!),
                     Info = name,
                     DerivativeId = derivativeId,
                     DerivativeCode = derivativeCode,
                     ExchangeId = exchangeId,
-                    AccountBrokerId = brokerId,
-                    AccountUserId = userId,
-                    AccountName = AccountName,
+                    AccountId = accountId,
+                    UserId = userId,
+                    BrokerId = brokerId,
                     OperationId = (byte)OperationTypes.Приход,
                     CurrencyId = (byte)currency
                 });
         }
     }
-    private void ParseAdditionalStockRelease(Currencies currency, string value)
+    private void ParseAdditionalStockRelease(string value, Currencies? currency = null)
     {
         var ticker = value.Trim();
 
-        if (!derivatives.ContainsValue(ticker))
+        var (derivativeId, derivativeCodes) = derivatives.FirstOrDefault(x => x.Value.Contains(ticker, StringComparer.OrdinalIgnoreCase));
+
+        if (string.IsNullOrEmpty(derivativeId))
             throw new ApplicationException(nameof(ParseAdditionalStockRelease) + $". Ticker '{ticker}' not found");
 
-        var (derivativeId, derivativeCode) = derivatives.First(x => x.Value.Equals(ticker));
+        var derivativeCode = derivativeCodes.First(x => x.Equals(ticker, StringComparison.OrdinalIgnoreCase));
 
         Deals.Add(new Deal
         {
-            DateTime = DateTime.Parse(GetCellValue(4)!, culture),
+            Date = DateOnly.Parse(GetCellValue(4)!, culture),
             Cost = 0,
             Value = decimal.Parse(GetCellValue(7)!),
             Info = GetCellValue(12),
             DerivativeId = derivativeId,
             DerivativeCode = derivativeCode,
-            ExchangeId = 0,
-            AccountBrokerId = brokerId,
-            AccountUserId = userId,
-            AccountName = AccountName,
+            ExchangeId = (byte)Exchanges.Spbex,
+            AccountId = accountId,
+            UserId = userId,
+            BrokerId = brokerId,
             OperationId = (byte)OperationTypes.Приход,
-            CurrencyId = (byte)currency
+            CurrencyId = (byte)Currencies.Usd
         });
     }
 
-    private bool TryCellValue(int rowNo, int stopColumnNo, string stopPattern, int targetColumnNo, out string? currentValue)
+    private byte? GetExchangeId()
+    {
+        var exchange = GetCellValue(12);
+        if (string.IsNullOrWhiteSpace(exchange))
+            exchange = GetCellValue(11);
+        if (string.IsNullOrWhiteSpace(exchange))
+            exchange = GetCellValue(10);
+
+        return string.IsNullOrWhiteSpace(exchange) ? null : (byte)BcsReportStructure.ExchangeTypes[exchange];
+
+    }
+    private string? GetCellValue(int columnNo) => table.Rows[rowId].ItemArray[columnNo]?.ToString();
+    private bool TryGetCellValue(int rowNo, int stopColumnNo, string stopPattern, int targetColumnNo, out string? currentValue)
     {
         var foundingCell = table.Rows[rowNo].ItemArray[stopColumnNo]?.ToString();
         currentValue = table.Rows[rowNo].ItemArray[targetColumnNo]?.ToString();
 
         return foundingCell is not null && foundingCell.IndexOf(stopPattern, StringComparison.OrdinalIgnoreCase) > -1;
     }
-    private bool TryCellValue(int stopColumnNo, string stopPattern, int targetColumnNo, out string? currentValue)
+    private bool TryGetCellValue(int stopColumnNo, string stopPattern, int targetColumnNo, out string? currentValue)
     {
         rowId++;
 
@@ -590,7 +572,7 @@ internal sealed class BcsReportParser
 
         return foundingCell is not null && foundingCell.IndexOf(stopPattern, StringComparison.OrdinalIgnoreCase) > -1;
     }
-    private bool TryCellValue(int stopColumnNo, IEnumerable<string> stopPatterns, int targetColumnNo, out string? currentValue)
+    private bool TryGetCellValue(int stopColumnNo, IEnumerable<string> stopPatterns, int targetColumnNo, out string? currentValue)
     {
         rowId++;
 
@@ -603,7 +585,6 @@ internal sealed class BcsReportParser
                        .IndexOf(x, StringComparison.OrdinalIgnoreCase))
                    .Any(x => x > -1);
     }
-    private string? GetCellValue(int columnNo) => table.Rows[rowId].ItemArray[columnNo]?.ToString();
 }
 internal static class BcsReportStructure
 {
@@ -634,15 +615,47 @@ internal static class BcsReportStructure
         "Оплата за вывод денежных средств",
         "Доп. выпуск акций "
     };
-    internal static readonly string[] Exchanges =
+
+    private static readonly string[] Exchanges =
     {
         "МосБирж(Валютный рынок)",
         "ММВБ",
-        "СПБ"
+        "СПБ",
+        "МосБирж(FORTS)",
+        "Внебирж."
     };
-    internal static readonly string[] ExchangeCurrencies =
+    private static readonly string[] ExchangeCurrencies =
     {
         "USDRUB_TOD",
         "USDRUB_TOM"
+    };
+
+    internal static readonly Dictionary<string, EventTypes> EventTypes = new(Actions.Length, StringComparer.OrdinalIgnoreCase)
+    {
+        { Actions[1], Enums.EventTypes.Комиссия_брокера },
+        { Actions[2], Enums.EventTypes.Комиссия_брокера },
+        { Actions[3], Enums.EventTypes.Комиссия_депозитария },
+        { Actions[4], Enums.EventTypes.Комиссия_депозитария },
+        { Actions[5], Enums.EventTypes.НДФЛ },
+        { Actions[7], Enums.EventTypes.Пополнение_счета },
+        { Actions[8], Enums.EventTypes.Вывод_с_счета },
+        { Actions[11], Enums.EventTypes.Комиссия_брокера },
+        { Actions[12], Enums.EventTypes.Комиссия_брокера },
+        { Actions[13], Enums.EventTypes.Комиссия_брокера },
+        { Actions[14], Enums.EventTypes.Комиссия_брокера },
+        { Actions[15], Enums.EventTypes.Комиссия_брокера }
+    };
+    internal static readonly Dictionary<string, Exchanges> ExchangeTypes = new(Exchanges.Length, StringComparer.OrdinalIgnoreCase)
+    {
+        { Exchanges[0], Shared.Enums.Exchanges.Moex },
+        { Exchanges[1], Shared.Enums.Exchanges.Moex },
+        { Exchanges[2], Shared.Enums.Exchanges.Spbex },
+        { Exchanges[3], Shared.Enums.Exchanges.Moex },
+        { Exchanges[4], Shared.Enums.Exchanges.Moex }
+    };
+    internal static readonly Dictionary<string, (Currencies buy, Currencies sell)> ExchangeCurrencyTypes = new(ExchangeCurrencies.Length, StringComparer.OrdinalIgnoreCase)
+    {
+        { ExchangeCurrencies[0], (Currencies.Usd, Currencies.Rub) },
+        { ExchangeCurrencies[1], (Currencies.Usd, Currencies.Rub) }
     };
 }

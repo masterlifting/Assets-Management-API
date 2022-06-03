@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Shared.RepositoryService;
 using IM.Service.Market.Domain.Entities.Catalogs;
 
 using Microsoft.EntityFrameworkCore;

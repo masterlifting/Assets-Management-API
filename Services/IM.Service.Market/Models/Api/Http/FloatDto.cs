@@ -1,9 +1,10 @@
-﻿using IM.Service.Common.Net.Attributes;
+﻿using IM.Service.Shared.Attributes;
 
 namespace IM.Service.Market.Models.Api.Http;
 
 public record FloatGetDto
 {
+    public string CompanyId { get; init; } = null!;
     public string Company { get; init; } = null!;
     public string Source { get; init; } = null!;
     public DateOnly Date { get; init; }

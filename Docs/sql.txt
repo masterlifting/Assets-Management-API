@@ -1,0 +1,37 @@
+delete from "Deals";
+delete from "Events";
+delete from "Reports";
+delete from "Derivatives";
+delete from "UnderlyingAssets";
+
+select * from "Deals";
+select * from "Events";
+select * from "Reports";
+select * from "UnderlyingAssets" order by "Name";
+select * from "Derivatives" where "UnderlyingAssetId" = 'KD' order by "UnderlyingAssetId";
+
+insert into "UnderlyingAssets"
+("Id","UnderlyingAssetTypeId","CountryId", "Name")
+values
+
+('USDRUB',4,2,'USD to RUB')
+
+insert into "Derivatives"
+("Id","Code","UnderlyingAssetId")
+values
+('US50155Q1004','KD_US','KD'),
+('US25470F3029','DISCK','DISCK'),
+('US68622V1061','OGN-W_US','OGN'),
+('US92556V1061','VTRS_US','VTRS'),
+('US6974351057','PANW','PANW'),
+('LR0008862868','RCL','RCL'),
+('IE00BTN1Y115','MDT','MDT'),
+('US260003108','DOV','DOV'),
+('PA1436583006','CCL','CCL'),
+('US92343V104','VZ','VZ'),
+('US15872M1045','APY_US','CHX'),
+('USDRUB_TOM','USDRUB_TOM','USDRUB'),
+('USDRUB_TOD','USDRUB_TOD','USDRUB'),
+('US98426T1060','YY','YY'),
+('US46591M1099','YY','YY'),
+('US3696041033','GE','GE')

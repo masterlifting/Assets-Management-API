@@ -1,4 +1,5 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using System;
+using IM.Service.Shared.RepositoryService;
 using IM.Service.Portfolio.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
@@ -24,13 +25,16 @@ public class EventRepositoryHandler : RepositoryHandler<Event>
 
         foreach (var (Old, New) in result)
         {
+            Old.UpdateTime = DateTime.UtcNow;
+            Old.Date = New.Date;
             Old.Cost = New.CurrencyId;
             Old.Info = New.Info;
             Old.DerivativeId = New.DerivativeId;
+            Old.DerivativeCode = New.DerivativeCode;
             Old.ExchangeId = New.ExchangeId;
-            Old.AccountBrokerId = New.AccountBrokerId;
-            Old.AccountUserId = New.AccountUserId;
-            Old.AccountName = New.AccountName;
+            Old.AccountId = New.AccountId;
+            Old.UserId = New.UserId;
+            Old.BrokerId = New.BrokerId;
             Old.EventTypeId = New.EventTypeId;
             Old.CurrencyId = New.CurrencyId;
         }

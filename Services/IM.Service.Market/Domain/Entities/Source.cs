@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-using IM.Service.Common.Net.Models.Entity;
+using IM.Service.Shared.Models.Entity;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 
 namespace IM.Service.Market.Domain.Entities;

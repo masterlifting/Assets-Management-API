@@ -1,8 +1,12 @@
 ﻿using IM.Service.Portfolio.Domain.Entities;
 using IM.Service.Portfolio.Domain.Entities.Catalogs;
 using IM.Service.Portfolio.Domain.Entities.ManyToMany;
+
 using Microsoft.EntityFrameworkCore;
-using CommonEnums = IM.Service.Common.Net.Enums;
+
+using SharedEnums = IM.Service.Shared.Enums;
+using PortfolioEnums = IM.Service.Portfolio.Enums;
+
 
 namespace IM.Service.Portfolio.Domain.DataAccess;
 
@@ -16,7 +20,6 @@ public sealed class DatabaseContext : DbContext
     public DbSet<Operation> Operations { get; set; } = null!;
     public DbSet<UnderlyingAssetType> UnderlyingAssetTypes { get; set; } = null!;
 
-    public DbSet<BrokerUser> BrokerUsers { get; set; } = null!;
     public DbSet<BrokerExchange> BrokerExchanges { get; set; } = null!;
 
     public DbSet<Account> Accounts { get; set; } = null!;
@@ -36,11 +39,12 @@ public sealed class DatabaseContext : DbContext
     {
         modelBuilder.UseSerialColumns();
 
-        modelBuilder.Entity<Account>().HasKey(x => new {x.UserId, x.BrokerId, x.Name});
-        modelBuilder.Entity<Report>().HasKey(x => new { x.AccountUserId, x.AccountBrokerId, x.Name });
+        modelBuilder.Entity<Account>().HasIndex(x => new {Id = x.Name, x.UserId, x.BrokerId }).IsUnique();
+        modelBuilder.Entity<Report>().HasKey(x => new {x.Id, x.BrokerId });
         modelBuilder.Entity<Derivative>().HasKey(x => new { x.Id, x.Code });
 
-        modelBuilder.Entity<BrokerExchange>().HasKey(x => new {x.BrokerId, x.ExchangeId});
+
+        modelBuilder.Entity<BrokerExchange>().HasKey(x => new { x.BrokerId, x.ExchangeId });
         modelBuilder.Entity<BrokerExchange>()
             .HasOne(x => x.Broker)
             .WithMany(x => x.BrokerExchanges)
@@ -50,54 +54,65 @@ public sealed class DatabaseContext : DbContext
             .WithMany(x => x.BrokerExchanges)
             .HasForeignKey(x => x.ExchangeId);
 
-        modelBuilder.Entity<BrokerUser>().HasKey(x => new { x.BrokerId, x.UserId });
-        modelBuilder.Entity<BrokerUser>()
-            .HasOne(x => x.Broker)
-            .WithMany(x => x.BrokerUsers)
-            .HasForeignKey(x => x.BrokerId);
-        modelBuilder.Entity<BrokerUser>()
-            .HasOne(x => x.User)
-            .WithMany(x => x.BrokerUsers)
-            .HasForeignKey(x => x.UserId);
+        modelBuilder.Entity<Broker>().HasData(
+            new() { Id = (byte)PortfolioEnums.Brokers.Bcs, Name = nameof(PortfolioEnums.Brokers.Bcs) },
+            new() { Id = (byte)PortfolioEnums.Brokers.Tinkoff, Name = nameof(PortfolioEnums.Brokers.Tinkoff) });
 
         modelBuilder.Entity<Exchange>().HasData(
-            new() { Id = (byte)CommonEnums.Exchanges.Spbex, Name = nameof(CommonEnums.Exchanges.Spbex) }, 
-            new() { Id = (byte)CommonEnums.Exchanges.Moex, Name = nameof(CommonEnums.Exchanges.Moex) });
+            new() { Id = (byte)SharedEnums.Exchanges.Nasdaq, Name = nameof(SharedEnums.Exchanges.Nasdaq) },
+            new() { Id = (byte)SharedEnums.Exchanges.Nyse, Name = nameof(SharedEnums.Exchanges.Nyse) },
+            new() { Id = (byte)SharedEnums.Exchanges.Fwb, Name = nameof(SharedEnums.Exchanges.Fwb) },
+            new() { Id = (byte)SharedEnums.Exchanges.Hkse, Name = nameof(SharedEnums.Exchanges.Hkse) },
+            new() { Id = (byte)SharedEnums.Exchanges.Lse, Name = nameof(SharedEnums.Exchanges.Lse) },
+            new() { Id = (byte)SharedEnums.Exchanges.Sse, Name = nameof(SharedEnums.Exchanges.Sse) },
+            new() { Id = (byte)SharedEnums.Exchanges.Spbex, Name = nameof(SharedEnums.Exchanges.Spbex) },
+            new() { Id = (byte)SharedEnums.Exchanges.Moex, Name = nameof(SharedEnums.Exchanges.Moex) });
+
+        modelBuilder.Entity<BrokerExchange>().HasData(
+            new() { BrokerId = (byte)PortfolioEnums.Brokers.Bcs, ExchangeId = (byte)SharedEnums.Exchanges.Spbex },
+            new() { BrokerId = (byte)PortfolioEnums.Brokers.Bcs, ExchangeId = (byte)SharedEnums.Exchanges.Moex },
+            new() { BrokerId = (byte)PortfolioEnums.Brokers.Tinkoff, ExchangeId = (byte)SharedEnums.Exchanges.Spbex },
+            new() { BrokerId = (byte)PortfolioEnums.Brokers.Tinkoff, ExchangeId = (byte)SharedEnums.Exchanges.Moex });
+
 
         modelBuilder.Entity<Country>().HasData(
-            new() { Id = (byte)CommonEnums.Countries.Rus, Name = nameof(CommonEnums.Countries.Rus) },
-            new() { Id = (byte)CommonEnums.Countries.Usa, Name = nameof(CommonEnums.Countries.Usa) },
-            new() { Id = (byte)CommonEnums.Countries.Chn, Name = nameof(CommonEnums.Countries.Chn) });
+            new() { Id = (byte)SharedEnums.Countries.Rus, Name = nameof(SharedEnums.Countries.Rus), Description = "The Russian Federation" },
+            new() { Id = (byte)SharedEnums.Countries.Usa, Name = nameof(SharedEnums.Countries.Usa), Description = "Соединенные Штаты Америки" },
+            new() { Id = (byte)SharedEnums.Countries.Chn, Name = nameof(SharedEnums.Countries.Chn), Description = "Chinese People's Republic" },
+            new() { Id = (byte)SharedEnums.Countries.Deu, Name = nameof(SharedEnums.Countries.Deu), Description = "Deutschland" },
+            new() { Id = (byte)SharedEnums.Countries.Gbr, Name = nameof(SharedEnums.Countries.Gbr), Description = "Great Britain" });
 
         modelBuilder.Entity<Currency>().HasData(
-            new() {Id = (byte)CommonEnums.Currencies.Rub, Name = "₽", Description = nameof(CommonEnums.Currencies.Rub)},
-            new() {Id = (byte)CommonEnums.Currencies.Usd, Name = "$", Description = nameof(CommonEnums.Currencies.Usd)},
-            new() {Id = (byte)CommonEnums.Currencies.Eur, Name = "€", Description = nameof(CommonEnums.Currencies.Eur)});
+            new() { Id = (byte)SharedEnums.Currencies.Rub, Name = "₽", Description = nameof(SharedEnums.Currencies.Rub) },
+            new() { Id = (byte)SharedEnums.Currencies.Usd, Name = "$", Description = nameof(SharedEnums.Currencies.Usd) },
+            new() { Id = (byte)SharedEnums.Currencies.Eur, Name = "€", Description = nameof(SharedEnums.Currencies.Eur) },
+            new() { Id = (byte)SharedEnums.Currencies.Gbp, Name = "£", Description = nameof(SharedEnums.Currencies.Gbp) },
+            new() { Id = (byte)SharedEnums.Currencies.Chy, Name = "¥", Description = nameof(SharedEnums.Currencies.Chy) },
+            new() { Id = (byte)SharedEnums.Currencies.Btc, Name = "₿", Description = nameof(SharedEnums.Currencies.Btc) },
+            new() { Id = (byte)SharedEnums.Currencies.Eth, Name = "Ξ", Description = nameof(SharedEnums.Currencies.Eth) });
 
-        modelBuilder.Entity<Broker>().HasData(
-            new() { Id = (byte)Enums.Brokers.Bcs, Name = nameof(Enums.Brokers.Bcs) },
-            new() { Id = (byte)Enums.Brokers.Tinkoff, Name = nameof(Enums.Brokers.Tinkoff) });
 
         modelBuilder.Entity<Operation>().HasData(
-            new() {Id = (byte)Enums.OperationTypes.Приход, Name = nameof(Enums.OperationTypes.Приход)},
-            new() {Id = (byte)Enums.OperationTypes.Расход, Name = nameof(Enums.OperationTypes.Расход)});
+            new() { Id = (byte)PortfolioEnums.OperationTypes.Приход, Name = nameof(PortfolioEnums.OperationTypes.Приход) },
+            new() { Id = (byte)PortfolioEnums.OperationTypes.Расход, Name = nameof(PortfolioEnums.OperationTypes.Расход) });
 
         modelBuilder.Entity<UnderlyingAssetType>().HasData(
-            new () { Id = (byte)Enums.UnderlyingAssetTypes.Stock, Name = nameof(Enums.UnderlyingAssetTypes.Stock)},
-            new () { Id = (byte)Enums.UnderlyingAssetTypes.Bond, Name = nameof(Enums.UnderlyingAssetTypes.Bond) },
-            new () { Id = (byte)Enums.UnderlyingAssetTypes.ETF, Name = nameof(Enums.UnderlyingAssetTypes.ETF) },
-            new () { Id = (byte)Enums.UnderlyingAssetTypes.Currency, Name = nameof(Enums.UnderlyingAssetTypes.Currency) });
+            new() { Id = (byte)PortfolioEnums.UnderlyingAssetTypes.Stock, Name = nameof(PortfolioEnums.UnderlyingAssetTypes.Stock) },
+            new() { Id = (byte)PortfolioEnums.UnderlyingAssetTypes.Bond, Name = nameof(PortfolioEnums.UnderlyingAssetTypes.Bond) },
+            new() { Id = (byte)PortfolioEnums.UnderlyingAssetTypes.ETF, Name = nameof(PortfolioEnums.UnderlyingAssetTypes.ETF) },
+            new() { Id = (byte)PortfolioEnums.UnderlyingAssetTypes.Currency, Name = nameof(PortfolioEnums.UnderlyingAssetTypes.Currency) },
+            new() { Id = (byte)PortfolioEnums.UnderlyingAssetTypes.CryptoCurrency, Name = nameof(PortfolioEnums.UnderlyingAssetTypes.CryptoCurrency) });
 
         modelBuilder.Entity<EventType>().HasData(
-            new() {Id = (byte)Enums.EventTypes.Пополнение_счета, OperationId = (byte)Enums.OperationTypes.Приход, Name = nameof(Enums.EventTypes.Пополнение_счета)},
-            new() {Id = (byte)Enums.EventTypes.Дополнительный_выпуск_акции, OperationId = (byte)Enums.OperationTypes.Приход,  Name = nameof(Enums.EventTypes.Дополнительный_выпуск_акции)},
-            new() {Id = (byte)Enums.EventTypes.Дивиденд, OperationId = (byte)Enums.OperationTypes.Приход,  Name = nameof(Enums.EventTypes.Дивиденд)},
-            new() {Id = (byte)Enums.EventTypes.Вывод_с_счета, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Вывод_с_счета)},
-            new() {Id = (byte)Enums.EventTypes.Делистинг_акции, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Делистинг_акции)},
-            new() {Id = (byte)Enums.EventTypes.Налог_с_дивиденда, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Налог_с_дивиденда)},
-            new() {Id = (byte)Enums.EventTypes.НДФЛ, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.НДФЛ)},
-            new() {Id = (byte)Enums.EventTypes.Комиссия_брокера, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Комиссия_брокера)},
-            new() {Id = (byte)Enums.EventTypes.Комиссия_депозитария, OperationId = (byte)Enums.OperationTypes.Расход,  Name = nameof(Enums.EventTypes.Комиссия_депозитария)});
+            new() { Id = (byte)PortfolioEnums.EventTypes.Пополнение_счета, OperationId = (byte)PortfolioEnums.OperationTypes.Приход, Name = nameof(PortfolioEnums.EventTypes.Пополнение_счета) },
+            new() { Id = (byte)PortfolioEnums.EventTypes.Дополнительный_выпуск_акции, OperationId = (byte)PortfolioEnums.OperationTypes.Приход, Name = nameof(PortfolioEnums.EventTypes.Дополнительный_выпуск_акции) },
+            new() { Id = (byte)PortfolioEnums.EventTypes.Дивиденд, OperationId = (byte)PortfolioEnums.OperationTypes.Приход, Name = nameof(PortfolioEnums.EventTypes.Дивиденд) },
+            new() { Id = (byte)PortfolioEnums.EventTypes.Вывод_с_счета, OperationId = (byte)PortfolioEnums.OperationTypes.Расход, Name = nameof(PortfolioEnums.EventTypes.Вывод_с_счета) },
+            new() { Id = (byte)PortfolioEnums.EventTypes.Делистинг_акции, OperationId = (byte)PortfolioEnums.OperationTypes.Расход, Name = nameof(PortfolioEnums.EventTypes.Делистинг_акции) },
+            new() { Id = (byte)PortfolioEnums.EventTypes.Налог_с_дивиденда, OperationId = (byte)PortfolioEnums.OperationTypes.Расход, Name = nameof(PortfolioEnums.EventTypes.Налог_с_дивиденда) },
+            new() { Id = (byte)PortfolioEnums.EventTypes.НДФЛ, OperationId = (byte)PortfolioEnums.OperationTypes.Расход, Name = nameof(PortfolioEnums.EventTypes.НДФЛ) },
+            new() { Id = (byte)PortfolioEnums.EventTypes.Комиссия_брокера, OperationId = (byte)PortfolioEnums.OperationTypes.Расход, Name = nameof(PortfolioEnums.EventTypes.Комиссия_брокера) },
+            new() { Id = (byte)PortfolioEnums.EventTypes.Комиссия_депозитария, OperationId = (byte)PortfolioEnums.OperationTypes.Расход, Name = nameof(PortfolioEnums.EventTypes.Комиссия_депозитария) });
 
         base.OnModelCreating(modelBuilder);
     }

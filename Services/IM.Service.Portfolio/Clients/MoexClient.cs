@@ -7,7 +7,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using IM.Service.Portfolio.Models.Clients;
-using static IM.Service.Common.Net.Enums;
+using static IM.Service.Shared.Enums;
 
 namespace IM.Service.Portfolio.Clients;
 

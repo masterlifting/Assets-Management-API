@@ -11,6 +11,7 @@ public class MapperDividend : IMapperRead<Dividend, DividendGetDto>, IMapperWrit
         .OrderByDescending(x => x.Date)
         .Select(x => new DividendGetDto
         {
+            CompanyId = x.CompanyId,
             Company = x.Company.Name,
             Source = x.Source.Name,
             Date = x.Date,
@@ -24,6 +25,7 @@ public class MapperDividend : IMapperRead<Dividend, DividendGetDto>, IMapperWrit
         var queryResult = await query
             .Select(x => new DividendGetDto
             {
+                CompanyId = x.CompanyId,
                 Company = x.Company.Name,
                 Source = x.Source.Name,
                 Date = x.Date,

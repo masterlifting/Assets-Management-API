@@ -1,10 +1,15 @@
+using IM.Service.Shared.Helpers;
+using IM.Service.Shared.RepositoryService;
 using IM.Service.Portfolio.Clients;
 using IM.Service.Portfolio.Domain.DataAccess;
 using IM.Service.Portfolio.Domain.DataAccess.RepositoryHandlers;
+using IM.Service.Portfolio.Domain.Entities;
+using IM.Service.Portfolio.Domain.Entities.Catalogs;
 using IM.Service.Portfolio.Services.Background;
-using IM.Service.Portfolio.Services.Data.Isins;
 using IM.Service.Portfolio.Services.Data.Reports;
-using IM.Service.Portfolio.Services.RabbitMq;
+using IM.Service.Portfolio.Services.Http;
+using IM.Service.Portfolio.Services.RabbitMq.Function.Processes;
+using IM.Service.Portfolio.Services.RabbitMq.Sync.Processes;
 using IM.Service.Portfolio.Settings;
 
 using Microsoft.AspNetCore.Builder;
@@ -17,12 +22,6 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
-using IM.Service.Common.Net.Helpers;
-using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Portfolio.Domain.Entities;
-using IM.Service.Portfolio.Domain.Entities.Catalogs;
-using IM.Service.Portfolio.Services.Entity;
-using IM.Service.Portfolio.Services.Http;
 
 namespace IM.Service.Portfolio;
 
@@ -64,14 +63,12 @@ public class Startup
         services.AddScoped<RepositoryHandler<Derivative>, DerivativeRepositoryHandler>();
 
         services.AddScoped<ReportApi>();
-
         services.AddScoped<ReportGrabber>();
-        services.AddScoped<ReportLoader>();
 
-        services.AddTransient<MoexIsinService>();
-        services.AddTransient<DealService>();
+        services.AddTransient<DealProcess>();
+        services.AddTransient<CompanyProcess>();
+        services.AddTransient<ReportProcess>();
 
-        services.AddSingleton<RabbitActionService>();
         services.AddHostedService<RabbitBackgroundService>();
     }
 

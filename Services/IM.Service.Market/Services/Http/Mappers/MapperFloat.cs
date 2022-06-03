@@ -11,6 +11,7 @@ public class MapperFloat : IMapperRead<Float, FloatGetDto>, IMapperWrite<Float, 
         .OrderByDescending(x => x.Date)
         .Select(x => new FloatGetDto
         {
+            CompanyId = x.CompanyId,
             Company = x.Company.Name,
             Source = x.Source.Name,
             Date = x.Date,
@@ -24,6 +25,7 @@ public class MapperFloat : IMapperRead<Float, FloatGetDto>, IMapperWrite<Float, 
         var queryResult = await query
             .Select(x => new FloatGetDto
             {
+                CompanyId = x.CompanyId,
                 Company = x.Company.Name,
                 Source = x.Source.Name,
                 Date = x.Date,

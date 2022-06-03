@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
+﻿using IM.Service.Shared.Models.Entity.Interfaces;
 using IM.Service.Market.Domain.Entities.Interfaces;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 

@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 using System.Net.Http;
 
-using static IM.Service.Common.Net.Helpers.HttpHelper;
+using static IM.Service.Shared.Helpers.HttpHelper;
 
 namespace IM.Service.Recommendations.Clients;
 

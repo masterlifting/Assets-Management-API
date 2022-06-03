@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Http;
+﻿using IM.Service.Shared.Models.Http;
 using IM.Service.Market.Models.Settings;
 
 namespace IM.Service.Market.Settings.Sections;

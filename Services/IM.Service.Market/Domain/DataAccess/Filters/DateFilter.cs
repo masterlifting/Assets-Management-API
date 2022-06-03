@@ -1,9 +1,9 @@
-﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
-using IM.Service.Common.Net.RepositoryService.Filters;
+﻿using IM.Service.Shared.Models.Entity.Interfaces;
+using IM.Service.Shared.RepositoryService.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
 
-using static IM.Service.Common.Net.Enums;
-using static IM.Service.Common.Net.Helpers.ServiceHelper.ExpressionHelper;
+using static IM.Service.Shared.Enums;
+using static IM.Service.Shared.Helpers.ServiceHelper.ExpressionHelper;
 
 namespace IM.Service.Market.Domain.DataAccess.Filters;
 

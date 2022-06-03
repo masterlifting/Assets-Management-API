@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using IM.Service.Common.Net.Attributes;
+using IM.Service.Shared.Attributes;
 using IM.Service.Market.Domain.Entities.Catalogs;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 

@@ -1,13 +1,12 @@
-﻿using IM.Service.Common.Net.RabbitMQ;
-using IM.Service.Common.Net.RabbitMQ.Configuration;
-using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.RepositoryService;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Settings;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using static IM.Service.Common.Net.Enums;
+using static IM.Service.Shared.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
@@ -67,7 +66,7 @@ public class SplitRepositoryHandler : RepositoryHandler<Split>
             var companySource = context.CompanySources.Find(entity.CompanyId, entity.SourceId);
             
             if(companySource is not null)
-                publisher.PublishTask(QueueNames.Market, QueueEntities.Float, QueueActions.Get, companySource);
+                publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySource, QueueActions.Get, companySource);
         }
 
         publisher.PublishTask(QueueNames.Market, QueueEntities.Split, RabbitHelper.GetQueueAction(action), entity);
@@ -89,7 +88,7 @@ public class SplitRepositoryHandler : RepositoryHandler<Split>
                     && sourceIds.Contains(x.SourceId))
                 .ToArray();
 
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Floats, QueueActions.Get, companySources);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, companySources);
         }
 
         publisher.PublishTask(QueueNames.Market, QueueEntities.Splits, RabbitHelper.GetQueueAction(action), entities);

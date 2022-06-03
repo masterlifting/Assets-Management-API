@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using IM.Service.Shared.Attributes;
+
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using IM.Service.Common.Net.Attributes;
 
 namespace IM.Service.Recommendations.Domain.Entities;
 
@@ -11,6 +12,13 @@ public class Company
 
     [StringLength(100, MinimumLength = 2)]
     public string Name { get; set; } = null!;
-    public virtual Purchase? Purchase { get; set; }
+
+    public int? RatingPlace { get; set; }
+    public decimal? DealValue { get; set; }
+    public decimal? DealCost { get; set; }
+    public decimal? PriceLast { get; set; }
+    public decimal? PriceAvg { get; set; }
+
+    public virtual IEnumerable<Purchase>? Purchases { get; set; }
     public virtual IEnumerable<Sale>? Sales { get; set; }
 }

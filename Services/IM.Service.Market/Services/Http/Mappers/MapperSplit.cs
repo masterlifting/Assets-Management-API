@@ -11,6 +11,7 @@ public class MapperSplit : IMapperRead<Split, SplitGetDto>, IMapperWrite<Split, 
         .OrderByDescending(x => x.Date)
         .Select(x => new SplitGetDto
         {
+            CompanyId = x.CompanyId,
             Company = x.Company.Name,
             Source = x.Source.Name,
             Date = x.Date,
@@ -23,6 +24,7 @@ public class MapperSplit : IMapperRead<Split, SplitGetDto>, IMapperWrite<Split, 
         var queryResult = await query
             .Select(x => new SplitGetDto
             {
+                CompanyId = x.CompanyId,
                 Company = x.Company.Name,
                 Source = x.Source.Name,
                 Date = x.Date,

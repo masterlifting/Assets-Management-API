@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Shared.RepositoryService;
 using Microsoft.Extensions.Logging;
 
 namespace IM.Service.Portfolio.Domain.DataAccess;

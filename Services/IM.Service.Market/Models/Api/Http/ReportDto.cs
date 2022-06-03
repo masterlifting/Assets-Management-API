@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using IM.Service.Common.Net.Attributes;
+using IM.Service.Shared.Attributes;
 
 namespace IM.Service.Market.Models.Api.Http;
 
 public record ReportGetDto
 {
+    public string CompanyId { get; init; } = null!;
     public string Company { get; init; } = null!;
     public string Source { get; init; } = null!;
     public int Year { get; init; }

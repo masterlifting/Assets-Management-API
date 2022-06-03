@@ -1,4 +1,3 @@
-using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Market.Clients;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
@@ -7,6 +6,9 @@ using IM.Service.Market.Domain.Entities.Catalogs;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Api.Http;
 using IM.Service.Market.Services.Background;
+using IM.Service.Market.Services.Background.Compute;
+using IM.Service.Market.Services.Background.Load;
+using IM.Service.Market.Services.Data;
 using IM.Service.Market.Services.Data.Dividends;
 using IM.Service.Market.Services.Data.Floats;
 using IM.Service.Market.Services.Data.Prices;
@@ -18,14 +20,15 @@ using IM.Service.Market.Services.Http.Common;
 using IM.Service.Market.Services.Http.Common.Interfaces;
 using IM.Service.Market.Services.Http.Mappers;
 using IM.Service.Market.Services.Http.Mappers.Interfaces;
-using IM.Service.Market.Services.RabbitMq;
+using IM.Service.Market.Services.RabbitMq.Function.Processes;
 using IM.Service.Market.Settings;
+using IM.Service.Shared.RepositoryService;
 
 using Microsoft.EntityFrameworkCore;
 
 using Polly;
 
-using static IM.Service.Common.Net.Helpers.JsonHelper;
+using static IM.Service.Shared.Helpers.JsonHelper;
 
 namespace IM.Service.Market;
 
@@ -61,6 +64,19 @@ public class Startup
         services.AddHttpClient<InvestingClient>()
             .AddTransientHttpErrorPolicy(policy => policy.WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))))
             .AddTransientHttpErrorPolicy(policy => policy.CircuitBreakerAsync(3, TimeSpan.FromSeconds(30)));
+
+        services.AddScoped(typeof(Repository<>));
+        services.AddScoped<RepositoryHandler<Company>, CompanyRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<CompanySource>, CompanySourceRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Industry>, IndustryRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Sector>, SectorRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Price>, PriceRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Report>, ReportRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Float>, FloatRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Split>, SplitRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Dividend>, DividendRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Coefficient>, CoefficientRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Rating>, RatingRepositoryHandler>();
 
         services.AddScoped<IMapperRead<Report, ReportGetDto>, MapperReport>();
         services.AddScoped<IMapperWrite<Report, ReportPostDto>, MapperReport>();
@@ -98,34 +114,35 @@ public class Startup
         services.AddScoped<RestApiRead<Coefficient, CoefficientGetDto>>();
         services.AddScoped<RestApiWrite<Coefficient, CoefficientPostDto>>();
 
-        services.AddTransient<PriceLoader>();
-        services.AddTransient<ReportLoader>();
-        services.AddTransient<FloatLoader>();
-        services.AddTransient<SplitLoader>();
-        services.AddTransient<DividendLoader>();
-
         services.AddTransient<CoefficientService>();
+        services.AddTransient<DividendService>();
+        services.AddTransient<FloatService>();
         services.AddTransient<PriceService>();
+        services.AddTransient<RatingService>();
         services.AddTransient<ReportService>();
-        services.AddTransient<RatingCalculator>();
+        services.AddTransient<SplitService>();
 
-        services.AddScoped(typeof(Repository<>));
-        services.AddScoped<RepositoryHandler<Company>, CompanyRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<CompanySource>, CompanySourceRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Industry>, IndustryRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Sector>, SectorRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Price>, PriceRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Report>, ReportRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Float>, FloatRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Split>, SplitRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Dividend>, DividendRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Coefficient>, CoefficientRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Rating>, RatingRepositoryHandler>();
+        services.AddScoped(typeof(DataLoader<>));
+        services.AddTransient<IDataLoaderConfiguration<Price>,LoadPriceConfiguration>();
+        services.AddTransient<IDataLoaderConfiguration<Report>,LoadReportConfiguration>();
+        services.AddTransient<IDataLoaderConfiguration<Float>,LoadFloatConfiguration>();
+        services.AddTransient<IDataLoaderConfiguration<Split>,LoadSplitConfiguration>();
+        services.AddTransient<IDataLoaderConfiguration<Dividend>,LoadDividendConfiguration>();
 
-        services.AddSingleton<RabbitActionService>();
+        services.AddTransient<PriceProcess>();
+        services.AddTransient<ReportProcess>();
+        services.AddTransient<DividendProcess>();
+        services.AddTransient<SplitProcess>();
+        services.AddTransient<FloatProcess>();
+        services.AddTransient<CoefficientProcess>();
+
         services.AddHostedService<RabbitBackgroundService>();
-        services.AddSingleton<RatingComparator>();
-        services.AddHostedService<RatingBackgroundService>();
+        services.AddHostedService<ComputeRatingBackgroundService>();
+        services.AddHostedService<LoadPriceBackgroundService>();
+        services.AddHostedService<LoadReportBackgroundService>();
+        services.AddHostedService<LoadFloatBackgroundService>();
+        services.AddHostedService<LoadDividendBackgroundService>();
+        services.AddHostedService<LoadSplitBackgroundService>();
     }
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

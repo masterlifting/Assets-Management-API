@@ -2,6 +2,7 @@
 
 public record CoefficientGetDto
 {
+    public string CompanyId { get; init; } = null!;
     public string Company { get; init; } = null!;
     public string Source { get; init; } = null!;
     public int Year { get; init; }

@@ -12,6 +12,7 @@ public class MapperReport : IMapperRead<Report, ReportGetDto>, IMapperWrite<Repo
         .ThenByDescending(x => x.Quarter)
         .Select(x => new ReportGetDto
         {
+            CompanyId = x.CompanyId,
             Company = x.Company.Name,
             Source = x.Source.Name,
             Year = x.Year,
@@ -36,6 +37,7 @@ public class MapperReport : IMapperRead<Report, ReportGetDto>, IMapperWrite<Repo
         var queryResult = await query
             .Select(x => new ReportGetDto
             {
+                CompanyId = x.CompanyId,
                 Company = x.Company.Name,
                 Source = x.Source.Name,
                 Year = x.Year,

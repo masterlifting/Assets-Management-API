@@ -17,8 +17,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IM.Service.Common.Net\IM.Service.Common.Net.csproj" />
     <ProjectReference Include="..\IM.Service.Market\IM.Service.Market.csproj" />
+    <ProjectReference Include="..\IM.Service.Shared\IM.Service.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,13 +1,12 @@
-﻿using IM.Service.Common.Net.RabbitMQ;
-using IM.Service.Common.Net.RabbitMQ.Configuration;
-using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.RepositoryService;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Settings;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using static IM.Service.Common.Net.Enums;
+using static IM.Service.Shared.Enums;
 
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
@@ -92,7 +91,7 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient>
         if (lastEntity is not null)
             publisher.PublishTask(QueueNames.Market, QueueEntities.Coefficient, QueueActions.Set, lastEntity);
         else
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Rating, QueueActions.Compute, string.Empty);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Rating, QueueActions.Compute, new Rating());
     }
     public override async Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Coefficient> entities)
     {
@@ -121,6 +120,6 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient>
         if (lastEntities.Any())
             publisher.PublishTask(QueueNames.Market, QueueEntities.Coefficients, QueueActions.Set, lastEntities);
         else
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Ratings, QueueActions.Compute, string.Empty);
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Ratings, QueueActions.Compute, Array.Empty<Rating>());
     }
 }

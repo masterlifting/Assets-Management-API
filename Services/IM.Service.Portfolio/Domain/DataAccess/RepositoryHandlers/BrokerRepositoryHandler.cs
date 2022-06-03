@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Shared.RepositoryService;
 using IM.Service.Portfolio.Domain.Entities.Catalogs;
 
 using Microsoft.EntityFrameworkCore;
@@ -18,9 +18,14 @@ public class BrokerRepositoryHandler : RepositoryHandler<Broker>
     {
         var existEntities = await GetExist(entities).ToArrayAsync();
 
-        return existEntities
-            .Join(entities, x => x.Id, y => y.Id, (x, _) => x)
+        var result = existEntities
+            .Join(entities, x => x.Id, y => y.Id, (x, y) => (Old: x, New: y))
             .ToArray();
+
+        foreach (var (Old, New) in result)
+            Old.Description = New.Description;
+
+        return result.Select(x => x.Old);
     }
     public override IQueryable<Broker> GetExist(IEnumerable<Broker> entities)
     {

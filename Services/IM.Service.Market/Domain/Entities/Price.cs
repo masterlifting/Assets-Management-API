@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using IM.Service.Common.Net.Models.Entity.Interfaces;
+using IM.Service.Shared.Models.Entity.Interfaces;
 using System.ComponentModel.DataAnnotations.Schema;
-using IM.Service.Common.Net.Attributes;
+using IM.Service.Shared.Attributes;
 using IM.Service.Market.Domain.Entities.Catalogs;
 using IM.Service.Market.Domain.Entities.Interfaces;
 using static IM.Service.Market.Enums;

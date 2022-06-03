@@ -12,6 +12,7 @@ public class MapperCoefficient : IMapperRead<Coefficient, CoefficientGetDto>, IM
         .ThenByDescending(x => x.Quarter)
         .Select(x => new CoefficientGetDto
         {
+            CompanyId = x.CompanyId,
             Company = x.Company.Name,
             Source = x.Source.Name,
             Year = x.Year,
@@ -31,6 +32,7 @@ public class MapperCoefficient : IMapperRead<Coefficient, CoefficientGetDto>, IM
         var queryResult = await query
             .Select(x => new CoefficientGetDto
             {
+                CompanyId = x.CompanyId,
                 Company = x.Company.Name,
                 Source = x.Source.Name,
                 Year = x.Year,

@@ -11,5 +11,13 @@ public class DatabaseContext : DbContext
 
     public DatabaseContext(DbContextOptions<DatabaseContext> options) : base(options)
     {
+        //Database.EnsureDeleted();
+        //Database.EnsureCreated();
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Sale>().HasIndex(x => x.CompanyId);
+        modelBuilder.Entity<Purchase>().HasIndex(x => x.CompanyId);
     }
 }

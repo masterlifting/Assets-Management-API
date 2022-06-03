@@ -1,13 +1,14 @@
-﻿using IM.Service.Common.Net.Models.Services;
-using IM.Service.Market.Domain.DataAccess;
+﻿using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Models.Api.Http;
+using IM.Service.Market.Services.Entity;
+
 using Microsoft.EntityFrameworkCore;
 
 using System.Linq.Expressions;
-using IM.Service.Market.Services.Entity;
-using static IM.Service.Common.Net.Enums;
-using static IM.Service.Common.Net.Helpers.ServiceHelper;
+using IM.Service.Shared.Models.Service;
+using static IM.Service.Shared.Enums;
+using static IM.Service.Shared.Helpers.ServiceHelper;
 
 namespace IM.Service.Market.Services.Http;
 
@@ -15,17 +16,17 @@ public class RatingApi
 {
     private readonly Repository<Rating> ratingRepo;
     private readonly Repository<Company> companyRepo;
-    private readonly RatingCalculator calculator;
+    private readonly RatingService ratingService;
     private const int resultRoundValue = 3;
 
     public RatingApi(
         Repository<Rating> ratingRepo,
         Repository<Company> companyRepo,
-        RatingCalculator calculator)
+        RatingService ratingService)
     {
         this.ratingRepo = ratingRepo;
         this.companyRepo = companyRepo;
-        this.calculator = calculator;
+        this.ratingService = ratingService;
     }
 
     public async Task<RatingGetDto> GetAsync(int place)
@@ -85,6 +86,7 @@ public class RatingApi
             ? throw new NullReferenceException(nameof(rating))
             : new RatingGetDto
             {
+                CompanyId = company.Id,
                 Company = company.Name,
                 Place = places[rating.CompanyId],
                 Result = rating.Result.HasValue ? decimal.Round(rating.Result.Value, resultRoundValue) : null,
@@ -114,6 +116,7 @@ public class RatingApi
             .GetPaginationQueryDesc(pagination, orderSelector)
             .Select(x => new
             {
+                x.CompanyId,
                 CompanyName = x.Company.Name,
                 x.Result,
                 x.ResultPrice,
@@ -129,6 +132,7 @@ public class RatingApi
             .Select((x, i) => new RatingGetDto
             {
                 Place = placeStart + i,
+                CompanyId = x.CompanyId,
                 Company = x.CompanyName,
                 Result = x.Result.HasValue ? decimal.Round(x.Result.Value, resultRoundValue) : null,
                 ResultPrice = x.ResultPrice.HasValue ? decimal.Round(x.ResultPrice.Value, resultRoundValue) : null,
@@ -143,5 +147,5 @@ public class RatingApi
     }
 
     public Task<string> RecalculateAsync(CompareType compareType, string? companyId, int year = 0, int month = 0, int day = 0) =>
-        calculator.RecompareRatingAsync(compareType, companyId, year, month, day);
+        ratingService.RecompareAsync(compareType, companyId, year, month, day);
 }

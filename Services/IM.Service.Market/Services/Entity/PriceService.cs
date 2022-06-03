@@ -1,85 +1,57 @@
-﻿using System.Runtime.Serialization;
-using IM.Service.Common.Net.Helpers;
-using IM.Service.Common.Net.RabbitMQ.Configuration;
-using IM.Service.Market.Domain.DataAccess;
+﻿using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Domain.Entities.Interfaces;
-using static IM.Service.Market.Enums;
+using IM.Service.Market.Services.Data;
+using IM.Service.Market.Services.Helpers;
+using IM.Service.Market.Settings;
+using IM.Service.Shared.Models.RabbitMq.Api;
+using IM.Service.Shared.RabbitMq;
+
+using Microsoft.Extensions.Options;
 
 namespace IM.Service.Market.Services.Entity;
 
-public sealed class PriceService : ChangeStatusService<Price>
+public sealed class PriceService : StatusChanger<Price>
 {
+    private readonly string rabbitConnectionString;
+    public DataLoader<Price> Loader { get; }
     private readonly Repository<Price> priceRepo;
     private readonly Repository<Split> splitRepo;
 
-    public PriceService(Repository<Price> priceRepo, Repository<Split> splitRepo) : base(priceRepo)
+    public PriceService(IOptions<ServiceSettings> options, Repository<Price> priceRepo, Repository<Split> splitRepo, DataLoader<Price> loader) : base(priceRepo)
     {
+        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        Loader = loader;
         this.priceRepo = priceRepo;
         this.splitRepo = splitRepo;
     }
 
-    public async Task SetValueTrueAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
-    {
-        if (!JsonHelper.TryDeserialize(data, out T? entity))
-            throw new SerializationException(typeof(T).Name);
-
-        var result = entity switch
-        {
-            Price price => await SetValueAsync(action, price),
-            Split split => await SetValueAsync(action, split),
-            _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
-        };
-
-        foreach (var price in result)
-        {
-            price.StatusId = (byte)Statuses.Ready;
-            if (price.ValueTrue == 0)
-                price.ValueTrue = price.Value;
-        }
-
-        await priceRepo.UpdateRangeAsync(result, $"{nameof(SetValueTrueAsync)}: {string.Join("; ", result.Select(x => x.CompanyId).Distinct())}");
-    }
-    public async Task SetValueTrueRangeAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
-    {
-        if (!JsonHelper.TryDeserialize(data, out T[]? entities))
-            throw new SerializationException(typeof(T).Name);
-
-        var result = entities switch
-        {
-            Price[] prices => await SetValueAsync(action, prices),
-            Split[] splits => await SetValueAsync(action, splits),
-            _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
-        };
-
-        foreach (var price in result)
-        {
-            price.StatusId = (byte)Statuses.Ready;
-            if (price.ValueTrue == 0)
-                price.ValueTrue = price.Value;
-        }
-
-        await priceRepo.UpdateRangeAsync(result, $"{nameof(SetValueTrueRangeAsync)}: {string.Join("; ", result.Select(x => x.CompanyId).Distinct())}");
-    }
-
-    private async Task<Price[]> SetValueAsync(QueueActions action, Price price)
+    public async Task SetValueTrueAsync(QueueActions action, Price price)
     {
         if (action is QueueActions.Delete)
-            return Array.Empty<Price>();
+        {
+            await TransferPriceAsync(price, action);
+            return;
+        }
 
         var splits = await splitRepo.GetSampleAsync(x => x.CompanyId == price.CompanyId && x.Date <= price.Date);
 
         if (!splits.Any())
-            return new[] { price };
+        {
+            await TransferPriceAsync(price, action);
+            return;
+        }
 
-        Compute(action, splits, price);
+        ComputeValueTrue(action, splits, price);
 
-        return new[] { price };
+        await UpdatePriceAsync(price, action);
     }
-    private async Task<Price[]> SetValueAsync(QueueActions action, Price[] prices)
+    public async Task SetValueTrueAsync(QueueActions action, Price[] prices)
     {
         if (action is QueueActions.Delete)
-            return Array.Empty<Price>();
+        {
+            await TransferPricesAsync(prices, action);
+            return;
+        }
 
         var companyIds = prices.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
         var dateMin = prices.Min(x => x.Date);
@@ -88,35 +60,39 @@ public sealed class PriceService : ChangeStatusService<Price>
         var splits = await splitRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId) && x.Date >= dateMin && x.Date <= dateMax);
 
         if (!splits.Any())
-            return prices;
+        {
+            await TransferPricesAsync(prices, action);
+            return;
+        }
 
         foreach (var group in splits.GroupBy(x => x.CompanyId))
-            Compute(action, group.Key, group, prices);
+            ComputeValueTrue(action, group.Key, group, prices);
 
-        return prices;
+        await UpdatePricesAsync(prices, action);
     }
 
-    private async Task<Price[]> SetValueAsync(QueueActions action, Split split)
+    public async Task SetValueTrueAsync(QueueActions action, Split split)
     {
         var splits = await splitRepo.GetSampleAsync(x => x.CompanyId == split.CompanyId);
         var prices = await priceRepo.GetSampleAsync(x => x.CompanyId == split.CompanyId && x.Date >= split.Date);
 
-        if(!prices.Any())
-            return Array.Empty<Price>();
+        if (!prices.Any())
+        {
+            await TransferPricesAsync(prices, action);
+            return;
+        }
 
         if (!splits.Any())
         {
-            foreach (var price in prices)
-                price.ValueTrue = 0;
-
-            return prices;
+            await TransferPricesAsync(prices, action);
+            return;
         }
 
-        Compute(action, split.CompanyId, splits, prices);
+        ComputeValueTrue(action, split.CompanyId, splits, prices);
 
-        return prices;
+        await UpdatePricesAsync(prices, action);
     }
-    private async Task<Price[]> SetValueAsync(QueueActions action, Split[] splits)
+    public async Task SetValueTrueAsync(QueueActions action, Split[] splits)
     {
         var companyIds = splits.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
         var dateMin = splits.Min(x => x.Date);
@@ -124,23 +100,24 @@ public sealed class PriceService : ChangeStatusService<Price>
         var prices = await priceRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId) && x.Date >= dateMin);
 
         if (!prices.Any())
-            return Array.Empty<Price>();
+        {
+            await TransferPricesAsync(prices, action);
+            return;
+        }
 
         if (!_splits.Any())
         {
-            foreach (var price in prices)
-                price.ValueTrue = 0;
-
-            return prices;
+            await TransferPricesAsync(prices, action);
+            return;
         }
 
         foreach (var group in splits.GroupBy(x => x.CompanyId))
-            Compute(action, group.Key, group, prices);
+            ComputeValueTrue(action, group.Key, group, prices);
 
-        return prices;
+        await UpdatePricesAsync(prices, action);
     }
 
-    private static void Compute(QueueActions action, IEnumerable<Split> splits, Price price)
+    private static void ComputeValueTrue(QueueActions action, IEnumerable<Split> splits, Price price)
     {
         if (action is QueueActions.Delete)
         {
@@ -151,7 +128,7 @@ public sealed class PriceService : ChangeStatusService<Price>
         var splitAgregatedValue = splits.OrderBy(x => x.Date).Select(x => x.Value).Aggregate((x, y) => x * y);
         price.ValueTrue = price.Value * splitAgregatedValue;
     }
-    private static void Compute(QueueActions action, string companyId, IEnumerable<Split> splits, IReadOnlyCollection<Price> prices)
+    private static void ComputeValueTrue(QueueActions action, string companyId, IEnumerable<Split> splits, IReadOnlyCollection<Price> prices)
     {
         var splitData = splits.OrderBy(x => x.Date).Select(x => (x.Date, x.Value)).ToArray();
         var targetData = new List<(DateOnly dateStart, DateOnly dateEnd, int value)>(splitData.Length);
@@ -178,5 +155,66 @@ public sealed class PriceService : ChangeStatusService<Price>
             foreach (var price in prices.Where(x => x.CompanyId == companyId && x.Date >= splitDate))
                 price.ValueTrue = price.Value * splitValue;
         }
+    }
+
+    private async Task UpdatePricesAsync(Price[] prices, QueueActions action)
+    {
+        await priceRepo.UpdateRangeAsync(prices, $"{nameof(SetValueTrueAsync)}: {string.Join("; ", prices.Select(x => x.CompanyId).Distinct())}").ConfigureAwait(false);
+        await TransferPricesAsync(prices, action);
+    }
+    private async Task UpdatePriceAsync(Price price, QueueActions action)
+    {
+        await priceRepo.UpdateAsync(new object[] { price.CompanyId, price.SourceId, price.Date }, price, $"{nameof(SetValueTrueAsync)}: {price.CompanyId}");
+        await TransferPriceAsync(price, action);
+    }
+
+    private async Task TransferPriceAsync(Price entity, QueueActions action)
+    {
+        var model = await GetPriceToTransferAsync(entity);
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Price, action, model);
+    }
+    private async Task TransferPricesAsync(Price[] entities, QueueActions action)
+    {
+        var models = await GetPricesToTransferAsync(entities);
+        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
+        publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Prices, action, models);
+    }
+
+    private async Task<PriceMqDto[]> GetPricesToTransferAsync(Price[] entities)
+    {
+        var companyIds = entities.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
+        var sourceIds = entities.GroupBy(x => x.SourceId).Select(x => x.Key).ToArray();
+
+        var date = DateOnly.FromDateTime(DateTime.Now.Date.AddDays(-365));
+
+        var prices = await priceRepo.GetSampleAsync(
+            x => companyIds.Contains(x.CompanyId) && sourceIds.Contains(x.SourceId) && x.Date >= date,
+            x => new { x.CompanyId, x.Date, x.ValueTrue });
+
+        var result = prices
+            .GroupBy(x => x.CompanyId)
+            .Select(x => new PriceMqDto(
+                x.Key,
+                x.MaxBy(y => y.Date)!.ValueTrue,
+                 Math.Round(x.Average(y => y.ValueTrue),4)))
+            .ToArray();
+
+        return result;
+    }
+    private async Task<PriceMqDto> GetPriceToTransferAsync(Price entity)
+    {
+        var date = DateOnly.FromDateTime(DateTime.Now.Date.AddDays(-365));
+
+        var prices = await priceRepo.GetSampleAsync(
+            x => entity.CompanyId.Equals(x.CompanyId) && entity.SourceId.Equals(x.SourceId) && x.Date >= date,
+            x => new { x.CompanyId, x.Date, x.ValueTrue });
+
+        var result = new PriceMqDto(
+                entity.CompanyId,
+                prices.MaxBy(y => y.Date)!.ValueTrue,
+                Math.Round(prices.Average(y => y.ValueTrue),4));
+
+        return result;
     }
 }

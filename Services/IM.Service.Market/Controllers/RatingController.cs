@@ -3,8 +3,8 @@ using IM.Service.Market.Services.Http;
 
 using Microsoft.AspNetCore.Mvc;
 
-using static IM.Service.Common.Net.Enums;
-using static IM.Service.Common.Net.Helpers.ServiceHelper;
+using static IM.Service.Shared.Enums;
+using static IM.Service.Shared.Helpers.ServiceHelper;
 
 namespace IM.Service.Market.Controllers;
 

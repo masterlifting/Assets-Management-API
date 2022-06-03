@@ -1,5 +1,5 @@
-﻿using IM.Service.Common.Net.Attributes;
-using IM.Service.Common.Net.Models.Entity.Interfaces;
+﻿using IM.Service.Shared.Attributes;
+using IM.Service.Shared.Models.Entity.Interfaces;
 using IM.Service.Market.Domain.Entities.Interfaces;
 
 namespace IM.Service.Market.Domain.Entities;

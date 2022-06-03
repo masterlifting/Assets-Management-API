@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-using IM.Service.Common.Net.Models.Entity;
+using IM.Service.Shared.Models.Entity;
 
 namespace IM.Service.Market.Domain.Entities.Catalogs;
 

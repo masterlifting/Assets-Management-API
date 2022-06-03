@@ -12,7 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
-using static IM.Service.Common.Net.Helpers.JsonHelper;
+using static IM.Service.Shared.Helpers.JsonHelper;
 
 namespace DataSetter;
 

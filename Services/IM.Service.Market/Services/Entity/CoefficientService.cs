@@ -1,17 +1,16 @@
-﻿using System.Runtime.Serialization;
-using IM.Service.Common.Net.Helpers;
-using IM.Service.Common.Net.RabbitMQ.Configuration;
+﻿using IM.Service.Shared.Helpers;
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Domain.Entities.Interfaces;
+using IM.Service.Market.Services.Helpers;
 using Microsoft.EntityFrameworkCore;
-using static IM.Service.Common.Net.Helpers.LogicHelper;
-using static IM.Service.Market.Enums;
+
+using static IM.Service.Shared.Helpers.LogicHelper;
+using IM.Service.Shared.RabbitMq;
 
 namespace IM.Service.Market.Services.Entity;
 
-public sealed class CoefficientService : ChangeStatusService<Coefficient>
+public sealed class CoefficientService : StatusChanger<Coefficient>
 {
     private readonly Repository<Coefficient> coefficientRepo;
     private readonly Repository<Report> reportRepo;
@@ -32,50 +31,23 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
         this.priceRepo = priceRepo;
         this.logger = logger;
     }
-
-    public async Task SetCoefficientAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
-    {
-        if (!JsonHelper.TryDeserialize(data, out T? entity))
-            throw new SerializationException(typeof(T).Name);
-
-        var coefficients = entity switch
-        {
-            Report _report => await GetAsync(action, _report),
-            Price _price => await GetAsync(action, _price),
-            Float _float => await GetAsync(action, _float),
-            _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
-        };
-
-        await coefficientRepo.CreateUpdateRangeAsync(coefficients, new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync));
-    }
-    public async Task SetCoefficientRangeAsync<T>(string data, QueueActions action) where T : class, IDataIdentity
-    {
-        if (!JsonHelper.TryDeserialize(data, out T[]? entities))
-            throw new SerializationException(typeof(T).Name);
-
-        var coefficients = entities switch
-        {
-            Report[] reports => await GetAsync(action, reports),
-            Price[] prices => await GetAsync(action, prices),
-            Float[] floats => await GetAsync(action, floats),
-            _ => throw new ArgumentOutOfRangeException($"{typeof(T).Name} not recognized")
-        };
-
-        await coefficientRepo.CreateUpdateRangeAsync(coefficients, new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientRangeAsync));
-    }
-
-    private async Task<Coefficient[]> GetAsync(QueueActions action, Report report)
+    public async Task SetCoefficientAsync(QueueActions action, Report report)
     {
         if (action is not QueueActions.Delete)
-            return await GetAsync(report);
+        {
+            await coefficientRepo.CreateUpdateRangeAsync(await GetCoefficientAsync(report), new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync) + $": {report.CompanyId}");
+            return;
+        }
 
         await coefficientRepo.DeleteAsync(new object[] { report.CompanyId, report.SourceId, report.Year, report.Quarter }, nameof(SetCoefficientAsync) + $": {report.CompanyId}");
-        return Array.Empty<Coefficient>();
     }
-    private async Task<Coefficient[]> GetAsync(QueueActions action, Float _float)
+    public async Task SetCoefficientAsync(QueueActions action, Float _float)
     {
         if (action is not QueueActions.Delete)
-            return await GetAsync(_float);
+        {
+            await coefficientRepo.CreateUpdateRangeAsync(await GetCoefficientAsync(_float), new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync) + $": {_float.CompanyId}");
+            return;
+        }
 
         var quarter = QuarterHelper.GetQuarter(_float.Date.Month);
         var months = QuarterHelper.GetMonths(quarter);
@@ -93,12 +65,15 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
 
         _float = lastFloat ?? throw new NullReferenceException($"Не найден {nameof(Float)} для расчета");
 
-        return await GetAsync(_float);
+        await coefficientRepo.CreateUpdateRangeAsync(await GetCoefficientAsync(_float), new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync) + $": {_float.CompanyId}");
     }
-    private async Task<Coefficient[]> GetAsync(QueueActions action, Price price)
+    public async Task SetCoefficientAsync(QueueActions action, Price price)
     {
         if (action is not QueueActions.Delete)
-            return await GetAsync(price);
+        {
+            await coefficientRepo.CreateUpdateRangeAsync(await GetCoefficientAsync(price), new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync) + $": {price.CompanyId}");
+            return;
+        }
 
         var quarter = QuarterHelper.GetQuarter(price.Date.Month);
         var months = QuarterHelper.GetMonths(quarter);
@@ -116,10 +91,10 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
 
         price = lastPrice ?? throw new NullReferenceException($"Не найден {nameof(Price)} для расчета");
 
-        return await GetAsync(price);
+        await coefficientRepo.CreateUpdateRangeAsync(await GetCoefficientAsync(price), new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync) + $": {price.CompanyId}");
     }
 
-    private async Task<Coefficient[]> GetAsync(QueueActions action, Report[] reports)
+    public async Task SetCoefficientAsync(QueueActions action, Report[] reports)
     {
         if (action is QueueActions.Delete)
         {
@@ -133,9 +108,7 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
                 })
                 .ToArray();
 
-            await coefficientRepo.DeleteRangeAsync(deletedCoefficients, nameof(SetCoefficientRangeAsync));
-
-            return Array.Empty<Coefficient>();
+            await coefficientRepo.DeleteRangeAsync(deletedCoefficients, nameof(SetCoefficientAsync) + $": CompanyIds: {string.Join(";", deletedCoefficients.Select(x => x.CompanyId).Distinct())}");
         }
 
         reports = reports.OrderBy(x => x.Year).ThenBy(x => x.Quarter).ToArray();
@@ -146,17 +119,17 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
         {
             try
             {
-                coefficients.AddRange(await GetAsync(report));
+                coefficients.AddRange(await GetCoefficientAsync(report));
             }
             catch (Exception exception)
             {
-                logger.LogWarning(nameof(SetCoefficientAsync), report.CompanyId, exception.Message);
+                logger.LogWarning(nameof(GetCoefficientAsync), report.CompanyId, exception.Message);
             }
         }
 
-        return coefficients.ToArray();
+        await coefficientRepo.CreateUpdateRangeAsync(coefficients, new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync) + $": CompanyIds: {string.Join(";", coefficients.Select(x => x.CompanyId).Distinct())}");
     }
-    private async Task<Coefficient[]> GetAsync(QueueActions action, Float[] floats)
+    public async Task SetCoefficientAsync(QueueActions action, Float[] floats)
     {
         if (action is QueueActions.Delete)
         {
@@ -212,17 +185,17 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
         {
             try
             {
-                coefficients.AddRange(await GetAsync(report, floats));
+                coefficients.AddRange(await GetCoefficientAsync(report, floats));
             }
             catch (Exception exception)
             {
-                logger.LogWarning(nameof(SetCoefficientAsync), report.CompanyId, exception.Message);
+                logger.LogWarning(nameof(GetCoefficientAsync), report.CompanyId, exception.Message);
             }
         }
 
-        return coefficients.ToArray();
+        await coefficientRepo.CreateUpdateRangeAsync(coefficients, new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync) + $": CompanyIds: {string.Join(";", coefficients.Select(x => x.CompanyId).Distinct())}");
     }
-    private async Task<Coefficient[]> GetAsync(QueueActions action, Price[] prices)
+    public async Task SetCoefficientAsync(QueueActions action, Price[] prices)
     {
         if (action is QueueActions.Delete)
         {
@@ -281,19 +254,18 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
         {
             try
             {
-                coefficients.AddRange(await GetAsync(report, null, prices));
+                coefficients.AddRange(await GetCoefficientAsync(report, null, prices));
             }
             catch (Exception exception)
             {
-                logger.LogWarning(nameof(SetCoefficientAsync), report.CompanyId, exception.Message);
+                logger.LogWarning(nameof(GetCoefficientAsync), report.CompanyId, exception.Message);
             }
         }
 
-        return coefficients.ToArray();
+        await coefficientRepo.CreateUpdateRangeAsync(coefficients, new DataQuarterComparer<Coefficient>(), nameof(SetCoefficientAsync) + $": CompanyIds: {string.Join(";", coefficients.Select(x => x.CompanyId).Distinct())}");
     }
 
-
-    private async Task<Coefficient[]> GetAsync(Report report, Float[]? floats = null, Price[]? prices = null)
+    private async Task<Coefficient[]> GetCoefficientAsync(Report report, Float[]? floats = null, Price[]? prices = null)
     {
         var lastDate = new DateOnly(report.Year, QuarterHelper.GetLastMonth(report.Quarter), 28);
 
@@ -319,9 +291,9 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
 
         return !floats.Any()
             ? throw new ArithmeticException($"floats for '{report.CompanyId}' with date less '{lastDate}' not found")
-            : new[] { await GetAsync(report, floats[^1], prices) };
+            : new[] { await GetCoefficientAsync(report, floats[^1], prices) };
     }
-    private async Task<Coefficient[]> GetAsync(Float _float, Report[]? reports = null, Price[]? prices = null)
+    private async Task<Coefficient[]> GetCoefficientAsync(Float _float, Report[]? reports = null, Price[]? prices = null)
     {
         var firstDate = _float.Date;
         DateOnly? lastDate = null;
@@ -379,11 +351,11 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
         var coefficients = new List<Coefficient>(_reports.Length);
 
         foreach (var report in _reports)
-            coefficients.Add(await GetAsync(report, _float, prices));
+            coefficients.Add(await GetCoefficientAsync(report, _float, prices));
 
         return coefficients.ToArray();
     }
-    private async Task<Coefficient[]> GetAsync(Price price, Report[]? reports = null, Price[]? prices = null)
+    private async Task<Coefficient[]> GetCoefficientAsync(Price price, Report[]? reports = null, Price[]? prices = null)
     {
         var firstDate = price.Date;
 
@@ -438,13 +410,12 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
         var coefficients = new List<Coefficient>(_reports.Length);
 
         foreach (var report in _reports)
-            coefficients.Add(await GetAsync(report, price));
+            coefficients.Add(await GetCoefficientAsync(report, price));
 
         return coefficients.ToArray();
     }
 
-
-    private async Task<Coefficient> GetAsync(Report report, Float _float, IEnumerable<Price>? prices = null)
+    private async Task<Coefficient> GetCoefficientAsync(Report report, Float _float, IEnumerable<Price>? prices = null)
     {
         var firstDate = new DateOnly(report.Year, QuarterHelper.GetFirstMonth(report.Quarter), 1);
         var lastDate = new DateOnly(report.Year, QuarterHelper.GetLastMonth(report.Quarter), 28);
@@ -472,7 +443,7 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
             ? throw new ArithmeticException($"prices for '{report.CompanyId}' with date betwen '{firstDate}' - '{lastDate}' not found")
             : Compute(report, _float, _prices[^1]);
     }
-    private async Task<Coefficient> GetAsync(Report report, Price price, IEnumerable<Float>? floats = null)
+    private async Task<Coefficient> GetCoefficientAsync(Report report, Price price, IEnumerable<Float>? floats = null)
     {
         var lastDate = new DateOnly(report.Year, QuarterHelper.GetLastMonth(report.Quarter), 28);
 
@@ -496,7 +467,6 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
             : Compute(report, _floats[^1], price);
     }
 
-
     private static Coefficient Compute(Report report, Float _float, Price price)
     {
         var coefficient = new Coefficient
@@ -505,7 +475,7 @@ public sealed class CoefficientService : ChangeStatusService<Coefficient>
             SourceId = report.SourceId,
             Year = report.Year,
             Quarter = report.Quarter,
-            StatusId = (byte)Statuses.Ready
+            StatusId = (byte)Enums.Statuses.Ready
         };
 
         if (report.Asset is not null)

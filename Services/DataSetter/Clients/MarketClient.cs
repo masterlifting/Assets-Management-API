@@ -3,7 +3,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
 using System.Net.Http;
-using static IM.Service.Common.Net.Helpers.HttpHelper;
+using static IM.Service.Shared.Helpers.HttpHelper;
 
 namespace DataSetter.Clients;
 

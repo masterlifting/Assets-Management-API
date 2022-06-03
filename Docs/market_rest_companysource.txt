@@ -1,0 +1,50 @@
+[
+    {
+        "Id": 2,
+        "Value":"MOEX"
+    },
+    {
+        "Id": 5,
+        "Value":"moskovskaya-birzha-oao"
+    }
+]
+[
+    {
+        "Id": 4,
+        "Value":"KD"
+    },
+    {
+        "Id": 5,
+        "Value":"kyndryl-holdings"
+    }
+]
+[
+    {
+        "Id": 4,
+        "Value":"OGN"
+    },
+    {
+        "Id": 5,
+        "Value":"organon-co"
+    }
+]
+[
+    {
+        "Id": 4,
+        "Value":"VTRS"
+    },
+    {
+        "Id": 5,
+        "Value":"mylan-inc"
+    }
+]
+[
+    {
+        "Id": 4,
+        "Value":"CHX"
+    },
+    {
+        "Id": 5,
+        "Value":"apergy"
+    }
+]

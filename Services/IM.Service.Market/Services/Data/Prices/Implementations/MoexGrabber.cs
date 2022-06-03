@@ -5,7 +5,7 @@ using IM.Service.Market.Models.Clients;
 
 using System.Globalization;
 
-using static IM.Service.Common.Net.Enums;
+using static IM.Service.Shared.Enums;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.Data.Prices.Implementations;
@@ -53,7 +53,7 @@ public sealed class MoexGrabber : IDataGrabber<Price>
                     yield return data;
     }
 
-    private static Price[] Map(MoexCurrentPriceResultModel clientResult, IEnumerable<string> tickers)
+    private static IEnumerable<Price> Map(MoexCurrentPriceResultModel clientResult, IEnumerable<string> tickers)
     {
         var clientData = clientResult.Data.Marketdata.Data;
 
@@ -63,7 +63,8 @@ public sealed class MoexGrabber : IDataGrabber<Price>
             date = x[48],
             price = x[12]
         })
-        .Where(x => x.ticker != null);
+        .Where(x => x.ticker != null && x.price != null)
+        .ToArray();
 
         var tickersData = prepareData.Join(tickers, x => x.ticker, y => y, (x, y) => new
         {
@@ -82,6 +83,7 @@ public sealed class MoexGrabber : IDataGrabber<Price>
                     CompanyId = tickersData[i].Ticker,
                     Date = date,
                     Value = price,
+                    ValueTrue = price,
                     CurrencyId = (byte)Currencies.Rub,
                     SourceId = (byte)Sources.Moex,
                     StatusId = (byte)Statuses.New,
@@ -109,6 +111,7 @@ public sealed class MoexGrabber : IDataGrabber<Price>
                     CompanyId = ticker,
                     Date = date,
                     Value = price,
+                    ValueTrue = price,
                     CurrencyId = (byte)Currencies.Rub,
                     SourceId = (byte)Sources.Moex,
                     StatusId = (byte)Statuses.New

@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Entity;
+﻿using IM.Service.Shared.Models.Entity;
 
 using System.Text.Json.Serialization;
 

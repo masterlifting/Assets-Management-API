@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace IM.Service.Recommendations.Domain.Entities;
 
@@ -11,8 +12,14 @@ public class Purchase
     public string CompanyId { get; set; } = null!;
     public virtual Company Company { get; set; } = null!;
 
-    public DateTime Date { get; set; } = DateTime.UtcNow;
+    public DateTime UpdateTime { get; set; } = DateTime.UtcNow;
 
+    [Column(TypeName = "Decimal(18,4)")]
     public decimal Price { get; set; }
-    public int Percent { get; set; }
+
+    [Column(TypeName = "Decimal(18,4)")]
+    public decimal Plan { get; set; }
+
+    [Column(TypeName = "Decimal(18,4)")]
+    public decimal? Fact { get; set; }
 }

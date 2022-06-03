@@ -3,7 +3,7 @@ using IM.Service.Market.Services.Http;
 
 using Microsoft.AspNetCore.Mvc;
 
-using static IM.Service.Common.Net.Helpers.ServiceHelper;
+using static IM.Service.Shared.Helpers.ServiceHelper;
 
 namespace IM.Service.Market.Controllers;
 
@@ -44,7 +44,6 @@ public class CompaniesController : ControllerBase
             return BadRequest(exception.Message);
         }
     }
-
     [HttpGet("{companyId}/sources/")]
     public async Task<IActionResult> GetSources(string companyId)
     {
@@ -57,7 +56,6 @@ public class CompaniesController : ControllerBase
             return BadRequest(exception.Message);
         }
     }
-
     [HttpGet("{companyId}/sources/{sourceId:int}")]
     public async Task<IActionResult> GetSource(string companyId, int sourceId)
     {
@@ -70,13 +68,61 @@ public class CompaniesController : ControllerBase
             return BadRequest(exception.Message);
         }
     }
-
     [HttpPost("{companyId}/sources/")]
     public async Task<IActionResult> CrateSource(string companyId, IEnumerable<SourcePostDto> models)
     {
         try
         {
             return Ok(await csApi.CreateUpdateDeleteAsync(companyId, models));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpGet("{companyId}/sources/load/")]
+    public async Task<IActionResult> Load(string companyId)
+    {
+        try
+        {
+            return Ok(await GetLoaderAsync(api, companyId, null));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpGet("{companyId}/sources/{sourceId:int}/load/")]
+    public async Task<IActionResult> Load(string companyId, int sourceId)
+    {
+        try
+        {
+            return Ok(await GetLoaderAsync(api, companyId, sourceId));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    
+    [HttpGet("sources/load/")]
+    public async Task<IActionResult> Load()
+    {
+        try
+        {
+            return Ok(await GetLoaderAsync(api, null, null));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpGet("sources/{sourceId:int}load/")]
+    public async Task<IActionResult> Load(int sourceId)
+    {
+        try
+        {
+            return Ok(await GetLoaderAsync(api, null, sourceId));
         }
         catch (Exception exception)
         {
@@ -158,5 +204,35 @@ public class CompaniesController : ControllerBase
         {
             return BadRequest(exception.Message);
         }
+    }
+
+    private static Task<string> GetLoaderAsync(CompanyApi api, string? companyId, int? sourceId)
+    {
+        Task<string> loader;
+
+        switch (companyId)
+        {
+            case null when sourceId is null:
+                loader = api.LoadAsync();
+                break;
+            case null when true:
+                loader = api.LoadAsync((byte)sourceId.Value);
+                break;
+            default:
+                {
+                    var companyIds = companyId.Split(',');
+
+                    loader = sourceId is null
+                        ? companyIds.Length > 1
+                            ? Task.FromResult("Загрузка по выбранным компаниям не предусмотрена")
+                            : api.LoadAsync(companyId)
+                        : companyIds.Length > 1
+                            ? Task.FromResult("Загрузка по выбранным компаниям не предусмотрена")
+                            : api.LoadAsync(companyId, (byte)sourceId.Value);
+                    break;
+                }
+        }
+
+        return loader;
     }
 }

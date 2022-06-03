@@ -1,13 +1,12 @@
-﻿using IM.Service.Common.Net.RabbitMQ;
-using IM.Service.Common.Net.RabbitMQ.Configuration;
-using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.RepositoryService;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Settings;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using static IM.Service.Common.Net.Enums;
+using static IM.Service.Shared.Enums;
 using static IM.Service.Market.Enums;
 
 

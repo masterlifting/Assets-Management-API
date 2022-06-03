@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.Models.Entity.Interfaces;
+﻿using IM.Service.Shared.Models.Entity.Interfaces;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.DataAccess.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
@@ -6,7 +6,7 @@ using IM.Service.Market.Services.Http.Common;
 
 using Microsoft.AspNetCore.Mvc;
 
-using static IM.Service.Common.Net.Enums;
+using static IM.Service.Shared.Enums;
 
 namespace IM.Service.Market.Controllers.Base;
 
@@ -153,49 +153,5 @@ public class QuarterControllerBase<TEntity, TPost, TGet> : ControllerBase
         {
             return BadRequest(exception.Message);
         }
-    }
-
-    [HttpGet("load/")]
-    public async Task<IActionResult> Load(string? companyId, int? sourceId)
-    {
-        try
-        {
-            return Ok(await GetLoaderAsync(apiWrite, companyId, sourceId));
-        }
-        catch (Exception exception)
-        {
-            return BadRequest(exception.Message);
-        }
-    }
-
-
-    private static Task<string> GetLoaderAsync(RestApiWrite<TEntity, TPost> api, string? companyId, int? sourceId)
-    {
-        Task<string> loader;
-
-        switch (companyId)
-        {
-            case null when sourceId is null:
-                loader = api.LoadAsync();
-                break;
-            case null when true:
-                loader = api.LoadAsync((byte)sourceId.Value);
-                break;
-            default:
-                {
-                    var companyIds = companyId.Split(',');
-
-                    loader = sourceId is null
-                        ? companyIds.Length > 1
-                            ? Task.FromResult("Загрузка по выбранным компаниям не предусмотрена")
-                            : api.LoadAsync(companyId)
-                        : companyIds.Length > 1
-                            ? Task.FromResult("Загрузка по выбранным компаниям не предусмотрена")
-                            : api.LoadAsync(companyId, (byte)sourceId.Value);
-                    break;
-                }
-        }
-
-        return loader;
     }
 }

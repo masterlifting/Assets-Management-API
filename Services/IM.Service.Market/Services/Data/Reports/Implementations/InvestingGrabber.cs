@@ -6,8 +6,8 @@ using IM.Service.Market.Domain.Entities.ManyToMany;
 
 using System.Globalization;
 
-using static IM.Service.Common.Net.Enums;
-using static IM.Service.Common.Net.Helpers.LogicHelper;
+using static IM.Service.Shared.Enums;
+using static IM.Service.Shared.Helpers.LogicHelper;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.Data.Reports.Implementations;

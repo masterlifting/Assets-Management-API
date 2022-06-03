@@ -1,6 +1,6 @@
-﻿using IM.Service.Common.Net.Helpers;
-using IM.Service.Common.Net.Models.Entity.Interfaces;
-using IM.Service.Common.Net.RepositoryService.Filters;
+﻿using IM.Service.Shared.Helpers;
+using IM.Service.Shared.Models.Entity.Interfaces;
+using IM.Service.Shared.RepositoryService.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
 
 namespace IM.Service.Market.Services.Http.Common.Interfaces;

@@ -1,10 +1,14 @@
-using IM.Service.Common.Net.Helpers;
-using IM.Service.Common.Net.RepositoryService;
 using IM.Service.Recommendations.Clients;
 using IM.Service.Recommendations.Domain.DataAccess;
 using IM.Service.Recommendations.Domain.DataAccess.RepositoryHandlers;
 using IM.Service.Recommendations.Domain.Entities;
+using IM.Service.Recommendations.Services.Background;
+using IM.Service.Recommendations.Services.Entity;
+using IM.Service.Recommendations.Services.Http;
+using IM.Service.Recommendations.Services.RabbitMq.Transfer.Processes;
 using IM.Service.Recommendations.Settings;
+using IM.Service.Shared.Helpers;
+using IM.Service.Shared.RepositoryService;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -16,9 +20,6 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
-using IM.Service.Recommendations.Services.Background;
-using IM.Service.Recommendations.Services.Http;
-using IM.Service.Recommendations.Services.RabbitMq;
 
 namespace IM.Service.Recommendations;
 
@@ -56,11 +57,21 @@ public class Startup
 
         services.AddScoped(typeof(Repository<>));
         services.AddScoped<RepositoryHandler<Company>, CompanyRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Purchase>, PurchaseRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Sale>, SaleRepositoryHandler>();
 
         services.AddScoped<PurchaseApi>();
         services.AddScoped<SaleApi>();
 
-        services.AddScoped<RabbitActionService>();
+        services.AddScoped<CompanyService>();
+        services.AddScoped<SaleService>();
+        services.AddScoped<PurchaseService>();
+
+        services.AddScoped<SaleProcess>();
+        services.AddScoped<PurchaseProcess>();
+        services.AddScoped<CompanyProcess>();
+        services.AddScoped<Services.RabbitMq.Sync.Processes.CompanyProcess>();
+
         services.AddHostedService<RabbitBackgroundService>();
     }
 

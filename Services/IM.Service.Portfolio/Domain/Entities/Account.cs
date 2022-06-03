@@ -1,22 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using IM.Service.Portfolio.Domain.Entities.Catalogs;
+﻿using IM.Service.Portfolio.Domain.Entities.Catalogs;
+
+using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace IM.Service.Portfolio.Domain.Entities;
 
 public class Account
 {
-    public DateOnly Date { get; init; } = DateOnly.FromDateTime(DateTime.UtcNow);
+    [Key]
+    public int Id { get; set; }
 
     public string Name { get; init; } = null!;
 
-    public virtual Broker Broker { get; set; } = null!;
-    public byte BrokerId { get; init; }
-
-    public virtual User User { get; set; } = null!;
+    public virtual User User { get; init; } = null!;
     public string UserId { get; init; } = null!;
 
-    public virtual IEnumerable<Deal>? Deals { get; set; }
-    public virtual IEnumerable<Event>? Events { get; set; }
-    public virtual IEnumerable<Report>? Reports { get; set; }
+    public virtual Broker Broker { get; init; } = null!;
+    public byte BrokerId { get; init; }
+
+    public DateOnly DateCreate { get; init; } = DateOnly.FromDateTime(DateTime.UtcNow);
 }

@@ -1,8 +1,8 @@
-﻿using IM.Service.Common.Net.Models.Services;
-using IM.Service.Market.Domain.DataAccess;
+﻿using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Api.Http;
+using IM.Service.Shared.Models.Service;
 
 namespace IM.Service.Market.Services.Http;
 

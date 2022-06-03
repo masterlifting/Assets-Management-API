@@ -1,21 +1,17 @@
 ﻿using System;
-using IM.Service.Recommendations.Domain.Entities;
 
-namespace IM.Service.Recommendations.Models.Api.Http
+namespace IM.Service.Recommendations.Models.Api.Http;
+
+public record PurchaseDto
 {
-    public class PurchaseDto
-    {
-        public PurchaseDto() { }
-        public PurchaseDto(Purchase purchase)
-        {
-            Ticker = purchase.CompanyId;
-            Price = purchase.Price;
-            Percent = purchase.Percent;
-            UpdateTime = DateTime.UtcNow;
-        }
-        public string Ticker { get;} = null!;
-        public DateTime UpdateTime { get;}
-        public decimal Price { get; }
-        public int Percent { get; }
-    }
+    public string Company { get; init; } = null!;
+    public PurchaseRecommendationDto[] Recommendations { get; init; } = Array.Empty<PurchaseRecommendationDto>();
+}
+
+public record PurchaseRecommendationDto
+{
+    public string Plan { get; init; } = null!;
+    public string? Fact { get; init; }
+    public decimal Price { get; init; }
+    public bool IrReady { get; init; }
 }

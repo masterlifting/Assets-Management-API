@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -11,11 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IM.Service.Common.Net\IM.Service.Common.Net.csproj" />
+    <Folder Include="Services\Entity\" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\Api\Http\" />
+    <ProjectReference Include="..\IM.Service.Shared\IM.Service.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,14 +1,13 @@
-﻿using IM.Service.Common.Net.RabbitMQ;
-using IM.Service.Common.Net.RabbitMQ.Configuration;
-using IM.Service.Common.Net.RepositoryService;
-using IM.Service.Market.Domain.Entities;
+﻿using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Settings;
+using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.RepositoryService;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-using static IM.Service.Common.Net.Enums;
 using static IM.Service.Market.Enums;
+using static IM.Service.Shared.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 
@@ -119,10 +118,11 @@ public class PriceRepositoryHandler : RepositoryHandler<Price>
             }
 
             publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Prices, QueueActions.Delete, entities);
 
             if (lastEntities.Any())
                 publisher.PublishTask(QueueNames.Market, QueueEntities.Prices, QueueActions.Set, lastEntities);
+
+            publisher.PublishTask(QueueNames.Market, QueueEntities.Prices, QueueActions.Delete, entities);
         }
 
         var newEntities = entities.Where(x => x.StatusId is (byte)Statuses.New).ToArray();

@@ -1,10 +1,11 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Shared.RepositoryService;
+using IM.Service.Recommendations.Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Recommendations.Domain.Entities;
 
 namespace IM.Service.Recommendations.Domain.DataAccess.RepositoryHandlers;
 
@@ -24,6 +25,11 @@ public class CompanyRepositoryHandler : RepositoryHandler<Company>
         foreach (var (Old, New) in result)
         {
             Old.Name = New.Name;
+            Old.RatingPlace = New.RatingPlace;
+            Old.DealValue = New.DealValue;
+            Old.DealCost = New.DealCost;
+            Old.PriceLast = New.PriceLast;
+            Old.PriceAvg = New.PriceAvg;
         }
 
         return result.Select(x => x.Old);

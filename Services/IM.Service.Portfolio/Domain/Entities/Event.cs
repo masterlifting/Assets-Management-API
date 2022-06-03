@@ -8,10 +8,9 @@ public class Event
 {
     [Key]
     public long Id { get; init; }
-    public DateTime DateTime { get; set; } = DateTime.UtcNow;
     public decimal Cost { get; set; }
     public string? Info { get; set; }
-
+    public DateOnly Date { get; set; }
 
     public virtual EventType EventType { get; set; } = null!;
     public byte EventTypeId { get; set; }
@@ -24,10 +23,16 @@ public class Event
     public byte? ExchangeId { get; set; }
 
     public virtual Account Account { get; set; } = null!;
-    public string AccountUserId { get; set; } = null!;
-    public byte AccountBrokerId { get; set; }
-    public string AccountName { get; set; } = null!;
+    public int AccountId { get; set; }
+
+    public virtual User User { get; set; } = null!;
+    public string UserId { get; set; } = null!;
+
+    public virtual Broker Broker { get; set; } = null!;
+    public byte BrokerId { get; set; }
 
     public virtual Currency Currency { get; set; } = null!;
     public byte CurrencyId { get; set; }
+
+    public DateTime UpdateTime { get; set; } = DateTime.UtcNow;
 }

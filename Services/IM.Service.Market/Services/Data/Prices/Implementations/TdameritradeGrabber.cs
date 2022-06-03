@@ -3,7 +3,7 @@ using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Clients;
 
-using static IM.Service.Common.Net.Enums;
+using static IM.Service.Shared.Enums;
 using static IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Services.Data.Prices.Implementations;
@@ -52,13 +52,14 @@ public sealed class TdameritradeGrabber : IDataGrabber<Price>
                     yield return data;
     }
 
-    private static Price[] Map(TdAmeritradeLastPriceResultModel clientResult) =>
+    private static IEnumerable<Price> Map(TdAmeritradeLastPriceResultModel clientResult) =>
         clientResult.data is null
             ? Array.Empty<Price>()
             : clientResult.data.Select(x => new Price
             {
                 CompanyId = x.Key,
                 Value = x.Value.lastPrice,
+                ValueTrue = x.Value.lastPrice,
                 Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Value.regularMarketTradeTimeInLong).DateTime),
                 CurrencyId = (byte)Currencies.Usd,
                 SourceId = (byte)Sources.Tdameritrade,
@@ -72,6 +73,7 @@ public sealed class TdameritradeGrabber : IDataGrabber<Price>
                 CompanyId = clientResult.ticker,
                 Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.datetime).DateTime),
                 Value = x.high,
+                ValueTrue = x.high,
                 CurrencyId = (byte)Currencies.Usd,
                 SourceId = (byte)Sources.Tdameritrade,
                 StatusId = (byte)Statuses.New

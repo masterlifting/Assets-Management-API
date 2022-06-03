@@ -1,4 +1,4 @@
-﻿using IM.Service.Common.Net.RepositoryService;
+﻿using IM.Service.Shared.RepositoryService;
 using IM.Service.Portfolio.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
@@ -26,14 +26,14 @@ public class AccountRepositoryHandler : RepositoryHandler<Account>
     {
         entities = entities.ToArray();
 
+        var names = entities
+            .GroupBy(x => x.Name)
+            .Select(x => x.Key);
         var userIds = entities
             .GroupBy(x => x.UserId)
             .Select(x => x.Key);
         var brockerIds = entities
             .GroupBy(x => x.BrokerId)
-            .Select(x => x.Key);
-        var names = entities
-            .GroupBy(x => x.Name)
             .Select(x => x.Key);
 
         return context.Accounts

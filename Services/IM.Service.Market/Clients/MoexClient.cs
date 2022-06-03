@@ -1,4 +1,4 @@
-using IM.Service.Common.Net.Models.Http;
+using IM.Service.Shared.Models.Http;
 using IM.Service.Market.Models.Clients;
 using IM.Service.Market.Settings;
 using Microsoft.Extensions.Options;
