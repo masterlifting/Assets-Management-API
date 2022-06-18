@@ -1,24 +1,27 @@
-﻿using IM.Service.Shared.Models.Entity.Interfaces;
-using IM.Service.Shared.RepositoryService;
-using IM.Service.Market.Domain.DataAccess;
+﻿using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.DataAccess.Filters;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Interfaces;
+using IM.Service.Market.Services.Helpers;
+using IM.Service.Shared.Models.Entity.Interfaces;
+using IM.Service.Shared.RepositoryService;
 
 using Microsoft.EntityFrameworkCore;
 
 using System.Text;
-using IM.Service.Market.Services.Helpers;
-using static IM.Service.Shared.Enums;
-using static IM.Service.Shared.Helpers.LogicHelper;
+
 using static IM.Service.Market.Enums;
 using static IM.Service.Market.Services.Helpers.RatingHelper;
+using static IM.Service.Shared.Enums;
+using static IM.Service.Shared.Helpers.LogHelper;
+using static IM.Service.Shared.Helpers.LogicHelper;
 
 namespace IM.Service.Market.Services.Entity;
 
 public class RatingService
 {
+    private readonly ILogger<RatingService> logger;
     private readonly Repository<Company> companyRepository;
     private readonly Repository<Rating> ratingRepository;
     private readonly Repository<Price> priceRepository;
@@ -27,6 +30,7 @@ public class RatingService
     private readonly Repository<Dividend> dividendRepository;
 
     public RatingService(
+        ILogger<RatingService> logger,
         Repository<Company> companyRepository,
         Repository<Rating> ratingRepository,
         Repository<Price> priceRepository,
@@ -34,6 +38,7 @@ public class RatingService
         Repository<Coefficient> coefficientRepository,
         Repository<Dividend> dividendRepository)
     {
+        this.logger = logger;
         this.companyRepository = companyRepository;
         this.ratingRepository = ratingRepository;
         this.priceRepository = priceRepository;
@@ -71,9 +76,10 @@ public class RatingService
             await repository.UpdateRangeAsync(computedData, nameof(CompareAsync));
             return true;
         }
-        catch
+        catch(Exception exception)
         {
             await statusChanger.SetStatusRangeAsync(readyData, Statuses.Error);
+            logger.LogError(nameof(CompareAsync), exception);
             return false;
         }
     }

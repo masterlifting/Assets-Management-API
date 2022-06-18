@@ -15,5 +15,6 @@ public class User
     public virtual IEnumerable<Deal>? Deals { get; set; }
     [JsonIgnore]
     public virtual IEnumerable<Event>? Events { get; set; }
-
+    [JsonIgnore]
+    public virtual IEnumerable<Report>? Reports { get; set; }
 }

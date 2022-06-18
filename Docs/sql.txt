@@ -13,12 +13,13 @@ select * from "Derivatives" where "UnderlyingAssetId" = 'KD' order by "Underlyin
 insert into "UnderlyingAssets"
 ("Id","UnderlyingAssetTypeId","CountryId", "Name")
 values
-
+('EURRUB',4,2,'EUR to RUB')
 ('USDRUB',4,2,'USD to RUB')
 
 insert into "Derivatives"
 ("Id","Code","UnderlyingAssetId")
 values
+('EURRUB_TOM','EURRUB_TOM','EURRUB'),
 ('US50155Q1004','KD_US','KD'),
 ('US25470F3029','DISCK','DISCK'),
 ('US68622V1061','OGN-W_US','OGN'),
@@ -35,3 +36,42 @@ values
 ('US98426T1060','YY','YY'),
 ('US46591M1099','YY','YY'),
 ('US3696041033','GE','GE')
+
+select
+"e"."Date"
+,"e"."DerivativeCode"
+,"o"."Name"
+,"et"."Name"
+,"e"."Cost"
+,"c"."Name"
+,"ex"."Name"
+,"a"."Name"
+,"e"."Info"
+from "Events" as "e"
+join "EventTypes" as "et" on "e"."EventTypeId" = "et"."Id"
+join "Operations" as "o" on "et"."OperationId" = "o"."Id"
+join "Accounts" as "a" on "e"."AccountId" = "a"."Id"
+join "Exchanges" as "ex" on "e"."ExchangeId" = "ex"."Id"
+join "Currencies" as "c" on "e"."CurrencyId" = "c"."Id"
+order by "e"."Date" desc
+
+select
+"e"."Date"
+,"ut"."Name"
+,"u"."Name"
+,"o"."Name"
+,"e"."Value"
+,"e"."Cost"
+,"c"."Name"
+,"ex"."Name"
+,"a"."Name"
+,"e"."Info"
+from "Deals" as "e"
+join "Derivatives" as "d" on "e"."DerivativeId" = "d"."Id"
+join "UnderlyingAssets" as "u" on "d"."UnderlyingAssetId" = "u"."Id"
+join "UnderlyingAssetTypes" as "ut" on "u"."UnderlyingAssetTypeId" = "ut"."Id"
+join "Operations" as "o" on "e"."OperationId" = "o"."Id"
+join "Accounts" as "a" on "e"."AccountId" = "a"."Id"
+join "Exchanges" as "ex" on "e"."ExchangeId" = "ex"."Id"
+join "Currencies" as "c" on "e"."CurrencyId" = "c"."Id"
+order by "e"."Date" desc

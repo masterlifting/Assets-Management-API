@@ -22,6 +22,7 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
+using IM.Service.Portfolio.Services.Entity;
 
 namespace IM.Service.Portfolio;
 
@@ -64,6 +65,8 @@ public class Startup
 
         services.AddScoped<ReportApi>();
         services.AddScoped<ReportGrabber>();
+
+        services.AddTransient<DealService>();
 
         services.AddTransient<DealProcess>();
         services.AddTransient<CompanyProcess>();

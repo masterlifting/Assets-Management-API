@@ -1,5 +1,5 @@
-﻿using IM.Service.Recommendations.Services.Entity;
-using IM.Service.Shared.Models.RabbitMq.Api;
+﻿using IM.Service.Recommendations.Domain.Entities;
+using IM.Service.Recommendations.Services.Entity;
 using IM.Service.Shared.RabbitMq;
 
 using System.Collections.Generic;
@@ -9,23 +9,21 @@ namespace IM.Service.Recommendations.Services.RabbitMq.Transfer.Processes;
 
 public class PurchaseProcess : IRabbitProcess
 {
-    private readonly PurchaseService service;
-    public PurchaseProcess(PurchaseService service) => this.service = service;
+    private readonly PurchaseService purchaseService;
+    public PurchaseProcess(PurchaseService purchaseService) => this.purchaseService = purchaseService;
 
     public Task ProcessAsync<T>(QueueActions action, T model) where T : class => Task.CompletedTask;
     public Task ProcessRangeAsync<T>(QueueActions action, IEnumerable<T> models) where T : class => action switch
     {
         QueueActions.Create or QueueActions.Update => models switch
         {
-            RatingMqDto[] ratings => service.SetAsync(ratings),
-
+            Company[] companies => purchaseService.SetAsync(companies),
             _ => Task.CompletedTask
         },
         QueueActions.Delete => models switch
         {
-            RatingMqDto[] ratings => service.DeleteAsync(ratings),
+            Company[] companies => purchaseService.DeleteAsync(companies),
             _ => Task.CompletedTask
-
         },
         _ => Task.CompletedTask
     };

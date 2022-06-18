@@ -4,18 +4,18 @@
     "windowsAuthentication": false,
     "anonymousAuthentication": true,
     "iisExpress": {
-      "applicationUrl": "http://localhost:50797",
-      "sslPort": 0
+      "applicationUrl": "http://localhost:51467/",
+      "sslPort": 44334
     }
   },
   "profiles": {
     "IM.Service.Market": {
-      "applicationUrl": "http://localhost:1001",
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "applicationUrl": "http://localhost:1001",
+      "dotnetRunMessages": true
     },
     "IM.Service.Market.IIS": {
       "commandName": "IISExpress",

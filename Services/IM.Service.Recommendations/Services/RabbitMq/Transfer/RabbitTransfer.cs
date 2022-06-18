@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
-
+using IM.Service.Recommendations.Services.Entity;
 using static IM.Service.Shared.Helpers.ServiceHelper;
 using IM.Service.Shared.Models.RabbitMq.Api;
 
@@ -26,46 +26,38 @@ public class RabbitTransfer : IRabbitAction
 
         return entity switch
         {
-            QueueEntities.Ratings => Task.Run(() =>
+            QueueEntities.Ratings => Task.Run(async () =>
             {
-                var models = JsonHelper.Deserialize<RatingMqDto[]>(data);
-
-                var companyProcessTask = serviceProvider.GetRequiredService<CompanyProcess>().ProcessRangeAsync(action, models);
-                var recommendationsTask = TaskHelper.WhenAny(methodName, logger, new List<Task>
+                var ratings = JsonHelper.Deserialize<RatingMqDto[]>(data);
+                var companies = await serviceProvider.GetRequiredService<CompanyService>().SetCompaniesAsync(ratings);
+                return TaskHelper.WhenAny(methodName, logger, new List<Task>
                 {
-                    serviceProvider.GetRequiredService<SaleProcess>().ProcessRangeAsync(action, models),
-                    serviceProvider.GetRequiredService<PurchaseProcess>().ProcessRangeAsync(action, models)
+                    serviceProvider.GetRequiredService<SaleProcess>().ProcessRangeAsync(action, companies),
+                    serviceProvider.GetRequiredService<PurchaseProcess>().ProcessRangeAsync(action, companies)
                 });
-
-                return companyProcessTask.ContinueWith(_ => recommendationsTask);
             }),
             QueueEntities.Deal => Task.Run(() =>
             {
-                var model = JsonHelper.Deserialize<DealMqDto>(data);
-
-                var companyProcessTask = serviceProvider.GetRequiredService<CompanyProcess>().ProcessAsync(action, model);
-                var recommendationsTask = serviceProvider.GetRequiredService<SaleProcess>().ProcessAsync(action, model);
-
-                return companyProcessTask.ContinueWith(_ => recommendationsTask);
+                var deal = JsonHelper.Deserialize<DealMqDto>(data);
+                return serviceProvider.GetRequiredService<SaleProcess>().ProcessAsync(action, deal);
             }),
             QueueEntities.Deals => Task.Run(() =>
             {
-                var models = JsonHelper.Deserialize<DealMqDto[]>(data);
-
-                var companyProcessTask = serviceProvider.GetRequiredService<CompanyProcess>().ProcessRangeAsync(action, models);
-                var recommendationsTask = serviceProvider.GetRequiredService<SaleProcess>().ProcessRangeAsync(action, models);
-
-                return companyProcessTask.ContinueWith(_ => recommendationsTask);
+                var deals = JsonHelper.Deserialize<DealMqDto[]>(data);
+                return serviceProvider.GetRequiredService<SaleProcess>().ProcessRangeAsync(action, deals);
             }),
             QueueEntities.Price => Task.Run(() =>
             {
-                var model = JsonHelper.Deserialize<PriceMqDto>(data);
-                return serviceProvider.GetRequiredService<CompanyProcess>().ProcessAsync(action, model);
+                var price = JsonHelper.Deserialize<PriceMqDto>(data);
+                return serviceProvider.GetRequiredService<CompanyProcess>().ProcessAsync(action, price);
             }),
             QueueEntities.Prices => Task.Run(() =>
             {
-                var models = JsonHelper.Deserialize<PriceMqDto[]>(data);
-                return serviceProvider.GetRequiredService<CompanyProcess>().ProcessRangeAsync(action, models);
+                var prices = JsonHelper.Deserialize<PriceMqDto[]>(data);
+
+                return prices.Length == 1
+                    ? serviceProvider.GetRequiredService<CompanyProcess>().ProcessAsync(action, prices[0])
+                    : serviceProvider.GetRequiredService<CompanyProcess>().ProcessRangeAsync(action, prices);
             }),
             _ => Task.CompletedTask
         };

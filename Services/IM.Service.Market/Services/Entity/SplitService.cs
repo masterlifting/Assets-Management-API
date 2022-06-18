@@ -7,8 +7,5 @@ public sealed class SplitService
 {
     public DataLoader<Split> Loader { get; }
 
-    public SplitService(DataLoader<Split> loader)
-    {
-        Loader = loader;
-    }
+    public SplitService(DataLoader<Split> loader) => Loader = loader;
 }

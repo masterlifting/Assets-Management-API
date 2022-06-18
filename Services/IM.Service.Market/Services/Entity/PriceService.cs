@@ -8,6 +8,8 @@ using IM.Service.Shared.RabbitMq;
 
 using Microsoft.Extensions.Options;
 
+using static IM.Service.Market.Enums;
+
 namespace IM.Service.Market.Services.Entity;
 
 public sealed class PriceService : StatusChanger<Price>
@@ -43,7 +45,7 @@ public sealed class PriceService : StatusChanger<Price>
 
         ComputeValueTrue(action, splits, price);
 
-        await UpdatePriceAsync(price, action);
+        await TransferPriceAsync(price, action);
     }
     public async Task SetValueTrueAsync(QueueActions action, Price[] prices)
     {
@@ -54,10 +56,9 @@ public sealed class PriceService : StatusChanger<Price>
         }
 
         var companyIds = prices.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
-        var dateMin = prices.Min(x => x.Date);
         var dateMax = prices.Max(x => x.Date);
 
-        var splits = await splitRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId) && x.Date >= dateMin && x.Date <= dateMax);
+        var splits = await splitRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId) && x.Date <= dateMax);
 
         if (!splits.Any())
         {
@@ -68,20 +69,19 @@ public sealed class PriceService : StatusChanger<Price>
         foreach (var group in splits.GroupBy(x => x.CompanyId))
             ComputeValueTrue(action, group.Key, group, prices);
 
-        await UpdatePricesAsync(prices, action);
+        await TransferPricesAsync(prices, action);
     }
 
     public async Task SetValueTrueAsync(QueueActions action, Split split)
     {
-        var splits = await splitRepo.GetSampleAsync(x => x.CompanyId == split.CompanyId);
         var prices = await priceRepo.GetSampleAsync(x => x.CompanyId == split.CompanyId && x.Date >= split.Date);
-
         if (!prices.Any())
         {
             await TransferPricesAsync(prices, action);
             return;
         }
 
+        var splits = await splitRepo.GetSampleAsync(x => x.CompanyId == split.CompanyId);
         if (!splits.Any())
         {
             await TransferPricesAsync(prices, action);
@@ -90,21 +90,21 @@ public sealed class PriceService : StatusChanger<Price>
 
         ComputeValueTrue(action, split.CompanyId, splits, prices);
 
-        await UpdatePricesAsync(prices, action);
+        await TransferPricesAsync(prices, action);
     }
     public async Task SetValueTrueAsync(QueueActions action, Split[] splits)
     {
         var companyIds = splits.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
         var dateMin = splits.Min(x => x.Date);
-        var _splits = await splitRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId));
-        var prices = await priceRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId) && x.Date >= dateMin);
 
+        var prices = await priceRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId) && x.Date >= dateMin);
         if (!prices.Any())
         {
             await TransferPricesAsync(prices, action);
             return;
         }
 
+        var _splits = await splitRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId));
         if (!_splits.Any())
         {
             await TransferPricesAsync(prices, action);
@@ -114,7 +114,7 @@ public sealed class PriceService : StatusChanger<Price>
         foreach (var group in splits.GroupBy(x => x.CompanyId))
             ComputeValueTrue(action, group.Key, group, prices);
 
-        await UpdatePricesAsync(prices, action);
+        await TransferPricesAsync(prices, action);
     }
 
     private static void ComputeValueTrue(QueueActions action, IEnumerable<Split> splits, Price price)
@@ -157,26 +157,25 @@ public sealed class PriceService : StatusChanger<Price>
         }
     }
 
-    private async Task UpdatePricesAsync(Price[] prices, QueueActions action)
-    {
-        await priceRepo.UpdateRangeAsync(prices, $"{nameof(SetValueTrueAsync)}: {string.Join("; ", prices.Select(x => x.CompanyId).Distinct())}").ConfigureAwait(false);
-        await TransferPricesAsync(prices, action);
-    }
-    private async Task UpdatePriceAsync(Price price, QueueActions action)
-    {
-        await priceRepo.UpdateAsync(new object[] { price.CompanyId, price.SourceId, price.Date }, price, $"{nameof(SetValueTrueAsync)}: {price.CompanyId}");
-        await TransferPriceAsync(price, action);
-    }
-
     private async Task TransferPriceAsync(Price entity, QueueActions action)
     {
+        entity.StatusId = (byte)Statuses.Ready;
+        await priceRepo.UpdateAsync(new object[] { entity.CompanyId, entity.SourceId, entity.Date }, entity, $"{nameof(SetValueTrueAsync)}: {entity.CompanyId}");
+
         var model = await GetPriceToTransferAsync(entity);
+
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
         publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Price, action, model);
     }
     private async Task TransferPricesAsync(Price[] entities, QueueActions action)
     {
+        foreach (var entity in entities)
+            entity.StatusId = (byte)Statuses.Ready;
+
+        await priceRepo.UpdateRangeAsync(entities, "Change status to 'Ready'");
+
         var models = await GetPricesToTransferAsync(entities);
+
         var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
         publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Prices, action, models);
     }
@@ -188,33 +187,56 @@ public sealed class PriceService : StatusChanger<Price>
 
         var date = DateOnly.FromDateTime(DateTime.Now.Date.AddDays(-365));
 
+        var splits = await splitRepo.GetSampleAsync(
+            x => companyIds.Contains(x.CompanyId) && x.Date >= date,
+            x => new { x.CompanyId, x.Date });
+
+        var splitsDict = splits
+            .GroupBy(x => x.CompanyId)
+            .ToDictionary(x => x.Key, y => y.MaxBy(z => z.Date)!.Date, StringComparer.OrdinalIgnoreCase);
+
         var prices = await priceRepo.GetSampleAsync(
             x => companyIds.Contains(x.CompanyId) && sourceIds.Contains(x.SourceId) && x.Date >= date,
-            x => new { x.CompanyId, x.Date, x.ValueTrue });
+            x => new { x.CompanyId, x.Date, x.Value });
 
-        var result = prices
+        return prices
             .GroupBy(x => x.CompanyId)
-            .Select(x => new PriceMqDto(
-                x.Key,
-                x.MaxBy(y => y.Date)!.ValueTrue,
-                 Math.Round(x.Average(y => y.ValueTrue),4)))
-            .ToArray();
+            .Select(x =>
+            {
+                var data = splitsDict.ContainsKey(x.Key)
+                    ? x.Where(y => y.Date >= splitsDict[x.Key]).ToArray()
+                    : x.ToArray();
 
-        return result;
+                return new PriceMqDto(
+                    x.Key,
+                    data.MaxBy(y => y.Date)!.Value,
+                    Math.Round(data.Average(y => y.Value), 4));
+            })
+            .ToArray();
     }
     private async Task<PriceMqDto> GetPriceToTransferAsync(Price entity)
     {
         var date = DateOnly.FromDateTime(DateTime.Now.Date.AddDays(-365));
 
         var prices = await priceRepo.GetSampleAsync(
-            x => entity.CompanyId.Equals(x.CompanyId) && entity.SourceId.Equals(x.SourceId) && x.Date >= date,
-            x => new { x.CompanyId, x.Date, x.ValueTrue });
+            x => entity.CompanyId.Equals(x.CompanyId, StringComparison.OrdinalIgnoreCase) && entity.SourceId.Equals(x.SourceId) && x.Date >= date,
+            x => new { x.CompanyId, x.Date, x.Value });
 
-        var result = new PriceMqDto(
-                entity.CompanyId,
-                prices.MaxBy(y => y.Date)!.ValueTrue,
-                Math.Round(prices.Average(y => y.ValueTrue),4));
+        var splits = await splitRepo.GetSampleAsync(
+            x =>x.CompanyId.Equals(entity.CompanyId, StringComparison.OrdinalIgnoreCase) && x.Date >= date,
+            x => new { x.CompanyId, x.Date });
 
-        return result;
+        var splitsDict = splits
+            .GroupBy(x => x.CompanyId)
+            .ToDictionary(x => x.Key, y => y.MaxBy(z => z.Date)!.Date, StringComparer.OrdinalIgnoreCase);
+
+        var data = splitsDict.Any()
+            ? prices.Where(y => y.Date >= splitsDict[entity.CompanyId]).ToArray()
+            : prices;
+
+        return new PriceMqDto(
+            entity.CompanyId,
+            data.MaxBy(y => y.Date)!.Value,
+            Math.Round(data.Average(y => y.Value), 4));
     }
 }

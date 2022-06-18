@@ -22,4 +22,6 @@ public class Purchase
 
     [Column(TypeName = "Decimal(18,4)")]
     public decimal? Fact { get; set; }
+
+    public bool IsReady { get; set; }
 }

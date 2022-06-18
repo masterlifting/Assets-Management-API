@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
-
-using Microsoft.Extensions.Logging;
 
 namespace IM.Service.Shared.Helpers;
 
@@ -64,7 +64,7 @@ public static class ServiceHelper
         public Paginatior(int page, int limit)
         {
             Page = page <= 0 ? 1 : page >= int.MaxValue ? int.MaxValue : page;
-            Limit = limit <= 0 ? 10 : limit > 100 ? limit == int.MaxValue ? int.MaxValue : 100 : limit;
+            Limit = limit <= 0 ? 10 : limit > 500 ? limit == int.MaxValue ? int.MaxValue : 500 : limit;
         }
 
         public int Page { get; }

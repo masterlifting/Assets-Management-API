@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
-using IM.Service.Shared.Helpers;
 using IM.Service.Recommendations.Services.Http;
 
 using Microsoft.AspNetCore.Mvc;
+using static IM.Service.Shared.Helpers.ServiceHelper;
 
 namespace IM.Service.Recommendations.Controllers;
 
@@ -18,7 +18,31 @@ public class SalesController : Controller
     {
         try
         {
-            return Ok(await api.GetAsync(new ServiceHelper.Paginatior(page, limit)));
+            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.Fact != null && x.Plan > 0));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpGet("ready/")]
+    public async Task<IActionResult> GetReady(int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.IsReady && x.Plan > 0));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpGet("payback/")]
+    public async Task<IActionResult> GetPayback(int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.Fact != null && x.Plan == 0));
         }
         catch (Exception exception)
         {

@@ -7,6 +7,9 @@ public class Report
 {
     public string Id { get; init; } = null!;
 
+    public virtual User User { get; init; } = null!;
+    public string UserId { get; init; } = null!;
+
     public virtual Broker Broker { get; init; } = null!;
     public byte BrokerId { get; init; }
 

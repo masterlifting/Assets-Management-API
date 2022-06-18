@@ -21,8 +21,8 @@ public class ReportRepositoryHandler : RepositoryHandler<Report>
 
         var result = existEntities
             .Join(entities,
-                x => (x.Id, x.BrokerId),
-                y => (y.Id, y.BrokerId),
+                x => (x.Id, x.BrokerId, x.UserId),
+                y => (y.Id, y.BrokerId, y.UserId),
                 (x, y) => (Old: x, New: y))
             .ToArray();
 
@@ -47,7 +47,10 @@ public class ReportRepositoryHandler : RepositoryHandler<Report>
         var brockerIds = entities
             .GroupBy(x => x.BrokerId)
             .Select(x => x.Key);
+        var userIds = entities
+            .GroupBy(x => x.UserId)
+            .Select(x => x.Key);
 
-        return context.Reports.Where(x => names.Contains(x.Id) && brockerIds.Contains(x.BrokerId));
+        return context.Reports.Where(x => names.Contains(x.Id) && brockerIds.Contains(x.BrokerId) && userIds.Contains(x.UserId));
     }
 }

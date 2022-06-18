@@ -21,6 +21,8 @@ namespace IM.Service.Portfolio.Services.RabbitMq.Sync.Processes;
 
 public class CompanyProcess : IRabbitProcess
 {
+    private const string serviceName = "Company synchronization";
+
     private readonly ILogger<CompanyProcess> logger;
     private readonly MoexClient client;
     private readonly Repository<UnderlyingAsset> underlyingAssetRepo;
@@ -92,7 +94,7 @@ public class CompanyProcess : IRabbitProcess
         };
         await derivativeRepo.CreateUpdateAsync(new object[] { derivative.Id, derivative.Code }, derivative, isin);
 
-        logger.LogDebug(nameof(SetAsync), isin, "Ok");
+        logger.LogDebug(serviceName, isin, "OK");
     }
     private async Task SetAsync(CompanyMqDto[] models)
     {
@@ -107,7 +109,7 @@ public class CompanyProcess : IRabbitProcess
         })
         .ToArray();
 
-        await underlyingAssetRepo.CreateUpdateRangeAsync(underlyingAssets, new UnderlyingAssetComparer(), string.Join(";", models.Select(x => x.Id)));
+        await underlyingAssetRepo.CreateUpdateRangeAsync(underlyingAssets, new UnderlyingAssetComparer(), serviceName);
 
         if (!models.Any())
             return;
@@ -132,7 +134,7 @@ public class CompanyProcess : IRabbitProcess
             {
                 if (isin!.Equals("0"))
                 {
-                    logger.LogWarning(nameof(SetAsync), $"ISIN for {companyId} not recognized", isin);
+                    logger.LogWarning(serviceName, $"ISIN for {companyId} not recognized", isin);
                     continue;
                 }
 

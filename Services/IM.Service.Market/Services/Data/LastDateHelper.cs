@@ -18,10 +18,12 @@ public sealed class LastDateHelper<TEntity> : ILastDataHelper<TEntity> where TEn
 
     public async Task<TEntity?> GetLastDataAsync(CompanySource companySource)
     {
+        var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-daysAgo);
+
         var result = await repository.GetSampleOrderedAsync(x =>
                 x.CompanyId == companySource.CompanyId
                 && x.SourceId == companySource.SourceId
-                && x.Date >= DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-daysAgo),
+                && x.Date >= date,
             orderBy => orderBy.Date);
 
         return result.LastOrDefault();
@@ -30,11 +32,12 @@ public sealed class LastDateHelper<TEntity> : ILastDataHelper<TEntity> where TEn
     {
         var companyIds = companySources.Select(x => x.CompanyId).Distinct();
         var sourceIds = companySources.Select(x => x.SourceId).Distinct();
+        var date = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-daysAgo);
 
         var result = await repository.GetSampleAsync(x =>
             companyIds.Contains(x.CompanyId)
             && sourceIds.Contains(x.SourceId)
-            && x.Date >= DateOnly.FromDateTime(DateTime.UtcNow).AddDays(-daysAgo));
+            && x.Date >= date);
 
         return result
             .GroupBy(x => (x.CompanyId, x.SourceId))

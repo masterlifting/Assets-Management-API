@@ -40,7 +40,7 @@ public sealed class DatabaseContext : DbContext
         modelBuilder.UseSerialColumns();
 
         modelBuilder.Entity<Account>().HasIndex(x => new {Id = x.Name, x.UserId, x.BrokerId }).IsUnique();
-        modelBuilder.Entity<Report>().HasKey(x => new {x.Id, x.BrokerId });
+        modelBuilder.Entity<Report>().HasKey(x => new {x.Id, x.BrokerId, x.UserId });
         modelBuilder.Entity<Derivative>().HasKey(x => new { x.Id, x.Code });
 
 

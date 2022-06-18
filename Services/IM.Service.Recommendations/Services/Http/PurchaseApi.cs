@@ -1,4 +1,5 @@
-﻿using IM.Service.Recommendations.Domain.DataAccess;
+﻿using System;
+using IM.Service.Recommendations.Domain.DataAccess;
 using IM.Service.Recommendations.Domain.Entities;
 using IM.Service.Recommendations.Models.Api.Http;
 using IM.Service.Shared.Helpers;
@@ -7,6 +8,7 @@ using IM.Service.Shared.Models.Service;
 using Microsoft.EntityFrameworkCore;
 
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace IM.Service.Recommendations.Services.Http;
@@ -16,14 +18,17 @@ public class PurchaseApi
     private readonly Repository<Purchase> purchaseRepo;
     public PurchaseApi(Repository<Purchase> purchaseRepo) => this.purchaseRepo = purchaseRepo;
 
-    public async Task<PaginationModel<PurchaseDto>> GetAsync(ServiceHelper.Paginatior pagination)
+    public async Task<PaginationModel<PurchaseDto>> GetAsync(ServiceHelper.Paginatior pagination, Expression<Func<Purchase, bool>> filter)
     {
-        var count = await purchaseRepo.GetCountAsync();
-        var paginatedResult = purchaseRepo.GetPaginationQuery(pagination, x => x.CompanyId, x => x.Plan);
+        var queryFilter = purchaseRepo.Where(filter);
+        var count = await purchaseRepo.GetCountAsync(queryFilter);
+        var paginatedResult = purchaseRepo.GetPaginationQueryDesc(queryFilter, pagination, x => x.Fact);
 
         var sales = await paginatedResult
+            .OrderByDescending(x => x.Fact)
             .Select(x => new
             {
+                x.CompanyId,
                 Company = x.Company.Name,
                 x.Price,
                 x.Plan,
@@ -32,19 +37,12 @@ public class PurchaseApi
             .ToArrayAsync();
 
         var result = sales
-            .GroupBy(x => x.Company)
+            .GroupBy(x => x.CompanyId)
             .Select(x => new PurchaseDto
             {
-                Company = x.Key,
+                Company = $"({x.Key}) " + x.First().Company,
                 Recommendations = x
-                    .OrderByDescending(y => y.Fact)
-                    .ThenBy(y => y.Plan)
-                    .Select(y => new PurchaseRecommendationDto
-                    {
-                        Plan = $"{decimal.Round(y.Plan, 1)}%",
-                        Fact = y.Fact.HasValue ? $"{decimal.Round(y.Fact.Value, 1)}%" : "not compute",
-                        Price = y.Price
-                    })
+                    .Select(y => new PurchaseRecommendationDto(y.Plan, y.Fact, y.Price))
                 .ToArray()
             }).ToArray();
 
@@ -63,14 +61,7 @@ public class PurchaseApi
         {
             Company = companyId,
             Recommendations = sales
-                .OrderByDescending(x => x.Fact)
-                .ThenBy(x => x.Plan)
-                .Select(x => new PurchaseRecommendationDto
-                {
-                    Plan = $"{decimal.Round(x.Plan, 1)}%",
-                    Fact = x.Fact.HasValue ? $"{decimal.Round(x.Fact.Value, 1)}%" : "not compute",
-                    Price = x.Price
-                })
+                .Select(x => new PurchaseRecommendationDto(x.Plan, x.Fact, x.Price))
                 .ToArray()
         };
     }

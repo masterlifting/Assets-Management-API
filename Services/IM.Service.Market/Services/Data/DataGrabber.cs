@@ -25,12 +25,13 @@ public class DataGrabber<TEntity> : IDataGrabber<TEntity> where TEntity : class,
     public async IAsyncEnumerable<TEntity[]> GetCurrentDataAsync(IEnumerable<CompanySource> companySources)
     {
         var enumerableData = companySources
-            .ToDictionary(x => (x.SourceId, x.CompanyId) )
-            .Where(x => sourceMatcher.ContainsKey(x.Key.SourceId))
+            .GroupBy(x => x.SourceId)
+            .ToDictionary(x => x.Key, y => y.Select(z => z))
+            .Where(x => sourceMatcher.ContainsKey(x.Key))
             .ToArray();
 
         foreach (var (sourceId, cs) in enumerableData)
-            await foreach (var entities in sourceMatcher[sourceId.SourceId].GetCurrentDataAsync(cs))
+            await foreach (var entities in sourceMatcher[sourceId].GetCurrentDataAsync(cs))
                 yield return entities;
     }
 
@@ -44,12 +45,13 @@ public class DataGrabber<TEntity> : IDataGrabber<TEntity> where TEntity : class,
     public async IAsyncEnumerable<TEntity[]> GetHistoryDataAsync(IEnumerable<CompanySource> companySources)
     {
         var enumerableData = companySources
-            .ToDictionary(x => (x.SourceId, x.CompanyId))
-            .Where(x => sourceMatcher.ContainsKey(x.Key.SourceId))
+            .GroupBy(x => x.SourceId)
+            .ToDictionary(x => x.Key, y => y.Select(z => z))
+            .Where(x => sourceMatcher.ContainsKey(x.Key))
             .ToArray();
 
         foreach (var (sourceId, cs) in enumerableData)
-            await foreach (var entities in sourceMatcher[sourceId.SourceId].GetHistoryDataAsync(cs))
+            await foreach (var entities in sourceMatcher[sourceId].GetHistoryDataAsync(cs))
                 yield return entities;
     }
 }

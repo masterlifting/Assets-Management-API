@@ -17,7 +17,6 @@ public class CompanyProcess : IRabbitProcess
         QueueActions.Create or QueueActions.Update or QueueActions.Delete => model switch
         {
             PriceMqDto price => service.SetCompanyAsync(price),
-            DealMqDto deal => service.SetCompanyAsync(deal),
             _ => Task.CompletedTask
         },
         _ => Task.CompletedTask
@@ -27,8 +26,6 @@ public class CompanyProcess : IRabbitProcess
         QueueActions.Create or QueueActions.Update or QueueActions.Delete => models switch
         {
             PriceMqDto[] prices => service.SetCompaniesAsync(prices),
-            DealMqDto[] deals => service.SetCompaniesAsync(deals),
-            RatingMqDto[] rating => service.SetCompaniesAsync(rating),
             _ => Task.CompletedTask
         },
         _ => Task.CompletedTask

@@ -268,25 +268,15 @@ public class Repository<TEntity, TContext> where TEntity : class where TContext 
             : await DbSet.AsNoTracking().Where(predicate).OrderBy(orderSelector).ThenBy(orderSelector2).ToArrayAsync().ConfigureAwait(false);
 
     public IQueryable<TEntity> GetPaginationQuery<TSelector>(Paginatior pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
-        DbSet
-            .OrderBy(orderSelector)
-            .Skip((pagination.Page - 1) * pagination.Limit)
-            .Take(pagination.Limit);
+        DbSet.OrderBy(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
     public IQueryable<TEntity> GetPaginationQuery<TSelector, TSelector2>(Paginatior pagination, Expression<Func<TEntity, TSelector>> orderSelector, Expression<Func<TEntity, TSelector2>> orderSelector2) =>
-       DbSet
-        .OrderBy(orderSelector)
-        .ThenBy(orderSelector2)
-        .Skip((pagination.Page - 1) * pagination.Limit)
-        .Take(pagination.Limit);
+       DbSet.OrderBy(orderSelector).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
     public IQueryable<TEntity> GetPaginationQuery<TSelector>(IQueryable<TEntity> query, Paginatior pagination, Expression<Func<TEntity, TSelector>> orderSelector, Expression<Func<TEntity, TSelector>>? orderSelector2 = null) =>
         orderSelector2 is null
         ? query.OrderBy(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit)
         : query.OrderBy(orderSelector).ThenBy(orderSelector2).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
     public IQueryable<TEntity> GetPaginationQueryDesc<TSelector>(Paginatior pagination, Expression<Func<TEntity, TSelector>> orderSelector) =>
-        DbSet
-            .OrderByDescending(orderSelector)
-            .Skip((pagination.Page - 1) * pagination.Limit)
-            .Take(pagination.Limit);
+        DbSet.OrderByDescending(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit);
     public IQueryable<TEntity> GetPaginationQueryDesc<TSelector>(IQueryable<TEntity> query, Paginatior pagination, Expression<Func<TEntity, TSelector>> orderSelector, Expression<Func<TEntity, TSelector>>? orderSelector2 = null) =>
         orderSelector2 is null
         ? query.OrderByDescending(orderSelector).Skip((pagination.Page - 1) * pagination.Limit).Take(pagination.Limit)

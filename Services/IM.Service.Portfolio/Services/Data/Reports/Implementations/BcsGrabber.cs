@@ -69,10 +69,7 @@ public sealed class BcsGrabber : IDataGrabber
             var table = GetExcelTable(file);
             var parser = new BcsReportParser(file.UserId, table, accounts, derivatives);
 
-            var reports = await reportRepo.GetSampleAsync(x =>
-                x.Id == file.Name
-                && x.BrokerId == brokerId
-                && x.DateStart <= parser.DateEnd);
+            var reports = await reportRepo.GetSampleAsync(x => x.BrokerId == brokerId && x.UserId == file.UserId);
 
             var alreadyReportDates = reports.SelectMany(x =>
             {
@@ -97,7 +94,7 @@ public sealed class BcsGrabber : IDataGrabber
                 _ = await eventRepo.CreateRangeAsync(events, new EventComparer(), parser.AccountName);
             else
             {
-                logger.LogInfo<BcsGrabber>(nameof(GetDataAsync), file.Name, "New deals and events not found");
+                logger.LogInfo<BcsGrabber>(nameof(GetDataAsync), file.Name, "New data not found");
                 return;
             }
 
@@ -105,6 +102,7 @@ public sealed class BcsGrabber : IDataGrabber
             {
                 Id = file.Name,
                 BrokerId = brokerId,
+                UserId = file.UserId,
                 DateStart = parser.DateStart,
                 DateEnd = parser.DateEnd,
                 ContentType = file.ContentType,
@@ -627,7 +625,9 @@ internal static class BcsReportStructure
     private static readonly string[] ExchangeCurrencies =
     {
         "USDRUB_TOD",
-        "USDRUB_TOM"
+        "USDRUB_TOM",
+        "EURRUB_TOM",
+        "EURRUB_TOD"
     };
 
     internal static readonly Dictionary<string, EventTypes> EventTypes = new(Actions.Length, StringComparer.OrdinalIgnoreCase)
@@ -656,6 +656,8 @@ internal static class BcsReportStructure
     internal static readonly Dictionary<string, (Currencies buy, Currencies sell)> ExchangeCurrencyTypes = new(ExchangeCurrencies.Length, StringComparer.OrdinalIgnoreCase)
     {
         { ExchangeCurrencies[0], (Currencies.Usd, Currencies.Rub) },
-        { ExchangeCurrencies[1], (Currencies.Usd, Currencies.Rub) }
+        { ExchangeCurrencies[1], (Currencies.Usd, Currencies.Rub) },
+        { ExchangeCurrencies[2], (Currencies.Eur, Currencies.Rub) },
+        { ExchangeCurrencies[3], (Currencies.Eur, Currencies.Rub) }
     };
 }

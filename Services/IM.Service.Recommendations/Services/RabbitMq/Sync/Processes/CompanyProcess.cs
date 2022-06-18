@@ -12,7 +12,7 @@ namespace IM.Service.Recommendations.Services.RabbitMq.Sync.Processes;
 
 public class CompanyProcess : IRabbitProcess
 {
-    private const string serviceName = "Company sinchronization";
+    private const string serviceName = "Company synchronization";
     private readonly Repository<Company> companyRepo;
     public CompanyProcess(Repository<Company> companyRepo) => this.companyRepo = companyRepo;
 

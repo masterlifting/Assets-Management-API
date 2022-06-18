@@ -38,7 +38,7 @@ public class Startup
         {
             provider.UseLazyLoadingProxies();
             provider.UseNpgsql(Configuration["ServiceSettings:ConnectionStrings:Db"]);
-        });
+        }, ServiceLifetime.Transient);
 
         services.AddControllers();
 
@@ -62,15 +62,15 @@ public class Startup
 
         services.AddScoped<PurchaseApi>();
         services.AddScoped<SaleApi>();
+                            
+        services.AddTransient<CompanyService>();
+        services.AddTransient<SaleService>();
+        services.AddTransient<PurchaseService>();
 
-        services.AddScoped<CompanyService>();
-        services.AddScoped<SaleService>();
-        services.AddScoped<PurchaseService>();
-
-        services.AddScoped<SaleProcess>();
-        services.AddScoped<PurchaseProcess>();
-        services.AddScoped<CompanyProcess>();
-        services.AddScoped<Services.RabbitMq.Sync.Processes.CompanyProcess>();
+        services.AddTransient<SaleProcess>();
+        services.AddTransient<PurchaseProcess>();
+        services.AddTransient<CompanyProcess>();
+        services.AddTransient<Services.RabbitMq.Sync.Processes.CompanyProcess>();
 
         services.AddHostedService<RabbitBackgroundService>();
     }

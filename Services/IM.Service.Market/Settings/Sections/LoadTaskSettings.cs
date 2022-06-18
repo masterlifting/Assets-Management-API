@@ -6,4 +6,5 @@ namespace IM.Service.Market.Settings.Sections;
 public class LoadTaskSettings : BackgroundTaskSettings
 {
     public Sources[] Sources { get; set; } = Array.Empty<Sources>();
+    public int DaysAgo { get; set; } = 1;
 }

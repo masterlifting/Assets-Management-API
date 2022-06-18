@@ -11,10 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Services\Entity\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\IM.Service.Shared\IM.Service.Shared.csproj" />
   </ItemGroup>
 

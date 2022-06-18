@@ -3,20 +3,24 @@ using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Clients;
 
-using static IM.Service.Shared.Enums;
 using static IM.Service.Market.Enums;
+using static IM.Service.Shared.Enums;
 
 namespace IM.Service.Market.Services.Data.Prices.Implementations;
 
 public sealed class TdameritradeGrabber : IDataGrabber<Price>
 {
     private readonly TdAmeritradeClient client;
-    public TdameritradeGrabber(TdAmeritradeClient client) => this.client = client;
+
+    public TdameritradeGrabber(TdAmeritradeClient client)
+    {
+        this.client = client;
+    }
 
     public async IAsyncEnumerable<Price[]> GetCurrentDataAsync(CompanySource companySource)
     {
         if (companySource.Value is null)
-            throw new ArgumentNullException(companySource.CompanyId);
+            throw new ArgumentNullException(companySource.Value);
 
         var data = await client.GetCurrentPricesAsync(new[] { companySource.CompanyId });
 
@@ -26,7 +30,7 @@ public sealed class TdameritradeGrabber : IDataGrabber<Price>
     }
     public async IAsyncEnumerable<Price[]> GetCurrentDataAsync(IEnumerable<CompanySource> companySources)
     {
-        var data = await client.GetCurrentPricesAsync(companySources.Select(x => x.CompanyId));
+        var data = await client.GetCurrentPricesAsync(companySources.Select(x => x.CompanyId).Distinct());
 
         var result = Map(data);
 
@@ -36,7 +40,7 @@ public sealed class TdameritradeGrabber : IDataGrabber<Price>
     public async IAsyncEnumerable<Price[]> GetHistoryDataAsync(CompanySource companySource)
     {
         if (companySource.Value is null)
-            throw new ArgumentNullException(companySource.CompanyId);
+            throw new ArgumentNullException(companySource.Value);
 
         var data = await client.GetHistoryPricesAsync(companySource.CompanyId);
 

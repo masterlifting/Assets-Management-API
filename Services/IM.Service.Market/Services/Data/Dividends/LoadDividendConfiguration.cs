@@ -1,6 +1,9 @@
 using IM.Service.Market.Domain.DataAccess;
 using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Services.Tasks;
+using IM.Service.Market.Settings;
+using Microsoft.Extensions.Options;
 
 namespace IM.Service.Market.Services.Data.Dividends;
 
@@ -11,11 +14,13 @@ public sealed class LoadDividendConfiguration : IDataLoaderConfiguration<Dividen
     public ILastDataHelper<Dividend> LastDataHelper { get; }
     public DataGrabber<Dividend> Grabber { get; }
 
-    public LoadDividendConfiguration(Repository<Dividend> repository)
+    public LoadDividendConfiguration(IOptions<ServiceSettings> options, Repository<Dividend> repository)
     {
+        var settings = options.Value.LoadData.Tasks.FirstOrDefault(x => x.Name.Equals(nameof(LoadDividendTask), StringComparison.OrdinalIgnoreCase)) ?? new();
+
         Grabber = new (new ());
         IsCurrentDataCondition = _ => true;
         Comparer = new DataDateComparer<Dividend>();
-        LastDataHelper = new LastDateHelper<Dividend>(repository, 1);
+        LastDataHelper = new LastDateHelper<Dividend>(repository, settings.DaysAgo);
     }
 }
