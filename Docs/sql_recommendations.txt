@@ -1,0 +1,6 @@
+insert into "Assets"
+("Id","TypeId","CurrencyId","CountryId", "Name")
+values
+('EUR',2,1,2,'Euro from Rub'),
+('EUR',2,2,2,'Euro from Usd'),
+('USD',2,1,2,'Dollar from Rub')

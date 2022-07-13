@@ -1,5 +1,5 @@
 ﻿using System;
-using IM.Service.Shared.RepositoryService;
+using IM.Service.Shared.SqlAccess;
 using IM.Service.Portfolio.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
@@ -21,8 +21,8 @@ public class ReportRepositoryHandler : RepositoryHandler<Report>
 
         var result = existEntities
             .Join(entities,
-                x => (x.Id, x.BrokerId, x.UserId),
-                y => (y.Id, y.BrokerId, y.UserId),
+                x => (x.Id, x.ProviderId, x.AccountId),
+                y => (y.Id, y.ProviderId, y.AccountId),
                 (x, y) => (Old: x, New: y))
             .ToArray();
 
@@ -41,16 +41,16 @@ public class ReportRepositoryHandler : RepositoryHandler<Report>
     {
         entities = entities.ToArray();
 
-        var names = entities
+        var ids = entities
             .GroupBy(x => x.Id)
             .Select(x => x.Key);
-        var brockerIds = entities
-            .GroupBy(x => x.BrokerId)
+        var providerIds = entities
+            .GroupBy(x => x.ProviderId)
             .Select(x => x.Key);
-        var userIds = entities
-            .GroupBy(x => x.UserId)
+        var accountIds = entities
+            .GroupBy(x => x.AccountId)
             .Select(x => x.Key);
 
-        return context.Reports.Where(x => names.Contains(x.Id) && brockerIds.Contains(x.BrokerId) && userIds.Contains(x.UserId));
+        return context.Reports.Where(x => ids.Contains(x.Id) && providerIds.Contains(x.ProviderId) && accountIds.Contains(x.AccountId));
     }
 }

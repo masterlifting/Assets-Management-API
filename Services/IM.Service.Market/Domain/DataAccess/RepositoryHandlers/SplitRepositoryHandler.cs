@@ -1,10 +1,9 @@
-﻿using IM.Service.Shared.RabbitMq;
-using IM.Service.Shared.RepositoryService;
-using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Settings;
+﻿using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Services.RabbitMq;
+using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using static IM.Service.Shared.Enums;
 
@@ -13,11 +12,11 @@ namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 public class SplitRepositoryHandler : RepositoryHandler<Split>
 {
     private readonly DatabaseContext context;
-    private readonly string rabbitConnectionString;
-    public SplitRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    private readonly RabbitAction rabbitAction;
+    public SplitRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
     {
         this.context = context;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
     }
 
     public override async Task<IEnumerable<Split>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Split> entities)
@@ -59,23 +58,25 @@ public class SplitRepositoryHandler : RepositoryHandler<Split>
 
     public override Task RunPostProcessAsync(RepositoryActions action, Split entity)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        var queueTaskParams = new List<(QueueNames, QueueEntities, QueueActions, object)>(2);
 
         if (action is RepositoryActions.Create)
         {
             var companySource = context.CompanySources.Find(entity.CompanyId, entity.SourceId);
             
             if(companySource is not null)
-                publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySource, QueueActions.Get, companySource);
+                queueTaskParams.Add((QueueNames.Market, QueueEntities.AssetSource, QueueActions.Get, companySource));
         }
 
-        publisher.PublishTask(QueueNames.Market, QueueEntities.Split, RabbitHelper.GetQueueAction(action), entity);
+        queueTaskParams.Add((QueueNames.Market, QueueEntities.Split, RabbitHelper.GetAction(action), entity));
+        
+        rabbitAction.Publish(QueueExchanges.Function, queueTaskParams);
 
         return Task.CompletedTask;
     }
     public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Split> entities)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
+        var queueTaskParams = new List<(QueueNames, QueueEntities, QueueActions, object)>(2);
 
         if (action is RepositoryActions.Create)
         {
@@ -88,10 +89,13 @@ public class SplitRepositoryHandler : RepositoryHandler<Split>
                     && sourceIds.Contains(x.SourceId))
                 .ToArray();
 
-            publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, companySources);
+
+            queueTaskParams.Add((QueueNames.Market, QueueEntities.AssetSources, QueueActions.Get, companySources));
         }
 
-        publisher.PublishTask(QueueNames.Market, QueueEntities.Splits, RabbitHelper.GetQueueAction(action), entities);
+        queueTaskParams.Add((QueueNames.Market, QueueEntities.Splits, RabbitHelper.GetAction(action), entities));
+
+        rabbitAction.Publish(QueueExchanges.Function, queueTaskParams);
 
         return Task.CompletedTask;
     }

@@ -55,7 +55,7 @@ public abstract class BaseLoadBackgroundService : BackgroundService
             }
             catch (Exception exception)
             {
-                logger.LogError(methodName, exception);
+                logger.LogError(methodName, exception.InnerException?.Message ?? exception.Message);
             }
             finally
             {

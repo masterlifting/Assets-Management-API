@@ -1,145 +1,145 @@
-﻿using System;
+﻿using IM.Service.Portfolio.Domain.DataAccess;
+using IM.Service.Portfolio.Domain.Entities;
+using IM.Service.Shared.RabbitMq;
+
+using Microsoft.Extensions.Logging;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-
-using IM.Service.Portfolio.Domain.DataAccess;
-using IM.Service.Portfolio.Domain.Entities;
-using IM.Service.Portfolio.Models.Service;
-using IM.Service.Portfolio.Settings;
-using IM.Service.Shared.Models.RabbitMq.Api;
-using IM.Service.Shared.RabbitMq;
-
-using Microsoft.Extensions.Options;
-
-using static IM.Service.Portfolio.Enums;
 
 namespace IM.Service.Portfolio.Services.Entity;
 
 public class DealService
 {
-    private readonly Repository<UnderlyingAsset> underlyingAssetRepo;
-    private readonly Repository<Derivative> derivativeRepo;
+    public ILogger<DealService> Logger { get; }
     private readonly Repository<Deal> dealRepo;
-    private readonly string rabbitConnectionString;
+    private readonly Repository<Income> incomeRepo;
+    private readonly Repository<Expense> expenseRepo;
+    private readonly Repository<Derivative> derivativeRepo;
 
-    public DealService(IOptions<ServiceSettings> options, Repository<UnderlyingAsset> underlyingAssetRepo, Repository<Derivative> derivativeRepo, Repository<Deal> dealRepo)
+    public DealService(
+        ILogger<DealService> logger
+        , Repository<Deal> dealRepo
+        , Repository<Income> incomeRepo
+        , Repository<Expense> expenseRepo
+        , Repository<Derivative> derivativeRepo)
     {
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
-        this.underlyingAssetRepo = underlyingAssetRepo;
-        this.derivativeRepo = derivativeRepo;
+        Logger = logger;
         this.dealRepo = dealRepo;
+        this.incomeRepo = incomeRepo;
+        this.expenseRepo = expenseRepo;
+        this.derivativeRepo = derivativeRepo;
     }
 
-    public async Task ComputeSummariesAsync(IEnumerable<Deal> entities)
+    public Task SetAsync(QueueActions action, IReadOnlyCollection<Deal> entities) => action switch
     {
-        var derivativeIds = entities.Select(x => x.DerivativeId).Distinct();
-        var dealSummaries = await GetSummariesAsync(derivativeIds);
-
-        var dealMqModels = new List<DealMqDto>(dealSummaries.Length);
-        foreach (var (companyId, value, cost) in dealSummaries)
-            if (value != 0)
-            {
-                if (cost >= 0)
-                    dealMqModels.Add(new(companyId, value, cost));
-            }
-            else
-                dealMqModels.Add(new(companyId, null, null));
-
-        TransferToRecommendations(dealMqModels.ToArray());
-    }
-    public async Task ComputeSummaryAsync(Deal entity)
+        QueueActions.Create => Up(entities),
+        QueueActions.Delete => Down(entities),
+        QueueActions.Update => Update(entities),
+        _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
+    };
+    public Task SetAsync(QueueActions action, Deal entity) => action switch
     {
-        var dealSummaries = await GetSummariesAsync(new[] { entity.DerivativeId });
-        var dealMqModels = new List<DealMqDto>(dealSummaries.Length);
-        foreach (var (companyId, value, cost) in dealSummaries)
-            if (value != 0)
-            {
-                if (cost >= 0)
-                    dealMqModels.Add(new(companyId, value, cost));
-            }
-            else
-                dealMqModels.Add(new(companyId, null, null));
+        QueueActions.Create => Up(entity),
+        QueueActions.Delete => Down(entity),
+        QueueActions.Update => Update(entity),
+        _ => throw new ArgumentOutOfRangeException(nameof(action), action, null)
+    };
 
-        TransferToRecommendations(dealMqModels.ToArray());
-    }
-
-    private async Task<DealSummary[]> GetSummariesAsync(IEnumerable<string> derivativeIds)
+    private async Task Up(Deal deal)
     {
-        var underlyingAssetIds = await underlyingAssetRepo.GetSampleAsync(
-            x => x.UnderlyingAssetTypeId == (byte)UnderlyingAssetTypes.Stock,
-            x => x.Id);
+        //var income = await incomeRepo.FindAsync(x => x.DealId == deal.Id);
+        //if (income is null)
+        //    throw new ApplicationException($"Deal '{deal.Id}' not complited. Income not found");
 
-        var derivatives = await derivativeRepo.GetSampleAsync(
-            x => underlyingAssetIds.Contains(x.UnderlyingAssetId) && derivativeIds.Contains(x.Id),
-            x => ValueTuple.Create(x.Id, x.UnderlyingAssetId));
+        //var expense = await expenseRepo.FindAsync(x => x.DealId == deal.Id);
+        //if (expense is null)
+        //    throw new ApplicationException($"Deal '{deal.Id}' not complited. Expense not found");
 
-        derivatives = derivatives
-            .GroupBy(x => x.Item1)
-            .Select(x => (x.Key, x.First().Item2))
-            .ToArray();
+        //var derivatives = await derivativeRepo.GetSampleAsync(x =>
+        //    new[] { income.DerivativeId, expense.DerivativeId }.Contains(x.Id)
+        //    && new[] { income.DerivativeCode, expense.DerivativeCode }.Contains(x.Code));
 
-        var deals = await dealRepo.GetSampleAsync(
-            x => derivativeIds.Contains(x.DerivativeId),
-            x => new { x.DerivativeId, x.OperationId, x.Cost, x.Value });
+        //var dicDerivatives = derivatives.ToDictionary(x => (x.Id, x.Code));
 
-        return deals
-            .Join(derivatives, x => x.DerivativeId, y => y.Item1, (x, y) => new
-            {
-                CompanyId = y.Item2,
-                x.OperationId,
-                x.Value,
-                x.Cost
-            })
-            .GroupBy(x => x.CompanyId)
-            .Select(x =>
-            {
-                var incomingDeals = x.Where(y => y.OperationId == (byte)OperationTypes.Приход).ToArray();
-                var expenseDeals = x.Where(y => y.OperationId == (byte)OperationTypes.Расход).OrderByDescending(y => y.Cost).ToArray();
+        //var incomeDerivative = dicDerivatives[(income.DerivativeId, income.DerivativeCode)];
+        //var expenseDerivative = dicDerivatives[(expense.DerivativeId, expense.DerivativeCode)];
 
-                var sumValue = expenseDeals.Sum(y => y.Value) - incomingDeals.Sum(y => y.Value);
+        //incomeDerivative.Balance += income.Value;
+        //expenseDerivative.Balance -= expense.Value;
 
-                if (sumValue <= 0)
-                {
-                    var sumCost = expenseDeals.Sum(y => y.Cost * y.Value) - incomingDeals.Sum(y => y.Cost * y.Value);
-                    return new DealSummary(x.Key, sumValue, sumCost);
-                }
-
-                var _sumCost = 0m;
-                var _sumValue = 0m;
-
-                foreach (var deal in expenseDeals)
-                {
-                    _sumValue += deal.Value;
-                    var dealValue = deal.Value;
-
-                    if (_sumValue > sumValue)
-                    {
-                        dealValue = _sumValue - deal.Value - sumValue;
-                        _sumValue += dealValue;
-                        dealValue = Math.Abs(dealValue);
-                    }
-
-                    _sumCost += deal.Cost * dealValue;
-
-                    if (sumValue == _sumValue)
-                        break;
-                }
-
-                return new DealSummary(x.Key, sumValue, _sumCost);
-            })
-            .ToArray();
+        //await derivativeRepo.UpdateRangeAsync(new[] { incomeDerivative, expenseDerivative }, "up balances");
     }
-    private void TransferToRecommendations(DealMqDto[] models)
+    private async Task Down(Deal deal)
     {
-        var computeResult = models.Where(x => x.SumValue.HasValue).ToArray();
-        var deleteResult = models.Where(x => !x.SumValue.HasValue).ToArray();
-
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
-
-        if (computeResult.Any())
-            publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Deals, QueueActions.Create, computeResult);
-        if (deleteResult.Any())
-            publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Deals, QueueActions.Delete, deleteResult);
+        
     }
+    private async Task Update(Deal deal)
+    {
+      
+    }
+
+    private async Task Up(IEnumerable<Deal> deals)
+    {
+        deals = deals.ToArray();
+
+        var derivativeIds = deals.SelectMany(x => new[]{ x.Income.DerivativeId, x.Expense.DerivativeId}).Distinct();
+        var derivativeCodes = deals.SelectMany(x => new[] { x.Income.DerivativeCode, x.Expense.DerivativeCode }).Distinct();
+        var derivatives = await derivativeRepo.GetSampleAsync(x => derivativeIds.Contains(x.Id) && derivativeCodes.Contains(x.Code));
+        var dicDerivatives = derivatives.ToDictionary(x => (x.Id, x.Code));
+        
+        foreach (var derivative in dicDerivatives)
+            derivative.Value.Balance = 0;
+
+        foreach (var deal in deals)
+        {
+            dicDerivatives[(deal.Income.DerivativeId, deal.Income.DerivativeCode)].Balance += deal.Income.Value;
+            dicDerivatives[(deal.Expense.DerivativeId, deal.Expense.DerivativeCode)].Balance -= deal.Expense.Value;
+        }
+
+        await derivativeRepo.UpdateRangeAsync(derivatives, "up balances");
+    }
+    private async Task Down(IEnumerable<Deal> deals)
+    {
+        
+    }
+    private async Task Update(IEnumerable<Deal> deals)
+    {
+        
+    }
+
+    //private (decimal sum, decimal value) Compute(Deal[] deals)
+    //{
+    //    var income = deals.Where(x => operationTypes[OperationTypes.Income].Contains(x.TypeId)).ToArray();
+    //    var expense = deals.Where(x => operationTypes[OperationTypes.Expense].Contains(x.TypeId)).ToArray();
+
+    //    var sumValue = expense.Sum(y => y.Value) - income.Sum(y => y.Value);
+
+    //    if (sumValue <= 0)
+    //        return (expense.Sum(y => y.Cost * y.Value) - income.Sum(y => y.Cost * y.Value), sumValue);
+
+    //    var _sumCost = 0m;
+    //    var _sumValue = 0m;
+
+    //    foreach (var item in expense.OrderByDescending(y => y.Cost))
+    //    {
+    //        _sumValue += item.Value;
+    //        var dealValue = item.Value;
+
+    //        if (_sumValue > sumValue)
+    //        {
+    //            dealValue = _sumValue - sumValue;
+    //            _sumValue = sumValue;
+    //        }
+
+    //        _sumCost += item.Cost * dealValue;
+
+    //        if (sumValue == _sumValue)
+    //            break;
+    //    }
+
+    //    return (_sumCost, sumValue);
+    //}
 }

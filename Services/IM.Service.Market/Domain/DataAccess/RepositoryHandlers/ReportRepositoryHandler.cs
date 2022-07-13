@@ -1,13 +1,12 @@
-﻿using IM.Service.Shared.RabbitMq;
-using IM.Service.Shared.RepositoryService;
-using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Settings;
+﻿using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Services.RabbitMq;
+using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
-using static IM.Service.Shared.Enums;
 using static IM.Service.Market.Enums;
+using static IM.Service.Shared.Enums;
 
 
 namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
@@ -15,11 +14,11 @@ namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 public class ReportRepositoryHandler : RepositoryHandler<Report>
 {
     private readonly DatabaseContext context;
-    private readonly string rabbitConnectionString;
-    public ReportRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    private readonly RabbitAction rabbitAction;
+    public ReportRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
     {
         this.context = context;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
     }
 
     public override async Task<IEnumerable<Report>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Report> entities)
@@ -81,7 +80,7 @@ public class ReportRepositoryHandler : RepositoryHandler<Report>
 
     public override async Task RunPostProcessAsync(RepositoryActions action, Report entity)
     {
-        RabbitPublisher publisher;
+        var queueTaskParams = new List<(QueueNames, QueueEntities, QueueActions, object)>(3);
 
         if (action is RepositoryActions.Delete)
         {
@@ -95,23 +94,22 @@ public class ReportRepositoryHandler : RepositoryHandler<Report>
                 .ThenBy(x => x.Quarter)
                 .LastOrDefaultAsync();
 
-            publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-
             if (lastEntity is not null)
-                publisher.PublishTask(QueueNames.Market, QueueEntities.Report, QueueActions.Set, lastEntity);
+                queueTaskParams.Add((QueueNames.Market, QueueEntities.Report, QueueActions.Set, lastEntity));
 
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Report, QueueActions.Delete, entity);
+            queueTaskParams.Add((QueueNames.Market, QueueEntities.Report, QueueActions.Delete, entity));
         }
         else if (entity.StatusId is (byte)Statuses.New)
         {
-            publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Report, QueueActions.Set, entity);
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Report, RabbitHelper.GetQueueAction(action), entity);
+            queueTaskParams.Add((QueueNames.Market, QueueEntities.Report, QueueActions.Set, entity));
+            queueTaskParams.Add((QueueNames.Market, QueueEntities.Report, RabbitHelper.GetAction(action), entity));
         }
+
+        rabbitAction.Publish(QueueExchanges.Transfer, queueTaskParams);
     }
     public override async Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Report> entities)
     {
-        RabbitPublisher publisher;
+        var queueTaskParams = new List<(QueueNames, QueueEntities, QueueActions, object)>(3);
 
         if (action is RepositoryActions.Delete)
         {
@@ -134,11 +132,10 @@ public class ReportRepositoryHandler : RepositoryHandler<Report>
                     lastEntities.Add(lastEntity);
             }
 
-            publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Reports, QueueActions.Delete, entities);
+            queueTaskParams.Add((QueueNames.Market, QueueEntities.Reports, QueueActions.Delete, entities));
 
             if (lastEntities.Any())
-                publisher.PublishTask(QueueNames.Market, QueueEntities.Reports, QueueActions.Set, lastEntities);
+                queueTaskParams.Add((QueueNames.Market, QueueEntities.Reports, QueueActions.Set, lastEntities));
         }
 
         var newEntities = entities.Where(x => x.StatusId is (byte)Statuses.New).ToArray();
@@ -146,8 +143,8 @@ public class ReportRepositoryHandler : RepositoryHandler<Report>
         if (!newEntities.Any())
             return;
 
-        publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.Reports, QueueActions.Set, newEntities);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.Reports, RabbitHelper.GetQueueAction(action), newEntities);
+        queueTaskParams.Add((QueueNames.Market, QueueEntities.Reports, QueueActions.Set, newEntities));
+        queueTaskParams.Add((QueueNames.Market, QueueEntities.Reports, RabbitHelper.GetAction(action), newEntities));
+        rabbitAction.Publish(QueueExchanges.Transfer, queueTaskParams);
     }
 }

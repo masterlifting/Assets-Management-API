@@ -1,4 +1,5 @@
-﻿using IM.Service.Shared.RepositoryService;
+﻿using System;
+using IM.Service.Shared.SqlAccess;
 using IM.Service.Portfolio.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
@@ -6,13 +7,22 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IM.Service.Portfolio.Services.RabbitMq;
+using IM.Service.Shared.RabbitMq;
+using static IM.Service.Shared.Enums;
 
 namespace IM.Service.Portfolio.Domain.DataAccess.RepositoryHandlers;
 
 public class DerivativeRepositoryHandler : RepositoryHandler<Derivative>
 {
+    private readonly RabbitAction rabbitAction;
     private readonly DatabaseContext context;
-    public DerivativeRepositoryHandler(DatabaseContext context) => this.context = context;
+
+    public DerivativeRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
+    {
+        this.rabbitAction = rabbitAction;
+        this.context = context;
+    }
 
     public override async Task<IEnumerable<Derivative>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Derivative> entities)
     {
@@ -24,7 +34,10 @@ public class DerivativeRepositoryHandler : RepositoryHandler<Derivative>
 
         foreach (var (Old, New) in result)
         {
-            Old.UnderlyingAssetId = New.UnderlyingAssetId;
+            Old.UpdateTime = DateTime.UtcNow;
+            Old.Balance += New.Balance;
+            Old.AssetId = New.AssetId;
+            Old.AssetTypeId = New.AssetTypeId;
         }
 
         return result.Select(x => x.Old);
@@ -33,13 +46,19 @@ public class DerivativeRepositoryHandler : RepositoryHandler<Derivative>
     {
         entities = entities.ToArray();
 
-        var ids = entities
-            .GroupBy(x => x.Id)
-            .Select(x => x.Key);
-        var codes = entities
-            .GroupBy(x => x.Code)
-            .Select(x => x.Key);
+        var ids = entities.Select(x => x.Id).Distinct();
+        var codes = entities.Select(x => x.Code).Distinct();
 
         return context.Derivatives.Where(x => ids.Contains(x.Id) && codes.Contains(x.Code));
+    }
+    public override Task RunPostProcessAsync(RepositoryActions action, Derivative entity)
+    {
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Portfolio, QueueEntities.Derivative, QueueActions.Compute, entity);
+        return Task.CompletedTask;
+    }
+    public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Derivative> entities)
+    {
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Portfolio, QueueEntities.Derivatives, QueueActions.Compute, entities);
+        return Task.CompletedTask;
     }
 }

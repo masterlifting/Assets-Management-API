@@ -1,10 +1,9 @@
-﻿using IM.Service.Shared.RabbitMq;
-using IM.Service.Shared.RepositoryService;
-using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Settings;
+﻿using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Services.RabbitMq;
+using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using static IM.Service.Shared.Enums;
 
@@ -14,11 +13,11 @@ namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient>
 {
     private readonly DatabaseContext context;
-    private readonly string rabbitConnectionString;
-    public CoefficientRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    private readonly RabbitAction rabbitAction;
+    public CoefficientRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
     {
         this.context = context;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
     }
 
     public override async Task<IEnumerable<Coefficient>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Coefficient> entities)
@@ -86,12 +85,10 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient>
             .ThenBy(x => x.Quarter)
             .LastOrDefaultAsync();
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-
         if (lastEntity is not null)
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Coefficient, QueueActions.Set, lastEntity);
+            rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Coefficient, QueueActions.Set, lastEntity);
         else
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Rating, QueueActions.Compute, new Rating());
+            rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Rating, QueueActions.Compute, new Rating());
     }
     public override async Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Coefficient> entities)
     {
@@ -115,11 +112,9 @@ public class CoefficientRepositoryHandler : RepositoryHandler<Coefficient>
                 lastEntities.Add(lastEntity);
         }
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-
         if (lastEntities.Any())
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Coefficients, QueueActions.Set, lastEntities);
+            rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Coefficients, QueueActions.Set, lastEntities);
         else
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Ratings, QueueActions.Compute, Array.Empty<Rating>());
+            rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Ratings, QueueActions.Compute, Array.Empty<Rating>());
     }
 }

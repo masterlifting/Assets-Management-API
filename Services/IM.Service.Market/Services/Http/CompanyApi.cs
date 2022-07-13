@@ -5,15 +5,15 @@ using IM.Service.Market.Domain.DataAccess.Comparators;
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.ManyToMany;
 using IM.Service.Market.Models.Api.Http;
-using IM.Service.Market.Settings;
+using IM.Service.Market.Services.RabbitMq;
+using IM.Service.Shared.Models.RabbitMq.Api;
 using IM.Service.Shared.Models.Service;
 using IM.Service.Shared.RabbitMq;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using System.Collections;
-using IM.Service.Shared.Models.RabbitMq.Api;
+
 using static IM.Service.Shared.Helpers.ServiceHelper;
 
 namespace IM.Service.Market.Services.Http;
@@ -23,15 +23,15 @@ public class CompanyApi
     private readonly Repository<Company> companyRepo;
     private readonly Repository<CompanySource> companySourceRepo;
 
-    private readonly string rabbitConnectionString;
+    private readonly RabbitAction rabbitAction;
     public CompanyApi(
-        IOptions<ServiceSettings> options,
+        RabbitAction rabbitAction,
         Repository<Company> companyRepo,
         Repository<CompanySource> companySourceRepo)
     {
         this.companyRepo = companyRepo;
         this.companySourceRepo = companySourceRepo;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
     }
 
     public async Task<CompanyGetDto> GetAsync(string companyId)
@@ -154,8 +154,7 @@ public class CompanyApi
     {
         var companySources = await companySourceRepo.GetSampleAsync(x => x);
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, companySources);
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.AssetSources, QueueActions.Get, companySources);
 
         return $"Load data by {string.Join(";", companySources.Select(x => Enum.Parse<Enums.Statuses>(x.SourceId.ToString())))} is starting...";
     }
@@ -164,8 +163,7 @@ public class CompanyApi
         companyId = companyId.Trim().ToUpperInvariant();
         var companySources = await companySourceRepo.GetSampleAsync(x => x.CompanyId == companyId);
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, companySources);
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.AssetSources, QueueActions.Get, companySources);
 
         return $"Load data by {string.Join(";", companySources.Select(x => Enum.Parse<Enums.Statuses>(x.SourceId.ToString())))} is starting...";
     }
@@ -173,8 +171,7 @@ public class CompanyApi
     {
         var companySources = await companySourceRepo.GetSampleAsync(x => x.SourceId == sourceId);
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, companySources);
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.AssetSources, QueueActions.Get, companySources);
 
         return $"Load data by {string.Join(";", companySources.Select(x => Enum.Parse<Enums.Statuses>(x.SourceId.ToString())))} is starting...";
     }
@@ -189,8 +186,7 @@ public class CompanyApi
         if (companySource?.Value is null)
             return $"source for '{companyId}' not found";
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySource, QueueActions.Get, companySource);
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.AssetSource, QueueActions.Get, companySource);
 
         return $"Load data by {Enum.Parse<Enums.Statuses>(companySource.SourceId.ToString())} is starting...";
     }
@@ -203,12 +199,10 @@ public class CompanyApi
             return "Data for sync not found";
 
         var data = companies
-            .Select(x => new CompanyMqDto(x.Item1, x.Item2, x.Item3))
+            .Select(x => new AssetMqDto(x.Item1, (byte)Shared.Enums.AssetTypes.Stock, x.Item2, x.Item3))
             .ToArray();
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Sync);
-
-        publisher.PublishTask(new[] { QueueNames.Recommendations, QueueNames.Portfolio }, QueueEntities.Companies, QueueActions.Set, data);
+        rabbitAction.Publish(QueueExchanges.Sync, new[] { QueueNames.Recommendations, QueueNames.Portfolio }, QueueEntities.Assets, QueueActions.Set, data);
 
         return "Task of sync is running...";
     }

@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using IM.Service.Shared.Models.Entity.Interfaces;
+
+using Microsoft.EntityFrameworkCore;
 
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -6,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace IM.Service.Shared.Models.Entity;
 
 [Index(nameof(Name), IsUnique = true)]
-public abstract class Catalog
+public class Catalog : ICatalog
 {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public byte Id { get; init; }

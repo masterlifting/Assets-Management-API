@@ -1,5 +1,5 @@
 using IM.Service.Shared.Helpers;
-using IM.Service.Shared.RepositoryService;
+using IM.Service.Shared.SqlAccess;
 using IM.Service.Portfolio.Clients;
 using IM.Service.Portfolio.Domain.DataAccess;
 using IM.Service.Portfolio.Domain.DataAccess.RepositoryHandlers;
@@ -23,6 +23,7 @@ using Polly;
 
 using System;
 using IM.Service.Portfolio.Services.Entity;
+using IM.Service.Portfolio.Services.RabbitMq;
 
 namespace IM.Service.Portfolio;
 
@@ -56,22 +57,30 @@ public class Startup
         services.AddScoped(typeof(Repository<>));
         services.AddScoped<RepositoryHandler<User>, UserRepositoryHandler>();
         services.AddScoped<RepositoryHandler<Account>, AccountRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Broker>, BrokerRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<Event>, EventRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Provider>, ProviderRepositoryHandler>();
         services.AddScoped<RepositoryHandler<Deal>, DealRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Expense>, ExpenseRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Income>, IncomeRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Event>, EventRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<EventType>, EventTypeRepositoryHandler>();
         services.AddScoped<RepositoryHandler<Report>, ReportRepositoryHandler>();
-        services.AddScoped<RepositoryHandler<UnderlyingAsset>, UnderlyingAssetRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Asset>, AssetRepositoryHandler>();
         services.AddScoped<RepositoryHandler<Derivative>, DerivativeRepositoryHandler>();
 
         services.AddScoped<ReportApi>();
         services.AddScoped<ReportGrabber>();
 
-        services.AddTransient<DealService>();
+        services.AddScoped<AssetService>();
+        services.AddScoped<DealService>();
+        services.AddScoped<EventService>();
+        services.AddScoped<ReportService>();
 
+        services.AddTransient<AssetProcess>();
         services.AddTransient<DealProcess>();
-        services.AddTransient<CompanyProcess>();
+        services.AddTransient<EventProcess>();
         services.AddTransient<ReportProcess>();
 
+        services.AddSingleton<RabbitAction>();
         services.AddHostedService<RabbitBackgroundService>();
     }
 

@@ -2,11 +2,9 @@
 using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Services.Data;
 using IM.Service.Market.Services.Helpers;
-using IM.Service.Market.Settings;
+using IM.Service.Market.Services.RabbitMq;
 using IM.Service.Shared.Models.RabbitMq.Api;
 using IM.Service.Shared.RabbitMq;
-
-using Microsoft.Extensions.Options;
 
 using static IM.Service.Market.Enums;
 
@@ -14,14 +12,14 @@ namespace IM.Service.Market.Services.Entity;
 
 public sealed class PriceService : StatusChanger<Price>
 {
-    private readonly string rabbitConnectionString;
+    private readonly RabbitAction rabbitAction;
     public DataLoader<Price> Loader { get; }
     private readonly Repository<Price> priceRepo;
     private readonly Repository<Split> splitRepo;
 
-    public PriceService(IOptions<ServiceSettings> options, Repository<Price> priceRepo, Repository<Split> splitRepo, DataLoader<Price> loader) : base(priceRepo)
+    public PriceService(RabbitAction rabbitAction, Repository<Price> priceRepo, Repository<Split> splitRepo, DataLoader<Price> loader) : base(priceRepo)
     {
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
         Loader = loader;
         this.priceRepo = priceRepo;
         this.splitRepo = splitRepo;
@@ -164,8 +162,7 @@ public sealed class PriceService : StatusChanger<Price>
 
         var model = await GetPriceToTransferAsync(entity);
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
-        publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Price, action, model);
+        rabbitAction.Publish(QueueExchanges.Transfer, QueueNames.Recommendations, QueueEntities.Cost, action, model);
     }
     private async Task TransferPricesAsync(Price[] entities, QueueActions action)
     {
@@ -176,11 +173,10 @@ public sealed class PriceService : StatusChanger<Price>
 
         var models = await GetPricesToTransferAsync(entities);
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
-        publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Prices, action, models);
+        rabbitAction.Publish(QueueExchanges.Transfer, QueueNames.Recommendations, QueueEntities.Costs, action, models);
     }
 
-    private async Task<PriceMqDto[]> GetPricesToTransferAsync(Price[] entities)
+    private async Task<CostMqDto[]> GetPricesToTransferAsync(Price[] entities)
     {
         var companyIds = entities.GroupBy(x => x.CompanyId).Select(x => x.Key).ToArray();
         var sourceIds = entities.GroupBy(x => x.SourceId).Select(x => x.Key).ToArray();
@@ -207,14 +203,15 @@ public sealed class PriceService : StatusChanger<Price>
                     ? x.Where(y => y.Date >= splitsDict[x.Key]).ToArray()
                     : x.ToArray();
 
-                return new PriceMqDto(
+                return new CostMqDto(
                     x.Key,
+                    (byte)Shared.Enums.AssetTypes.Stock,
                     data.MaxBy(y => y.Date)!.Value,
                     Math.Round(data.Average(y => y.Value), 4));
             })
             .ToArray();
     }
-    private async Task<PriceMqDto> GetPriceToTransferAsync(Price entity)
+    private async Task<CostMqDto> GetPriceToTransferAsync(Price entity)
     {
         var date = DateOnly.FromDateTime(DateTime.Now.Date.AddDays(-365));
 
@@ -234,8 +231,9 @@ public sealed class PriceService : StatusChanger<Price>
             ? prices.Where(y => y.Date >= splitsDict[entity.CompanyId]).ToArray()
             : prices;
 
-        return new PriceMqDto(
+        return new CostMqDto(
             entity.CompanyId,
+            (byte)Shared.Enums.AssetTypes.Stock,
             data.MaxBy(y => y.Date)!.Value,
             Math.Round(data.Average(y => y.Value), 4));
     }

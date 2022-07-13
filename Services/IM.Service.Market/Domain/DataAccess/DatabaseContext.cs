@@ -1,11 +1,9 @@
 ﻿using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Catalogs;
 using IM.Service.Market.Domain.Entities.ManyToMany;
+using IM.Service.Shared.Models.Entity;
 
 using Microsoft.EntityFrameworkCore;
-
-using SharedEnums = IM.Service.Shared.Enums;
-using MarketEnums = IM.Service.Market.Enums;
 
 namespace IM.Service.Market.Domain.DataAccess;
 
@@ -68,37 +66,24 @@ public class DatabaseContext : DbContext
         modelBuilder.Entity<Report>().HasOne(x => x.Company).WithMany(x => x.Reports).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<Coefficient>().HasOne(x => x.Company).WithMany(x => x.Coefficients).OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<Currency>().HasData(Catalogs.Currencies);
+        modelBuilder.Entity<Country>().HasData(Catalogs.Countries);
+
         modelBuilder.Entity<Source>().HasData(
-            new() { Id = (byte)MarketEnums.Sources.Manual, Name = nameof(MarketEnums.Sources.Manual), Description = "Data from manual enter" },
-            new() { Id = (byte)MarketEnums.Sources.Moex, Name = nameof(MarketEnums.Sources.Moex), Description = "Data from Moscow Exchange" },
-            new() { Id = (byte)MarketEnums.Sources.Spbex, Name = nameof(MarketEnums.Sources.Spbex), Description = "Data from Spb Exchange" },
-            new() { Id = (byte)MarketEnums.Sources.Yahoo, Name = nameof(MarketEnums.Sources.Yahoo), Description = "Data from YahooFinance.com" },
-            new() { Id = (byte)MarketEnums.Sources.Tdameritrade, Name = nameof(MarketEnums.Sources.Tdameritrade), Description = "Data from Tdameritrade.com" },
-            new() { Id = (byte)MarketEnums.Sources.Investing, Name = nameof(MarketEnums.Sources.Investing), Description = "Data from Investing.com" });
-
-        modelBuilder.Entity<Country>().HasData(
-            new() { Id = (byte)SharedEnums.Countries.Rus, Name = nameof(SharedEnums.Countries.Rus), Description = "The Russian Federation" },
-            new() { Id = (byte)SharedEnums.Countries.Usa, Name = nameof(SharedEnums.Countries.Usa), Description = "Соединенные Штаты Америки" },
-            new() { Id = (byte)SharedEnums.Countries.Chn, Name = nameof(SharedEnums.Countries.Chn), Description = "Chinese People's Republic" },
-            new() { Id = (byte)SharedEnums.Countries.Deu, Name = nameof(SharedEnums.Countries.Deu), Description = "Deutschland" },
-            new() { Id = (byte)SharedEnums.Countries.Gbr, Name = nameof(SharedEnums.Countries.Gbr), Description = "Great Britain" });
-
-        modelBuilder.Entity<Currency>().HasData(
-            new() { Id = (byte)SharedEnums.Currencies.Rub, Name = "₽", Description = nameof(SharedEnums.Currencies.Rub) },
-            new() { Id = (byte)SharedEnums.Currencies.Usd, Name = "$", Description = nameof(SharedEnums.Currencies.Usd) },
-            new() { Id = (byte)SharedEnums.Currencies.Eur, Name = "€", Description = nameof(SharedEnums.Currencies.Eur) },
-            new() { Id = (byte)SharedEnums.Currencies.Gbp, Name = "£", Description = nameof(SharedEnums.Currencies.Gbp) },
-            new() { Id = (byte)SharedEnums.Currencies.Chy, Name = "¥", Description = nameof(SharedEnums.Currencies.Chy) },
-            new() { Id = (byte)SharedEnums.Currencies.Btc, Name = "₿", Description = nameof(SharedEnums.Currencies.Btc) },
-            new() { Id = (byte)SharedEnums.Currencies.Eth, Name = "Ξ", Description = nameof(SharedEnums.Currencies.Eth) });
+            new() { Id = (byte)Enums.Sources.Manual, Name = nameof(Enums.Sources.Manual), Description = "Data from manual enter" },
+            new() { Id = (byte)Enums.Sources.Moex, Name = nameof(Enums.Sources.Moex), Description = "Data from Moscow Exchange" },
+            new() { Id = (byte)Enums.Sources.Spbex, Name = nameof(Enums.Sources.Spbex), Description = "Data from Spb Exchange" },
+            new() { Id = (byte)Enums.Sources.Yahoo, Name = nameof(Enums.Sources.Yahoo), Description = "Data from YahooFinance.com" },
+            new() { Id = (byte)Enums.Sources.Tdameritrade, Name = nameof(Enums.Sources.Tdameritrade), Description = "Data from Tdameritrade.com" },
+            new() { Id = (byte)Enums.Sources.Investing, Name = nameof(Enums.Sources.Investing), Description = "Data from Investing.com" });
 
         modelBuilder.Entity<Status>().HasData(
-            new() { Id = (byte)MarketEnums.Statuses.New, Name = nameof(MarketEnums.Statuses.New), Description = "new object" }
-            , new() { Id = (byte)MarketEnums.Statuses.Ready, Name = nameof(MarketEnums.Statuses.Ready), Description = "ready to compute" }
-            , new() { Id = (byte)MarketEnums.Statuses.Computing, Name = nameof(MarketEnums.Statuses.Computing), Description = "computing in process" }
-            , new() { Id = (byte)MarketEnums.Statuses.Computed, Name = nameof(MarketEnums.Statuses.Computed), Description = "computing was completed" }
-            , new() { Id = (byte)MarketEnums.Statuses.NotComputed, Name = nameof(MarketEnums.Statuses.NotComputed), Description = "computing was not done" }
-            , new() { Id = (byte)MarketEnums.Statuses.Error, Name = nameof(MarketEnums.Statuses.Error), Description = "error" });
+            new() { Id = (byte)Enums.Statuses.New, Name = nameof(Enums.Statuses.New), Description = "new object" }
+            , new() { Id = (byte)Enums.Statuses.Ready, Name = nameof(Enums.Statuses.Ready), Description = "ready to compute" }
+            , new() { Id = (byte)Enums.Statuses.Computing, Name = nameof(Enums.Statuses.Computing), Description = "computing in process" }
+            , new() { Id = (byte)Enums.Statuses.Computed, Name = nameof(Enums.Statuses.Computed), Description = "computing was completed" }
+            , new() { Id = (byte)Enums.Statuses.NotComputed, Name = nameof(Enums.Statuses.NotComputed), Description = "computing was not done" }
+            , new() { Id = (byte)Enums.Statuses.Error, Name = nameof(Enums.Statuses.Error), Description = "error" });
 
         modelBuilder.Entity<Sector>().HasData(
              new() { Id = 1, Name = "Сырье" }

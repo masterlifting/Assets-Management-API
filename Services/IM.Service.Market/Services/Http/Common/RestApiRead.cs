@@ -1,5 +1,5 @@
 ﻿using IM.Service.Shared.Models.Entity.Interfaces;
-using IM.Service.Shared.RepositoryService.Filters;
+using IM.Service.Shared.SqlAccess.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
 using IM.Service.Market.Services.Http.Common.Interfaces;
 using IM.Service.Market.Services.Http.Mappers.Interfaces;

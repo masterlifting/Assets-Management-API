@@ -9,9 +9,9 @@ using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using IM.Service.Shared.Models.Http;
 using IM.Service.Shared.Models.Service;
 using static IM.Service.Shared.Helpers.ServiceHelper;
+using IM.Service.Shared.Models.Configuration;
 
 namespace IM.Service.Shared.Helpers;
 

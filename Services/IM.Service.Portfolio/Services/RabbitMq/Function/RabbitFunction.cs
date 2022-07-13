@@ -7,6 +7,7 @@ using IM.Service.Shared.Helpers;
 using IM.Service.Portfolio.Domain.Entities;
 using IM.Service.Portfolio.Models.Api.Mq;
 using IM.Service.Portfolio.Services.RabbitMq.Function.Processes;
+using Microsoft.Extensions.Logging;
 
 namespace IM.Service.Portfolio.Services.RabbitMq.Function;
 
@@ -23,8 +24,12 @@ public class RabbitFunction : IRabbitAction
         {
             QueueEntities.Deal => serviceProvider.GetRequiredService<DealProcess>().ProcessAsync(action, JsonHelper.Deserialize<Deal>(data)),
             QueueEntities.Deals => serviceProvider.GetRequiredService<DealProcess>().ProcessRangeAsync(action, JsonHelper.Deserialize<Deal[]>(data)),
-            QueueEntities.Report => serviceProvider.GetRequiredService<ReportProcess>().ProcessAsync(action, JsonHelper.Deserialize<ReportFileDto>(data)),
-            _ => Task.CompletedTask
+            QueueEntities.Event => serviceProvider.GetRequiredService<EventProcess>().ProcessAsync(action, JsonHelper.Deserialize<Event>(data)),
+            QueueEntities.Events => serviceProvider.GetRequiredService<EventProcess>().ProcessRangeAsync(action, JsonHelper.Deserialize<Event[]>(data)),
+            QueueEntities.Derivative => serviceProvider.GetRequiredService<DerivativeProcess>().ProcessAsync(action, JsonHelper.Deserialize<Derivative>(data)),
+            QueueEntities.Derivatives => serviceProvider.GetRequiredService<DerivativeProcess>().ProcessRangeAsync(action, JsonHelper.Deserialize<Derivative[]>(data)),
+            QueueEntities.Report => serviceProvider.GetRequiredService<ReportProcess>().ProcessAsync(action, JsonHelper.Deserialize<ProviderReportDto>(data)),
+            _ => serviceProvider.GetRequiredService<ILogger<RabbitFunction>>().LogDefaultTask($"{action} {entity}")
         };
     }
 }

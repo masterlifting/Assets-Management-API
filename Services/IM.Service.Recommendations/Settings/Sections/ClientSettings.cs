@@ -1,4 +1,4 @@
-﻿using IM.Service.Shared.Models.Http;
+﻿using IM.Service.Shared.Models.Configuration;
 
 namespace IM.Service.Recommendations.Settings.Sections;
 

@@ -18,7 +18,7 @@ public class SalesController : Controller
     {
         try
         {
-            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.Fact != null && x.Plan > 0));
+            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.ProfitPlan > 0));
         }
         catch (Exception exception)
         {
@@ -30,7 +30,7 @@ public class SalesController : Controller
     {
         try
         {
-            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.IsReady && x.Plan > 0));
+            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.IsReady));
         }
         catch (Exception exception)
         {
@@ -42,7 +42,55 @@ public class SalesController : Controller
     {
         try
         {
-            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.Fact != null && x.Plan == 0));
+            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.ProfitPlan == 0));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpGet("assets/")]
+    public async Task<IActionResult> GetAssets()
+    {
+        try
+        {
+            return Ok(await api.GetAssetsAsync());
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpGet("assets/{assetTypeId}")]
+    public async Task<IActionResult> GetAssets(int assetTypeId, int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.AssetTypeId == assetTypeId));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpGet("assets/{assetTypeId}/ready/")]
+    public async Task<IActionResult> GetAssetsReady(int assetTypeId, int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.AssetTypeId == assetTypeId && x.IsReady));
+        }
+        catch (Exception exception)
+        {
+            return BadRequest(exception.Message);
+        }
+    }
+    [HttpGet("assets/{assetTypeId}/payback/")]
+    public async Task<IActionResult> GetAssetsPayback(int assetTypeId, int page = 0, int limit = 0)
+    {
+        try
+        {
+            return Ok(await api.GetAsync(new Paginatior(page, limit), x => x.AssetTypeId == assetTypeId && x.ProfitPlan == 0));
         }
         catch (Exception exception)
         {
@@ -50,12 +98,12 @@ public class SalesController : Controller
         }
     }
 
-    [HttpGet("{companyId}")]
-    public async Task<IActionResult> Get(string companyId)
+    [HttpGet("assets/{assetTypeId}/{assetId}")]
+    public async Task<IActionResult> Get(int assetTypeId, string assetId)
     {
         try
         {
-            return Ok(await api.GetAsync(companyId));
+            return Ok(await api.GetAsync((byte)assetTypeId, assetId));
         }
         catch (Exception exception)
         {

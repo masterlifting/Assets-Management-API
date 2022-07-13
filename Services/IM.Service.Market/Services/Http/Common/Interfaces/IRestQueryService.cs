@@ -1,6 +1,6 @@
 ﻿using IM.Service.Shared.Helpers;
 using IM.Service.Shared.Models.Entity.Interfaces;
-using IM.Service.Shared.RepositoryService.Filters;
+using IM.Service.Shared.SqlAccess.Filters;
 using IM.Service.Market.Domain.Entities.Interfaces;
 
 namespace IM.Service.Market.Services.Http.Common.Interfaces;

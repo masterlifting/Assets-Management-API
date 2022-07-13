@@ -1,4 +1,4 @@
-﻿using IM.Service.Shared.RepositoryService;
+﻿using IM.Service.Shared.SqlAccess;
 using IM.Service.Recommendations.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
@@ -24,9 +24,14 @@ public class SaleRepositoryHandler : RepositoryHandler<Sale>
 
         foreach (var (Old, New) in result)
         {
-            Old.Price = New.Price;
-            Old.Value = New.Value;
-            Old.Plan = New.Plan;
+            Old.AssetId = New.AssetId;
+            Old.AssetTypeId = New.AssetTypeId;
+
+            Old.ProfitPlan = New.ProfitPlan;
+            Old.ProfitFact = New.ProfitFact;
+            Old.CostPlan = New.CostPlan;
+            Old.CostFact = New.CostFact;
+            Old.ActiveValue = New.ActiveValue;
         }
 
         return result.Select(x => x.Old);

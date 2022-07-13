@@ -9,7 +9,7 @@ namespace IM.Service.Shared.RabbitMq;
 
 public static class RabbitHelper
 {
-    public static QueueActions GetQueueAction(RepositoryActions action) => action switch
+    public static QueueActions GetAction(RepositoryActions action) => action switch
     {
         RepositoryActions.Create => QueueActions.Create,
         RepositoryActions.Update => QueueActions.Update,

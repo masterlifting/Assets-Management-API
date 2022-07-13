@@ -1,0 +1,44 @@
+delete from "Incomes";
+delete from "Expenses";
+delete from "Deals";
+delete from "Events";
+delete from "Reports";
+update "Derivatives" set "Balance" = 0
+
+select 
+"ain"."Name" as "Получаю"
+,ROUND("i"."Value",2) as "В количестве"
+,ROUND("d"."Cost",2) as "по за шт"
+,ROUND("e"."Value",2) as "На сумму"
+,"aout"."Name" as "Отдаю"
+,"d"."Date"
+from "Deals" as "d" 
+left join "Incomes" as "i" on "d"."Id" = "i"."DealId"
+left join "Expenses" as "e" on "d"."Id" = "e"."DealId"
+left join "Derivatives" as "derin" on "derin"."Id" = "i"."DerivativeId" and "derin"."Code" = "i"."DerivativeCode"
+left join "Derivatives" as "derout" on "derout"."Id" = "e"."DerivativeId" and "derout"."Code" = "e"."DerivativeCode"
+left join "Assets" as "ain" on "ain"."Id" = "derin"."AssetId"
+left join "Assets" as "aout" on "aout"."Id" = "derout"."AssetId"
+order by "d"."Date" desc ,"ain"."Name"
+
+select 
+--"Date"
+ROUND(sum("Value"),2)
+--, "DerivativeCode"
+, "TypeId"
+, "Info"
+from "Events"
+where "DerivativeCode" = 'RUB' and "TypeId" in (3,6,7)
+group by  "TypeId", "Info"
+order by "TypeId", "Info"
+
+select sum("Value"), "DerivativeCode" from "Events" where "TypeId" = 4 group by "DerivativeCode"
+
+select
+"a"."Name"
+, round(sum("d"."Balance"),2) 
+from "Derivatives" as "d"
+join "Assets" as "a" on "a"."Id" = "d"."AssetId"
+group by "d"."AssetTypeId", "a"."Name"
+having sum("d"."Balance") != 0 
+order by "d"."AssetTypeId","a"."Name"

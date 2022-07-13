@@ -16,7 +16,7 @@ public static class QueueConfiguration
                 {
                     Entities = new[]
                     {
-                        new QueueEntity(QueueEntities.Company)
+                        new QueueEntity(QueueEntities.Asset)
                         {
                             Actions = new[]
                             {
@@ -25,7 +25,7 @@ public static class QueueConfiguration
                                 QueueActions.Set
                             }
                         },
-                        new QueueEntity(QueueEntities.Companies)
+                        new QueueEntity(QueueEntities.Assets)
                         {
                             Actions = new[]
                             {
@@ -40,7 +40,7 @@ public static class QueueConfiguration
                 {
                     Entities = new[]
                     {
-                        new QueueEntity(QueueEntities.Company)
+                        new QueueEntity(QueueEntities.Asset)
                         {
                             Actions = new[]
                             {
@@ -49,7 +49,7 @@ public static class QueueConfiguration
                                 QueueActions.Delete
                             }
                         },
-                        new QueueEntity(QueueEntities.Companies)
+                        new QueueEntity(QueueEntities.Assets)
                         {
                             Actions = new[]
                             {
@@ -91,7 +91,7 @@ public static class QueueConfiguration
                                 QueueActions.Delete
                             }
                         },
-                        new QueueEntity(QueueEntities.Price)
+                        new QueueEntity(QueueEntities.Cost)
                         {
                             Actions = new[]
                             {
@@ -100,7 +100,7 @@ public static class QueueConfiguration
                                 QueueActions.Delete
                             }
                         },
-                        new QueueEntity(QueueEntities.Prices)
+                        new QueueEntity(QueueEntities.Costs)
                         {
                             Actions = new[]
                             {
@@ -121,7 +121,7 @@ public static class QueueConfiguration
                 {
                     Entities = new[]
                     {
-                        new QueueEntity(QueueEntities.Price)
+                        new QueueEntity(QueueEntities.Cost)
                         {
                             Actions = new[]
                             {
@@ -132,7 +132,7 @@ public static class QueueConfiguration
                                 QueueActions.Delete
                             }
                         },
-                        new QueueEntity(QueueEntities.Prices)
+                        new QueueEntity(QueueEntities.Costs)
                         {
                             Actions = new[]
                             {
@@ -237,14 +237,14 @@ public static class QueueConfiguration
                                 QueueActions.Get
                             }
                         },
-                        new QueueEntity(QueueEntities.CompanySource)
+                        new QueueEntity(QueueEntities.AssetSource)
                         {
                             Actions = new[]
                             {
                                 QueueActions.Get
                             }
                         },
-                        new QueueEntity(QueueEntities.CompanySources)
+                        new QueueEntity(QueueEntities.AssetSources)
                         {
                             Actions = new[]
                             {
@@ -289,10 +289,64 @@ public static class QueueConfiguration
                         {
                             Actions = new[]
                             {
-                                QueueActions.Compute
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
                             }
                         },
                         new QueueEntity(QueueEntities.Deals)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Event)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Events)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Balance)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Balances)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Create,
+                                QueueActions.Update,
+                                QueueActions.Delete
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Derivative)
+                        {
+                            Actions = new[]
+                            {
+                                QueueActions.Compute
+                            }
+                        },
+                        new QueueEntity(QueueEntities.Derivatives)
                         {
                             Actions = new[]
                             {
@@ -320,18 +374,18 @@ public enum QueueExchanges
 }
 public enum QueueEntities
 {
-    Company,
-    Companies,
-    CompanySource,
-    CompanySources,
+    Asset,
+    Assets,
+    AssetSource,
+    AssetSources,
     Report,
     Reports,
     Split,
     Splits,
     Float,
     Floats,
-    Price,
-    Prices,
+    Cost,
+    Costs,
     Dividend,
     Dividends,
     Rating,
@@ -339,7 +393,13 @@ public enum QueueEntities
     Coefficient,
     Coefficients,
     Deal,
-    Deals
+    Deals,
+    Event,
+    Events,
+    Balance,
+    Balances,
+    Derivative,
+    Derivatives
 }
 public enum QueueActions
 {

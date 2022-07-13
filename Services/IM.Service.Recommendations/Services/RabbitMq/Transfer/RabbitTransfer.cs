@@ -29,12 +29,10 @@ public class RabbitTransfer : IRabbitAction
             QueueEntities.Ratings => Task.Run(async () =>
             {
                 var ratings = JsonHelper.Deserialize<RatingMqDto[]>(data);
-                var companies = await serviceProvider.GetRequiredService<CompanyService>().SetCompaniesAsync(ratings);
-                return TaskHelper.WhenAny(methodName, logger, new List<Task>
-                {
-                    serviceProvider.GetRequiredService<SaleProcess>().ProcessRangeAsync(action, companies),
-                    serviceProvider.GetRequiredService<PurchaseProcess>().ProcessRangeAsync(action, companies)
-                });
+                var assets = await serviceProvider.GetRequiredService<AssetService>().SetAsync(ratings);
+
+                await serviceProvider.GetRequiredService<SaleProcess>().ProcessRangeAsync(action, assets);
+                await serviceProvider.GetRequiredService<PurchaseProcess>().ProcessRangeAsync(action, assets);
             }),
             QueueEntities.Deal => Task.Run(() =>
             {
@@ -46,18 +44,18 @@ public class RabbitTransfer : IRabbitAction
                 var deals = JsonHelper.Deserialize<DealMqDto[]>(data);
                 return serviceProvider.GetRequiredService<SaleProcess>().ProcessRangeAsync(action, deals);
             }),
-            QueueEntities.Price => Task.Run(() =>
+            QueueEntities.Cost => Task.Run(() =>
             {
-                var price = JsonHelper.Deserialize<PriceMqDto>(data);
-                return serviceProvider.GetRequiredService<CompanyProcess>().ProcessAsync(action, price);
+                var cost = JsonHelper.Deserialize<CostMqDto>(data);
+                return serviceProvider.GetRequiredService<AssetProcess>().ProcessAsync(action, cost);
             }),
-            QueueEntities.Prices => Task.Run(() =>
+            QueueEntities.Costs => Task.Run(() =>
             {
-                var prices = JsonHelper.Deserialize<PriceMqDto[]>(data);
+                var costs = JsonHelper.Deserialize<CostMqDto[]>(data);
 
-                return prices.Length == 1
-                    ? serviceProvider.GetRequiredService<CompanyProcess>().ProcessAsync(action, prices[0])
-                    : serviceProvider.GetRequiredService<CompanyProcess>().ProcessRangeAsync(action, prices);
+                return costs.Length == 1
+                    ? serviceProvider.GetRequiredService<AssetProcess>().ProcessAsync(action, costs[0])
+                    : serviceProvider.GetRequiredService<AssetProcess>().ProcessRangeAsync(action, costs);
             }),
             _ => Task.CompletedTask
         };

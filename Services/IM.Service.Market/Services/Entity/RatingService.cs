@@ -5,7 +5,7 @@ using IM.Service.Market.Domain.Entities;
 using IM.Service.Market.Domain.Entities.Interfaces;
 using IM.Service.Market.Services.Helpers;
 using IM.Service.Shared.Models.Entity.Interfaces;
-using IM.Service.Shared.RepositoryService;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
 

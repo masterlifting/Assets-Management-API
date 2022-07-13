@@ -4,31 +4,33 @@ namespace IM.Service.Recommendations.Models.Api.Http;
 
 public record SaleDto
 {
-    public string Company { get; init; } = null!;
+    public string Asset { get; init; } = null!;
     public SaleRecommendationDto[] Recommendations { get; init; } = Array.Empty<SaleRecommendationDto>();
 }
 
 public record SaleRecommendationDto
 {
-    public SaleRecommendationDto(decimal plan, decimal? fact, decimal value, decimal price)
+    public SaleRecommendationDto(decimal profitPlan, decimal? profitFact, decimal activevalue, decimal costPlan, decimal? costFact)
     {
-        var _fact = "not computed";
+        var _profitFact = "not computed";
 
-        if (fact.HasValue)
+        if (profitFact.HasValue)
         {
-            var _f = decimal.Round(fact.Value, 1);
-            _fact = $"{_f}%";
-            if (_f > 0)
-                _fact = '+' + _fact;
+            var _pf = decimal.Round(profitFact.Value, 1);
+            _profitFact = $"{_pf}%";
+            if (_pf > 0)
+                _profitFact = '+' + _profitFact;
         }
 
-        Fact = _fact;
-        Plan = $"{decimal.Round(plan, 1)}%";
-        Value = $"{value:0.####}";
-        Price = $"{price:0.####}";
+        ProfitFact = _profitFact;
+        ProfitPlan = $"{decimal.Round(profitPlan, 1)}%";
+        ActiveValue = $"{activevalue:0.##########}";
+        CostPlan = $"{costPlan:0.##########}";
+        CostFact = $"{costFact:0.##########}";
     }
-    public string Plan { get; init; }
-    public string Fact { get; init; }
-    public string Value { get; init; }
-    public string Price { get; init; }
+    public string ProfitPlan { get; init; }
+    public string ProfitFact { get; init; }
+    public string ActiveValue { get; init; }
+    public string CostPlan { get; init; }
+    public string CostFact { get; init; }
 }

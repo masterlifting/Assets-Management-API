@@ -5,5 +5,5 @@ namespace IM.Service.Portfolio.Services.Data;
 
 public interface IDataGrabber
 {
-    Task GetDataAsync(ReportFileDto file);
+    Task ProcessAsync(ProviderReportDto report);
 }

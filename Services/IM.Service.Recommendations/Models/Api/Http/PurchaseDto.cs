@@ -4,29 +4,33 @@ namespace IM.Service.Recommendations.Models.Api.Http;
 
 public record PurchaseDto
 {
-    public string Company { get; init; } = null!;
+    public string Asset { get; init; } = null!;
     public PurchaseRecommendationDto[] Recommendations { get; init; } = Array.Empty<PurchaseRecommendationDto>();
 }
 
 public record PurchaseRecommendationDto
 {
-    public PurchaseRecommendationDto(decimal plan, decimal? fact, decimal price)
+    public PurchaseRecommendationDto(decimal discountPlan, decimal? discountFact, decimal costPlan, decimal costFact, decimal? costNext)
     {
-        var _fact = "not computed";
+        var _discountFact = "not computed";
 
-        if (fact.HasValue)
+        if (discountFact.HasValue)
         {
-            var _f = decimal.Round(fact.Value, 1);
-            _fact = $"{_f}%";
-            if (_f > 0)
-                _fact = '+' + _fact;
+            var _df = decimal.Round(discountFact.Value, 1);
+            _discountFact = $"{_df}%";
+            if (_df > 0)
+                _discountFact = '+' + _discountFact;
         }
 
-        Fact = _fact;
-        Plan = $"{decimal.Round(plan, 1)}%";
-        Price = $"{price:0.####}";
+        DiscountPlan = $"{decimal.Round(discountPlan, 1)}%";
+        DiscountFact = _discountFact;
+        CostPlan = $"{costPlan:0.##########}";
+        CostFact = $"{costFact:0.##########}";
+        CostNext = costNext.HasValue ? $"{costNext.Value:0.##########}" : "not found";
     }
-    public string Plan { get; init; }
-    public string Fact { get; init; }
-    public string Price { get; init; }
+    public string DiscountPlan { get; init; }
+    public string DiscountFact { get; init; }
+    public string CostPlan { get; init; }
+    public string CostFact { get; init; }
+    public string CostNext { get; init; }
 }

@@ -19,8 +19,6 @@ public sealed class ReportGrabber : DataGrabber
         ILogger<ReportGrabber> logger)
         : base(new()
         {
-            { Brokers.Bcs, new BcsGrabber(accountRepo, derivativeRepo, dealRepo, eventRepo, reportRepo, logger) }
-        })
-    {
-    }
+            { Providers.Bcs, new BcsReportGrabber(accountRepo, derivativeRepo, dealRepo, eventRepo, reportRepo, logger) }
+        }) { }
 }

@@ -4,5 +4,5 @@ namespace IM.Service.Recommendations.Settings.Sections;
 
 public class SaleSettings
 {
-    public decimal[] DeviationPercents { get; set; } = Array.Empty<decimal>();
+    public decimal[] Profits { get; set; } = Array.Empty<decimal>();
 }

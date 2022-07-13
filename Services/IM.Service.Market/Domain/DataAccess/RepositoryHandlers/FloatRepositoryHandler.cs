@@ -1,11 +1,11 @@
-﻿using System.Data;
+﻿using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Services.RabbitMq;
 using IM.Service.Shared.RabbitMq;
-using IM.Service.Shared.RepositoryService;
-using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Settings;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+
+using System.Data;
 
 using static IM.Service.Shared.Enums;
 
@@ -14,11 +14,11 @@ namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 public class FloatRepositoryHandler : RepositoryHandler<Float>
 {
     private readonly DatabaseContext context;
-    private readonly string rabbitConnectionString;
-    public FloatRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    private readonly RabbitAction rabbitAction;
+    public FloatRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
     {
         this.context = context;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
     }
     public override async Task<Float> RunCreateHandlerAsync(Float entity)
     {
@@ -67,16 +67,12 @@ public class FloatRepositoryHandler : RepositoryHandler<Float>
 
     public override Task RunPostProcessAsync(RepositoryActions action, Float entity)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.Float, RabbitHelper.GetQueueAction(action), entity);
-
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Float, RabbitHelper.GetAction(action), entity);
         return Task.CompletedTask;
     }
     public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Float> entities)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.Floats, RabbitHelper.GetQueueAction(action), entities);
-
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Floats, RabbitHelper.GetAction(action), entities);
         return Task.CompletedTask;
     }
 }

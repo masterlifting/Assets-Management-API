@@ -11,24 +11,24 @@ namespace IM.Service.Recommendations.Services.RabbitMq.Transfer.Processes;
 public class SaleProcess : IRabbitProcess
 {
     private readonly SaleService saleService;
-    private readonly CompanyService companyService;
+    private readonly AssetService assetService;
 
-    public SaleProcess(SaleService saleService, CompanyService companyService)
+    public SaleProcess(SaleService saleService, AssetService assetService)
     {
         this.saleService = saleService;
-        this.companyService = companyService;
+        this.assetService = assetService;
     }
 
     public Task ProcessAsync<T>(QueueActions action, T model) where T : class => action switch
     {
         QueueActions.Create or QueueActions.Update => model switch
         {
-            DealMqDto deal => companyService.SetCompanyAsync(deal).ContinueWith(x => saleService.SetAsync(x.Result)),
+            DealMqDto deal => assetService.SetAsync(deal).ContinueWith(x => saleService.SetAsync(x.Result)),
             _ => Task.CompletedTask
         },
         QueueActions.Delete => model switch
         {
-            DealMqDto deal => companyService.SetCompanyAsync(deal).ContinueWith(x => saleService.DeleteAsync(x.Result)),
+            DealMqDto deal => assetService.SetAsync(deal).ContinueWith(x => saleService.DeleteAsync(x.Result)),
             _ => Task.CompletedTask
         },
         _ => Task.CompletedTask
@@ -37,15 +37,15 @@ public class SaleProcess : IRabbitProcess
     {
         QueueActions.Create or QueueActions.Update => models switch
         {
-            DealMqDto[] deals => companyService.SetCompaniesAsync(deals).ContinueWith(x => saleService.SetAsync(x.Result)),
-            Company[] companies => saleService.SetAsync(companies),
+            DealMqDto[] deals => assetService.SetAsync(deals).ContinueWith(x => saleService.SetAsync(x.Result)),
+            Asset[] assets => saleService.SetAsync(assets),
 
             _ => Task.CompletedTask
         },
         QueueActions.Delete => models switch
         {
-            DealMqDto[] deals => companyService.SetCompaniesAsync(deals).ContinueWith(x => saleService.DeleteAsync(x.Result)),
-            Company[] companies => saleService.DeleteAsync(companies),
+            DealMqDto[] deals => assetService.SetAsync(deals).ContinueWith(x => saleService.DeleteAsync(x.Result)),
+            Asset[] assets => saleService.DeleteAsync(assets),
 
             _ => Task.CompletedTask
         },

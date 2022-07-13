@@ -11,9 +11,9 @@ public record DealGetDto
     public decimal Cost { get; init; }
     public string Currency { get; init; } = null!;
 
-    public string Exchange { get; init; } = null!;
     public string Account { get; init; } = null!;
-    public string Broker { get; init; } = null!;
+    public string Provider { get; init; } = null!;
+    public string? Exchange { get; init; }
 
     public DateTime UpdateTime { get; init; }
     public string? Info { get; init; }

@@ -1,10 +1,9 @@
 ﻿using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Settings;
+using IM.Service.Market.Services.RabbitMq;
 using IM.Service.Shared.RabbitMq;
-using IM.Service.Shared.RepositoryService;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using static IM.Service.Market.Enums;
 using static IM.Service.Shared.Enums;
@@ -14,12 +13,12 @@ namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 public class PriceRepositoryHandler : RepositoryHandler<Price>
 {
     private readonly DatabaseContext context;
-    private readonly string rabbitConnectionString;
+    private readonly RabbitAction rabbitAction;
 
-    public PriceRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    public PriceRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
     {
         this.context = context;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
     }
 
     public override async Task<IEnumerable<Price>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Price> entities)
@@ -69,7 +68,7 @@ public class PriceRepositoryHandler : RepositoryHandler<Price>
 
     public override async Task RunPostProcessAsync(RepositoryActions action, Price entity)
     {
-        RabbitPublisher publisher;
+        var queueTaskParams = new List<(QueueNames, QueueEntities, QueueActions, object)>(3);
 
         if (action is RepositoryActions.Delete)
         {
@@ -81,22 +80,19 @@ public class PriceRepositoryHandler : RepositoryHandler<Price>
                 .OrderBy(x => x.Date)
                 .LastOrDefaultAsync();
 
-            publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-
             if (lastEntity is not null)
-                publisher.PublishTask(QueueNames.Market, QueueEntities.Price, QueueActions.Set, lastEntity);
+                queueTaskParams.Add((QueueNames.Market, QueueEntities.Cost, QueueActions.Set, lastEntity));
 
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Price, QueueActions.Delete, entity);
+            queueTaskParams.Add((QueueNames.Market, QueueEntities.Cost, QueueActions.Delete, entity));
         }
         else if (entity.StatusId is (byte)Statuses.New)
-        {
-            publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Price, RabbitHelper.GetQueueAction(action), entity);
-        }
+            queueTaskParams.Add((QueueNames.Market, QueueEntities.Cost, RabbitHelper.GetAction(action), entity));
+
+        rabbitAction.Publish(QueueExchanges.Function, queueTaskParams);
     }
     public override async Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Price> entities)
     {
-        RabbitPublisher publisher;
+        var queueTaskParams = new List<(QueueNames, QueueEntities, QueueActions, object)>(3);
 
         if (action is RepositoryActions.Delete)
         {
@@ -117,12 +113,10 @@ public class PriceRepositoryHandler : RepositoryHandler<Price>
                     lastEntities.Add(lastEntity);
             }
 
-            publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-
             if (lastEntities.Any())
-                publisher.PublishTask(QueueNames.Market, QueueEntities.Prices, QueueActions.Set, lastEntities);
+                queueTaskParams.Add((QueueNames.Market, QueueEntities.Costs, QueueActions.Set, lastEntities));
 
-            publisher.PublishTask(QueueNames.Market, QueueEntities.Prices, QueueActions.Delete, entities);
+            queueTaskParams.Add((QueueNames.Market, QueueEntities.Costs, QueueActions.Delete, entities));
         }
 
         var newEntities = entities.Where(x => x.StatusId is (byte)Statuses.New).ToArray();
@@ -130,7 +124,8 @@ public class PriceRepositoryHandler : RepositoryHandler<Price>
         if (!newEntities.Any())
             return;
 
-        publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.Prices, RabbitHelper.GetQueueAction(action), newEntities);
+        queueTaskParams.Add((QueueNames.Market, QueueEntities.Costs, RabbitHelper.GetAction(action), newEntities));
+
+        rabbitAction.Publish(QueueExchanges.Function, queueTaskParams);
     }
 }

@@ -2,21 +2,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace IM.Service.Shared.Helpers;
 
 public static class LogHelper
 {
     private static readonly Action<ILogger, DateTime, string, string, Exception?> logError =
-         LoggerMessage.Define<DateTime, string, string>(LogLevel.Error, LogEvents.Defined, "[{time:yyyy-MM-dd HH:mm:ss}] {method}: {errors}");
+         LoggerMessage.Define<DateTime, string, string>(LogLevel.Error, LogEvents.Defined, "[{time:dd-MM HH:mm:ss}] - {method} - Error: {errors}");
     private static readonly Action<ILogger, DateTime, string, string, object, Exception?> logWarning =
-        LoggerMessage.Define<DateTime, string, string, object>(LogLevel.Warning, LogEvents.Defined, "[{time:yyyy-MM-dd HH:mm:ss}] {method}: {info} - {result}");
+        LoggerMessage.Define<DateTime, string, string, object>(LogLevel.Warning, LogEvents.Defined, "[{time:dd-MM HH:mm:ss}] - {method} - {info} - {result}");
     private static readonly Action<ILogger, DateTime, string, string, object, Exception?> logInfo =
-        LoggerMessage.Define<DateTime, string, string, object>(LogLevel.Information, LogEvents.Defined, "[{time:yyyy-MM-dd HH:mm:ss}] {method}: {info} - {result}");
+        LoggerMessage.Define<DateTime, string, string, object>(LogLevel.Information, LogEvents.Defined, "[{time:dd-MM HH:mm:ss}] - {method} - {info} - {result}");
     private static readonly Action<ILogger, DateTime, string, string, object, Exception?> logDebug =
-        LoggerMessage.Define<DateTime, string, string, object>(LogLevel.Debug, LogEvents.Defined, "[{time:yyyy-MM-dd HH:mm:ss}] {method}: {info} - {result}");
+        LoggerMessage.Define<DateTime, string, string, object>(LogLevel.Debug, LogEvents.Defined, "[{time:dd-MM HH:mm:ss}] - {method} - {info} - {result}");
     private static readonly Action<ILogger, DateTime, string, string, object, Exception?> logTrace =
-        LoggerMessage.Define<DateTime, string, string, object>(LogLevel.Trace, LogEvents.Defined, "[{time:yyyy-MM-dd HH:mm:ss}] {method}: {info} - {result}");
+        LoggerMessage.Define<DateTime, string, string, object>(LogLevel.Trace, LogEvents.Defined, "[{time:dd-MM HH:mm:ss}] - {method} - {info} - {result}");
 
 
     public static void LogError(this ILogger logger, string method, IEnumerable<string> errors) => logError(logger, DateTime.Now, method, string.Join("\n\t- ", errors), null);
@@ -28,6 +29,11 @@ public static class LogHelper
     public static void LogInfo<T>(this ILogger logger, string method, string info, object result) => logInfo(logger, DateTime.Now, $"{typeof(T).Name}.{method}", info, result, null);
     public static void LogDebug(this ILogger logger, string method, string info, object result) => logDebug(logger, DateTime.Now, method, info, result, null);
     public static void LogTrace(this ILogger logger, string method, string info, object result) => logTrace(logger, DateTime.Now, method, info, result, null);
+    public static Task LogDefaultTask(this ILogger logger, string method)
+    {
+        logWarning(logger, DateTime.Now, method, $"pipe method '{method}' not found", "SKIP", null);
+        return Task.CompletedTask;
+    }
 
     private static class LogEvents
     {

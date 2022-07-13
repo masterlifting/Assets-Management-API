@@ -1,16 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using IM.Service.Recommendations.Domain.DataAccess;
+﻿using IM.Service.Recommendations.Domain.DataAccess;
+using IM.Service.Recommendations.Domain.DataAccess.Comparators;
 using IM.Service.Recommendations.Domain.Entities;
 using IM.Service.Recommendations.Settings;
+using IM.Service.Recommendations.Settings.Sections;
 using IM.Service.Shared.Helpers;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using IM.Service.Recommendations.Domain.DataAccess.Comparators;
 
 namespace IM.Service.Recommendations.Services.Entity;
 
@@ -18,103 +19,118 @@ public class PurchaseService
 {
     private const string actionsName = "Purchase recommendations";
 
-    private readonly decimal[] percents;
+    private readonly PurchaseSettings settings;
     private readonly ILogger<PurchaseService> logger;
     private readonly Repository<Purchase> purchaseRepo;
-    private readonly Repository<Company> companyRepo;
+    private readonly Repository<Asset> assetRepo;
     public PurchaseService(
         ILogger<PurchaseService> logger,
-        IOptions<ServiceSettings> options,
+        IOptionsSnapshot<ServiceSettings> options,
         Repository<Purchase> purchaseRepo,
-        Repository<Company> companyRepo)
+        Repository<Asset> assetRepo)
     {
         this.logger = logger;
         this.purchaseRepo = purchaseRepo;
-        this.companyRepo = companyRepo;
-        percents = options.Value.PurchaseSettings.DeviationPercents.OrderByDescending(x => x).ToArray();
+        this.assetRepo = assetRepo;
+        settings = options.Value.PurchaseSettings;
     }
-    public async Task SetAsync(Company[] companies)
+
+    public async Task SetAsync(Asset[] assets)
     {
-        var ratingCount = await companyRepo.GetCountAsync(x => x.RatingPlace.HasValue);
-        var companiesWithPrices = companies.Where(x => x.PriceLast.HasValue).ToArray();
-        var pricesCount = (int)companiesWithPrices.Sum(x => x.PriceLast!.Value);
+        var ratingCount = await assetRepo.GetCountAsync(x => x.RatingPlace.HasValue);
+        var assetsWithPrices = assets.Where(x => x.CostFact.HasValue).ToArray();
+        var costCount = (int)assetsWithPrices.Sum(x => x.CostFact!.Value);
 
-        var recommendations = new List<Purchase>(pricesCount + 1);
-        var processedCompanyIds = new List<string>(companiesWithPrices.Length);
+        var purchases = new List<Purchase>(costCount + 1);
+        var processedIds = new List<(string AssetId, byte AssetTypeId)>(assetsWithPrices.Length);
 
-        foreach (var company in companiesWithPrices)
+        foreach (var asset in assetsWithPrices)
         {
-            if (!company.RatingPlace.HasValue)
+            int ratingPlace;
+
+            if (asset.RatingPlace.HasValue)
+                ratingPlace = asset.RatingPlace.Value;
+            else
             {
-                logger.LogWarning(actionsName, "Rating place not found", company.Name);
+                logger.LogWarning(actionsName, "Rating place not found", asset.Name);
+                ratingPlace = 1;
+                ratingCount = 1;
+            }
+
+            var costFact = asset.CostFact!.Value;
+
+            if (costFact == 0)
+            {
+                logger.LogWarning(actionsName, "Cost fact = 0", asset.Name);
                 continue;
             }
 
-            var priceLast = company.PriceLast!.Value;
-            var priceAvg = company.PriceAvg!.Value;
+            var costAvg = asset.CostAvg!.Value;
 
-            var companyRecommendations = GetCompanyPurchases(
-                company.Id,
-                priceLast,
-                priceAvg,
-                company.RatingPlace.Value,
-                ratingCount);
-            recommendations.AddRange(companyRecommendations);
+            purchases.Add(GetPurchase(
+                asset.Id,
+                asset.TypeId,
+                costFact,
+                costAvg,
+                ratingPlace,
+                ratingCount,
+                asset.DealCostLast));
 
-            processedCompanyIds.Add(company.Id);
+            processedIds.Add((asset.Id, asset.TypeId));
         }
 
-        if (!processedCompanyIds.Any())
+        if (!processedIds.Any())
             return;
 
-        var purchasesToDelete = await purchaseRepo.GetSampleAsync(x => processedCompanyIds.Contains(x.CompanyId));
+        var assetIds = processedIds.Select(x => x.AssetId).Distinct();
+        var assetTypeIds = processedIds.Select(x => x.AssetTypeId).Distinct();
+
+        var purchasesToDelete = await purchaseRepo.GetSampleAsync(x => assetIds.Contains(x.AssetId) && assetTypeIds.Contains(x.AssetTypeId));
         await purchaseRepo.DeleteRangeAsync(purchasesToDelete, actionsName);
 
-        await purchaseRepo.CreateRangeAsync(recommendations, new PurchaseComparer(), actionsName);
+        await purchaseRepo.CreateRangeAsync(purchases, new PurchaseComparer(), actionsName);
     }
-    public Task DeleteAsync(Company[] companies)
+    public Task DeleteAsync(Asset[] assets)
     {
         throw new NotImplementedException();
     }
-    private IEnumerable<Purchase> GetCompanyPurchases(string companyId, decimal priceLast, decimal priceAvg, int ratingPlace, int ratingCount) =>
-    ComputeRecommendations(priceAvg, ratingPlace, ratingCount).Select(y =>
+
+    private Purchase GetPurchase(string assetId, byte assetTypeId, decimal costFact, decimal costAvg, int ratingPlace, int ratingCount, decimal? dealCost)
     {
-        var (plan, price) = y;
-        var fact = price / priceLast * 100 - 100;
+        var (discountPlan, pricePlan) = ComputeRecommendation(costAvg, ratingPlace, ratingCount);
+        var discountFact = pricePlan / costFact * 100 - 100;
+
+        decimal? costNext = null;
+        decimal? percentStep = null;
+        if (dealCost.HasValue && dealCost.Value != 0)
+        {
+            percentStep = costFact * 100 / dealCost.Value - 100;
+            var discountStep = settings.DiscountStep * (percentStep.Value / Math.Abs(percentStep.Value));
+            costNext = dealCost.Value + discountStep / 100 * dealCost.Value;
+        }
+
         return new Purchase
         {
-            CompanyId = companyId,
-            Plan = plan,
-            Fact = fact,
-            Price = price,
-            IsReady = fact > plan
+            AssetId = assetId,
+            AssetTypeId = assetTypeId,
+            DiscountPlan = discountPlan,
+            DiscountFact = discountFact,
+            CostFact = costFact,
+            CostPlan = pricePlan,
+            CostNext = costNext,
+            IsReady = discountFact >= discountPlan || percentStep.HasValue && Math.Abs(percentStep.Value) >= settings.DiscountStep
         };
-    });
-    private IEnumerable<(decimal Plan, decimal Price)> ComputeRecommendations(decimal priceAvg, int ratingPlace, int ratingCount)
-    {
-        var activeParts = ComputeActiveParts(ratingPlace, ratingCount);
-
-        foreach (var profitPercent in percents)
-        {
-            if (!activeParts.ContainsKey(profitPercent))
-                yield break;
-
-            var value = priceAvg - priceAvg * activeParts[profitPercent] / 100;
-            yield return (profitPercent, Math.Round(value, 5));
-        }
     }
-    private Dictionary<decimal, decimal> ComputeActiveParts(int ratingPlace, int ratingCount)
+    private (decimal DiscountPlan, decimal CostPlan) ComputeRecommendation(decimal costAvg, int ratingPlace, int ratingCount)
     {
-        var ratingPercent = 100 - (decimal)ratingPlace * 100 / ratingCount;
+        var discountPercent = ComputeDiscountPercent(ratingPlace, ratingCount);
+        var costPlan = costAvg - costAvg * discountPercent / 100;
 
-        var result = new Dictionary<decimal, decimal>(percents.Length);
-
-        foreach (var profitPercent in percents)
-        {
-            var value = profitPercent - ratingPercent * profitPercent / 100;
-            result.Add(profitPercent, value);
-        }
-
-        return result;
+        return (discountPercent, Math.Round(costPlan, 10));
+    }
+    private decimal ComputeDiscountPercent(int ratingPlace, int ratingCount)
+    {
+        var ratingPercent = 100 - (decimal)(ratingPlace - 1) / ratingCount * 100;
+        return settings.DiscountMax - (settings.DiscountMax - settings.DiscountMin) * ratingPercent / 100;
     }
 }

@@ -1,4 +1,4 @@
-﻿using IM.Service.Shared.RepositoryService;
+﻿using IM.Service.Shared.SqlAccess;
 using IM.Service.Portfolio.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;

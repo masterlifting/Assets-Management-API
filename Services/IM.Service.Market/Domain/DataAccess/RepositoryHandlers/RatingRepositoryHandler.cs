@@ -1,11 +1,10 @@
 ﻿using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Settings;
+using IM.Service.Market.Services.RabbitMq;
 using IM.Service.Shared.Models.RabbitMq.Api;
 using IM.Service.Shared.RabbitMq;
-using IM.Service.Shared.RepositoryService;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using static IM.Service.Shared.Enums;
 
@@ -14,11 +13,11 @@ namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 public class RatingRepositoryHandler : RepositoryHandler<Rating>
 {
     private readonly DatabaseContext context;
-    private readonly string rabbitConnectionString;
-    public RatingRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    private readonly RabbitAction rabbitAction;
+    public RatingRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
     {
         this.context = context;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
     }
 
     public override async Task<IEnumerable<Rating>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Rating> entities)
@@ -54,10 +53,9 @@ public class RatingRepositoryHandler : RepositoryHandler<Rating>
 
     public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Rating> entities)
     {
-        var ratings = entities.OrderByDescending(x => x.Result).Select((x, i) => new RatingMqDto(x.CompanyId, i + 1));
+        var ratings = entities.OrderByDescending(x => x.Result).Select((x, i) => new RatingMqDto(x.CompanyId, (byte)AssetTypes.Stock, i + 1));
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Transfer);
-        publisher.PublishTask(QueueNames.Recommendations, QueueEntities.Ratings, RabbitHelper.GetQueueAction(action), ratings);
+        rabbitAction.Publish(QueueExchanges.Transfer, QueueNames.Recommendations, QueueEntities.Ratings, RabbitHelper.GetAction(action), ratings);
 
         return Task.CompletedTask;
     }

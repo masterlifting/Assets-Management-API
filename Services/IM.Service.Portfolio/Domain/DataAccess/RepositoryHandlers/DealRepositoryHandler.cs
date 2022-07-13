@@ -1,10 +1,9 @@
-﻿using IM.Service.Shared.RabbitMq;
-using IM.Service.Shared.RepositoryService;
-using IM.Service.Portfolio.Domain.Entities;
-using IM.Service.Portfolio.Settings;
+﻿using IM.Service.Portfolio.Domain.Entities;
+using IM.Service.Portfolio.Services.RabbitMq;
+using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using System;
 using System.Collections.Generic;
@@ -17,13 +16,13 @@ namespace IM.Service.Portfolio.Domain.DataAccess.RepositoryHandlers;
 
 public class DealRepositoryHandler : RepositoryHandler<Deal>
 {
+    private readonly RabbitAction rabbitAction;
     private readonly DatabaseContext context;
-    private readonly string rabbitConnectionString;
 
-    public DealRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    public DealRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
     {
+        this.rabbitAction = rabbitAction;
         this.context = context;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
     }
 
     public override async Task<IEnumerable<Deal>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Deal> entities)
@@ -37,18 +36,15 @@ public class DealRepositoryHandler : RepositoryHandler<Deal>
         foreach (var (Old, New) in result)
         {
             Old.UpdateTime = DateTime.UtcNow;
+            Old.Cost = New.Cost;
+
             Old.Date = New.Date;
-            Old.Cost = New.CurrencyId;
-            Old.Value = New.Value;
             Old.Info = New.Info;
-            Old.DerivativeId = New.DerivativeId;
-            Old.DerivativeCode = New.DerivativeCode;
-            Old.ExchangeId = New.ExchangeId;
+            
             Old.AccountId = New.AccountId;
             Old.UserId = New.UserId;
-            Old.BrokerId = New.BrokerId;
-            Old.OperationId = New.OperationId;
-            Old.CurrencyId = New.CurrencyId;
+            Old.ProviderId = New.ProviderId;
+            Old.ExchangeId = New.ExchangeId;
         }
 
         return result.Select(x => x.Old);
@@ -66,14 +62,12 @@ public class DealRepositoryHandler : RepositoryHandler<Deal>
 
     public override Task RunPostProcessAsync(RepositoryActions action, Deal entity)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Portfolio, QueueEntities.Deal, QueueActions.Compute, entity);
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Portfolio, QueueEntities.Deal, RabbitHelper.GetAction(action), entity);
         return Task.CompletedTask;
     }
     public override Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Deal> entities)
     {
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Portfolio, QueueEntities.Deals, QueueActions.Compute, entities);
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Portfolio, QueueEntities.Deals, RabbitHelper.GetAction(action), entities);
         return Task.CompletedTask;
     }
 }

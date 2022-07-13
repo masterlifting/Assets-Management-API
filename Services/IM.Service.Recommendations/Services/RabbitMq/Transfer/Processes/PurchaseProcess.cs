@@ -17,12 +17,12 @@ public class PurchaseProcess : IRabbitProcess
     {
         QueueActions.Create or QueueActions.Update => models switch
         {
-            Company[] companies => purchaseService.SetAsync(companies),
+            Asset[] companies => purchaseService.SetAsync(companies),
             _ => Task.CompletedTask
         },
         QueueActions.Delete => models switch
         {
-            Company[] companies => purchaseService.DeleteAsync(companies),
+            Asset[] companies => purchaseService.DeleteAsync(companies),
             _ => Task.CompletedTask
         },
         _ => Task.CompletedTask

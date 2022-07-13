@@ -1,10 +1,9 @@
-﻿using IM.Service.Shared.RabbitMq;
-using IM.Service.Shared.RepositoryService;
-using IM.Service.Market.Domain.Entities;
-using IM.Service.Market.Settings;
+﻿using IM.Service.Market.Domain.Entities;
+using IM.Service.Market.Services.RabbitMq;
+using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using static IM.Service.Shared.Enums;
 
@@ -13,12 +12,12 @@ namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 public class DividendRepositoryHandler : RepositoryHandler<Dividend>
 {
     private readonly DatabaseContext context;
-    private readonly string rabbitConnectionString;
+    private readonly RabbitAction rabbitAction;
 
-    public DividendRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    public DividendRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
     {
         this.context = context;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
     }
 
     public override async Task<IEnumerable<Dividend>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<Dividend> entities)
@@ -74,12 +73,10 @@ public class DividendRepositoryHandler : RepositoryHandler<Dividend>
                 .OrderBy(x => x.Date)
                 .LastOrDefaultAsync();
 
-            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-
             if (lastEntity is not null)
-                publisher.PublishTask(QueueNames.Market, QueueEntities.Dividend, QueueActions.Set, lastEntity);
+                rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Dividend, QueueActions.Set, lastEntity);
             else
-                publisher.PublishTask(QueueNames.Market, QueueEntities.Rating, QueueActions.Compute, new Rating());
+                rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Rating, QueueActions.Compute, new Rating());
         }
     }
     public override async Task RunPostProcessRangeAsync(RepositoryActions action, IReadOnlyCollection<Dividend> entities)
@@ -104,12 +101,10 @@ public class DividendRepositoryHandler : RepositoryHandler<Dividend>
                     lastEntities.Add(lastEntity);
             }
 
-            var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-
             if (lastEntities.Any())
-                publisher.PublishTask(QueueNames.Market, QueueEntities.Dividends, QueueActions.Set, lastEntities);
+                rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Dividends, QueueActions.Set, lastEntities);
             else
-                publisher.PublishTask(QueueNames.Market, QueueEntities.Ratings, QueueActions.Compute, Array.Empty<Rating>());
+                rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.Ratings, QueueActions.Compute, Array.Empty<Rating>());
         }
     }
 }

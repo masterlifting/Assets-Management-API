@@ -49,37 +49,44 @@ public sealed class TdameritradeGrabber : IDataGrabber<Price>
     public async IAsyncEnumerable<Price[]> GetHistoryDataAsync(IEnumerable<CompanySource> companySources)
     {
         using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(100));
+        var _companySources = companySources.ToArray();
+        var currentData = await client.GetCurrentPricesAsync(_companySources.Select(x => x.CompanyId).Distinct());
+        var currentResult = Map(currentData);
 
-        foreach (var companySource in companySources)
+        foreach (var companySource in _companySources)
             if (await timer.WaitForNextTickAsync())
                 await foreach (var data in GetHistoryDataAsync(companySource))
-                    yield return data;
+                    yield return data.Concat(currentResult).ToArray();
     }
 
-    private static IEnumerable<Price> Map(TdAmeritradeLastPriceResultModel clientResult) =>
+    private static Price[] Map(TdAmeritradeLastPriceResultModel clientResult) =>
         clientResult.data is null
             ? Array.Empty<Price>()
-            : clientResult.data.Select(x => new Price
-            {
-                CompanyId = x.Key,
-                Value = x.Value.lastPrice,
-                ValueTrue = x.Value.lastPrice,
-                Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Value.regularMarketTradeTimeInLong).DateTime),
-                CurrencyId = (byte)Currencies.Usd,
-                SourceId = (byte)Sources.Tdameritrade,
-                StatusId = (byte)Statuses.New
-            }).ToArray();
+            : clientResult.data
+                .Where(x => x.Value.lastPrice > 0)
+                .Select(x => new Price
+                {
+                    CompanyId = x.Key,
+                    Value = x.Value.lastPrice,
+                    ValueTrue = x.Value.lastPrice,
+                    Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.Value.regularMarketTradeTimeInLong).DateTime),
+                    CurrencyId = (byte)Currencies.Usd,
+                    SourceId = (byte)Sources.Tdameritrade,
+                    StatusId = (byte)Statuses.New
+                }).ToArray();
     private static Price[] Map(TdAmeritradeHistoryPriceResultModel clientResult) =>
         clientResult.data?.candles is null
             ? Array.Empty<Price>()
-            : clientResult.data.candles.Select(x => new Price
-            {
-                CompanyId = clientResult.ticker,
-                Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.datetime).DateTime),
-                Value = x.high,
-                ValueTrue = x.high,
-                CurrencyId = (byte)Currencies.Usd,
-                SourceId = (byte)Sources.Tdameritrade,
-                StatusId = (byte)Statuses.New
-            }).ToArray();
+            : clientResult.data.candles
+                .Where(x => x.high > 0)
+                .Select(x => new Price
+                {
+                    CompanyId = clientResult.ticker,
+                    Date = DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeMilliseconds(x.datetime).DateTime),
+                    Value = x.high,
+                    ValueTrue = x.high,
+                    CurrencyId = (byte)Currencies.Usd,
+                    SourceId = (byte)Sources.Tdameritrade,
+                    StatusId = (byte)Statuses.New
+                }).ToArray();
 }

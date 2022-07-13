@@ -1,6 +1,6 @@
-﻿using IM.Service.Shared.RabbitMq;
-using IM.Service.Market.Services.RabbitMq;
+﻿using IM.Service.Market.Services.RabbitMq;
 using IM.Service.Market.Settings;
+using IM.Service.Shared.RabbitMq;
 
 using Microsoft.Extensions.Options;
 
@@ -11,14 +11,14 @@ public class RabbitBackgroundService : BackgroundService
     private readonly RabbitAction action;
     private readonly RabbitSubscriber subscriber;
 
-    public RabbitBackgroundService(ILogger<RabbitBackgroundService> logger, IOptions<ServiceSettings> options, IServiceScopeFactory scopeFactory)
+    public RabbitBackgroundService(RabbitAction action, ILogger<RabbitBackgroundService> logger, IOptions<ServiceSettings> options)
     {
+        this.action = action;
         subscriber = new RabbitSubscriber(
             logger,
             options.Value.ConnectionStrings.Mq,
             new[] { QueueExchanges.Sync, QueueExchanges.Function, QueueExchanges.Transfer },
             QueueNames.Market);
-        action = new RabbitAction(logger, scopeFactory);
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -29,7 +29,7 @@ public class RabbitBackgroundService : BackgroundService
             return Task.CompletedTask;
         }
 
-        subscriber.Subscribe(action.GetResultAsync);
+        subscriber.Subscribe(action.StartAsync);
 
         return Task.CompletedTask;
     }

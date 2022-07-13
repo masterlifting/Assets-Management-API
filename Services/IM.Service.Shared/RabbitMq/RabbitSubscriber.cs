@@ -22,10 +22,11 @@ public sealed class RabbitSubscriber
 {
     private readonly SemaphoreSlim semaphore = new(1, 1);
 
-    private readonly ILogger logger;
-    private readonly Queue queue;
     private readonly IModel channel;
     private readonly IConnection connection;
+
+    private readonly ILogger logger;
+    private readonly Queue queue;
 
     public RabbitSubscriber(ILogger logger, string connectionString, IEnumerable<QueueExchanges> exchangeNames, QueueNames queueName)
     {
@@ -59,7 +60,7 @@ public sealed class RabbitSubscriber
         }
     }
 
-    public void Subscribe(Func<QueueExchanges, string, string, Task<bool>> getActionResult)
+    public void Subscribe(Func<QueueExchanges, string, string, Task<bool>> queueFunc)
     {
         var consumer = new EventingBasicConsumer(channel);
         consumer.Received += OnReceivedAsync;
@@ -75,7 +76,7 @@ public sealed class RabbitSubscriber
             try
             {
                 var exchange = Enum.Parse<QueueExchanges>(ea.Exchange, true);
-                result = await getActionResult(exchange, ea.RoutingKey, data);
+                result = await queueFunc(exchange, ea.RoutingKey, data);
             }
             catch (Exception exception)
             {

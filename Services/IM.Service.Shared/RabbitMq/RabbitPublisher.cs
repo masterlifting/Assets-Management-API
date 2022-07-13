@@ -11,9 +11,11 @@ using IM.Service.Shared.Models.RabbitMq;
 
 namespace IM.Service.Shared.RabbitMq;
 
-public class RabbitPublisher
+public class RabbitPublisher : IDisposable
 {
     private readonly IModel channel;
+    private readonly IConnection connection;
+
     private readonly QueueExchange exchange;
 
     public RabbitPublisher(string connectionString, QueueExchanges exchangeName)
@@ -31,7 +33,7 @@ public class RabbitPublisher
             Password = mqConnection.Password
         };
 
-        var connection = factory.CreateConnection();
+        connection = factory.CreateConnection();
         channel = connection.CreateModel();
 
         channel.ExchangeDeclare(currentExchange.NameString, currentExchange.Type);
@@ -45,6 +47,30 @@ public class RabbitPublisher
         }
     }
 
+    public void PublishTask(QueueNames queue, QueueEntities entity, QueueActions action, object data)
+    {
+        var _data = JsonHelper.Serialize(data);
+
+        var currentQueue = exchange.Queues.FirstOrDefault(x => x.NameEnum == queue);
+
+        if (currentQueue is null)
+            return;
+
+        var queueEntity = currentQueue.Entities.FirstOrDefault(x => x.NameEnum == entity && x.Actions.Contains(action));
+
+        if (queueEntity is null)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.WriteLine($"Entity '{entity}' for Action '{action}' from Queue '{queue}' by Exchange '{exchange.NameString}' not found!");
+            Console.ForegroundColor = ConsoleColor.Gray;
+            return;
+        }
+        channel.BasicPublish(
+            exchange.NameString
+            , $"{currentQueue.NameString}.{queueEntity.NameString}.{action}"
+            , null
+            , Encoding.UTF8.GetBytes(_data));
+    }
     public void PublishTask<T>(QueueNames queue, QueueEntities entity, QueueActions action, T data) where T : class
     {
         var _data = JsonHelper.Serialize(data);
@@ -63,7 +89,6 @@ public class RabbitPublisher
             Console.ForegroundColor = ConsoleColor.Gray;
             return;
         }
-
         channel.BasicPublish(
             exchange.NameString
             , $"{currentQueue.NameString}.{queueEntity.NameString}.{action}"
@@ -81,5 +106,11 @@ public class RabbitPublisher
                     , $"{queue.NameString}.{queueEntity.NameString}.{action}"
                     , null
                     , Encoding.UTF8.GetBytes(_data));
+    }
+
+    public void Dispose()
+    {
+        channel.Dispose();
+        connection.Dispose();
     }
 }

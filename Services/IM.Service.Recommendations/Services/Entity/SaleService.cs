@@ -22,136 +22,159 @@ public sealed class SaleService
     private readonly decimal[] percents;
     private readonly ILogger<SaleService> logger;
     private readonly Repository<Sale> saleRepo;
-    private readonly Repository<Company> companyRepo;
+    private readonly Repository<Asset> assetRepo;
     public SaleService(
         ILogger<SaleService> logger,
-        IOptions<ServiceSettings> options,
+        IOptionsSnapshot<ServiceSettings> options,
         Repository<Sale> saleRepo,
-        Repository<Company> companyRepo)
+        Repository<Asset> assetRepo)
     {
         this.logger = logger;
         this.saleRepo = saleRepo;
-        this.companyRepo = companyRepo;
-        percents = options.Value.SaleSettings.DeviationPercents.OrderByDescending(x => x).ToArray();
+        this.assetRepo = assetRepo;
+        percents = options.Value.SaleSettings.Profits.OrderByDescending(x => x).ToArray();
     }
 
-    public async Task SetAsync(IEnumerable<Company> companies)
+    public async Task SetAsync(IEnumerable<Asset> assets)
     {
-        var ratingCount = await companyRepo.GetCountAsync(x => x.RatingPlace.HasValue);
-        var companiesWithDeals = companies.Where(x => x.DealValue.HasValue).ToArray();
-        var dealsCount = Math.Abs((int)companiesWithDeals.Sum(x => x.DealValue!.Value));
+        var ratingCount = await assetRepo.GetCountAsync(x => x.RatingPlace.HasValue);
+        var assetsWithDeals = assets.Where(x => x.DealSumValue.HasValue).ToArray();
+        var dealsCount = Math.Abs((int)assetsWithDeals.Sum(x => x.DealSumValue!.Value));
 
         var recommendations = new List<Sale>(dealsCount + 1);
-        var processedCompanyIds = new List<string>(companiesWithDeals.Length);
+        var processedIds = new List<(string AssetId, byte AssetTypeId)>(assetsWithDeals.Length);
 
-        foreach (var company in companiesWithDeals)
+        foreach (var asset in assetsWithDeals)
         {
-            if (!company.RatingPlace.HasValue)
+            int ratingPlace;
+
+            if (asset.RatingPlace.HasValue)
+                ratingPlace = asset.RatingPlace.Value;
+            else
             {
-                logger.LogWarning(actionsName, "Rating place not found", company.Name);
-                continue;
+                logger.LogWarning(actionsName, "Rating place not found", asset.Name);
+                ratingPlace = percents.Length;
+                ratingCount = percents.Length;
             }
 
-            var dealCost = company.DealCost!.Value;
-            var dealValue = company.DealValue!.Value;
+            var dealCost = asset.DealSumCost!.Value;
+            var dealValue = asset.DealSumValue!.Value;
 
-            if (dealCost == 0 && company.PriceLast.HasValue)
+            if (dealCost == 0 && asset.CostFact.HasValue)
             {
                 dealValue = Math.Abs(dealValue);
-                dealCost = dealValue * company.PriceLast.Value;
+                dealCost = dealValue * asset.CostFact.Value;
             }
 
-            var companyRecommendations = GetCompanySales(
-                company.Id,
+            recommendations.AddRange(GetSales(
+                asset.Id,
+                asset.TypeId,
                 dealValue,
                 dealCost,
-                company.RatingPlace.Value,
+                ratingPlace,
                 ratingCount,
-                company.PriceLast);
-            recommendations.AddRange(companyRecommendations);
+                asset.CostFact));
 
-            processedCompanyIds.Add(company.Id);
+            processedIds.Add((asset.Id, asset.TypeId));
         }
 
-        if (!processedCompanyIds.Any())
+        if (!processedIds.Any())
             return;
 
-        var salesToDelete = await saleRepo.GetSampleAsync(x => processedCompanyIds.Contains(x.CompanyId));
+        var assetIds = processedIds.Select(x => x.AssetId).Distinct();
+        var assetTypeIds = processedIds.Select(x => x.AssetTypeId).Distinct();
+
+        var salesToDelete = await saleRepo.GetSampleAsync(x => assetIds.Contains(x.AssetId) && assetTypeIds.Contains(x.AssetTypeId));
         await saleRepo.DeleteRangeAsync(salesToDelete, actionsName);
 
         await saleRepo.CreateRangeAsync(recommendations, new SaleComparer(), actionsName);
     }
-    public async Task SetAsync(Company company)
+    public async Task SetAsync(Asset asset)
     {
-        if (!company.RatingPlace.HasValue)
+        if (!asset.DealSumValue.HasValue || !asset.DealSumCost.HasValue)
         {
-            logger.LogWarning(actionsName, "Rating place not found", company.Name);
-            return;
-        }
-        if (!company.DealValue.HasValue || !company.DealCost.HasValue)
-        {
-            logger.LogWarning(actionsName, "Deal not found", company.Name);
+            logger.LogWarning(actionsName, "Deal not found", asset.Name);
             return;
         }
 
-        var ratingCount = await companyRepo.GetCountAsync(x => x.RatingPlace.HasValue);
+        int ratingCount;
+        int ratingPlace;
+        if (asset.RatingPlace.HasValue)
+        {
+            ratingCount = await assetRepo.GetCountAsync(x => x.RatingPlace.HasValue);
+            ratingPlace = asset.RatingPlace.Value;
+        }
+        else
+        {
+            logger.LogWarning(actionsName, "Rating place not found", asset.Name);
+            ratingCount = percents.Length;
+            ratingPlace = percents.Length;
+        }
 
-        var dealCost = company.DealCost!.Value;
-        var dealValue = company.DealValue!.Value;
+        var dealCost = asset.DealSumCost!.Value;
+        var dealValue = asset.DealSumValue!.Value;
 
-        if (dealCost == 0 && company.PriceLast.HasValue)
+        if (dealCost == 0 && asset.CostFact.HasValue)
         {
             dealValue = Math.Abs(dealValue);
-            dealCost = dealValue * company.PriceLast.Value;
+            dealCost = dealValue * asset.CostFact.Value;
         }
 
-        var recommendations = GetCompanySales(
-            company.Id,
+        var recommendations = GetSales(
+            asset.Id,
+            asset.TypeId,
             dealValue,
             dealCost,
-            company.RatingPlace.Value,
+            ratingPlace,
             ratingCount,
-            company.PriceLast)
+            asset.CostFact)
         .ToArray();
 
-        var salesToDelete = await saleRepo.GetSampleAsync(x => company.Id == x.CompanyId);
+        var salesToDelete = await saleRepo.GetSampleAsync(x => asset.Id == x.AssetId && asset.TypeId == x.AssetTypeId);
         await saleRepo.DeleteRangeAsync(salesToDelete, actionName);
 
         await saleRepo.CreateRangeAsync(recommendations, new SaleComparer(), actionName);
     }
 
-    public async Task DeleteAsync(IEnumerable<Company> companies)
+    public async Task DeleteAsync(IEnumerable<Asset> assets)
     {
-        var companyIds = companies.Select(x => x.Id).Distinct();
-        var sales = await saleRepo.GetSampleAsync(x => companyIds.Contains(x.CompanyId));
+        var _assets = assets.ToArray();
+
+        var assetIds = _assets.Select(x => x.Id).Distinct();
+        var assetTypeIds = _assets.Select(x => x.TypeId).Distinct();
+
+        var sales = await saleRepo.GetSampleAsync(x => assetIds.Contains(x.AssetId) && assetTypeIds.Contains(x.AssetTypeId));
+
         await saleRepo.DeleteRangeAsync(sales, actionsName);
     }
-    public async Task DeleteAsync(Company company)
+    public async Task DeleteAsync(Asset asset)
     {
-        var sales = await saleRepo.GetSampleAsync(x => company.Id.Equals(x.CompanyId));
+        var sales = await saleRepo.GetSampleAsync(x => asset.Id == x.AssetId && asset.TypeId == x.AssetTypeId);
         await saleRepo.DeleteRangeAsync(sales, actionsName);
     }
 
-    private IEnumerable<Sale> GetCompanySales(string companyId, decimal sumValue, decimal sumCost, int ratingPlace, int ratingCount, decimal? lastPrice) =>
+    private IEnumerable<Sale> GetSales(string assetId, byte assetTypeId, decimal sumValue, decimal sumCost, int ratingPlace, int ratingCount, decimal? costFact) =>
         ComputeRecommendations(sumValue, sumCost, ratingPlace, ratingCount).Select(y =>
         {
-            var fact = lastPrice / y.Price * 100 - 100;
+            var profitFact = costFact / y.CostPlan * 100 - 100;
             return new Sale
             {
-                CompanyId = companyId,
-                Plan = y.Plan,
-                Fact = fact,
-                Value = y.Value,
-                Price = y.Price,
-                IsReady = fact is > 0
+                AssetId = assetId,
+                AssetTypeId = assetTypeId,
+                ProfitPlan = y.ProfitPlan,
+                ProfitFact = profitFact,
+                CostPlan = y.CostPlan,
+                CostFact = costFact,
+                ActiveValue = y.ActiveValue,
+                IsReady = profitFact is > 0
             };
         });
-    private IEnumerable<(decimal Plan, decimal Value, decimal Price)> ComputeRecommendations(decimal sumValue, decimal sumCost, int ratingPlace, int ratingCount)
+    private IEnumerable<(decimal ProfitPlan, decimal ActiveValue, decimal CostPlan)> ComputeRecommendations(decimal sumValue, decimal sumCost, int ratingPlace, int ratingCount)
     {
         var _value = sumValue;
         var _cost = sumCost / sumValue;
 
-        yield return (0, _value, Math.Round(_cost, 5));
+        yield return (0, _value, Math.Round(_cost, 10));
 
         var activeParts = ComputeActiveParts(ratingPlace, ratingCount);
 
@@ -167,7 +190,8 @@ public sealed class SaleService
 
             _value -= value;
 
-            yield return (profitPercent, value, Math.Round(_cost + _cost * profitPercent / 100, 5));
+            var costPlan = _cost + _cost * profitPercent / 100;
+            yield return (profitPercent, value, Math.Round(costPlan, 10));
         }
     }
     private Dictionary<decimal, decimal> ComputeActiveParts(int ratingPlace, int ratingCount)

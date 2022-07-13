@@ -2,38 +2,31 @@
 
 public static class Enums
 {
-    public enum Brokers : byte
+    public enum Providers
     {
-        Default = 0,
-        Bcs = 1,
-        Tinkoff = 2
-    }
-    public enum UnderlyingAssetTypes
-    {
-        Default = 0,
-        Stock = 1,
-        Bond = 2,
-        ETF = 3,
-        Currency = 4,
-        CryptoCurrency = 5
+        Default = int.MaxValue,
+        Safe = 1,
+        Bcs = 2,
+        Tinkoff = 3,
+        Vtb = 4,
+        LedgerNanoSPlus= 5,
+        JetLend = 6
     }
     public enum OperationTypes : byte
     {
-        Default = 0,
-        Приход = 1,
-        Расход = 2
+        Default = 255,
+        Income = 1,
+        Expense = 2
     }
     public enum EventTypes : byte
     {
-        Default = 0,
-        Пополнение_счета = 1,
-        Дополнительный_выпуск_акции = 2,
-        Дивиденд = 3,
-        Вывод_с_счета = 4,
-        Делистинг_акции = 5,
-        Налог_с_дивиденда = 6,
-        НДФЛ = 7,
-        Комиссия_брокера = 8,
-        Комиссия_депозитария = 9
+        Default = 255,
+        Refill = 1,
+        Withdraw = 2,
+        AddIncome = 3,
+        TaxIncome = 4,
+        TaxPersonal = 5,
+        TaxProvider = 6,
+        TaxThirdParty = 7
     }
 }

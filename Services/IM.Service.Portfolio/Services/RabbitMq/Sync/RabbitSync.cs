@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using System.Threading.Tasks;
 using IM.Service.Shared.Models.RabbitMq.Api;
+using Microsoft.Extensions.Logging;
 
 namespace IM.Service.Portfolio.Services.RabbitMq.Sync;
 
@@ -20,9 +21,9 @@ public class RabbitSync : IRabbitAction
 
         return entity switch
         {
-            QueueEntities.Company => serviceProvider.GetRequiredService<CompanyProcess>().ProcessAsync(action, JsonHelper.Deserialize<CompanyMqDto>(data)),
-            QueueEntities.Companies => serviceProvider.GetRequiredService<CompanyProcess>().ProcessRangeAsync(action, JsonHelper.Deserialize<CompanyMqDto[]>(data)),
-            _ => Task.CompletedTask
+            QueueEntities.Asset => serviceProvider.GetRequiredService<AssetProcess>().ProcessAsync(action, JsonHelper.Deserialize<AssetMqDto>(data)),
+            QueueEntities.Assets => serviceProvider.GetRequiredService<AssetProcess>().ProcessRangeAsync(action, JsonHelper.Deserialize<AssetMqDto[]>(data)),
+            _ => serviceProvider.GetRequiredService<ILogger<RabbitSync>>().LogDefaultTask($"{action} {entity}")
         };
     }
 }

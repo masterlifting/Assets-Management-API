@@ -20,7 +20,7 @@ public sealed class RabbitFunction : IRabbitAction
         var logger = serviceProvider.GetRequiredService<ILogger<RabbitFunction>>();
         return entity switch
         {
-            QueueEntities.CompanySource => Task.Run(() =>
+            QueueEntities.AssetSource => Task.Run(() =>
             {
                 var model = JsonHelper.Deserialize<CompanySource>(data);
 
@@ -33,7 +33,7 @@ public sealed class RabbitFunction : IRabbitAction
                         serviceProvider.GetRequiredService<DividendProcess>().ProcessAsync(action, model)
                     });
             }),
-            QueueEntities.CompanySources => Task.Run(() =>
+            QueueEntities.AssetSources => Task.Run(() =>
             {
                 var models = JsonHelper.Deserialize<CompanySource[]>(data);
 
@@ -46,7 +46,7 @@ public sealed class RabbitFunction : IRabbitAction
                         serviceProvider.GetRequiredService<DividendProcess>().ProcessRangeAsync(action, models)
                     });
             }),
-            QueueEntities.Price => Task.Run(() =>
+            QueueEntities.Cost => Task.Run(() =>
              {
                  var model = JsonHelper.Deserialize<Price>(data);
 
@@ -56,7 +56,7 @@ public sealed class RabbitFunction : IRabbitAction
                         serviceProvider.GetRequiredService<CoefficientProcess>().ProcessAsync(action, model)
                 });
              }),
-            QueueEntities.Prices => Task.Run(() =>
+            QueueEntities.Costs => Task.Run(() =>
             {
                 var models = JsonHelper.Deserialize<Price[]>(data);
 

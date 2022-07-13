@@ -1,0 +1,28 @@
+insert into "Assets"
+("Id","TypeId","CountryId", "Name")
+values
+('RUB',2,1,'?'),
+('USD',2,2,'$'),
+('EUR',2,5,'ˆ')
+
+insert into "Derivatives"
+("Id","Code","AssetId","AssetTypeId","Balance","UpdateTime")
+values
+('RUB','RUB','RUB',2,0, NOW()),
+('USD','USD','USD',2,0, NOW()),
+('EUR','EUR','EUR',2,0, NOW()),
+('US30303M1027','FB','FB',3,0, NOW()),
+('US50155Q1004','KD_US','KD',3,0, NOW()),
+('US25470F3029','DISCK','DISCK',3,0, NOW()),
+('US68622V1061','OGN-W_US','OGN',3,0, NOW()),
+('US92556V1061','VTRS_US','VTRS',3,0, NOW()),
+('US6974351057','PANW','PANW',3,0, NOW()),
+('LR0008862868','RCL','RCL',3,0, NOW()),
+('IE00BTN1Y115','MDT','MDT',3,0, NOW()),
+('US260003108','DOV','DOV',3,0, NOW()),
+('PA1436583006','CCL','CCL',3,0, NOW()),
+('US92343V104','VZ','VZ',3,0, NOW()),
+('US15872M1045','APY_US','CHX',3,0, NOW()),
+('US98426T1060','YY','YY',3,0, NOW()),
+('US46591M1099','YY','YY',3,0, NOW()),
+('US3696041033','GE','GE',3,0, NOW())

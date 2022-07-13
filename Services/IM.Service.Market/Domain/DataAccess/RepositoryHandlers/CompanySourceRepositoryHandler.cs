@@ -1,10 +1,9 @@
-﻿using IM.Service.Shared.RabbitMq;
-using IM.Service.Shared.RepositoryService;
-using IM.Service.Market.Domain.Entities.ManyToMany;
-using IM.Service.Market.Settings;
+﻿using IM.Service.Market.Domain.Entities.ManyToMany;
+using IM.Service.Market.Services.RabbitMq;
+using IM.Service.Shared.RabbitMq;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 using static IM.Service.Shared.Enums;
 
@@ -13,12 +12,12 @@ namespace IM.Service.Market.Domain.DataAccess.RepositoryHandlers;
 public class CompanySourceRepositoryHandler : RepositoryHandler<CompanySource>
 {
     private readonly DatabaseContext context;
-    private readonly string rabbitConnectionString;
+    private readonly RabbitAction rabbitAction;
 
-    public CompanySourceRepositoryHandler(IOptions<ServiceSettings> options, DatabaseContext context)
+    public CompanySourceRepositoryHandler(RabbitAction rabbitAction, DatabaseContext context)
     {
         this.context = context;
-        rabbitConnectionString = options.Value.ConnectionStrings.Mq;
+        this.rabbitAction = rabbitAction;
     }
 
     public override async Task<IEnumerable<CompanySource>> RunUpdateRangeHandlerAsync(IReadOnlyCollection<CompanySource> entities)
@@ -56,8 +55,7 @@ public class CompanySourceRepositoryHandler : RepositoryHandler<CompanySource>
         if (entity.Value is null || action is RepositoryActions.Delete)
             return Task.CompletedTask;
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySource, QueueActions.Get, entity);
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.AssetSource, QueueActions.Get, entity);
 
         return Task.CompletedTask;
     }
@@ -66,8 +64,7 @@ public class CompanySourceRepositoryHandler : RepositoryHandler<CompanySource>
         if (action is RepositoryActions.Delete)
             return Task.CompletedTask;
 
-        var publisher = new RabbitPublisher(rabbitConnectionString, QueueExchanges.Function);
-        publisher.PublishTask(QueueNames.Market, QueueEntities.CompanySources, QueueActions.Get, entities);
+        rabbitAction.Publish(QueueExchanges.Function, QueueNames.Market, QueueEntities.AssetSources, QueueActions.Get, entities);
 
         return Task.CompletedTask;
     }

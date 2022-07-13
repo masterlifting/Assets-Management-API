@@ -1,5 +1,5 @@
-﻿using IM.Service.Shared.Models.Http;
-using IM.Service.Market.Models.Settings;
+﻿using IM.Service.Market.Models.Settings;
+using IM.Service.Shared.Models.Configuration;
 
 namespace IM.Service.Market.Settings.Sections;
 

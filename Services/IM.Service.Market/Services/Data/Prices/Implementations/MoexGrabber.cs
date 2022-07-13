@@ -66,13 +66,17 @@ public sealed class MoexGrabber : IDataGrabber<Price>
     {
         using PeriodicTimer timer = new(TimeSpan.FromMilliseconds(100));
 
-        foreach (var companySource in companySources)
+        var _companySources = companySources.ToArray();
+        var currentData = await client.GetCurrentPricesAsync();
+        var currentRresult = Map(logger, currentData, _companySources.Select(x => x.CompanyId).Distinct());
+
+        foreach (var companySource in _companySources)
             if (await timer.WaitForNextTickAsync())
                 await foreach (var data in GetHistoryDataAsync(companySource))
-                    yield return data;
+                    yield return data.Concat(currentRresult).ToArray();
     }
 
-    private static IEnumerable<Price> Map(ILogger logger, MoexCurrentPriceResultModel clientResult, IEnumerable<string>? tickers = null)
+    private static Price[] Map(ILogger logger, MoexCurrentPriceResultModel clientResult, IEnumerable<string>? tickers = null)
     {
         var clientData = clientResult.Data.Marketdata.Data;
 

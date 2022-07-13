@@ -19,8 +19,8 @@ public class RabbitSync : IRabbitAction
 
         return entity switch
         {
-            QueueEntities.Company => serviceProvider.GetRequiredService<CompanyProcess>().ProcessAsync(action, JsonHelper.Deserialize<CompanyMqDto>(data)),
-            QueueEntities.Companies => serviceProvider.GetRequiredService<CompanyProcess>().ProcessRangeAsync(action, JsonHelper.Deserialize<CompanyMqDto[]>(data)),
+            QueueEntities.Asset => serviceProvider.GetRequiredService<AssetProcess>().ProcessAsync(action, JsonHelper.Deserialize<AssetMqDto>(data)),
+            QueueEntities.Assets => serviceProvider.GetRequiredService<AssetProcess>().ProcessRangeAsync(action, JsonHelper.Deserialize<AssetMqDto[]>(data)),
             _ => Task.CompletedTask
         };
     }

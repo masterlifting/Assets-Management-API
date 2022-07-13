@@ -7,10 +7,10 @@ namespace IM.Service.Portfolio.Services.Data;
 
 public abstract class DataGrabber
 {
-    private readonly Dictionary<Brokers, IDataGrabber> grabber;
-    protected DataGrabber(Dictionary<Brokers, IDataGrabber> grabber) => this.grabber = grabber;
+    private readonly Dictionary<Providers, IDataGrabber> grabber;
+    protected DataGrabber(Dictionary<Providers, IDataGrabber> grabber) => this.grabber = grabber;
 
-    public Task GetDataAsync(ReportFileDto file, Brokers broker) => grabber.ContainsKey(broker) 
-        ? grabber[broker].GetDataAsync(file) 
+    public Task ProcessAsync(ProviderReportDto report, Providers provider) => grabber.ContainsKey(provider) 
+        ? grabber[provider].ProcessAsync(report) 
         : Task.CompletedTask;
 }

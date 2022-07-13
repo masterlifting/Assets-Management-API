@@ -1,5 +1,6 @@
 ﻿using IM.Service.Portfolio.Domain.Entities;
 using IM.Service.Portfolio.Services.Entity;
+using IM.Service.Shared.Helpers;
 using IM.Service.Shared.RabbitMq;
 
 using System.Collections.Generic;
@@ -14,21 +15,20 @@ public sealed class DealProcess : IRabbitProcess
 
     public Task ProcessAsync<T>(QueueActions action, T model) where T : class => action switch
     {
-        QueueActions.Compute => model switch
+        QueueActions.Create or QueueActions.Update or QueueActions.Delete => model switch
         {
-            Deal deal => service.ComputeSummaryAsync(deal),
-            _ => Task.CompletedTask
+            Deal deal => service.SetAsync(action, deal),
+            _ => service.Logger.LogDefaultTask($"{action} {typeof(T).Name}"),
         },
-        _ => Task.CompletedTask
+        _ => service.Logger.LogDefaultTask($"{action}")
     };
     public Task ProcessRangeAsync<T>(QueueActions action, IEnumerable<T> models) where T : class => action switch
     {
-        QueueActions.Compute => models switch
+        QueueActions.Create or QueueActions.Update or QueueActions.Delete => models switch
         {
-            Deal[] deals => service.ComputeSummariesAsync(deals),
-            _ => Task.CompletedTask
+            Deal[] deals => service.SetAsync(action, deals),
+            _ => service.Logger.LogDefaultTask($"{action} {typeof(T).Name}s"),
         },
-        _ => Task.CompletedTask
+        _ => service.Logger.LogDefaultTask($"{action}")
     };
-
 }

@@ -8,7 +8,7 @@ using IM.Service.Recommendations.Services.Http;
 using IM.Service.Recommendations.Services.RabbitMq.Transfer.Processes;
 using IM.Service.Recommendations.Settings;
 using IM.Service.Shared.Helpers;
-using IM.Service.Shared.RepositoryService;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -20,6 +20,8 @@ using Microsoft.Extensions.Hosting;
 using Polly;
 
 using System;
+using IM.Service.Recommendations.Domain.Entities.Catalogs;
+using IM.Service.Recommendations.Services.RabbitMq;
 
 namespace IM.Service.Recommendations;
 
@@ -56,22 +58,25 @@ public class Startup
         });
 
         services.AddScoped(typeof(Repository<>));
-        services.AddScoped<RepositoryHandler<Company>, CompanyRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<Asset>, AssetRepositoryHandler>();
+        services.AddScoped<RepositoryHandler<AssetType>, AssetTypeRepositoryHandler>();
+
         services.AddScoped<RepositoryHandler<Purchase>, PurchaseRepositoryHandler>();
         services.AddScoped<RepositoryHandler<Sale>, SaleRepositoryHandler>();
 
         services.AddScoped<PurchaseApi>();
         services.AddScoped<SaleApi>();
                             
-        services.AddTransient<CompanyService>();
+        services.AddTransient<AssetService>();
         services.AddTransient<SaleService>();
         services.AddTransient<PurchaseService>();
 
         services.AddTransient<SaleProcess>();
         services.AddTransient<PurchaseProcess>();
-        services.AddTransient<CompanyProcess>();
-        services.AddTransient<Services.RabbitMq.Sync.Processes.CompanyProcess>();
+        services.AddTransient<AssetProcess>();
+        services.AddTransient<Services.RabbitMq.Sync.Processes.AssetProcess>();
 
+        services.AddSingleton<RabbitAction>();
         services.AddHostedService<RabbitBackgroundService>();
     }
 

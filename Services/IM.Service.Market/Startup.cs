@@ -20,9 +20,10 @@ using IM.Service.Market.Services.Http.Common;
 using IM.Service.Market.Services.Http.Common.Interfaces;
 using IM.Service.Market.Services.Http.Mappers;
 using IM.Service.Market.Services.Http.Mappers.Interfaces;
+using IM.Service.Market.Services.RabbitMq;
 using IM.Service.Market.Services.RabbitMq.Function.Processes;
 using IM.Service.Market.Settings;
-using IM.Service.Shared.RepositoryService;
+using IM.Service.Shared.SqlAccess;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -136,6 +137,7 @@ public class Startup
         services.AddTransient<FloatProcess>();
         services.AddTransient<CoefficientProcess>();
 
+        services.AddSingleton<RabbitAction>();
         services.AddHostedService<RabbitBackgroundService>();
         services.AddHostedService<ComputeRatingBackgroundService>();
         services.AddHostedService<LoadPriceBackgroundService>();

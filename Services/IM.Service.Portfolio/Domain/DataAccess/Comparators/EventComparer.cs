@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+
 using IM.Service.Portfolio.Domain.Entities;
 
 namespace IM.Service.Portfolio.Domain.DataAccess.Comparators;

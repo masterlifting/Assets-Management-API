@@ -1,12 +1,5 @@
-﻿using IM.Service.Shared.Models.Entity;
+﻿namespace IM.Service.Portfolio.Domain.Entities.Catalogs;
 
-using System.Collections.Generic;
-using System.Text.Json.Serialization;
-
-namespace IM.Service.Portfolio.Domain.Entities.Catalogs;
-
-public class Country : Catalog
+public class Country : Shared.Models.Entity.Country<Asset>
 {
-    [JsonIgnore]
-    public virtual IEnumerable<UnderlyingAsset>? UnderlyingAssets { get; set; }
 }
